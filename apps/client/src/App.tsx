@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "@/components/layouts/global/layout.tsx";
 import { Error404 } from "@/components/ui/error-404.tsx";
@@ -85,7 +84,6 @@ const LabelPage = lazy(() => import("@/pages/label/label-page"));
 const OAuthConsent = lazy(() => import("@/ee/oauth/pages/oauth-consent.tsx"));
 
 export default function App() {
-  const { t } = useTranslation();
   useRedirectToCloudSelect();
   useTrackOrigin();
 
