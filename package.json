@@ -1,22 +1,30 @@
 {
   "name": "docmost",
-  "homepage": "https://docmost.com",
   "version": "0.96.0",
   "private": true,
+  "homepage": "https://docmost.com",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ]
+  },
   "scripts": {
     "build": "nx run-many -t build",
-    "start": "pnpm --filter ./apps/server run start:prod",
+    "check": "ultracite check",
+    "clean": "rm -rf apps/*/dist packages/*/dist apps/client/node_modules/.vite",
+    "client:build": "nx run client:build",
+    "client:dev": "nx run client:dev",
     "collab": "pnpm --filter ./apps/server run collab:prod",
     "collab:dev": "pnpm --filter ./apps/server run collab:dev",
-    "server:build": "nx run server:build",
-    "client:build": "nx run client:build",
+    "dev": "pnpm concurrently -n \"frontend,backend\" -c \"cyan,green\" \"pnpm run client:dev\" \"pnpm run server:dev\"",
     "editor-ext:build": "nx run @docmost/editor-ext:build",
-    "client:dev": "nx run client:dev",
+    "email:dev": "nx run server:email:dev",
+    "fix": "ultracite fix",
+    "server:build": "nx run server:build",
     "server:dev": "nx run server:start:dev",
     "server:start": "nx run server:start:prod",
-    "email:dev": "nx run server:email:dev",
-    "dev": "pnpm concurrently -n \"frontend,backend\" -c \"cyan,green\" \"pnpm run client:dev\" \"pnpm run server:dev\"",
-    "clean": "rm -rf apps/*/dist packages/*/dist apps/client/node_modules/.vite"
+    "start": "pnpm --filter ./apps/server run start:prod"
   },
   "dependencies": {
     "@braintree/sanitize-url": "7.1.2",
@@ -81,19 +89,15 @@
     "yjs": "^13.6.30"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.12",
     "@nx/js": "23.1.1",
     "@types/bytes": "3.1.5",
     "@types/qrcode": "1.5.6",
     "@types/turndown": "5.0.6",
     "concurrently": "10.0.4",
     "nx": "23.1.1",
-    "tsx": "^4.21.0"
-  },
-  "workspaces": {
-    "packages": [
-      "apps/*",
-      "packages/*"
-    ]
+    "tsx": "^4.21.0",
+    "ultracite": "7.11.0"
   },
   "packageManager": "pnpm@11.25.0"
 }

@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": [
+    // "ultracite/biome/core",
+    // "ultracite/biome/react",
+    // "ultracite/biome/tanstack",
+    // "ultracite/biome/vitest",
+    "ultracite/biome/nestjs"
+    // "ultracite/biome/jest"
+  ],
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "rules": {
+      "correctness": {
+        "noUnusedImports": {
+          "level": "error",
+          "fix": "safe"
+        },
+        "useExhaustiveDependencies": "off"
+      },
+      "suspicious": {
+        "noLeakedRender": "off"
+      },
+      "performance": {
+        "noJsxPropsBind": "off"
+      },
+      "style": {
+        "useTemplate": "off",
+        "useDestructuring": "off"
+      }
+    }
+  }
+}
