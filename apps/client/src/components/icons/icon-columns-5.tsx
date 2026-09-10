@@ -8,15 +8,15 @@ type Props = {
 export function IconColumns5({ size = 24, stroke = 2 }: Props) {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={rem(size)}
-      height={rem(size)}
-      viewBox="0 0 24 24"
       fill="none"
+      height={rem(size)}
       stroke="currentColor"
-      strokeWidth={stroke}
       strokeLinecap="round"
       strokeLinejoin="round"
+      strokeWidth={stroke}
+      viewBox="0 0 24 24"
+      width={rem(size)}
+      xmlns="http://www.w3.org/2000/svg"
     >
       <path d="M3 4a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-16" />
       <path d="M6.6 3v18" />

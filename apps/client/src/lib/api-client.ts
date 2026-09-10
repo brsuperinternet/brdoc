@@ -30,8 +30,12 @@ api.interceptors.response.use(
       switch (error.response.status) {
         case 401: {
           const url = new URL(error.request.responseURL)?.pathname;
-          if (url === "/api/auth/collab-token") return;
-          if (window.location.pathname.startsWith("/share/")) return;
+          if (url === "/api/auth/collab-token") {
+            return;
+          }
+          if (window.location.pathname.startsWith("/share/")) {
+            return;
+          }
           // public docs probe authed endpoints; reject without the login redirect
           if (
             window.location.pathname === "/docs" ||
@@ -71,7 +75,7 @@ api.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 function redirectToLogin() {

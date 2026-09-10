@@ -1,11 +1,11 @@
-export type LicenseType = 'business' | 'enterprise';
+export type LicenseType = "business" | "enterprise";
 
 export interface ILicenseInfo {
-  id: string;
   customerName: string;
-  seatCount: number;
-  licenseType: LicenseType;
-  issuedAt: Date;
   expiresAt: Date;
+  id: string;
+  issuedAt: Date;
+  licenseType: LicenseType;
+  seatCount: number;
   trial: boolean;
 }

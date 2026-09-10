@@ -1,11 +1,11 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { IconArrowDown, IconAlertTriangle } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { VisuallyHidden } from "@mantine/core";
+import { IconAlertTriangle, IconArrowDown } from "@tabler/icons-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useTranslation } from "react-i18next";
+import classes from "../styles/ai-chat.module.css";
 import type { AiChatMessage, AiChatToolCall } from "../types/ai-chat.types";
 import ChatMessage from "./chat-message";
-import classes from "../styles/ai-chat.module.css";
 
 function ChatMessageErrorFallback() {
   const { t } = useTranslation();
@@ -76,11 +76,13 @@ export default function ChatMessageList({
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     isAutoScrollingRef.current = true;
     const target = container.scrollHeight - container.clientHeight;
-    container.scrollTo({ top: target, behavior });
+    container.scrollTo({ behavior, top: target });
     prevScrollTopRef.current = target;
     isAtBottomRef.current = true;
     setShowScrollButton(false);
@@ -98,10 +100,14 @@ export default function ChatMessageList({
   }, []);
 
   const handleScroll = useCallback(() => {
-    if (isAutoScrollingRef.current) return;
+    if (isAutoScrollingRef.current) {
+      return;
+    }
 
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const currentScrollTop = container.scrollTop;
     const scrolledUp =
@@ -123,7 +129,9 @@ export default function ChatMessageList({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
@@ -151,7 +159,9 @@ export default function ChatMessageList({
     // content that doesn't overflow correctly hide the button even when no
     // scroll event fires.
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
     const distanceFromBottom =
       container.scrollHeight - container.scrollTop - container.clientHeight;
     const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD_PX;
@@ -164,39 +174,36 @@ export default function ChatMessageList({
       {/* Single status region for chat announcements. Kept outside the
           scrolling transcript so changes here trigger one polite read per
           state change instead of re-announcing every streamed token. */}
-      <VisuallyHidden role="status" aria-live="polite">
+      <VisuallyHidden aria-live="polite" role="status">
         {statusAnnouncement}
       </VisuallyHidden>
 
       <div
-        ref={containerRef}
-        className={classes.messageList}
         aria-label={t("Chat transcript")}
+        className={classes.messageList}
+        ref={containerRef}
       >
         {messages.map((msg) => (
-          <ErrorBoundary
-            key={msg.id}
-            fallback={<ChatMessageErrorFallback />}
-          >
+          <ErrorBoundary fallback={<ChatMessageErrorFallback />} key={msg.id}>
             <ChatMessage message={msg} />
           </ErrorBoundary>
         ))}
         {isStreaming && (
           <ErrorBoundary
-            resetKeys={[streamingContent, streamingToolCalls.length]}
             fallback={<ChatMessageErrorFallback />}
+            resetKeys={[streamingContent, streamingToolCalls.length]}
           >
             <ChatMessage
-              message={{
-                id: "streaming",
-                chatId: "",
-                role: "assistant",
-                content: null,
-                toolCalls: null,
-                metadata: null,
-                createdAt: new Date().toISOString(),
-              }}
               isStreaming
+              message={{
+                chatId: "",
+                content: null,
+                createdAt: new Date().toISOString(),
+                id: "streaming",
+                metadata: null,
+                role: "assistant",
+                toolCalls: null,
+              }}
               streamingContent={streamingContent}
               streamingToolCalls={streamingToolCalls}
             />
@@ -206,10 +213,10 @@ export default function ChatMessageList({
       </div>
       {showScrollButton && (
         <button
-          type="button"
           aria-label={t("Scroll to bottom")}
           className={classes.scrollToBottomButton}
           onClick={() => scrollToBottom("smooth")}
+          type="button"
         >
           <IconArrowDown size={16} stroke={2} />
         </button>

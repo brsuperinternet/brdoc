@@ -54,7 +54,7 @@ export function formatLocalized(
   date: Date | number | string,
   enUSPattern: string,
   localizedPattern: string,
-  locale?: Locale,
+  locale?: Locale
 ): string {
   const effective = locale ?? getDateFnsLocale();
   const pattern = isEnglishLocale(effective) ? enUSPattern : localizedPattern;

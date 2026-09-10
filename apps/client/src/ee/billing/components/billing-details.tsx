@@ -1,39 +1,39 @@
+import { Group, Paper, SimpleGrid, Text } from "@mantine/core";
 import {
   useBillingPlans,
   useBillingQuery,
 } from "@/ee/billing/queries/billing-query.ts";
-import { Group, Text, SimpleGrid, Paper } from "@mantine/core";
-import classes from "./billing.module.css";
 import { formatInterval } from "@/ee/billing/utils.ts";
 import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
+import classes from "./billing.module.css";
 
 export default function BillingDetails() {
   const { data: billing } = useBillingQuery();
   const { data: plans } = useBillingPlans();
   const locale = useDateFnsLocale();
 
-  if (!billing || !plans) {
+  if (!(billing && plans)) {
     return null;
   }
 
   return (
     <div className={classes.root}>
-      <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
+      <SimpleGrid cols={{ base: 1, sm: 3, xs: 2 }}>
         <Paper p="md" radius="md">
           <Group justify="apart">
             <div>
               <Text
                 c="dimmed"
-                tt="uppercase"
+                className={classes.label}
                 fw={700}
                 fz="xs"
-                className={classes.label}
+                tt="uppercase"
               >
                 Plan
               </Text>
               <Text fw={700} fz="lg" tt="capitalize">
                 {plans.find(
-                  (plan) => plan.productId === billing.stripeProductId,
+                  (plan) => plan.productId === billing.stripeProductId
                 )?.name ||
                   billing.planName ||
                   "Standard"}
@@ -47,10 +47,10 @@ export default function BillingDetails() {
             <div>
               <Text
                 c="dimmed"
-                tt="uppercase"
+                className={classes.label}
                 fw={700}
                 fz="xs"
-                className={classes.label}
+                tt="uppercase"
               >
                 Billing Period
               </Text>
@@ -66,10 +66,10 @@ export default function BillingDetails() {
             <div>
               <Text
                 c="dimmed"
-                tt="uppercase"
+                className={classes.label}
                 fw={700}
                 fz="xs"
-                className={classes.label}
+                tt="uppercase"
               >
                 {billing.cancelAtPeriodEnd
                   ? "Cancellation date"
@@ -80,7 +80,7 @@ export default function BillingDetails() {
                   billing.periodEndAt,
                   "dd MMM, yyyy",
                   "PP",
-                  locale,
+                  locale
                 )}
               </Text>
             </div>
@@ -88,16 +88,16 @@ export default function BillingDetails() {
         </Paper>
       </SimpleGrid>
 
-      <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
+      <SimpleGrid cols={{ base: 1, sm: 3, xs: 2 }}>
         <Paper p="md" radius="md">
           <Group justify="apart">
             <div>
               <Text
                 c="dimmed"
-                tt="uppercase"
+                className={classes.label}
                 fw={700}
                 fz="xs"
-                className={classes.label}
+                tt="uppercase"
               >
                 Seat count
               </Text>
@@ -113,10 +113,10 @@ export default function BillingDetails() {
             <div>
               <Text
                 c="dimmed"
-                tt="uppercase"
+                className={classes.label}
                 fw={700}
                 fz="xs"
-                className={classes.label}
+                tt="uppercase"
               >
                 Cost
               </Text>
@@ -153,10 +153,10 @@ export default function BillingDetails() {
               <div>
                 <Text
                   c="dimmed"
-                  tt="uppercase"
+                  className={classes.label}
                   fw={700}
                   fz="xs"
-                  className={classes.label}
+                  tt="uppercase"
                 >
                   Current Tier
                 </Text>

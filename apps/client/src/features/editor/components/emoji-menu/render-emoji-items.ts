@@ -1,5 +1,3 @@
-import { ReactRenderer, useEditor } from "@tiptap/react";
-import EmojiList from "./emoji-list";
 import {
   autoUpdate,
   computePosition,
@@ -7,6 +5,8 @@ import {
   offset,
   shift,
 } from "@floating-ui/dom";
+import { ReactRenderer, useEditor } from "@tiptap/react";
+import EmojiList from "./emoji-list";
 
 const renderEmojiItems = () => {
   let component: ReactRenderer | null = null;
@@ -37,8 +37,8 @@ const renderEmojiItems = () => {
       clientRect: () => DOMRect;
     }) => {
       component = new ReactRenderer(EmojiList, {
-        props: { isLoading: true, items: [] },
         editor: props.editor,
+        props: { isLoading: true, items: [] },
       });
 
       if (!props.clientRect) {
@@ -55,27 +55,43 @@ const renderEmojiItems = () => {
       document.body.appendChild(popup);
 
       const virtualElement = {
-        getBoundingClientRect: () => {
-          return getReferenceClientRect
+        getBoundingClientRect: () =>
+          getReferenceClientRect
             ? getReferenceClientRect()
-            : new DOMRect(0, 0, 0, 0);
-        },
+            : new DOMRect(0, 0, 0, 0),
       };
 
       cleanup = autoUpdate(virtualElement, popup, () => {
-        if (!popup) return;
+        if (!popup) {
+          return;
+        }
 
         computePosition(virtualElement, popup, {
-          placement: "bottom-start",
           middleware: [offset(10), flip(), shift()],
+          placement: "bottom-start",
         }).then(({ x, y }) => {
-          if (!popup) return;
+          if (!popup) {
+            return;
+          }
 
           Object.assign(popup.style, {
             transform: `translate(${x}px, ${y}px)`,
           });
         });
       });
+    },
+    onExit: () => {
+      destroy();
+    },
+    onKeyDown: (props: { event: KeyboardEvent }) => {
+      if (props.event.key === "Escape") {
+        destroy();
+
+        return true;
+      }
+
+      // @ts-expect-error
+      return component?.ref?.onKeyDown(props);
     },
     onStart: (props: {
       editor: ReturnType<typeof useEditor>;
@@ -96,19 +112,6 @@ const renderEmojiItems = () => {
       if (props.clientRect) {
         getReferenceClientRect = props.clientRect;
       }
-    },
-    onKeyDown: (props: { event: KeyboardEvent }) => {
-      if (props.event.key === "Escape") {
-        destroy();
-
-        return true;
-      }
-
-      // @ts-ignore
-      return component?.ref?.onKeyDown(props);
-    },
-    onExit: () => {
-      destroy();
     },
   };
 };

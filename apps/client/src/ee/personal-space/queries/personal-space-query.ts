@@ -1,22 +1,22 @@
 import {
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
-import { ISpace } from "@/features/space/types/space.types";
 import {
   createPersonalSpace,
   getPersonalSpace,
 } from "@/ee/personal-space/services/personal-space-service";
+import { ISpace } from "@/features/space/types/space.types";
 
 export function usePersonalSpaceQuery(
-  enabled: boolean,
+  enabled: boolean
 ): UseQueryResult<ISpace | null, Error> {
   return useQuery({
-    queryKey: ["personal-space"],
-    queryFn: () => getPersonalSpace(),
     enabled,
+    queryFn: () => getPersonalSpace(),
+    queryKey: ["personal-space"],
     staleTime: 5 * 60 * 1000,
   });
 }

@@ -1,15 +1,15 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Popover, TextInput } from "@mantine/core";
+import clsx from "clsx";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChoiceBadge } from "@/ee/base/components/cells/choice-badge";
+import { choiceColor } from "@/ee/base/components/cells/choice-color";
+import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
+import cellClasses from "@/ee/base/styles/cells.module.css";
 import {
+  Choice,
   IBaseProperty,
   SelectTypeOptions,
-  Choice,
 } from "@/ee/base/types/base.types";
-import { choiceColor } from "@/ee/base/components/cells/choice-color";
-import { ChoiceBadge } from "@/ee/base/components/cells/choice-badge";
-import cellClasses from "@/ee/base/styles/cells.module.css";
-import clsx from "clsx";
-import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
 
 type CellStatusProps = {
   value: unknown;
@@ -26,9 +26,9 @@ type CategoryGroup = {
 };
 
 const categoryLabels: Record<string, string> = {
-  todo: "To Do",
-  inProgress: "In Progress",
   complete: "Complete",
+  inProgress: "In Progress",
+  todo: "To Do",
 };
 
 export function CellStatus({
@@ -56,30 +56,32 @@ export function CellStatus({
   const groups = useMemo(() => {
     const filtered = search
       ? choices.filter((c) =>
-          c.name.toLowerCase().includes(search.toLowerCase()),
+          c.name.toLowerCase().includes(search.toLowerCase())
         )
       : choices;
 
     const grouped: Record<string, Choice[]> = {};
     for (const choice of filtered) {
       const cat = choice.category ?? "todo";
-      if (!grouped[cat]) grouped[cat] = [];
+      if (!grouped[cat]) {
+        grouped[cat] = [];
+      }
       grouped[cat].push(choice);
     }
 
     const result: CategoryGroup[] = [];
     for (const key of ["todo", "inProgress", "complete"]) {
       if (grouped[key]?.length) {
-        result.push({ label: categoryLabels[key] ?? key, choices: grouped[key] });
+        result.push({
+          choices: grouped[key],
+          label: categoryLabels[key] ?? key,
+        });
       }
     }
     return result;
   }, [choices, search]);
 
-  const flatChoices = useMemo(
-    () => groups.flatMap((g) => g.choices),
-    [groups],
-  );
+  const flatChoices = useMemo(() => groups.flatMap((g) => g.choices), [groups]);
   const choiceIdxMap = useMemo(() => {
     const m = new Map<string, number>();
     flatChoices.forEach((c, i) => m.set(c.id, i));
@@ -93,7 +95,7 @@ export function CellStatus({
     (choice: Choice) => {
       onCommit(choice.id === selectedId ? null : choice.id);
     },
-    [selectedId, onCommit],
+    [selectedId, onCommit]
   );
 
   const handleKeyDown = useCallback(
@@ -103,29 +105,35 @@ export function CellStatus({
         onCancel();
         return;
       }
-      if (handleNavKey(e)) return;
+      if (handleNavKey(e)) {
+        return;
+      }
       if (e.key === "Enter") {
-        if (activeIndex < 0 || activeIndex >= flatChoices.length) return;
+        if (activeIndex < 0 || activeIndex >= flatChoices.length) {
+          return;
+        }
         e.preventDefault();
         handleSelect(flatChoices[activeIndex]);
       }
     },
-    [onCancel, handleNavKey, activeIndex, flatChoices, handleSelect],
+    [onCancel, handleNavKey, activeIndex, flatChoices, handleSelect]
   );
 
   if (isEditing) {
     return (
       <Popover
-        opened
-        onChange={(o) => {
-          if (!o) onCancel();
-        }}
-        onClose={onCancel}
-        position="bottom-start"
-        width={220}
-        trapFocus
         closeOnClickOutside
         closeOnEscape
+        onChange={(o) => {
+          if (!o) {
+            onCancel();
+          }
+        }}
+        onClose={onCancel}
+        opened
+        position="bottom-start"
+        trapFocus
+        width={220}
       >
         <Popover.Target>
           <div className={cellClasses.popoverTarget}>
@@ -143,13 +151,13 @@ export function CellStatus({
         </Popover.Target>
         <Popover.Dropdown p={4}>
           <TextInput
-            ref={searchRef}
-            size="xs"
-            placeholder="Search..."
-            value={search}
+            mb={4}
             onChange={(e) => setSearch(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
-            mb={4}
+            placeholder="Search..."
+            ref={searchRef}
+            size="xs"
+            value={search}
           />
           <div className={cellClasses.selectDropdown}>
             {groups.map((group) => (
@@ -162,15 +170,16 @@ export function CellStatus({
                   const isSelected = choice.id === selectedId;
                   return (
                     <div
-                      key={choice.id}
-                      ref={setOptionRef(idx)}
                       className={clsx(
                         cellClasses.selectOption,
                         isSelected && cellClasses.selectOptionActive,
-                        idx === activeIndex && cellClasses.selectOptionKeyboardActive,
+                        idx === activeIndex &&
+                          cellClasses.selectOptionKeyboardActive
                       )}
-                      onMouseEnter={() => setActiveIndex(idx)}
+                      key={choice.id}
                       onClick={() => handleSelect(choice)}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      ref={setOptionRef(idx)}
                     >
                       <span
                         className={cellClasses.badge}

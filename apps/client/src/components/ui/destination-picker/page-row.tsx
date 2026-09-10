@@ -1,11 +1,11 @@
-import { KeyboardEvent, useState } from "react";
 import { ActionIcon } from "@mantine/core";
 import { IconChevronRight, IconFileDescription } from "@tabler/icons-react";
+import { KeyboardEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { IPage } from "@/features/page/types/page.types";
 import { getPageTitle } from "@/features/page/page.utils";
-import { PageChildren } from "./page-children";
+import { IPage } from "@/features/page/types/page.types";
 import classes from "./destination-picker.module.css";
+import { PageChildren } from "./page-children";
 
 type PageRowProps = {
   page: Partial<IPage>;
@@ -39,11 +39,15 @@ export function PageRow({
     .join(" ");
 
   const handleSelect = () => {
-    if (!isExcluded) onSelect(page);
+    if (!isExcluded) {
+      onSelect(page);
+    }
   };
 
   const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget) return;
+    if (e.target !== e.currentTarget) {
+      return;
+    }
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       handleSelect();
@@ -53,31 +57,31 @@ export function PageRow({
   return (
     <>
       <div
-        className={rowClasses}
-        style={{ paddingLeft: depth * 20 + 12 }}
-        role="button"
-        tabIndex={isExcluded ? -1 : 0}
         aria-disabled={isExcluded || undefined}
+        className={rowClasses}
         onClick={handleSelect}
         onKeyDown={handleRowKeyDown}
+        role="button"
+        style={{ paddingLeft: depth * 20 + 12 }}
+        tabIndex={isExcluded ? -1 : 0}
       >
         {page.hasChildren ? (
           <ActionIcon
-            className={`${classes.chevron} ${expanded ? classes.chevronExpanded : ""}`}
-            variant="subtle"
-            color="gray"
-            size="sm"
-            aria-label={expanded ? t("Collapse") : t("Expand")}
             aria-expanded={expanded}
+            aria-label={expanded ? t("Collapse") : t("Expand")}
+            className={`${classes.chevron} ${expanded ? classes.chevronExpanded : ""}`}
+            color="gray"
             onClick={(e) => {
               e.stopPropagation();
               setExpanded(!expanded);
             }}
+            size="sm"
+            variant="subtle"
           >
             <IconChevronRight size={14} />
           </ActionIcon>
         ) : (
-          <div style={{ width: 20, flexShrink: 0 }} />
+          <div style={{ flexShrink: 0, width: 20 }} />
         )}
 
         <div className={classes.iconWrapper}>
@@ -85,10 +89,10 @@ export function PageRow({
             page.icon
           ) : (
             <ActionIcon
-              component="div"
-              variant="transparent"
               c="gray"
+              component="div"
               size={22}
+              variant="transparent"
             >
               <IconFileDescription size={18} />
             </ActionIcon>
@@ -102,13 +106,13 @@ export function PageRow({
 
       {expanded && page.hasChildren && (
         <PageChildren
-          spaceId={page.spaceId}
-          pageId={page.id}
           depth={depth + 1}
-          limit={limit}
-          selectedId={selectedId}
           excludePageId={excludePageId}
+          limit={limit}
           onSelectPage={onSelect}
+          pageId={page.id}
+          selectedId={selectedId}
+          spaceId={page.spaceId}
         />
       )}
     </>

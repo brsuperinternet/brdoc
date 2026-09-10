@@ -1,33 +1,42 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { TextInput } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import clsx from "clsx";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { choiceColor } from "@/ee/base/components/cells/choice-color";
+import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
+import { useUpdatePropertyMutation } from "@/ee/base/queries/base-property-query";
+import cellClasses from "@/ee/base/styles/cells.module.css";
 import {
+  Choice,
   IBaseProperty,
   SelectTypeOptions,
-  Choice,
 } from "@/ee/base/types/base.types";
-import { choiceColor } from "@/ee/base/components/cells/choice-color";
-import { useUpdatePropertyMutation } from "@/ee/base/queries/base-property-query";
 import { generateBaseChoiceId } from "@/ee/base/utils/generate-base-id";
-import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
-import cellClasses from "@/ee/base/styles/cells.module.css";
 
 const CHOICE_COLORS = [
-  "gray", "red", "pink", "grape", "violet", "indigo",
-  "blue", "cyan", "teal", "green", "lime", "yellow", "orange",
+  "gray",
+  "red",
+  "pink",
+  "grape",
+  "violet",
+  "indigo",
+  "blue",
+  "cyan",
+  "teal",
+  "green",
+  "lime",
+  "yellow",
+  "orange",
 ];
 
 const STATUS_CATEGORY_LABELS: Record<string, string> = {
-  todo: "To Do",
-  inProgress: "In Progress",
   complete: "Complete",
+  inProgress: "In Progress",
+  todo: "To Do",
 };
 const STATUS_CATEGORY_ORDER = ["todo", "inProgress", "complete"];
 
-type NavItem =
-  | { kind: "choice"; choice: Choice }
-  | { kind: "add" };
+type NavItem = { kind: "choice"; choice: Choice } | { kind: "add" };
 
 type ChoiceGroup = { label: string | null; choices: Choice[] };
 
@@ -72,12 +81,14 @@ export function ChoicePicker({
     const filtered = (
       search
         ? choices.filter((c) =>
-            c.name.toLowerCase().includes(search.toLowerCase()),
+            c.name.toLowerCase().includes(search.toLowerCase())
           )
         : choices
-    ).filter((c) => !multiple || !selectedSet.has(c.id));
+    ).filter((c) => !(multiple && selectedSet.has(c.id)));
 
-    if (!grouped) return [{ label: null, choices: filtered }];
+    if (!grouped) {
+      return [{ choices: filtered, label: null }];
+    }
 
     const byCategory: Record<string, Choice[]> = {};
     for (const choice of filtered) {
@@ -85,7 +96,10 @@ export function ChoicePicker({
       (byCategory[cat] ??= []).push(choice);
     }
     return STATUS_CATEGORY_ORDER.filter((key) => byCategory[key]?.length).map(
-      (key) => ({ label: STATUS_CATEGORY_LABELS[key] ?? key, choices: byCategory[key] }),
+      (key) => ({
+        choices: byCategory[key],
+        label: STATUS_CATEGORY_LABELS[key] ?? key,
+      })
     );
   }, [choices, search, grouped, multiple, selectedSet]);
 
@@ -102,45 +116,56 @@ export function ChoicePicker({
     () =>
       trimmedSearch.length > 0 &&
       choices.some((c) => c.name.toLowerCase() === trimmedSearch.toLowerCase()),
-    [choices, trimmedSearch],
+    [choices, trimmedSearch]
   );
-  const showAddOption = allowCreate && trimmedSearch.length > 0 && !hasExactMatch;
+  const showAddOption =
+    allowCreate && trimmedSearch.length > 0 && !hasExactMatch;
   const addOptionColor = useMemo(
     () => CHOICE_COLORS[choices.length % CHOICE_COLORS.length],
-    [choices.length],
+    [choices.length]
   );
 
   const navItems = useMemo<NavItem[]>(
     () => [
-      ...flatChoices.map((c) => ({ kind: "choice" as const, choice: c })),
+      ...flatChoices.map((c) => ({ choice: c, kind: "choice" as const })),
       ...(showAddOption ? [{ kind: "add" as const }] : []),
     ],
-    [flatChoices, showAddOption],
+    [flatChoices, showAddOption]
   );
 
   const { activeIndex, setActiveIndex, handleNavKey, setOptionRef } =
     useListKeyboardNav(navItems.length, [search, showAddOption]);
 
   const handleAddOption = useCallback(() => {
-    if (!trimmedSearch) return;
+    if (!trimmedSearch) {
+      return;
+    }
     const newChoice: Choice = {
+      color: addOptionColor,
       id: generateBaseChoiceId(),
       name: trimmedSearch,
-      color: addOptionColor,
     };
     const newChoices = [...choices, newChoice];
     updatePropertyMutation.mutate({
-      propertyId: property.id,
       pageId: property.pageId,
+      propertyId: property.id,
       typeOptions: {
         ...typeOptions,
-        choices: newChoices,
         choiceOrder: newChoices.map((c) => c.id),
+        choices: newChoices,
       },
     });
     onToggle(newChoice);
     setSearch("");
-  }, [trimmedSearch, addOptionColor, choices, typeOptions, property, updatePropertyMutation, onToggle]);
+  }, [
+    trimmedSearch,
+    addOptionColor,
+    choices,
+    typeOptions,
+    property,
+    updatePropertyMutation,
+    onToggle,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -149,13 +174,18 @@ export function ChoicePicker({
         onEscape();
         return;
       }
-      if (handleNavKey(e)) return;
+      if (handleNavKey(e)) {
+        return;
+      }
       if (e.key === "Enter") {
         if (activeIndex >= 0 && activeIndex < navItems.length) {
           e.preventDefault();
           const item = navItems[activeIndex];
-          if (item.kind === "choice") onToggle(item.choice);
-          else handleAddOption();
+          if (item.kind === "choice") {
+            onToggle(item.choice);
+          } else {
+            handleAddOption();
+          }
           return;
         }
         if (showAddOption) {
@@ -164,7 +194,15 @@ export function ChoicePicker({
         }
       }
     },
-    [onEscape, handleNavKey, activeIndex, navItems, onToggle, handleAddOption, showAddOption],
+    [
+      onEscape,
+      handleNavKey,
+      activeIndex,
+      navItems,
+      onToggle,
+      handleAddOption,
+      showAddOption,
+    ]
   );
 
   const addOptionIdx = flatChoices.length;
@@ -175,18 +213,18 @@ export function ChoicePicker({
         <div className={cellClasses.personTagArea}>
           {selectedChoices.map((choice) => (
             <span
-              key={choice.id}
               className={cellClasses.badge}
+              key={choice.id}
               style={choiceColor(choice.color)}
             >
               {choice.name}
               <button
-                type="button"
                 className={`${cellClasses.personTagRemove} ${cellClasses.badgeRemoveBtn}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggle(choice);
                 }}
+                type="button"
               >
                 <IconX size={10} />
               </button>
@@ -195,35 +233,38 @@ export function ChoicePicker({
         </div>
       )}
       <TextInput
-        ref={searchRef}
-        size="xs"
-        placeholder="Search..."
-        value={search}
+        data-autofocus
+        mb={4}
         onChange={(e) => setSearch(e.currentTarget.value)}
         onKeyDown={handleKeyDown}
-        mb={4}
-        data-autofocus
+        placeholder="Search..."
+        ref={searchRef}
+        size="xs"
+        value={search}
       />
       <div className={cellClasses.selectDropdown}>
         {groups.map((group) => (
           <div key={group.label ?? "all"}>
             {group.label && (
-              <div className={cellClasses.selectCategoryLabel}>{group.label}</div>
+              <div className={cellClasses.selectCategoryLabel}>
+                {group.label}
+              </div>
             )}
             {group.choices.map((choice) => {
               const idx = choiceIdxMap.get(choice.id) ?? -1;
               const isSelected = !multiple && selectedSet.has(choice.id);
               return (
                 <div
-                  key={choice.id}
-                  ref={setOptionRef(idx)}
                   className={clsx(
                     cellClasses.selectOption,
                     isSelected && cellClasses.selectOptionActive,
-                    idx === activeIndex && cellClasses.selectOptionKeyboardActive,
+                    idx === activeIndex &&
+                      cellClasses.selectOptionKeyboardActive
                   )}
-                  onMouseEnter={() => setActiveIndex(idx)}
+                  key={choice.id}
                   onClick={() => onToggle(choice)}
+                  onMouseEnter={() => setActiveIndex(idx)}
+                  ref={setOptionRef(idx)}
                 >
                   <span
                     className={cellClasses.badge}
@@ -238,16 +279,20 @@ export function ChoicePicker({
         ))}
         {showAddOption && (
           <div
-            ref={setOptionRef(addOptionIdx)}
             className={clsx(
               cellClasses.addOptionRow,
-              addOptionIdx === activeIndex && cellClasses.selectOptionKeyboardActive,
+              addOptionIdx === activeIndex &&
+                cellClasses.selectOptionKeyboardActive
             )}
-            onMouseEnter={() => setActiveIndex(addOptionIdx)}
             onClick={handleAddOption}
+            onMouseEnter={() => setActiveIndex(addOptionIdx)}
+            ref={setOptionRef(addOptionIdx)}
           >
             <span className={cellClasses.addOptionLabel}>Add option:</span>
-            <span className={cellClasses.badge} style={choiceColor(addOptionColor)}>
+            <span
+              className={cellClasses.badge}
+              style={choiceColor(addOptionColor)}
+            >
               {trimmedSearch}
             </span>
           </div>

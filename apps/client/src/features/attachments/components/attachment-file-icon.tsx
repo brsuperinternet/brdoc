@@ -1,5 +1,6 @@
 import { ThemeIcon } from "@mantine/core";
 import {
+  type Icon,
   IconFile,
   IconFileTypeCsv,
   IconFileTypeDocx,
@@ -10,29 +11,28 @@ import {
   IconMovie,
   IconMusic,
   IconPhoto,
-  type Icon,
 } from "@tabler/icons-react";
 
 const EXT_ICONS: Record<string, { icon: Icon; color: string }> = {
-  ".pdf": { icon: IconFileTypePdf, color: "red" },
-  ".doc": { icon: IconFileTypeDocx, color: "blue" },
-  ".docx": { icon: IconFileTypeDocx, color: "blue" },
-  ".xls": { icon: IconFileTypeXls, color: "teal" },
-  ".xlsx": { icon: IconFileTypeXls, color: "teal" },
-  ".csv": { icon: IconFileTypeCsv, color: "teal" },
-  ".ppt": { icon: IconFileTypePpt, color: "orange" },
-  ".pptx": { icon: IconFileTypePpt, color: "orange" },
-  ".zip": { icon: IconFileZip, color: "gray" },
-  ".rar": { icon: IconFileZip, color: "gray" },
-  ".7z": { icon: IconFileZip, color: "gray" },
-  ".tar": { icon: IconFileZip, color: "gray" },
-  ".gz": { icon: IconFileZip, color: "gray" },
+  ".7z": { color: "gray", icon: IconFileZip },
+  ".csv": { color: "teal", icon: IconFileTypeCsv },
+  ".doc": { color: "blue", icon: IconFileTypeDocx },
+  ".docx": { color: "blue", icon: IconFileTypeDocx },
+  ".gz": { color: "gray", icon: IconFileZip },
+  ".pdf": { color: "red", icon: IconFileTypePdf },
+  ".ppt": { color: "orange", icon: IconFileTypePpt },
+  ".pptx": { color: "orange", icon: IconFileTypePpt },
+  ".rar": { color: "gray", icon: IconFileZip },
+  ".tar": { color: "gray", icon: IconFileZip },
+  ".xls": { color: "teal", icon: IconFileTypeXls },
+  ".xlsx": { color: "teal", icon: IconFileTypeXls },
+  ".zip": { color: "gray", icon: IconFileZip },
 };
 
 const MIME_ICONS: Array<{ prefix: string; icon: Icon; color: string }> = [
-  { prefix: "image/", icon: IconPhoto, color: "grape" },
-  { prefix: "video/", icon: IconMovie, color: "violet" },
-  { prefix: "audio/", icon: IconMusic, color: "pink" },
+  { color: "grape", icon: IconPhoto, prefix: "image/" },
+  { color: "violet", icon: IconMovie, prefix: "video/" },
+  { color: "pink", icon: IconMusic, prefix: "audio/" },
 ];
 
 interface AttachmentFileIconProps {
@@ -49,10 +49,10 @@ export function AttachmentFileIcon({
     ? MIME_ICONS.find((entry) => mimeType.startsWith(entry.prefix))
     : undefined;
   const { icon: FileIcon, color } = byExt ??
-    byMime ?? { icon: IconFile, color: "gray" };
+    byMime ?? { color: "gray", icon: IconFile };
 
   return (
-    <ThemeIcon variant="light" color={color} size={40} radius="md">
+    <ThemeIcon color={color} radius="md" size={40} variant="light">
       <FileIcon size={22} stroke={1.5} />
     </ThemeIcon>
   );

@@ -21,8 +21,8 @@ ol ol ol ol ol ol ol ol ol ol ol ol {
 }
 
 ol {
-  list-style-position: outside;
   margin-left: 0.25rem;
+  list-style-position: outside;
 }
 
 /* Nested list spacing */

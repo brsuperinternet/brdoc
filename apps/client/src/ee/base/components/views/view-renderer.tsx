@@ -1,12 +1,12 @@
 import { Table } from "@tanstack/react-table";
+import { BaseTable } from "@/ee/base/components/base-table";
+import { BaseKanban } from "@/ee/base/components/kanban/base-kanban";
 import {
+  FilterGroup,
   IBase,
   IBaseRow,
   IBaseView,
-  FilterGroup,
 } from "@/ee/base/types/base.types";
-import { BaseTable } from "@/ee/base/components/base-table";
-import { BaseKanban } from "@/ee/base/components/kanban/base-kanban";
 
 type ViewRendererProps = {
   base: IBase;
@@ -27,7 +27,7 @@ type ViewRendererProps = {
   onRowReorder: (
     rowId: string,
     targetRowId: string,
-    dropPosition: "above" | "below",
+    dropPosition: "above" | "below"
   ) => void;
   persistViewConfig: () => void;
   scrollportRef: React.RefObject<HTMLDivElement>;
@@ -42,10 +42,10 @@ export function ViewRenderer(props: ViewRendererProps) {
     return (
       <BaseKanban
         base={props.base}
-        view={props.effectiveView!}
-        pageId={props.pageId}
-        embedded={props.embedded}
         editable={props.editable}
+        embedded={props.embedded}
+        pageId={props.pageId}
+        view={props.effectiveView!}
         viewFilter={props.kanbanFilter}
       />
     );

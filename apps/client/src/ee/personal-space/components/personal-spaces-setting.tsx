@@ -1,22 +1,22 @@
-import { Group, Text, Switch, Tooltip } from "@mantine/core";
+import { Group, Switch, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
-import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label.ts";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 
 export default function PersonalSpacesSetting() {
   const { t } = useTranslation();
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
         <Text size="md">{t("Allow personal spaces")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t("Members can create their own personal space.")}
         </Text>
       </div>
@@ -30,7 +30,7 @@ function PersonalSpacesToggle() {
   const { t } = useTranslation();
   const [workspace, setWorkspace] = useAtom(workspaceAtom);
   const [checked, setChecked] = useState(
-    workspace?.settings?.spaces?.allowPersonal === true,
+    workspace?.settings?.spaces?.allowPersonal === true
   );
   const hasPersonalSpaces = useHasFeature(Feature.PERSONAL_SPACES);
   const upgradeLabel = useUpgradeLabel();
@@ -45,19 +45,23 @@ function PersonalSpacesToggle() {
       setWorkspace(updatedWorkspace);
     } catch (err) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
   };
 
   return (
-    <Tooltip label={upgradeLabel} disabled={hasPersonalSpaces} refProp="rootRef">
+    <Tooltip
+      disabled={hasPersonalSpaces}
+      label={upgradeLabel}
+      refProp="rootRef"
+    >
       <Switch
-        checked={checked}
-        onChange={handleChange}
-        disabled={!hasPersonalSpaces}
         aria-label={t("Toggle allow personal spaces")}
+        checked={checked}
+        disabled={!hasPersonalSpaces}
+        onChange={handleChange}
       />
     </Tooltip>
   );

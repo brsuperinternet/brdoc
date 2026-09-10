@@ -1,7 +1,7 @@
 import { EditorView } from "@tiptap/pm/view";
+import { v7 } from "uuid";
 import { getPageById } from "@/features/page/services/page-service.ts";
 import { IPage } from "@/features/page/types/page.types.ts";
-import { v7 } from "uuid";
 import { extractPageSlugId } from "@/lib";
 
 export type LinkFn = (
@@ -9,19 +9,21 @@ export type LinkFn = (
   view: EditorView,
   pos: number,
   creatorId: string,
-  anchorId?: string,
+  anchorId?: string
 ) => void;
 
 export interface InternalLinkOptions {
-  validateFn: (url: string, view: EditorView) => boolean;
   onResolveLink: (linkedPageId: string, creatorId: string) => Promise<any>;
+  validateFn: (url: string, view: EditorView) => boolean;
 }
 
 export const handleInternalLink =
   ({ validateFn, onResolveLink }: InternalLinkOptions): LinkFn =>
   async (url: string, view, pos, creatorId, anchorId) => {
     const validated = validateFn(url, view);
-    if (!validated) return;
+    if (!validated) {
+      return;
+    }
 
     const linkedPageId = extractPageSlugId(url);
 
@@ -30,16 +32,18 @@ export const handleInternalLink =
         const { schema } = view.state;
 
         const node = schema.nodes.mention.create({
+          anchorId,
+          creatorId,
+          entityId: page.id,
+          entityType: "page",
           id: v7(),
           label: page.title || "Untitled",
-          entityType: "page",
-          entityId: page.id,
           slugId: page.slugId,
-          creatorId: creatorId,
-          anchorId: anchorId,
         });
 
-        if (!node) return;
+        if (!node) {
+          return;
+        }
 
         const transaction = view.state.tr.replaceWith(pos, pos, node);
         view.dispatch(transaction);
@@ -52,11 +56,11 @@ export const handleInternalLink =
         transaction.addMark(
           pos,
           pos + url.length,
-          schema.marks.link.create({ href: url }),
+          schema.marks.link.create({ href: url })
         );
 
         view.dispatch(transaction);
-      },
+      }
     );
   };
 

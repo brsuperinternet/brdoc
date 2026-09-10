@@ -1,12 +1,9 @@
 import { Badge, Tooltip } from "@mantine/core";
-import {
-  IBaseProperty,
-  isFormulaErrorCell,
-} from "@/ee/base/types/base.types";
-import { CellText } from "./cell-text";
-import { CellNumber } from "./cell-number";
+import { IBaseProperty, isFormulaErrorCell } from "@/ee/base/types/base.types";
 import { CellCheckbox } from "./cell-checkbox";
 import { CellDate } from "./cell-date";
+import { CellNumber } from "./cell-number";
+import { CellText } from "./cell-text";
 
 type Props = {
   value: unknown;
@@ -22,7 +19,7 @@ export function CellFormula(props: Props) {
   if (isFormulaErrorCell(value)) {
     return (
       <Tooltip label={`${value.__err}: ${value.msg}`}>
-        <Badge color="red" variant="light" size="sm">
+        <Badge color="red" size="sm" variant="light">
           #ERROR
         </Badge>
       </Tooltip>
@@ -31,8 +28,14 @@ export function CellFormula(props: Props) {
   const opts = (property.typeOptions ?? {}) as { resultType?: string };
   const resultType = opts.resultType ?? "null";
   const readOnlyProps = { ...props, isEditing: false };
-  if (resultType === "number") return <CellNumber {...readOnlyProps} />;
-  if (resultType === "boolean") return <CellCheckbox {...readOnlyProps} />;
-  if (resultType === "date") return <CellDate {...readOnlyProps} />;
+  if (resultType === "number") {
+    return <CellNumber {...readOnlyProps} />;
+  }
+  if (resultType === "boolean") {
+    return <CellCheckbox {...readOnlyProps} />;
+  }
+  if (resultType === "date") {
+    return <CellDate {...readOnlyProps} />;
+  }
   return <CellText {...readOnlyProps} />;
 }

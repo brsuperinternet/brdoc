@@ -2,10 +2,10 @@ import { Button, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 export interface PagePaginationProps {
-  hasPrevPage: boolean;
   hasNextPage: boolean;
-  onPrev: () => void;
+  hasPrevPage: boolean;
   onNext: () => void;
+  onPrev: () => void;
 }
 
 export default function Paginate({
@@ -16,26 +16,26 @@ export default function Paginate({
 }: PagePaginationProps) {
   const { t } = useTranslation();
 
-  if (!hasPrevPage && !hasNextPage) {
+  if (!(hasPrevPage || hasNextPage)) {
     return null;
   }
 
   return (
-    <Group mt="md" justify="flex-end">
+    <Group justify="flex-end" mt="md">
       <Button
-        variant="default"
-        size="compact-sm"
-        onClick={onPrev}
         disabled={!hasPrevPage}
+        onClick={onPrev}
+        size="compact-sm"
+        variant="default"
       >
         {t("Prev")}
       </Button>
 
       <Button
-        variant="default"
-        size="compact-sm"
-        onClick={onNext}
         disabled={!hasNextPage}
+        onClick={onNext}
+        size="compact-sm"
+        variant="default"
       >
         {t("Next")}
       </Button>

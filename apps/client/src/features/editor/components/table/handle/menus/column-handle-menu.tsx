@@ -1,8 +1,4 @@
-import React from "react";
-import type { Editor } from "@tiptap/react";
-import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { ColorSwatch, Menu } from "@mantine/core";
-import { TABLE_COLORS } from "../../table-background-color";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -14,9 +10,13 @@ import {
   IconSortAscendingLetters,
   IconSortDescendingLetters,
 } from "@tabler/icons-react";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Editor } from "@tiptap/react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useTableMoveRowColumn } from "../hooks/use-table-move-row-column";
+import { TABLE_COLORS } from "../../table-background-color";
 import { useTableClear } from "../hooks/use-table-clear";
+import { useTableMoveRowColumn } from "../hooks/use-table-move-row-column";
 import { useTableSort } from "../hooks/use-table-sort";
 import { AlignmentSubmenu } from "./alignment-submenu";
 
@@ -35,11 +35,25 @@ export const ColumnHandleMenu = React.memo(function ColumnHandleMenu({
 }: ColumnHandleMenuProps) {
   const { t } = useTranslation();
 
-  const moveLeft = useTableMoveRowColumn(editor, "col", index, "left", tableNode, tablePos);
-  const moveRight = useTableMoveRowColumn(editor, "col", index, "right", tableNode, tablePos);
-  const clearCol = useTableClear(editor, tableNode, tablePos, {
-    kind: "col",
+  const moveLeft = useTableMoveRowColumn(
+    editor,
+    "col",
     index,
+    "left",
+    tableNode,
+    tablePos
+  );
+  const moveRight = useTableMoveRowColumn(
+    editor,
+    "col",
+    index,
+    "right",
+    tableNode,
+    tablePos
+  );
+  const clearCol = useTableClear(editor, tableNode, tablePos, {
+    index,
+    kind: "col",
   });
 
   const setBackground = (color: string, name: string) => {
@@ -58,35 +72,35 @@ export const ColumnHandleMenu = React.memo(function ColumnHandleMenu({
   };
 
   const sortAsc = useTableSort({
+    direction: "asc",
     editor,
-    orientation: "col",
     index,
+    orientation: "col",
     tableNode,
     tablePos,
-    direction: "asc",
   });
   const sortDesc = useTableSort({
+    direction: "desc",
     editor,
-    orientation: "col",
     index,
+    orientation: "col",
     tableNode,
     tablePos,
-    direction: "desc",
   });
 
   return (
     <>
       <Menu.Item
+        disabled={!sortAsc.canSort}
         leftSection={<IconSortAscendingLetters size={16} />}
         onClick={sortAsc.handleSort}
-        disabled={!sortAsc.canSort}
       >
         {t("Sort A → Z")}
       </Menu.Item>
       <Menu.Item
+        disabled={!sortDesc.canSort}
         leftSection={<IconSortDescendingLetters size={16} />}
         onClick={sortDesc.handleSort}
-        disabled={!sortDesc.canSort}
       >
         {t("Sort Z → A")}
       </Menu.Item>
@@ -99,24 +113,33 @@ export const ColumnHandleMenu = React.memo(function ColumnHandleMenu({
           </Menu.Sub.Item>
         </Menu.Sub.Target>
         <Menu.Sub.Dropdown>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: 8 }}>
+          <div
+            style={{
+              display: "grid",
+              gap: 8,
+              gridTemplateColumns: "repeat(4, 1fr)",
+              padding: 8,
+            }}
+          >
             {TABLE_COLORS.map((c) => (
               <button
-                key={c.name}
-                type="button"
-                onClick={() => setBackground(c.color, c.name)}
                 aria-label={t(c.name)}
+                key={c.name}
+                onClick={() => setBackground(c.color, c.name)}
                 style={{
-                  border: "none",
                   background: "transparent",
-                  padding: 0,
+                  border: "none",
                   cursor: "pointer",
+                  padding: 0,
                 }}
+                type="button"
               >
                 <ColorSwatch
                   color={c.color || "#ffffff"}
                   size={22}
-                  style={{ border: c.color === "" ? "1px solid #e5e7eb" : undefined }}
+                  style={{
+                    border: c.color === "" ? "1px solid #e5e7eb" : undefined,
+                  }}
                 />
               </button>
             ))}
@@ -143,10 +166,7 @@ export const ColumnHandleMenu = React.memo(function ColumnHandleMenu({
 
       <Menu.Divider />
 
-      <Menu.Item
-        leftSection={<IconEraser size={16} />}
-        onClick={clearCol}
-      >
+      <Menu.Item leftSection={<IconEraser size={16} />} onClick={clearCol}>
         {t("Clear cells")}
       </Menu.Item>
       <Menu.Item
@@ -159,16 +179,16 @@ export const ColumnHandleMenu = React.memo(function ColumnHandleMenu({
       <Menu.Divider />
 
       <Menu.Item
+        disabled={!moveLeft.canMove}
         leftSection={<IconArrowLeft size={16} />}
         onClick={moveLeft.handleMove}
-        disabled={!moveLeft.canMove}
       >
         {t("Move column left")}
       </Menu.Item>
       <Menu.Item
+        disabled={!moveRight.canMove}
         leftSection={<IconArrowRight size={16} />}
         onClick={moveRight.handleMove}
-        disabled={!moveRight.canMove}
       >
         {t("Move column right")}
       </Menu.Item>

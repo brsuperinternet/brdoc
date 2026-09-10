@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Skeleton } from '@mantine/core';
+import { Skeleton } from "@mantine/core";
+import { useEffect, useState } from "react";
 
 function EditorSkeleton() {
   const [showSkeleton, setShowSkeleton] = useState(false);
@@ -32,7 +32,6 @@ function EditorSkeleton() {
       <Skeleton height={12} mt={6} radius="xl" />
       <Skeleton height={12} mt={6} radius="xl" />
     </>
-
   );
 }
 

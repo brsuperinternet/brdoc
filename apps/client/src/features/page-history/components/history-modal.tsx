@@ -1,10 +1,10 @@
 import { Modal, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { useAtom } from "jotai";
+import { useTranslation } from "react-i18next";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms";
 import HistoryModalBody from "@/features/page-history/components/history-modal-body";
 import HistoryModalMobile from "@/features/page-history/components/history-modal-mobile";
-import { useTranslation } from "react-i18next";
-import { useMediaQuery } from "@mantine/hooks";
 
 interface Props {
   pageId: string;
@@ -19,16 +19,16 @@ export default function HistoryModal({ pageId, pageTitle }: Props) {
   if (isMobile) {
     return (
       <Modal.Root
-        opened={isModalOpen}
-        onClose={() => setModalOpen(false)}
-        fullScreen
         aria-label={t("Page history")}
+        fullScreen
+        onClose={() => setModalOpen(false)}
+        opened={isModalOpen}
       >
         <Modal.Overlay />
         <Modal.Content style={{ overflow: "hidden" }}>
           <Modal.Header>
             <Modal.Title>
-              <Text size="md" fw={500}>
+              <Text fw={500} size="md">
                 {t("Page history")}
               </Text>
             </Modal.Title>
@@ -47,16 +47,16 @@ export default function HistoryModal({ pageId, pageTitle }: Props) {
 
   return (
     <Modal.Root
-      size={1400}
-      opened={isModalOpen}
-      onClose={() => setModalOpen(false)}
       aria-label={t("Page history")}
+      onClose={() => setModalOpen(false)}
+      opened={isModalOpen}
+      size={1400}
     >
       <Modal.Overlay />
       <Modal.Content style={{ overflow: "hidden" }}>
         <Modal.Header>
           <Modal.Title>
-            <Text size="md" fw={500}>
+            <Text fw={500} size="md">
               {t("Page history")}
             </Text>
           </Modal.Title>

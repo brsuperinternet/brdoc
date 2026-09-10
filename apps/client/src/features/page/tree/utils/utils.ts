@@ -1,10 +1,14 @@
-import { IPage } from "@/features/page/types/page.types.ts";
 import { SpaceTreeNode } from "@/features/page/tree/types.ts";
+import { IPage } from "@/features/page/types/page.types.ts";
 
 export function sortPositionKeys(keys: any[]) {
   return keys.sort((a, b) => {
-    if (a.position < b.position) return -1;
-    if (a.position > b.position) return 1;
+    if (a.position < b.position) {
+      return -1;
+    }
+    if (a.position > b.position) {
+      return 1;
+    }
     return 0;
   });
 }
@@ -16,17 +20,17 @@ export function buildTree(pages: IPage[]): SpaceTreeNode[] {
 
   pages.forEach((page) => {
     pageMap[page.id] = {
-      id: page.id,
-      slugId: page.slugId,
-      name: page.title,
-      icon: page.icon,
-      position: page.position,
-      hasChildren: page.hasChildren,
-      spaceId: page.spaceId,
-      parentPageId: page.parentPageId,
-      isBase: page.isBase,
       canEdit: page.canEdit ?? page.permissions?.canEdit,
       children: [],
+      hasChildren: page.hasChildren,
+      icon: page.icon,
+      id: page.id,
+      isBase: page.isBase,
+      name: page.title,
+      parentPageId: page.parentPageId,
+      position: page.position,
+      slugId: page.slugId,
+      spaceId: page.spaceId,
     };
   });
 
@@ -40,7 +44,7 @@ export function buildTree(pages: IPage[]): SpaceTreeNode[] {
 export function findBreadcrumbPath(
   tree: SpaceTreeNode[],
   pageId: string,
-  path: SpaceTreeNode[] = [],
+  path: SpaceTreeNode[] = []
 ): SpaceTreeNode[] | null {
   for (const node of tree) {
     if (node.id === pageId) {
@@ -63,9 +67,9 @@ export function findBreadcrumbPath(
 export const updateTreeNodeName = (
   nodes: SpaceTreeNode[],
   nodeId: string,
-  newName: string,
-): SpaceTreeNode[] => {
-  return nodes.map((node) => {
+  newName: string
+): SpaceTreeNode[] =>
+  nodes.map((node) => {
     if (node.id === nodeId) {
       return { ...node, name: newName };
     }
@@ -77,14 +81,13 @@ export const updateTreeNodeName = (
     }
     return node;
   });
-};
 
 export const updateTreeNodeIcon = (
   nodes: SpaceTreeNode[],
   nodeId: string,
-  newIcon: string,
-): SpaceTreeNode[] => {
-  return nodes.map((node) => {
+  newIcon: string
+): SpaceTreeNode[] =>
+  nodes.map((node) => {
     if (node.id === nodeId) {
       return { ...node, icon: newIcon };
     }
@@ -96,13 +99,12 @@ export const updateTreeNodeIcon = (
     }
     return node;
   });
-};
 
 export const deleteTreeNode = (
   nodes: SpaceTreeNode[],
-  nodeId: string,
-): SpaceTreeNode[] => {
-  return nodes
+  nodeId: string
+): SpaceTreeNode[] =>
+  nodes
     .map((node) => {
       if (node.id === nodeId) {
         return null;
@@ -117,7 +119,6 @@ export const deleteTreeNode = (
       return node;
     })
     .filter((node) => node !== null);
-};
 
 export function buildTreeWithChildren(items: SpaceTreeNode[]): SpaceTreeNode[] {
   const nodeMap = {};
@@ -131,12 +132,12 @@ export function buildTreeWithChildren(items: SpaceTreeNode[]): SpaceTreeNode[] {
   // Build the tree array
   items.forEach((item) => {
     const node = nodeMap[item.id];
-    if (item.parentPageId !== null) {
-      // Find the parent node and add the current node to its children
-      nodeMap[item.parentPageId].children.push(node);
-    } else {
+    if (item.parentPageId === null) {
       // If the item has no parent, it's a root node, so add it to the result array
       result.push(node);
+    } else {
+      // Find the parent node and add the current node to its children
+      nodeMap[item.parentPageId].children.push(node);
     }
   });
 
@@ -159,7 +160,7 @@ export function buildTreeWithChildren(items: SpaceTreeNode[]): SpaceTreeNode[] {
 export function appendNodeChildren(
   treeItems: SpaceTreeNode[],
   nodeId: string,
-  children: SpaceTreeNode[],
+  children: SpaceTreeNode[]
 ) {
   // Preserve deeper children if they exist and remove node if deleted
   return treeItems.map((node) => {
@@ -169,7 +170,7 @@ export function appendNodeChildren(
       const existingMap = new Map(
         (node.children ?? [])
           .filter((c) => newIds.has(c.id))
-          .map((c) => [c.id, c]),
+          .map((c) => [c.id, c])
       );
 
       const merged = children.map((newChild) => {
@@ -201,13 +202,15 @@ export function appendNodeChildren(
  */
 export function mergeRootTrees(
   prevRoots: SpaceTreeNode[],
-  incomingRoots: SpaceTreeNode[],
+  incomingRoots: SpaceTreeNode[]
 ): SpaceTreeNode[] {
   const seen = new Set<string>();
   const collect = (nodes: SpaceTreeNode[]) => {
     for (const node of nodes) {
       seen.add(node.id);
-      if (node.children?.length) collect(node.children);
+      if (node.children?.length) {
+        collect(node.children);
+      }
     }
   };
   collect(prevRoots);
@@ -215,7 +218,9 @@ export function mergeRootTrees(
   // add new roots that were not present before
   const merged = [...prevRoots];
   incomingRoots.forEach((node) => {
-    if (!seen.has(node.id)) merged.push(node);
+    if (!seen.has(node.id)) {
+      merged.push(node);
+    }
   });
 
   return sortPositionKeys(merged);
@@ -223,7 +228,7 @@ export function mergeRootTrees(
 
 export function spaceRoots(
   tree: SpaceTreeNode[],
-  spaceId: string,
+  spaceId: string
 ): SpaceTreeNode[] {
   return tree.filter((node) => node?.spaceId === spaceId);
 }
@@ -231,10 +236,12 @@ export function spaceRoots(
 export function updateSpaceRoots(
   tree: SpaceTreeNode[],
   spaceId: string,
-  update: (roots: SpaceTreeNode[]) => SpaceTreeNode[],
+  update: (roots: SpaceTreeNode[]) => SpaceTreeNode[]
 ): SpaceTreeNode[] {
   const roots = spaceRoots(tree, spaceId);
   const next = update(roots);
-  if (next === roots) return tree;
+  if (next === roots) {
+    return tree;
+  }
   return [...tree.filter((node) => node?.spaceId !== spaceId), ...next];
 }

@@ -1,5 +1,5 @@
-import api from "@/lib/api-client";
 import { ISession } from "@/features/session/types/session.types";
+import api from "@/lib/api-client";
 
 export async function getSessions(): Promise<ISession[]> {
   const req = await api.post<{ sessions: ISession[] }>("/sessions");

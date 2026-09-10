@@ -82,9 +82,13 @@ export function TransclusionLookupProvider({
     tickRef.current = null;
     const keys = Array.from(queueRef.current);
     queueRef.current.clear();
-    if (keys.length === 0) return;
+    if (keys.length === 0) {
+      return;
+    }
 
-    for (const k of keys) inFlightRef.current.add(k);
+    for (const k of keys) {
+      inFlightRef.current.add(k);
+    }
 
     const references = keys.map((k) => {
       const [sourcePageId, transclusionId] = k.split("::");
@@ -93,9 +97,13 @@ export function TransclusionLookupProvider({
 
     const resolveWaiters = (key: LookupKey) => {
       const waiters = pendingRef.current.get(key);
-      if (!waiters) return;
+      if (!waiters) {
+        return;
+      }
       pendingRef.current.delete(key);
-      for (const w of waiters) w();
+      for (const w of waiters) {
+        w();
+      }
     };
 
     try {
@@ -103,13 +111,13 @@ export function TransclusionLookupProvider({
       const activeSpaceSlug = spaceSlugRef.current;
       const { items } = activeShareId
         ? await lookupTransclusionForShare({
-            shareId: activeShareId,
             references,
+            shareId: activeShareId,
           })
         : activeSpaceSlug
           ? await lookupTransclusionForPublicSpace({
-              spaceSlug: activeSpaceSlug,
               references,
+              spaceSlug: activeSpaceSlug,
             })
           : await lookupTransclusion({ references });
       for (const r of items) {
@@ -118,7 +126,9 @@ export function TransclusionLookupProvider({
         inFlightRef.current.delete(key);
         const subs = subscribersRef.current.get(key);
         if (subs) {
-          for (const s of subs) s.setResult(r);
+          for (const s of subs) {
+            s.setResult(r);
+          }
         }
         resolveWaiters(key);
       }
@@ -139,7 +149,7 @@ export function TransclusionLookupProvider({
         tickRef.current = setTimeout(flush, 10);
       }
     },
-    [flush],
+    [flush]
   );
 
   const subscribe = useCallback<ContextValue["subscribe"]>(
@@ -158,11 +168,14 @@ export function TransclusionLookupProvider({
       return () => {
         const cur = subscribersRef.current.get(s.key) ?? [];
         const next = cur.filter((x) => x !== s);
-        if (next.length === 0) subscribersRef.current.delete(s.key);
-        else subscribersRef.current.set(s.key, next);
+        if (next.length === 0) {
+          subscribersRef.current.delete(s.key);
+        } else {
+          subscribersRef.current.set(s.key, next);
+        }
       };
     },
-    [enqueue],
+    [enqueue]
   );
 
   const refresh = useCallback<ContextValue["refresh"]>(
@@ -175,19 +188,21 @@ export function TransclusionLookupProvider({
         pendingRef.current.set(key, waiters);
         enqueue(key);
       }),
-    [enqueue],
+    [enqueue]
   );
 
   useEffect(
     () => () => {
-      if (tickRef.current) clearTimeout(tickRef.current);
+      if (tickRef.current) {
+        clearTimeout(tickRef.current);
+      }
     },
-    [],
+    []
   );
 
   const value = useMemo<ContextValue>(
-    () => ({ subscribe, refresh }),
-    [subscribe, refresh],
+    () => ({ refresh, subscribe }),
+    [subscribe, refresh]
   );
 
   return (
@@ -199,7 +214,7 @@ export function TransclusionLookupProvider({
 
 export function useTransclusionLookup(
   sourcePageId: string | null | undefined,
-  transclusionId: string | null | undefined,
+  transclusionId: string | null | undefined
 ): {
   result: TransclusionLookup | null;
   refresh: () => Promise<void>;
@@ -208,21 +223,25 @@ export function useTransclusionLookup(
   const [result, setResult] = useState<TransclusionLookup | null>(null);
 
   useEffect(() => {
-    if (!ctx || !sourcePageId || !transclusionId) return;
+    if (!(ctx && sourcePageId && transclusionId)) {
+      return;
+    }
     const key = `${sourcePageId}::${transclusionId}`;
     const unsubscribe = ctx.subscribe({
       key,
+      setResult,
       sourcePageId,
       transclusionId,
-      setResult,
     });
     return unsubscribe;
   }, [ctx, sourcePageId, transclusionId]);
 
   const refresh = useCallback(async () => {
-    if (!ctx || !sourcePageId || !transclusionId) return;
+    if (!(ctx && sourcePageId && transclusionId)) {
+      return;
+    }
     await ctx.refresh(`${sourcePageId}::${transclusionId}`);
   }, [ctx, sourcePageId, transclusionId]);
 
-  return { result, refresh };
+  return { refresh, result };
 }

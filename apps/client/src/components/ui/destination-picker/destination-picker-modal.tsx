@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Modal, Button, Group, Divider } from "@mantine/core";
+import { Button, Divider, Group, Modal } from "@mantine/core";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DestinationPicker } from "./destination-picker";
 import {
@@ -30,12 +30,12 @@ export function DestinationPickerModal({
 
   return (
     <Modal.Root
-      opened={opened}
-      onClose={onClose}
-      size={550}
-      padding="lg"
-      yOffset="10vh"
       onClick={(e) => e.stopPropagation()}
+      onClose={onClose}
+      opened={opened}
+      padding="lg"
+      size={550}
+      yOffset="10vh"
     >
       <Modal.Overlay />
       <Modal.Content>
@@ -45,23 +45,23 @@ export function DestinationPickerModal({
         </Modal.Header>
         <Modal.Body>
           <DestinationPicker
-            onSelectionChange={setSelection}
             excludePageId={excludePageId}
-            pageLimit={pageLimit}
             initialSpaceId={initialSpaceId}
+            onSelectionChange={setSelection}
+            pageLimit={pageLimit}
             searchSpacesOnly={searchSpacesOnly}
           />
 
           <Divider my="md" />
 
           <Group justify="flex-end">
-            <Button variant="default" onClick={onClose}>
+            <Button onClick={onClose} variant="default">
               {t("Close")}
             </Button>
             <Button
-              onClick={() => selection && onSelect(selection)}
               disabled={!selection}
               loading={loading}
+              onClick={() => selection && onSelect(selection)}
             >
               {actionLabel}
             </Button>

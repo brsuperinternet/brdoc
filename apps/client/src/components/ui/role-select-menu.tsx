@@ -1,8 +1,8 @@
-import React, { forwardRef } from "react";
+import { Button, Group, Menu, Text } from "@mantine/core";
 import { IconCheck, IconChevronDown } from "@tabler/icons-react";
-import { Group, Text, Menu, Button } from "@mantine/core";
-import { IRoleData } from "@/lib/types.ts";
+import React, { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
+import { IRoleData } from "@/lib/types.ts";
 
 interface RoleButtonProps extends React.ComponentPropsWithoutRef<"button"> {
   name: string;
@@ -11,24 +11,24 @@ interface RoleButtonProps extends React.ComponentPropsWithoutRef<"button"> {
 const RoleButton = forwardRef<HTMLButtonElement, RoleButtonProps>(
   ({ name, ...others }: RoleButtonProps, ref) => (
     <Button
-      variant="default"
       ref={ref}
+      rightSection={<IconChevronDown size="1rem" />}
       style={{
         border: "none",
       }}
-      rightSection={<IconChevronDown size="1rem" />}
+      variant="default"
       {...others}
     >
       {name}
     </Button>
-  ),
+  )
 );
 
 interface RoleMenuProps {
-  roles: IRoleData[];
-  roleName: string;
-  onChange?: (value: string) => void;
   disabled?: boolean;
+  onChange?: (value: string) => void;
+  roleName: string;
+  roles: IRoleData[];
 }
 
 export default function RoleSelectMenu({
@@ -42,19 +42,19 @@ export default function RoleSelectMenu({
   return (
     <Menu withArrow>
       <Menu.Target>
-        <RoleButton name={t(roleName)} disabled={disabled} />
+        <RoleButton disabled={disabled} name={t(roleName)} />
       </Menu.Target>
 
       <Menu.Dropdown>
         {roles?.map((item) => (
           <Menu.Item
-            onClick={() => onChange && onChange(item.value)}
             key={item.value}
+            onClick={() => onChange && onChange(item.value)}
           >
             <Group flex="1" gap="xs">
               <div>
                 <Text size="sm">{t(item.label)}</Text>
-                <Text size="xs" opacity={0.65}>
+                <Text opacity={0.65} size="xs">
                   {t(item.description)}
                 </Text>
               </div>

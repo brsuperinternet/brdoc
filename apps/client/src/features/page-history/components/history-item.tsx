@@ -1,38 +1,38 @@
 import {
-  Text,
-  Group,
-  UnstyledButton,
-  Avatar,
-  Tooltip,
   ActionIcon,
+  Avatar,
   Checkbox,
+  Group,
   Menu,
+  Text,
+  Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import { IconDots } from "@tabler/icons-react";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import { formattedDate } from "@/lib/time";
-import classes from "./css/history.module.css";
 import clsx from "clsx";
-import { IPageHistory } from "@/features/page-history/types/page.types";
 import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import { IPageHistory } from "@/features/page-history/types/page.types";
+import { formattedDate } from "@/lib/time";
+import classes from "./css/history.module.css";
 
 const MAX_VISIBLE_AVATARS = 5;
 
 interface HistoryItemProps {
+  canCompare: boolean;
+  compareMode: boolean;
   historyItem: IPageHistory;
   index: number;
-  onSelect: (id: string, index: number) => void;
+  isActive: boolean;
+  isCheckboxDisabled: boolean;
+  isChecked: boolean;
   onHover?: (id: string, index: number) => void;
   onHoverEnd?: () => void;
-  isActive: boolean;
-  compareMode: boolean;
-  isChecked: boolean;
-  isCheckboxDisabled: boolean;
-  canCompare: boolean;
-  onToggleCompare: (id: string) => void;
-  onStartCompare: (id: string) => void;
   onRestore?: (id: string, index: number) => void;
+  onSelect: (id: string, index: number) => void;
+  onStartCompare: (id: string) => void;
+  onToggleCompare: (id: string) => void;
 }
 
 const HistoryItem = memo(function HistoryItem({
@@ -76,26 +76,26 @@ const HistoryItem = memo(function HistoryItem({
     >
       {compareMode && (
         <Checkbox
-          size="xs"
-          className={classes.compareCheckbox}
+          aria-label={t("Select version from {{date}}", { date })}
           checked={isChecked}
+          className={classes.compareCheckbox}
           disabled={isCheckboxDisabled}
           onChange={() => onToggleCompare(historyItem.id)}
-          aria-label={t("Select version from {{date}}", { date })}
+          size="xs"
         />
       )}
 
       <UnstyledButton
-        p="xs"
-        onClick={handleClick}
         className={classes.historyButton}
+        onClick={handleClick}
+        p="xs"
       >
         <Text size="sm">{date}</Text>
 
-        <Group gap={6} wrap="nowrap" mt={4}>
+        <Group gap={6} mt={4} wrap="nowrap">
           {hasContributors ? (
             <>
-              <Tooltip.Group openDelay={300} closeDelay={100}>
+              <Tooltip.Group closeDelay={100} openDelay={300}>
                 <Avatar.Group spacing={8}>
                   {contributors
                     .slice(0, MAX_VISIBLE_AVATARS)
@@ -106,22 +106,20 @@ const HistoryItem = memo(function HistoryItem({
                         withArrow
                       >
                         <CustomAvatar
-                          size="sm"
                           avatarUrl={contributor.avatarUrl}
                           name={contributor.name}
+                          size="sm"
                         />
                       </Tooltip>
                     ))}
                   {contributors.length > MAX_VISIBLE_AVATARS && (
                     <Tooltip
-                      withArrow
                       label={contributors
                         .slice(MAX_VISIBLE_AVATARS)
-                        .map((c) => (
-                          <div key={c.id}>{c.name}</div>
-                        ))}
+                        .map((c) => <div key={c.id}>{c.name}</div>)}
+                      withArrow
                     >
-                      <Avatar size="sm" color="gray">
+                      <Avatar color="gray" size="sm">
                         +{contributors.length - MAX_VISIBLE_AVATARS}
                       </Avatar>
                     </Tooltip>
@@ -129,7 +127,7 @@ const HistoryItem = memo(function HistoryItem({
                 </Avatar.Group>
               </Tooltip.Group>
               {contributors.length === 1 && (
-                <Text size="sm" c="dimmed" lineClamp={1}>
+                <Text c="dimmed" lineClamp={1} size="sm">
                   {contributors[0].name}
                 </Text>
               )}
@@ -137,11 +135,11 @@ const HistoryItem = memo(function HistoryItem({
           ) : (
             <>
               <CustomAvatar
-                size="sm"
                 avatarUrl={historyItem.lastUpdatedBy?.avatarUrl}
                 name={historyItem.lastUpdatedBy?.name}
+                size="sm"
               />
-              <Text size="sm" c="dimmed" lineClamp={1}>
+              <Text c="dimmed" lineClamp={1} size="sm">
                 {historyItem.lastUpdatedBy?.name}
               </Text>
             </>
@@ -150,14 +148,14 @@ const HistoryItem = memo(function HistoryItem({
       </UnstyledButton>
 
       {!compareMode && (
-        <Menu shadow="md" width={180} position="bottom-end">
+        <Menu position="bottom-end" shadow="md" width={180}>
           <Menu.Target>
             <ActionIcon
-              variant="subtle"
-              color="gray"
-              className={classes.itemMenu}
               aria-label={t("Version actions for {{date}}", { date })}
+              className={classes.itemMenu}
+              color="gray"
               onClick={(e) => e.stopPropagation()}
+              variant="subtle"
             >
               <IconDots size={18} />
             </ActionIcon>

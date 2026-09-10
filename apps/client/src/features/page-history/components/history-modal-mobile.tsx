@@ -9,7 +9,10 @@ import {
   Switch,
   Text,
 } from "@mantine/core";
+import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   activeHistoryIdAtom,
   activeHistoryPrevIdAtom,
@@ -18,16 +21,13 @@ import {
   historyAtoms,
 } from "@/features/page-history/atoms/history-atoms";
 import HistoryView from "@/features/page-history/components/history-view";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-import { usePageHistoryListQuery } from "@/features/page-history/queries/page-history-query";
-import { formattedDate } from "@/lib/time";
 import {
   useDiffNavigation,
   useHistoryReset,
   useHistoryRestore,
 } from "@/features/page-history/hooks";
+import { usePageHistoryListQuery } from "@/features/page-history/queries/page-history-query";
+import { formattedDate } from "@/lib/time";
 import classes from "./css/history-mobile.module.css";
 
 interface Props {
@@ -57,7 +57,7 @@ export default function HistoryModalMobile({ pageId, pageTitle }: Props) {
 
   const historyItems = useMemo(
     () => pageHistoryData?.pages.flatMap((page) => page.items) ?? [],
-    [pageHistoryData],
+    [pageHistoryData]
   );
 
   const selectData = useMemo(
@@ -69,12 +69,12 @@ export default function HistoryModalMobile({ pageId, pageTitle }: Props) {
           ? contributors.map((c) => c.name).join(", ")
           : item.lastUpdatedBy?.name;
         return {
-          value: item.id,
           label: formattedDate(new Date(item.createdAt)),
           userName: names,
+          value: item.id,
         };
       }),
-    [historyItems],
+    [historyItems]
   );
 
   useHistoryReset(pageId);
@@ -96,7 +96,9 @@ export default function HistoryModalMobile({ pageId, pageTitle }: Props) {
 
   const handleDropdownScroll = useCallback(() => {
     const viewport = dropdownViewportRef.current;
-    if (!viewport || !hasNextPage || isFetchingNextPage) return;
+    if (!(viewport && hasNextPage) || isFetchingNextPage) {
+      return;
+    }
 
     const { scrollTop, scrollHeight, clientHeight } = viewport;
     const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
@@ -108,14 +110,16 @@ export default function HistoryModalMobile({ pageId, pageTitle }: Props) {
 
   const handleSelectVersion = useCallback(
     (value: string | null) => {
-      if (!value) return;
+      if (!value) {
+        return;
+      }
       const index = historyItems.findIndex((item) => item.id === value);
       if (index >= 0) {
         setActiveHistoryId(value);
         setActiveHistoryPrevId(historyItems[index + 1]?.id ?? "");
       }
     },
-    [historyItems, setActiveHistoryId, setActiveHistoryPrevId],
+    [historyItems, setActiveHistoryId, setActiveHistoryPrevId]
   );
 
   if (isLoading) {
@@ -126,35 +130,35 @@ export default function HistoryModalMobile({ pageId, pageTitle }: Props) {
     <Box className={classes.container}>
       <Box className={classes.selectorWrapper}>
         <Select
+          checkIconPosition="right"
+          comboboxProps={{ withinPortal: false }}
           data={selectData}
-          value={activeHistoryId}
+          maxDropdownHeight={300}
           onChange={handleSelectVersion}
           placeholder={t("Select version")}
-          checkIconPosition="right"
-          maxDropdownHeight={300}
           renderOption={({ option, checked }) => (
-            <Group justify="space-between" wrap="nowrap" w="100%">
+            <Group justify="space-between" w="100%" wrap="nowrap">
               <div>
                 <Text size="sm">{option.label}</Text>
-                <Text size="xs" c="dimmed">
+                <Text c="dimmed" size="xs">
                   {(option as { userName?: string }).userName}
                 </Text>
               </div>
               {checked && <IconCheck size={16} />}
             </Group>
           )}
-          comboboxProps={{ withinPortal: false }}
           scrollAreaProps={{
-            viewportRef: dropdownViewportRef,
             onScrollPositionChange: handleDropdownScroll,
+            viewportRef: dropdownViewportRef,
           }}
+          value={activeHistoryId}
         />
       </Box>
 
       <ScrollArea
         className={classes.editorArea}
-        viewportRef={scrollViewportRef}
         scrollbarSize={5}
+        viewportRef={scrollViewportRef}
       >
         <Box className={classes.editorContent}>
           {activeHistoryId && <HistoryView />}
@@ -162,8 +166,8 @@ export default function HistoryModalMobile({ pageId, pageTitle }: Props) {
       </ScrollArea>
 
       {canRestore && (
-        <Group className={classes.actionButtons} justify="flex-end" gap="sm">
-          <Button variant="default" onClick={() => setHistoryModalOpen(false)}>
+        <Group className={classes.actionButtons} gap="sm" justify="flex-end">
+          <Button onClick={() => setHistoryModalOpen(false)} variant="default">
             {t("Cancel")}
           </Button>
           <Button onClick={() => confirmRestore()}>{t("Restore")}</Button>
@@ -172,36 +176,36 @@ export default function HistoryModalMobile({ pageId, pageTitle }: Props) {
 
       {activeHistoryId && (
         <Paper
-          shadow="sm"
-          radius="xl"
+          className={classes.floatingBar}
           px="md"
           py="xs"
-          className={classes.floatingBar}
+          radius="xl"
+          shadow="sm"
         >
           <Group gap="sm" wrap="nowrap">
             <Switch
-              label={t("Highlight changes")}
               checked={highlightChanges}
+              label={t("Highlight changes")}
               onChange={(e) => setHighlightChanges(e.currentTarget.checked)}
               size="sm"
               styles={{ label: { userSelect: "none", whiteSpace: "nowrap" } }}
             />
             {highlightChanges && diffCounts && diffCounts.total > 0 && (
               <Group gap={4} wrap="nowrap">
-                <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                <Text c="dimmed" size="sm" style={{ whiteSpace: "nowrap" }}>
                   {currentChangeIndex} of {diffCounts.total}
                 </Text>
                 <ActionIcon
-                  variant="subtle"
-                  size="sm"
                   onClick={handlePrevChange}
+                  size="sm"
+                  variant="subtle"
                 >
                   <IconChevronUp size={16} />
                 </ActionIcon>
                 <ActionIcon
-                  variant="subtle"
-                  size="sm"
                   onClick={handleNextChange}
+                  size="sm"
+                  variant="subtle"
                 >
                   <IconChevronDown size={16} />
                 </ActionIcon>

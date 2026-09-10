@@ -1,8 +1,9 @@
+import { notifications } from "@mantine/notifications";
 import {
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
 import {
   createSsoProvider,
@@ -11,25 +12,27 @@ import {
   getSsoProviders,
   updateSsoProvider,
 } from "@/ee/security/services/security-service.ts";
-import { notifications } from "@mantine/notifications";
 import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 import { IPagination } from "@/lib/types.ts";
 
-export function useGetSsoProviders(): UseQueryResult<IPagination<IAuthProvider>, Error> {
+export function useGetSsoProviders(): UseQueryResult<
+  IPagination<IAuthProvider>,
+  Error
+> {
   return useQuery({
-    queryKey: ["sso-providers"],
     queryFn: () => getSsoProviders(),
+    queryKey: ["sso-providers"],
     staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useSsoProvider(
-  providerId: string,
+  providerId: string
 ): UseQueryResult<IAuthProvider, Error> {
   return useQuery({
-    queryKey: ["sso-provider", providerId],
-    queryFn: () => getSsoProviderById({ providerId }),
     enabled: !!providerId,
+    queryFn: () => getSsoProviderById({ providerId }),
+    queryKey: ["sso-provider", providerId],
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -39,14 +42,14 @@ export function useCreateSsoProviderMutation() {
 
   return useMutation<any, Error, Partial<IAuthProvider>>({
     mutationFn: (data: Partial<IAuthProvider>) => createSsoProvider(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["sso-providers"],
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -56,15 +59,15 @@ export function useUpdateSsoProviderMutation() {
 
   return useMutation<any, Error, Partial<IAuthProvider>>({
     mutationFn: (data: Partial<IAuthProvider>) => updateSsoProvider(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: "Updated successfully" });
       queryClient.invalidateQueries({
         queryKey: ["sso-providers"],
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -74,16 +77,16 @@ export function useDeleteSsoProviderMutation() {
 
   return useMutation({
     mutationFn: (providerId: string) => deleteSsoProvider({ providerId }),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: "Deleted successfully" });
 
       queryClient.invalidateQueries({
         queryKey: ["sso-providers"],
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }

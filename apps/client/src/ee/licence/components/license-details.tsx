@@ -1,7 +1,7 @@
 import { Badge, Table } from "@mantine/core";
-import { useLicenseInfo } from "@/ee/licence/queries/license-query.ts";
-import { isLicenseExpired } from "@/ee/licence/license.utils.ts";
 import { useAtom } from "jotai";
+import { isLicenseExpired } from "@/ee/licence/license.utils.ts";
+import { useLicenseInfo } from "@/ee/licence/queries/license-query.ts";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
 
@@ -20,9 +20,9 @@ export default function LicenseDetails() {
   return (
     <Table.ScrollContainer minWidth={500} py="md">
       <Table
+        layout="fixed"
         variant="vertical"
         verticalSpacing="sm"
-        layout="fixed"
         withTableBorder
       >
         <Table.Caption>
@@ -52,14 +52,24 @@ export default function LicenseDetails() {
           <Table.Tr>
             <Table.Th>Issued at</Table.Th>
             <Table.Td>
-              {formatLocalized(license.issuedAt, "dd MMMM, yyyy", "PPP", locale)}
+              {formatLocalized(
+                license.issuedAt,
+                "dd MMMM, yyyy",
+                "PPP",
+                locale
+              )}
             </Table.Td>
           </Table.Tr>
 
           <Table.Tr>
             <Table.Th>Expires at</Table.Th>
             <Table.Td>
-              {formatLocalized(license.expiresAt, "dd MMMM, yyyy", "PPP", locale)}
+              {formatLocalized(
+                license.expiresAt,
+                "dd MMMM, yyyy",
+                "PPP",
+                locale
+              )}
             </Table.Td>
           </Table.Tr>
           <Table.Tr>

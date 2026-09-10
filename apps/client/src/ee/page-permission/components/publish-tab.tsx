@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
   Anchor,
@@ -10,11 +9,11 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconExternalLink, IconLock } from "@tabler/icons-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getPageIcon } from "@/lib";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import CopyTextButton from "@/components/common/copy";
-import { getAppUrl, isCloud } from "@/lib/config";
+import useTrial from "@/ee/hooks/use-trial";
 import { buildPageUrl } from "@/features/page/page.utils";
 import {
   useCreateShareMutation,
@@ -22,7 +21,8 @@ import {
   useShareForPageQuery,
   useUpdateShareMutation,
 } from "@/features/share/queries/share-query";
-import useTrial from "@/ee/hooks/use-trial";
+import { getPageIcon } from "@/lib";
+import { getAppUrl, isCloud } from "@/lib/config";
 
 type PublishTabProps = {
   pageId: string;
@@ -32,7 +32,13 @@ type PublishTabProps = {
   spaceSharingDisabled?: boolean;
 };
 
-export function PublishTab({ pageId, readOnly, isRestricted, workspaceSharingDisabled, spaceSharingDisabled }: PublishTabProps) {
+export function PublishTab({
+  pageId,
+  readOnly,
+  isRestricted,
+  workspaceSharingDisabled,
+  spaceSharingDisabled,
+}: PublishTabProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { pageSlug, spaceSlug } = useParams();
@@ -59,76 +65,74 @@ export function PublishTab({ pageId, readOnly, isRestricted, workspaceSharingDis
 
     if (value) {
       createShareMutation.mutateAsync({
-        pageId: pageId,
         includeSubPages: true,
+        pageId,
         searchIndexing: false,
       });
       setIsPagePublic(value);
-    } else {
-      if (share && share.id) {
-        deleteShareMutation.mutateAsync(share.id);
-        setIsPagePublic(value);
-      }
+    } else if (share && share.id) {
+      deleteShareMutation.mutateAsync(share.id);
+      setIsPagePublic(value);
     }
   };
 
   const handleSubPagesChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = event.currentTarget.checked;
     updateShareMutation.mutateAsync({
-      shareId: share.id,
       includeSubPages: value,
+      shareId: share.id,
     });
   };
 
   const handleIndexSearchChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = event.currentTarget.checked;
     updateShareMutation.mutateAsync({
-      shareId: share.id,
       searchIndexing: value,
+      shareId: share.id,
     });
   };
 
   const shareLink = useMemo(
     () => (
-      <Group my="sm" gap={4} wrap="nowrap">
+      <Group gap={4} my="sm" wrap="nowrap">
         <TextInput
-          variant="filled"
-          value={publicLink}
           readOnly
           rightSection={<CopyTextButton text={publicLink} />}
           style={{ width: "100%" }}
+          value={publicLink}
+          variant="filled"
         />
         <ActionIcon
           component="a"
-          variant="default"
-          target="_blank"
           href={publicLink}
           size="sm"
+          target="_blank"
+          variant="default"
         >
           <IconExternalLink size={16} />
         </ActionIcon>
       </Group>
     ),
-    [publicLink],
+    [publicLink]
   );
 
   if (isCloud() && isTrial) {
     return (
       <Stack align="center" py="md">
         <IconLock size={20} stroke={1.5} />
-        <Text size="sm" ta="center" fw={500}>
+        <Text fw={500} size="sm" ta="center">
           {t("Upgrade to share pages")}
         </Text>
-        <Text size="sm" c="dimmed" ta="center">
+        <Text c="dimmed" size="sm" ta="center">
           {t(
-            "Page sharing is available on paid plans. Upgrade to share your pages publicly.",
+            "Page sharing is available on paid plans. Upgrade to share your pages publicly."
           )}
         </Text>
-        <Button size="xs" onClick={() => navigate("/settings/billing")}>
+        <Button onClick={() => navigate("/settings/billing")} size="xs">
           {t("Upgrade Plan")}
         </Button>
       </Stack>
@@ -139,10 +143,10 @@ export function PublishTab({ pageId, readOnly, isRestricted, workspaceSharingDis
     return (
       <Stack align="center" py="md">
         <IconLock size={20} stroke={1.5} />
-        <Text size="sm" ta="center" fw={500}>
+        <Text fw={500} size="sm" ta="center">
           {t("Public sharing is disabled")}
         </Text>
-        <Text size="sm" c="dimmed" ta="center">
+        <Text c="dimmed" size="sm" ta="center">
           {workspaceSharingDisabled
             ? t("Public sharing has been disabled at the workspace level.")
             : t("Public sharing has been disabled for this space.")}
@@ -155,10 +159,10 @@ export function PublishTab({ pageId, readOnly, isRestricted, workspaceSharingDis
     return (
       <Stack align="center" py="md">
         <IconLock size={20} stroke={1.5} />
-        <Text size="sm" ta="center" fw={500}>
+        <Text fw={500} size="sm" ta="center">
           {t("Restricted page")}
         </Text>
-        <Text size="sm" c="dimmed" ta="center">
+        <Text c="dimmed" size="sm" ta="center">
           {t("Restricted pages cannot be shared publicly.")}
         </Text>
       </Stack>
@@ -170,22 +174,22 @@ export function PublishTab({ pageId, readOnly, isRestricted, workspaceSharingDis
       <Stack gap="sm">
         <Text size="sm">{t("Inherits public sharing from")}</Text>
         <Anchor
-          size="sm"
-          underline="never"
-          style={{
-            cursor: "pointer",
-            color: "var(--mantine-color-text)",
-          }}
           component={Link}
+          size="sm"
+          style={{
+            color: "var(--mantine-color-text)",
+            cursor: "pointer",
+          }}
           to={buildPageUrl(
             spaceSlug,
             share.sharedPage.slugId,
-            share.sharedPage.title,
+            share.sharedPage.title
           )}
+          underline="never"
         >
           <Group gap="4" wrap="nowrap">
             {getPageIcon(share.sharedPage.icon)}
-            <Text fz="sm" fw={500} lineClamp={1}>
+            <Text fw={500} fz="sm" lineClamp={1}>
               {share.sharedPage.title || t("untitled")}
             </Text>
           </Group>
@@ -197,21 +201,21 @@ export function PublishTab({ pageId, readOnly, isRestricted, workspaceSharingDis
 
   return (
     <Stack gap="sm">
-      <Group justify="space-between" wrap="nowrap" gap="xl">
+      <Group gap="xl" justify="space-between" wrap="nowrap">
         <div>
           <Text size="sm">
             {isPagePublic ? t("Shared to web") : t("Share to web")}
           </Text>
-          <Text size="xs" c="dimmed">
+          <Text c="dimmed" size="xs">
             {isPagePublic
               ? t("Anyone with the link can view this page")
               : t("Make this page publicly accessible")}
           </Text>
         </div>
         <Switch
-          onChange={handleChange}
           checked={isPagePublic}
           disabled={readOnly}
+          onChange={handleChange}
           size="xs"
         />
       </Group>
@@ -219,32 +223,32 @@ export function PublishTab({ pageId, readOnly, isRestricted, workspaceSharingDis
       {pageIsShared && (
         <>
           {shareLink}
-          <Group justify="space-between" wrap="nowrap" gap="xl">
+          <Group gap="xl" justify="space-between" wrap="nowrap">
             <div>
               <Text size="sm">{t("Include sub-pages")}</Text>
-              <Text size="xs" c="dimmed">
+              <Text c="dimmed" size="xs">
                 {t("Make sub-pages public too")}
               </Text>
             </div>
             <Switch
-              onChange={handleSubPagesChange}
               checked={share.includeSubPages}
-              size="xs"
               disabled={readOnly}
+              onChange={handleSubPagesChange}
+              size="xs"
             />
           </Group>
-          <Group justify="space-between" wrap="nowrap" gap="xl">
+          <Group gap="xl" justify="space-between" wrap="nowrap">
             <div>
               <Text size="sm">{t("Search engine indexing")}</Text>
-              <Text size="xs" c="dimmed">
+              <Text c="dimmed" size="xs">
                 {t("Allow search engines to index page")}
               </Text>
             </div>
             <Switch
-              onChange={handleIndexSearchChange}
               checked={share.searchIndexing}
-              size="xs"
               disabled={readOnly}
+              onChange={handleIndexSearchChange}
+              size="xs"
             />
           </Group>
         </>

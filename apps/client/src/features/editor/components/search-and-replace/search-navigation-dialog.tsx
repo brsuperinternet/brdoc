@@ -1,3 +1,4 @@
+import { isEditorReady } from "@docmost/editor-ext";
 import { ActionIcon, Dialog, Flex, Text, Tooltip } from "@mantine/core";
 import {
   IconArrowNarrowDown,
@@ -5,11 +6,10 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useEditor } from "@tiptap/react";
-import { isEditorReady } from "@docmost/editor-ext";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import classes from "./search-replace.module.css";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
+import classes from "./search-replace.module.css";
 
 interface SearchNavigationDialogProps {
   editor: ReturnType<typeof useEditor>;
@@ -34,17 +34,21 @@ function SearchNavigationDialog({ editor }: SearchNavigationDialogProps) {
   });
 
   const goToSelection = () => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
 
     const { results, resultIndex } = editor.storage.searchAndReplace;
     const position = results[resultIndex];
 
     setResultState({
-      resultsLength: results.length,
       resultIndex,
+      resultsLength: results.length,
     });
 
-    if (!position) return;
+    if (!position) {
+      return;
+    }
     requestAnimationFrame(() => {
       document
         .querySelector(".search-result-current")
@@ -53,19 +57,25 @@ function SearchNavigationDialog({ editor }: SearchNavigationDialogProps) {
   };
 
   const next = () => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     editor.commands.nextSearchResult();
     goToSelection();
   };
 
   const previous = () => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     editor.commands.previousSearchResult();
     goToSelection();
   };
 
   const close = useCallback(() => {
-    if (!openRef.current) return;
+    if (!openRef.current) {
+      return;
+    }
 
     openRef.current = false;
     setOpen(false);
@@ -78,11 +88,11 @@ function SearchNavigationDialog({ editor }: SearchNavigationDialogProps) {
     const nextSearch = nextParams.toString();
     navigate(
       {
+        hash: location.hash,
         pathname: location.pathname,
         search: nextSearch ? `?${nextSearch}` : "",
-        hash: location.hash,
       },
-      { replace: true },
+      { replace: true }
     );
   }, [editor, location.hash, location.pathname, location.search, navigate]);
 
@@ -92,7 +102,9 @@ function SearchNavigationDialog({ editor }: SearchNavigationDialogProps) {
         event as SearchNavigationEvent
       ).detail;
 
-      if (!terms?.length || !isEditorReady(editor)) return;
+      if (!(terms?.length && isEditorReady(editor))) {
+        return;
+      }
 
       openRef.current = false;
       editor.commands.setSearchTerms(terms);
@@ -134,7 +146,9 @@ function SearchNavigationDialog({ editor }: SearchNavigationDialogProps) {
 
   useEffect(() => {
     const handleTransaction = () => {
-      if (!openRef.current || editor.isDestroyed) return;
+      if (!openRef.current || editor.isDestroyed) {
+        return;
+      }
 
       const { results } = editor.storage.searchAndReplace;
       if (results.length === 0) {
@@ -150,14 +164,14 @@ function SearchNavigationDialog({ editor }: SearchNavigationDialogProps) {
 
   return (
     <Dialog
+      aria-label="Search navigation"
       className={classes.findDialog}
       opened={open}
-      size="xs"
+      position={{ right: 50, top: 90 }}
       radius="md"
+      size="xs"
       w="auto"
-      position={{ top: 90, right: 50 }}
       withBorder
-      aria-label="Search navigation"
     >
       <Flex align="center" gap="xs">
         <Text size="xs" style={{ flex: 1 }}>
@@ -167,32 +181,32 @@ function SearchNavigationDialog({ editor }: SearchNavigationDialogProps) {
         </Text>
         <Tooltip label="Previous match">
           <ActionIcon
-            variant="subtle"
-            color="gray"
-            onClick={previous}
             aria-label="Previous match"
+            color="gray"
             disabled={resultState.resultsLength === 0}
+            onClick={previous}
+            variant="subtle"
           >
             <IconArrowNarrowUp size={16} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Next match">
           <ActionIcon
-            variant="subtle"
-            color="gray"
-            onClick={next}
             aria-label="Next match"
+            color="gray"
             disabled={resultState.resultsLength === 0}
+            onClick={next}
+            variant="subtle"
           >
             <IconArrowNarrowDown size={16} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Close">
           <ActionIcon
-            variant="subtle"
+            aria-label="Close"
             color="gray"
             onClick={close}
-            aria-label="Close"
+            variant="subtle"
           >
             <IconX size={16} />
           </ActionIcon>

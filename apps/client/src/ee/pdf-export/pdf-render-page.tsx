@@ -1,8 +1,8 @@
 import "@/features/editor/styles/index.css";
+import { Container } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import ReadonlyPageEditor from "@/features/editor/readonly-page-editor";
-import { Container } from "@mantine/core";
 
 type PdfRenderData = {
   pageId: string;
@@ -19,18 +19,20 @@ export default function PdfRenderPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!pageId || !token) {
+    if (!(pageId && token)) {
       setError("Missing page ID or token");
       return;
     }
 
-    fetch('/api/pdf-export/render', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("/api/pdf-export/render", {
       body: JSON.stringify({ pageId, token }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
     })
       .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
         return res.json();
       })
       .then((result) => setData(result.data))
@@ -52,13 +54,13 @@ export default function PdfRenderPage() {
   }
 
   return (
-    <Container size={900} p={0}>
+    <Container p={0} size={900}>
       <ReadonlyPageEditor
-        key={data.pageId}
-        title={data.title}
         content={data.content}
+        key={data.pageId}
         pageId={data.pageId}
         printMode
+        title={data.title}
       />
     </Container>
   );

@@ -1,23 +1,23 @@
 import {
-  Text,
-  Group,
-  UnstyledButton,
   Badge,
-  Table,
   Button,
+  Group,
+  Table,
+  Text,
+  UnstyledButton,
 } from "@mantine/core";
+import { IconFiles } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { PageListIcon } from "@/components/common/page-list-icon";
+import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import { EmptyState } from "@/components/ui/empty-state";
 import PageListSkeleton from "@/components/ui/page-list-skeleton";
 import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
-import { formattedDate } from "@/lib/time";
 import { useCreatedByQuery } from "@/features/page/queries/page-query";
-import { PageListIcon } from "@/components/common/page-list-icon";
-import { IconFiles } from "@tabler/icons-react";
-import { EmptyState } from "@/components/ui/empty-state";
 import { getSpaceUrl } from "@/lib/config";
-import { useTranslation } from "react-i18next";
 import { getInitialsColor } from "@/lib/get-initials-color";
-import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import { formattedDate } from "@/lib/time";
 
 type Props = {
   spaceId?: string;
@@ -50,20 +50,16 @@ export default function CreatedByMe({ spaceId }: Props) {
         <Table highlightOnHover verticalSpacing="sm">
           <Table.Tbody>
             {pages.map((page) => (
-              <Table.Tr key={page.id} className={rowClasses.row}>
+              <Table.Tr className={rowClasses.row} key={page.id}>
                 <Table.Td>
                   <UnstyledButton
                     className={rowClasses.link}
                     component={Link}
-                    to={buildPageUrl(
-                      page?.space.slug,
-                      page.slugId,
-                      page.title,
-                    )}
+                    to={buildPageUrl(page?.space.slug, page.slugId, page.title)}
                   >
                     <Group wrap="nowrap">
                       <PageListIcon icon={page.icon} isBase={page.isBase} />
-                      <Text fw={500} size="md" lineClamp={1}>
+                      <Text fw={500} lineClamp={1} size="md">
                         {getPageTitle(page.title, page.isBase, t)}
                       </Text>
                     </Group>
@@ -73,10 +69,10 @@ export default function CreatedByMe({ spaceId }: Props) {
                   <Table.Td>
                     <Badge
                       color={getInitialsColor(page?.space.name)}
-                      variant="light"
                       component={Link}
-                      to={getSpaceUrl(page?.space.slug)}
                       style={{ cursor: "pointer" }}
+                      to={getSpaceUrl(page?.space.slug)}
+                      variant="light"
                     >
                       {page?.space.name}
                     </Badge>
@@ -85,9 +81,9 @@ export default function CreatedByMe({ spaceId }: Props) {
                 <Table.Td>
                   <Text
                     c="dimmed"
-                    style={{ whiteSpace: "nowrap" }}
-                    size="xs"
                     fw={500}
+                    size="xs"
+                    style={{ whiteSpace: "nowrap" }}
                   >
                     {formattedDate(page.createdAt)}
                   </Text>
@@ -99,12 +95,12 @@ export default function CreatedByMe({ spaceId }: Props) {
       </Table.ScrollContainer>
       {hasNextPage && (
         <Button
-          variant="subtle"
           fullWidth
-          mt="sm"
-          mb="xl"
-          onClick={() => fetchNextPage()}
           loading={isFetchingNextPage}
+          mb="xl"
+          mt="sm"
+          onClick={() => fetchNextPage()}
+          variant="subtle"
         >
           {t("Load more")}
         </Button>
@@ -112,9 +108,9 @@ export default function CreatedByMe({ spaceId }: Props) {
     </>
   ) : (
     <EmptyState
+      description={t("Pages you create will show up here.")}
       icon={IconFiles}
       title={t("No pages yet")}
-      description={t("Pages you create will show up here.")}
     />
   );
 }

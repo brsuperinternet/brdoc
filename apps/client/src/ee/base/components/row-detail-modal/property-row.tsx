@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef } from "react";
-import clsx from "clsx";
 import { Popover } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
-import { IBaseProperty, IBaseRow } from "@/ee/base/types/base.types";
-import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
+import clsx from "clsx";
+import { useCallback, useEffect, useRef } from "react";
 import { PropertyMenuContent } from "@/ee/base/components/property/property-menu";
 import { useBaseEditable } from "@/ee/base/context/base-editable";
-import { DetailField } from "./fields/detail-field";
+import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
 import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { IBaseProperty, IBaseRow } from "@/ee/base/types/base.types";
+import { DetailField } from "./fields/detail-field";
 
 type PropertyRowProps = {
   property: IBaseProperty;
@@ -39,7 +39,9 @@ export function PropertyRow({
   const focusedRef = useRef(false);
 
   useEffect(() => {
-    if (!autoFocusValue || focusedRef.current) return;
+    if (!autoFocusValue || focusedRef.current) {
+      return;
+    }
     focusedRef.current = true;
     const el = rowRef.current;
     if (el) {
@@ -61,7 +63,7 @@ export function PropertyRow({
 
   const label = (
     <>
-      {Icon && <Icon size={15} className={classes.propertyLabelIcon} />}
+      {Icon && <Icon className={classes.propertyLabelIcon} size={15} />}
       <span className={classes.propertyLabelText}>{property.name}</span>
     </>
   );
@@ -70,39 +72,46 @@ export function PropertyRow({
     <div className={classes.propertyRow} ref={rowRef}>
       {canEdit ? (
         <Popover
+          closeOnClickOutside={false}
+          closeOnEscape={false}
+          hideDetached={false}
           opened={menuOpened}
           position="bottom-start"
           shadow="md"
           width={260}
           withinPortal
-          closeOnClickOutside={false}
-          closeOnEscape={false}
-          hideDetached={false}
         >
           <Popover.Target>
             <button
-              type="button"
-              className={clsx(classes.propertyLabel, classes.propertyLabelButton, {
-                [classes.propertyLabelActive]: menuOpened,
-              })}
-              onClick={handleLabelClick}
+              className={clsx(
+                classes.propertyLabel,
+                classes.propertyLabelButton,
+                {
+                  [classes.propertyLabelActive]: menuOpened,
+                }
+              )}
               data-property-menu-target
+              onClick={handleLabelClick}
+              type="button"
             >
               {label}
-              <IconChevronDown size={13} className={classes.propertyLabelChevron} />
+              <IconChevronDown
+                className={classes.propertyLabelChevron}
+                size={13}
+              />
             </button>
           </Popover.Target>
           <Popover.Dropdown
-            p={0}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
+            p={0}
           >
             <PropertyMenuContent
-              property={property}
-              opened={menuOpened}
               onClose={handleMenuClose}
               onDirtyChange={onMenuDirtyChange}
+              opened={menuOpened}
               pageId={pageId}
+              property={property}
             />
           </Popover.Dropdown>
         </Popover>
@@ -110,11 +119,11 @@ export function PropertyRow({
         <div className={classes.propertyLabel}>{label}</div>
       )}
       <DetailField
-        property={property}
-        row={row}
-        readOnly={!canEdit}
-        onUpdate={onUpdate}
         onEditingChange={onEditingChange}
+        onUpdate={onUpdate}
+        property={property}
+        readOnly={!canEdit}
+        row={row}
       />
     </div>
   );

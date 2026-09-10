@@ -1,11 +1,9 @@
-import { SharedPageTreeNode } from "@/features/share/utils.ts";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useAtom, useSetAtom } from "jotai";
-import { useTranslation } from "react-i18next";
-import { IconChevronRight } from "@tabler/icons-react";
 import { ActionIcon } from "@mantine/core";
-import { extractPageSlugId } from "@/lib";
+import { IconChevronRight } from "@tabler/icons-react";
+import { useAtom, useSetAtom } from "jotai";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
 import {
   DocTree,
   type DocTreeApi,
@@ -17,6 +15,8 @@ import {
 } from "@/features/public-space/atoms/public-space-atoms.ts";
 import { useDocsSurface } from "@/features/public-space/components/docs/docs-surface-context.tsx";
 import { findAncestorTrail } from "@/features/public-space/utils/docs-tree.ts";
+import { SharedPageTreeNode } from "@/features/share/utils.ts";
+import { extractPageSlugId } from "@/lib";
 import styles from "./docs.module.css";
 
 export default function DocsSidebarTree() {
@@ -25,25 +25,31 @@ export default function DocsSidebarTree() {
   const { pageSlug } = useParams();
   const { treeData, getNodeUrl } = useDocsSurface();
   const [openTreeNodes, setOpenTreeNodes] = useAtom(
-    openPublicSpaceTreeNodesAtom,
+    openPublicSpaceTreeNodesAtom
   );
 
   // The first root page is the surface home, served at the bare URL.
   const firstRootSlugId = treeData?.[0]?.slugId;
 
-  const currentNodeId = pageSlug ? extractPageSlugId(pageSlug) : firstRootSlugId;
+  const currentNodeId = pageSlug
+    ? extractPageSlugId(pageSlug)
+    : firstRootSlugId;
 
   const openIds = useMemo(
     () => new Set(Object.keys(openTreeNodes).filter((k) => openTreeNodes[k])),
-    [openTreeNodes],
+    [openTreeNodes]
   );
 
   useEffect(() => {
     // Auto-open the first level of the tree on initial load.
     const root = treeData?.[0];
-    if (!root) return;
+    if (!root) {
+      return;
+    }
     setOpenTreeNodes((prev) => {
-      if (prev[root.slugId]) return prev;
+      if (prev[root.slugId]) {
+        return prev;
+      }
       const next = { ...prev, [root.slugId]: true };
       for (const child of root.children ?? []) {
         next[child.slugId] = true;
@@ -55,9 +61,13 @@ export default function DocsSidebarTree() {
   // Reveal the current page: expand its ancestor trail (deep links land with
   // everything collapsed otherwise) and the page itself when it has children.
   useEffect(() => {
-    if (!currentNodeId || !treeData?.length) return;
+    if (!(currentNodeId && treeData?.length)) {
+      return;
+    }
     const trail = findAncestorTrail(treeData, currentNodeId);
-    if (trail === null) return;
+    if (trail === null) {
+      return;
+    }
     setOpenTreeNodes((prev) => {
       const next = { ...prev };
       let changed = false;
@@ -80,18 +90,18 @@ export default function DocsSidebarTree() {
   const handleToggle = useCallback(
     (id: string, isOpen: boolean) =>
       setOpenTreeNodes((prev) => ({ ...prev, [id]: isOpen })),
-    [setOpenTreeNodes],
+    [setOpenTreeNodes]
   );
   const getDragLabel = useCallback(
     (n: SharedPageTreeNode) => n.name || "untitled",
-    [],
+    []
   );
 
   const renderRow = useCallback(
     (props: RenderRowProps<SharedPageTreeNode>) => (
       <DocsTreeRow {...props} getNodeUrl={getNodeUrl} />
     ),
-    [getNodeUrl],
+    [getNodeUrl]
   );
 
   if (!treeData?.length) {
@@ -100,20 +110,20 @@ export default function DocsSidebarTree() {
 
   return (
     <DocTree<SharedPageTreeNode>
-      readOnly
-      ref={treeRef}
+      aria-label={t("Pages")}
       data={treeData}
-      openIds={openIds}
-      selectedId={currentNodeId}
-      renderRow={renderRow}
-      indentPerLevel={INDENT_PER_LEVEL}
-      rowHeight={36}
       dynamicRowHeight
-      rowClassName={styles.treeNodeChrome}
+      getDragLabel={getDragLabel}
+      indentPerLevel={INDENT_PER_LEVEL}
       onMove={noopMove}
       onToggle={handleToggle}
-      getDragLabel={getDragLabel}
-      aria-label={t("Pages")}
+      openIds={openIds}
+      readOnly
+      ref={treeRef}
+      renderRow={renderRow}
+      rowClassName={styles.treeNodeChrome}
+      rowHeight={36}
+      selectedId={currentNodeId}
     />
   );
 }
@@ -122,7 +132,6 @@ export default function DocsSidebarTree() {
 const noopMove = () => {};
 
 const INDENT_PER_LEVEL = 16;
-
 
 type DocsTreeRowProps = RenderRowProps<SharedPageTreeNode> & {
   getNodeUrl: (node: Pick<SharedPageTreeNode, "slugId" | "name">) => string;
@@ -148,48 +157,48 @@ function DocsTreeRow({
       ref={rowRef as React.Ref<HTMLAnchorElement>}
       tabIndex={tabIndex}
       {...treeItemProps}
-      data-selected={isSelected || undefined}
-      data-open-parent={(level === 0 && isOpen && hasChildren) || undefined}
       className={styles.treeRow}
-      to={getNodeUrl(node)}
+      data-open-parent={(level === 0 && isOpen && hasChildren) || undefined}
+      data-selected={isSelected || undefined}
       onClick={() => {
         setMobileSidebarOpen(false);
       }}
+      to={getNodeUrl(node)}
     >
       {/* One segment per ancestor level; contiguous rows join into a rail. */}
       {Array.from({ length: level }, (_, ancestor) => (
         <span
-          key={ancestor}
-          className={styles.treeGuide}
-          style={{ left: -((level - ancestor) * INDENT_PER_LEVEL - 6) }}
           aria-hidden
+          className={styles.treeGuide}
+          key={ancestor}
+          style={{ left: -((level - ancestor) * INDENT_PER_LEVEL - 6) }}
         />
       ))}
       {node.icon && (
-        <span className={styles.treeIcon} aria-hidden>
+        <span aria-hidden className={styles.treeIcon}>
           {node.icon}
         </span>
       )}
       <span className={styles.treeText}>{node.name || t("untitled")}</span>
       {hasChildren && (
         <ActionIcon
-          component="span"
-          variant="subtle"
-          color="gray"
-          size={20}
-          tabIndex={-1}
           aria-hidden
+          color="gray"
+          component="span"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleOpen();
           }}
+          size={20}
+          tabIndex={-1}
+          variant="subtle"
         >
           <IconChevronRight
             className={styles.treeChevron}
             data-open={isOpen || undefined}
-            stroke={2}
             size={14}
+            stroke={2}
           />
         </ActionIcon>
       )}

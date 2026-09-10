@@ -1,10 +1,10 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { Group, Loader, Text } from "@mantine/core";
-import { useMemo } from "react";
-import { getFileUrl } from "@/lib/config.ts";
 import { isInternalFileUrl } from "@docmost/editor-ext";
-import classes from "./audio-view.module.css";
+import { Group, Loader, Text } from "@mantine/core";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { getFileUrl } from "@/lib/config.ts";
+import classes from "./audio-view.module.css";
 
 export default function AudioView(props: NodeViewProps) {
   const { t } = useTranslation();
@@ -12,7 +12,9 @@ export default function AudioView(props: NodeViewProps) {
   const { src, placeholder } = node.attrs;
 
   const safeSrc = useMemo(() => {
-    if (!src || !isInternalFileUrl(src)) return null;
+    if (!(src && isInternalFileUrl(src))) {
+      return null;
+    }
     return getFileUrl(src);
   }, [src]);
 
@@ -29,30 +31,39 @@ export default function AudioView(props: NodeViewProps) {
 
   return (
     <NodeViewWrapper data-drag-handle>
-      <div className={`${classes.audioWrapper} ${!safeSrc && placeholder ? classes.skeleton : ''}`}>
+      <div
+        className={`${classes.audioWrapper} ${!safeSrc && placeholder ? classes.skeleton : ""}`}
+      >
         {safeSrc && (
           <audio
-            className={classes.audio}
-            preload="metadata"
-            controls
-            src={safeSrc}
             aria-label={placeholder?.name || t("Audio")}
+            className={classes.audio}
+            controls
+            preload="metadata"
+            src={safeSrc}
           />
         )}
         {!safeSrc && previewSrc && (
           <Group pos="relative" w="100%">
             <audio
-              className={classes.audio}
-              preload="metadata"
-              controls
-              src={previewSrc}
               aria-label={placeholder?.name || t("Audio")}
+              className={classes.audio}
+              controls
+              preload="metadata"
+              src={previewSrc}
             />
-            <Loader size={20} pos="absolute" top={6} right={6} />
+            <Loader pos="absolute" right={6} size={20} top={6} />
           </Group>
         )}
-        {!safeSrc && !previewSrc && placeholder && (
-          <Group justify="center" wrap="nowrap" gap="xs" maw="100%" px="md" h={54}>
+        {!(safeSrc || previewSrc) && placeholder && (
+          <Group
+            gap="xs"
+            h={54}
+            justify="center"
+            maw="100%"
+            px="md"
+            wrap="nowrap"
+          >
             <Loader size={20} style={{ flexShrink: 0 }} />
             <Text component="span" size="sm" truncate="end">
               {placeholder?.name
@@ -61,8 +72,8 @@ export default function AudioView(props: NodeViewProps) {
             </Text>
           </Group>
         )}
-        {!safeSrc && !previewSrc && !placeholder && (
-          <audio className={classes.audio} controls aria-label={t("Audio")} />
+        {!(safeSrc || previewSrc || placeholder) && (
+          <audio aria-label={t("Audio")} className={classes.audio} controls />
         )}
       </div>
     </NodeViewWrapper>

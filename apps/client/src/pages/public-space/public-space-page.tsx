@@ -1,36 +1,35 @@
-import { useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { Skeleton, Stack, Text } from "@mantine/core";
-import React from "react";
-import ReadonlyPageEditor from "@/features/editor/readonly-page-editor.tsx";
-import { extractPageSlugId } from "@/lib";
-import { Error404 } from "@/components/ui/error-404.tsx";
-import { usePublicSpacePageQuery } from "@/features/public-space/queries/public-space-query.ts";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { Error404 } from "@/components/ui/error-404.tsx";
+import ReadonlyPageEditor from "@/features/editor/readonly-page-editor.tsx";
+import styles from "@/features/public-space/components/docs/docs.module.css";
 import DocsBreadcrumbs from "@/features/public-space/components/docs/docs-breadcrumbs.tsx";
 import DocsPageNav from "@/features/public-space/components/docs/docs-page-nav.tsx";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import { usePublicSpacePageQuery } from "@/features/public-space/queries/public-space-query.ts";
+import { extractPageSlugId } from "@/lib";
 import { timeAgo } from "@/lib/time.ts";
-import styles from "@/features/public-space/components/docs/docs.module.css";
 
 export default function PublicSpacePage() {
   const { t } = useTranslation();
   const { spaceSlug, pageSlug } = useParams();
 
   const { data, isLoading, isError, error } = usePublicSpacePageQuery({
-    spaceSlug,
     pageSlugId: pageSlug ? extractPageSlugId(pageSlug) : undefined,
+    spaceSlug,
   });
 
   if (isLoading) {
     return (
-      <Stack gap="md" pt={4} aria-hidden>
-        <Skeleton height={13} width={180} radius="sm" />
-        <Skeleton height={34} width="55%" radius="sm" mt={10} />
-        <Skeleton height={12} width="90%" radius="sm" mt={18} />
-        <Skeleton height={12} width="97%" radius="sm" />
-        <Skeleton height={12} width="85%" radius="sm" />
-        <Skeleton height={12} width="60%" radius="sm" />
+      <Stack aria-hidden gap="md" pt={4}>
+        <Skeleton height={13} radius="sm" width={180} />
+        <Skeleton height={34} mt={10} radius="sm" width="55%" />
+        <Skeleton height={12} mt={18} radius="sm" width="90%" />
+        <Skeleton height={12} radius="sm" width="97%" />
+        <Skeleton height={12} radius="sm" width="85%" />
+        <Skeleton height={12} radius="sm" width="60%" />
       </Stack>
     );
   }
@@ -61,23 +60,23 @@ export default function PublicSpacePage() {
         title={data.page.title || data.space.name || t("untitled")}
         withAppName={false}
       >
-        {!data.searchIndexing && <meta name="robots" content="noindex" />}
+        {!data.searchIndexing && <meta content="noindex" name="robots" />}
       </DocumentTitle>
 
       <DocsBreadcrumbs />
 
       <ReadonlyPageEditor
-        key={data.page.id}
-        title={data.page.title}
-        content={data.page.content}
-        pageId={data.page.id}
-        spaceSlug={spaceSlug}
         byline={
           <DocsByline
             creator={showAuthor ? data.page.creator : undefined}
             updatedAt={showUpdatedAt ? data.page.updatedAt : undefined}
           />
         }
+        content={data.page.content}
+        key={data.page.id}
+        pageId={data.page.id}
+        spaceSlug={spaceSlug}
+        title={data.page.title}
         trailingSpace={false}
       />
 
@@ -94,7 +93,9 @@ type DocsBylineProps = {
 function DocsByline({ creator, updatedAt }: DocsBylineProps) {
   const { t } = useTranslation();
 
-  if (!creator && !updatedAt) return null;
+  if (!(creator || updatedAt)) {
+    return null;
+  }
 
   return (
     <div className={styles.byline}>
@@ -110,7 +111,7 @@ function DocsByline({ creator, updatedAt }: DocsBylineProps) {
       )}
 
       {creator && updatedAt && (
-        <span className={styles.bylineDot} aria-hidden>
+        <span aria-hidden className={styles.bylineDot}>
           •
         </span>
       )}

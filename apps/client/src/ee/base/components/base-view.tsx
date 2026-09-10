@@ -1,55 +1,55 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Text, Stack } from "@mantine/core";
-import { useAtom } from "jotai";
-import { IconTable } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-import { notifications } from "@mantine/notifications";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
+import { Stack, Text } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconTable } from "@tabler/icons-react";
 import { generateJitteredKeyBetween } from "fractional-indexing-jittered";
-import { useBaseQuery } from "@/ee/base/queries/base-query";
-import { useBaseSocket } from "@/ee/base/hooks/use-base-socket";
-import {
-  FilterGroup,
-  ViewSortConfig,
-  EditingCell,
-  FocusedCell,
-  IBaseProperty,
-} from "@/ee/base/types/base.types";
-import {
-  useBaseRowsQuery,
-  flattenRows,
-  useCreateRowMutation,
-  useUpdateRowMutation,
-  useReorderRowMutation,
-} from "@/ee/base/queries/base-row-query";
-import { useUpdateViewMutation } from "@/ee/base/queries/base-view-query";
+import { useAtom } from "jotai";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   activeViewIdAtomFamily,
   editingCellAtomFamily,
   focusedCellAtomFamily,
 } from "@/ee/base/atoms/base-atoms";
-import { useBaseTable } from "@/ee/base/hooks/use-base-table";
-import { isSystemPropertyType } from "@/ee/base/property-types/property-type.registry";
-import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
-import useCurrentUser from "@/features/user/hooks/use-current-user";
-import { useHydrateCurrentUser } from "@/ee/base/reference/reference-store";
-import { useViewDraft } from "@/ee/base/hooks/use-view-draft";
-import { BaseToolbar } from "@/ee/base/components/base-toolbar";
-import { BaseViewDraftBanner } from "@/ee/base/components/base-view-draft-banner";
 import { BaseEmbedTitle } from "@/ee/base/components/base-embed-title";
 import { BaseTableSkeleton } from "@/ee/base/components/base-table-skeleton";
-import { ViewRenderer } from "@/ee/base/components/views/view-renderer";
+import { BaseToolbar } from "@/ee/base/components/base-toolbar";
+import { BaseViewDraftBanner } from "@/ee/base/components/base-view-draft-banner";
 import { RowDetailModal } from "@/ee/base/components/row-detail-modal/row-detail-modal";
-import { useRowDetailModal } from "@/ee/base/hooks/use-row-detail-modal";
+import { ViewRenderer } from "@/ee/base/components/views/view-renderer";
 import { BaseEditableProvider } from "@/ee/base/context/base-editable";
 import { RowExpandProvider } from "@/ee/base/context/row-expand";
-import { usePageQuery } from "@/features/page/queries/page-query";
-import { buildPageUrl } from "@/features/page/page.utils";
-import { getAppUrl } from "@/lib/config.ts";
-import { useNavigate } from "react-router-dom";
-import classes from "@/ee/base/styles/grid.module.css";
+import { useBaseSocket } from "@/ee/base/hooks/use-base-socket";
+import { useBaseTable } from "@/ee/base/hooks/use-base-table";
+import { useRowDetailModal } from "@/ee/base/hooks/use-row-detail-modal";
+import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
+import { useViewDraft } from "@/ee/base/hooks/use-view-draft";
+import { isSystemPropertyType } from "@/ee/base/property-types/property-type.registry";
+import { useBaseQuery } from "@/ee/base/queries/base-query";
+import {
+  flattenRows,
+  useBaseRowsQuery,
+  useCreateRowMutation,
+  useReorderRowMutation,
+  useUpdateRowMutation,
+} from "@/ee/base/queries/base-row-query";
+import { useUpdateViewMutation } from "@/ee/base/queries/base-view-query";
+import { useHydrateCurrentUser } from "@/ee/base/reference/reference-store";
 import viewClasses from "@/ee/base/styles/base-view.module.css";
+import classes from "@/ee/base/styles/grid.module.css";
 import kanbanClasses from "@/ee/base/styles/kanban.module.css";
+import {
+  EditingCell,
+  FilterGroup,
+  FocusedCell,
+  IBaseProperty,
+  ViewSortConfig,
+} from "@/ee/base/types/base.types";
+import { buildPageUrl } from "@/features/page/page.utils";
+import { usePageQuery } from "@/features/page/queries/page-query";
+import useCurrentUser from "@/features/user/hooks/use-current-user";
+import { getAppUrl } from "@/lib/config.ts";
 
 type BaseViewProps = {
   pageId: string;
@@ -60,17 +60,27 @@ type BaseViewProps = {
   titleSlot?: React.ReactNode;
 };
 
-export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseViewProps) {
+export function BaseView({
+  pageId,
+  embedded,
+  editable = true,
+  titleSlot,
+}: BaseViewProps) {
   const { t } = useTranslation();
   // Subscribe so other clients' edits, schema changes, and async-job completions reconcile into cache.
   useBaseSocket(pageId);
-  const { data: base, isLoading: baseLoading, error: baseError } =
-    useBaseQuery(pageId);
+  const {
+    data: base,
+    isLoading: baseLoading,
+    error: baseError,
+  } = useBaseQuery(pageId);
 
   const navigate = useNavigate();
   const { data: page } = usePageQuery({ pageId });
   const handleExpand = useCallback(() => {
-    if (!page) return;
+    if (!page) {
+      return;
+    }
     navigate(buildPageUrl(page.space?.slug, page.slugId, page.title));
   }, [navigate, page]);
 
@@ -80,30 +90,32 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
       page
         ? `${getAppUrl()}${buildPageUrl(page.space?.slug, page.slugId, page.title)}?view=${encodeURIComponent(viewId)}`
         : null,
-    [page],
+    [page]
   );
 
   const [activeViewId, setActiveViewId] = useAtom(
-    activeViewIdAtomFamily(pageId),
+    activeViewIdAtomFamily(pageId)
   ) as unknown as [string | null, (val: string | null) => void];
 
   const [, setEditingCell] = useAtom(
-    editingCellAtomFamily(pageId),
+    editingCellAtomFamily(pageId)
   ) as unknown as [EditingCell, (val: EditingCell) => void];
 
   const [, setFocusedCell] = useAtom(
-    focusedCellAtomFamily(pageId),
+    focusedCellAtomFamily(pageId)
   ) as unknown as [FocusedCell, (val: FocusedCell) => void];
 
   const views = useMemo(
     () =>
       [...(base?.views ?? [])].sort((a, b) =>
-        a.position < b.position ? -1 : a.position > b.position ? 1 : 0,
+        a.position < b.position ? -1 : a.position > b.position ? 1 : 0
       ),
-    [base?.views],
+    [base?.views]
   );
   const activeView = useMemo(() => {
-    if (!views.length) return undefined;
+    if (!views.length) {
+      return;
+    }
     return views.find((v) => v.id === activeViewId) ?? views[0];
   }, [views, activeViewId]);
 
@@ -118,11 +130,11 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
     reset: resetDraft,
     buildPromotedConfig,
   } = useViewDraft({
-    userId: currentUser?.user.id,
-    pageId,
-    viewId: activeView?.id,
     baselineFilter: activeView?.config?.filter,
     baselineSorts: activeView?.config?.sorts,
+    pageId,
+    userId: currentUser?.user.id,
+    viewId: activeView?.id,
   });
 
   // Baseline merged with local draft. Used for table state and toolbar badge counts.
@@ -139,7 +151,7 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
             },
           }
         : undefined,
-    [activeView, effectiveFilter, effectiveSorts],
+    [activeView, effectiveFilter, effectiveSorts]
   );
 
   const activeFilter = effectiveFilter;
@@ -157,7 +169,11 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useBaseRowsQuery(base && !isKanban ? pageId : undefined, activeFilter, activeSorts);
+  } = useBaseRowsQuery(
+    base && !isKanban ? pageId : undefined,
+    activeFilter,
+    activeSorts
+  );
 
   const updateRowMutation = useUpdateRowMutation();
   const createRowMutation = useCreateRowMutation();
@@ -174,7 +190,9 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
   // unrecognised so we fall back to the default without fighting a later tab switch.
   const appliedViewParamRef = useRef(false);
   useEffect(() => {
-    if (appliedViewParamRef.current || views.length === 0) return;
+    if (appliedViewParamRef.current || views.length === 0) {
+      return;
+    }
     const viewParam = new URLSearchParams(window.location.search).get("view");
     if (viewParam && views.some((v) => v.id === viewParam)) {
       setActiveViewId(viewParam);
@@ -198,7 +216,7 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
       return flat;
     }
     return flat.sort((a, b) =>
-      a.position < b.position ? -1 : a.position > b.position ? 1 : 0,
+      a.position < b.position ? -1 : a.position > b.position ? 1 : 0
     );
   }, [rowsData, activeSorts]);
   const rowsRef = useRef(rows);
@@ -207,7 +225,9 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
   const { table, persistViewConfig } = useBaseTable(base, rows, effectiveView);
 
   const guardedPersistViewConfig = useCallback(() => {
-    if (!editable) return;
+    if (!editable) {
+      return;
+    }
     persistViewConfig();
   }, [editable, persistViewConfig]);
 
@@ -217,36 +237,44 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
   const updateRow = updateRowMutation.mutate;
   const handleCellUpdate = useCallback(
     (rowId: string, propertyId: string, value: unknown) => {
-      if (!editable) return;
+      if (!editable) {
+        return;
+      }
       updateRow({
-        rowId,
-        pageId,
         cells: { [propertyId]: value },
+        pageId,
+        rowId,
       });
     },
-    [editable, pageId, updateRow],
+    [editable, pageId, updateRow]
   );
 
   const handleAddRow = useCallback(
     (afterRowId?: string, focusPropertyId?: string) => {
-      if (!editable) return;
+      if (!editable) {
+        return;
+      }
       createRowMutation.mutate(
         { pageId, ...(afterRowId ? { afterRowId } : {}) },
         {
           onSuccess: (newRow) => {
             let propertyId = focusPropertyId;
             if (!propertyId) {
-              const firstEditable = table.getVisibleLeafColumns().find((col) => {
-                if (col.id === "__row_number") return false;
-                const prop = col.columnDef.meta?.property as
-                  | IBaseProperty
-                  | undefined;
-                return (
-                  !!prop &&
-                  prop.type !== "checkbox" &&
-                  !isSystemPropertyType(prop.type)
-                );
-              });
+              const firstEditable = table
+                .getVisibleLeafColumns()
+                .find((col) => {
+                  if (col.id === "__row_number") {
+                    return false;
+                  }
+                  const prop = col.columnDef.meta?.property as
+                    | IBaseProperty
+                    | undefined;
+                  return (
+                    !!prop &&
+                    prop.type !== "checkbox" &&
+                    !isSystemPropertyType(prop.type)
+                  );
+                });
               propertyId = (
                 firstEditable?.columnDef.meta?.property as
                   | IBaseProperty
@@ -254,32 +282,34 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
               )?.id;
             }
             if (propertyId) {
-              setEditingCell({ rowId: newRow.id, propertyId });
-              setFocusedCell({ rowId: newRow.id, propertyId });
+              setEditingCell({ propertyId, rowId: newRow.id });
+              setFocusedCell({ propertyId, rowId: newRow.id });
             }
           },
-        },
+        }
       );
     },
-    [editable, pageId, createRowMutation, table, setEditingCell, setFocusedCell],
+    [editable, pageId, createRowMutation, table, setEditingCell, setFocusedCell]
   );
 
   const handleViewChange = useCallback(
     (viewId: string) => {
       setActiveViewId(viewId);
     },
-    [setActiveViewId],
+    [setActiveViewId]
   );
 
   const handleColumnReorder = useCallback(
     (columnId: string, finishIndex: number) => {
       const order = table.getState().columnOrder;
       const startIndex = order.indexOf(columnId);
-      if (startIndex === -1 || startIndex === finishIndex) return;
-      table.setColumnOrder(reorder({ list: order, startIndex, finishIndex }));
+      if (startIndex === -1 || startIndex === finishIndex) {
+        return;
+      }
+      table.setColumnOrder(reorder({ finishIndex, list: order, startIndex }));
       guardedPersistViewConfig();
     },
-    [table, guardedPersistViewConfig],
+    [table, guardedPersistViewConfig]
   );
 
   const handleResizeEnd = useCallback(() => {
@@ -290,25 +320,27 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
     (sorts: ViewSortConfig[] | undefined) => {
       setDraftSorts(sorts && sorts.length > 0 ? sorts : undefined);
     },
-    [setDraftSorts],
+    [setDraftSorts]
   );
 
   const handleDraftFiltersChange = useCallback(
     (filter: FilterGroup | undefined) => {
       setDraftFilter(filter);
     },
-    [setDraftFilter],
+    [setDraftFilter]
   );
 
   const handleSaveDraft = useCallback(async () => {
-    if (!activeView || !base) return;
+    if (!(activeView && base)) {
+      return;
+    }
     // Preserves non-draft baseline fields (widths/order/visibility), overwrites only filter/sorts.
     const config = buildPromotedConfig(activeView.config);
     try {
       await updateViewMutation.mutateAsync({
-        viewId: activeView.id,
-        pageId: base.id,
         config,
+        pageId: base.id,
+        viewId: activeView.id,
       });
       resetDraft();
       notifications.show({ message: t("View updated for everyone") });
@@ -339,10 +371,14 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
   const reorderRow = reorderRowMutation.mutate;
   const handleRowReorder = useCallback(
     (rowId: string, targetRowId: string, dropPosition: "above" | "below") => {
-      if (!editable) return;
+      if (!editable) {
+        return;
+      }
       const remainingRows = rowsRef.current.filter((r) => r.id !== rowId);
       const targetIndex = remainingRows.findIndex((r) => r.id === targetRowId);
-      if (targetIndex === -1) return;
+      if (targetIndex === -1) {
+        return;
+      }
 
       let lowerPos: string | null = null;
       let upperPos: string | null = null;
@@ -365,12 +401,12 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
         } else {
           newPosition = generateJitteredKeyBetween(lowerPos, upperPos);
         }
-        reorderRow({ rowId, pageId, position: newPosition });
+        reorderRow({ pageId, position: newPosition, rowId });
       } catch {
         // Position computation failed; skip silently.
       }
     },
-    [editable, pageId, reorderRow],
+    [editable, pageId, reorderRow]
   );
 
   if (baseLoading || (!isKanban && rowsLoading)) {
@@ -379,20 +415,22 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
   if (baseError) {
     return (
       <Stack align="center" gap="sm" p="xl">
-        <IconTable size={40} color="var(--mantine-color-gray-5)" />
+        <IconTable color="var(--mantine-color-gray-5)" size={40} />
         <Text c="dimmed">{t("Failed to load base")}</Text>
       </Stack>
     );
   }
-  if (!base) return null;
+  if (!base) {
+    return null;
+  }
 
   // Ghost rows are an "empty base" affordance, not a "filter matched nothing" state.
   const isFiltered = (activeFilter?.children?.length ?? 0) > 0;
 
   const banner = (
     <BaseViewDraftBanner
-      isDirty={isDirty}
       canSave={canSave}
+      isDirty={isDirty}
       onReset={resetDraft}
       onSave={handleSaveDraft}
       saving={updateViewMutation.isPending}
@@ -401,17 +439,17 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
 
   const toolbar = (
     <BaseToolbar
-      base={base}
       activeView={effectiveView}
-      views={views}
-      table={table}
-      onViewChange={handleViewChange}
+      base={base}
       canAddView={editable}
-      onPersistViewConfig={guardedPersistViewConfig}
-      onDraftSortsChange={handleDraftSortsChange}
-      onDraftFiltersChange={handleDraftFiltersChange}
-      onExpand={embedded ? handleExpand : undefined}
       getViewShareUrl={getViewShareUrl}
+      onDraftFiltersChange={handleDraftFiltersChange}
+      onDraftSortsChange={handleDraftSortsChange}
+      onExpand={embedded ? handleExpand : undefined}
+      onPersistViewConfig={guardedPersistViewConfig}
+      onViewChange={handleViewChange}
+      table={table}
+      views={views}
     />
   );
 
@@ -426,26 +464,26 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
 
   const viewRenderer = (folded: React.ReactNode) => (
     <ViewRenderer
+      aboveBand={folded}
       base={base}
-      rows={rows}
-      effectiveView={effectiveView}
-      table={table}
-      pageId={pageId}
-      embedded={embedded}
       editable={editable}
-      isFiltered={isFiltered}
+      effectiveView={effectiveView}
+      embedded={embedded}
       hasNextPage={!!hasNextPage}
       isFetchingNextPage={isFetchingNextPage}
-      onFetchNextPage={fetchNextPage}
-      onCellUpdate={handleCellUpdate}
+      isFiltered={isFiltered}
+      kanbanFilter={activeFilter}
       onAddRow={handleAddRow}
+      onCellUpdate={handleCellUpdate}
       onColumnReorder={editable ? handleColumnReorder : undefined}
+      onFetchNextPage={fetchNextPage}
       onResizeEnd={handleResizeEnd}
       onRowReorder={editable ? handleRowReorder : undefined}
+      pageId={pageId}
       persistViewConfig={guardedPersistViewConfig}
+      rows={rows}
       scrollportRef={scrollportRef}
-      kanbanFilter={activeFilter}
-      aboveBand={folded}
+      table={table}
     />
   );
 
@@ -459,10 +497,10 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
           </RowExpandProvider>
           <RowDetailModal
             base={base}
-            rows={rows}
-            openRowId={openRowId}
             onClose={closeRow}
             onNavigate={handleRowNavigate}
+            openRowId={openRowId}
+            rows={rows}
           />
         </BaseEditableProvider>
       );
@@ -478,15 +516,15 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
               {banner}
               {toolbar}
               <BaseEmbedTitle pageId={pageId} />
-            </>,
+            </>
           )}
         </RowExpandProvider>
         <RowDetailModal
           base={base}
-          rows={rows}
-          openRowId={openRowId}
           onClose={closeRow}
           onNavigate={handleRowNavigate}
+          openRowId={openRowId}
+          rows={rows}
         />
       </BaseEditableProvider>
     );
@@ -503,10 +541,10 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
         </div>
         <RowDetailModal
           base={base}
-          rows={rows}
-          openRowId={openRowId}
           onClose={closeRow}
           onNavigate={handleRowNavigate}
+          openRowId={openRowId}
+          rows={rows}
         />
       </BaseEditableProvider>
     );
@@ -524,17 +562,17 @@ export function BaseView({ pageId, embedded, editable = true, titleSlot }: BaseV
                 {titleSlot}
                 {banner}
                 {toolbar}
-              </>,
+              </>
             )}
           </RowExpandProvider>
         </div>
       </div>
       <RowDetailModal
         base={base}
-        rows={rows}
-        openRowId={openRowId}
         onClose={closeRow}
         onNavigate={handleRowNavigate}
+        openRowId={openRowId}
+        rows={rows}
       />
     </BaseEditableProvider>
   );

@@ -1,17 +1,17 @@
 export interface IFileTask {
-  id: string;
-  type: "import" | "export";
-  source: string;
-  status: string;
+  createdAt: string;
+  creatorId: string;
+  deletedAt: string | null;
+  errorMessage: string | null;
+  fileExt: string;
   fileName: string;
   filePath: string;
   fileSize: number;
-  fileExt: string;
-  errorMessage: string | null;
-  creatorId: string;
+  id: string;
+  source: string;
   spaceId: string;
-  workspaceId: string;
-  createdAt: string;
+  status: string;
+  type: "import" | "export";
   updatedAt: string;
-  deletedAt: string | null;
+  workspaceId: string;
 }

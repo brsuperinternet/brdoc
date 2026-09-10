@@ -1,5 +1,5 @@
-import { IPage } from "@/features/page/types/page.types.ts";
 import { sortPositionKeys } from "@/features/page/tree/utils";
+import { IPage } from "@/features/page/types/page.types.ts";
 
 export type SharedPageTreeNode = {
   id: string;
@@ -16,25 +16,25 @@ export type SharedPageTreeNode = {
 };
 
 export function buildSharedPageTree(
-  pages: Partial<IPage[]>,
+  pages: Partial<IPage[]>
 ): SharedPageTreeNode[] {
   const pageMap: Record<string, SharedPageTreeNode> = {};
 
   // Initialize each page as a tree node and store it in a map.
   pages.forEach((page) => {
     pageMap[page.id] = {
-      id: page.slugId,
-      slugId: page.slugId,
-      name: page.title,
-      icon: page.icon,
-      position: page.position,
+      children: [],
       // Initially assume a page has no children.
       hasChildren: false,
-      spaceId: page.spaceId,
-      parentPageId: page.parentPageId,
+      icon: page.icon,
+      id: page.slugId,
       label: page.title || "untitled",
+      name: page.title,
+      parentPageId: page.parentPageId,
+      position: page.position,
+      slugId: page.slugId,
+      spaceId: page.spaceId,
       value: page.id,
-      children: [],
     };
   });
 
@@ -67,13 +67,14 @@ export function buildSharedPageTree(
   return sortTree(tree);
 }
 
-
 // Returns the children of the node matching the page id or slugId.
 export function findSubpagesInTree(
   tree: SharedPageTreeNode[] | null | undefined,
-  pageId: string | undefined,
+  pageId: string | undefined
 ): SharedPageTreeNode[] {
-  if (!tree || !pageId) return [];
+  if (!(tree && pageId)) {
+    return [];
+  }
 
   for (const node of tree) {
     if (node.value === pageId || node.slugId === pageId) {
@@ -92,7 +93,7 @@ export function findSubpagesInTree(
 // Recursively checks if a page exists in the shared page tree.
 export function isPageInTree(
   tree: SharedPageTreeNode[],
-  pageSlugId: string,
+  pageSlugId: string
 ): boolean {
   for (const node of tree) {
     if (node.slugId === pageSlugId) {

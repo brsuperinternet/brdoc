@@ -1,4 +1,14 @@
-import { ActionIcon, Group, Menu, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import { htmlToMarkdown } from "@docmost/editor-ext";
+import {
+  ActionIcon,
+  Group,
+  Menu,
+  Text,
+  ThemeIcon,
+  Tooltip,
+} from "@mantine/core";
+import { useDisclosure, useHotkeys } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconArrowRight,
   IconArrowsHorizontal,
@@ -18,48 +28,45 @@ import {
   IconTrash,
   IconWifiOff,
 } from "@tabler/icons-react";
-import React, { useEffect, useRef, useState } from "react";
-import { useAsideTriggerProps } from "@/hooks/use-toggle-aside.tsx";
 import { useAtom, useAtomValue } from "jotai";
-import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
-import { useDisclosure, useHotkeys } from "@mantine/hooks";
-import { useClipboard } from "@/hooks/use-clipboard";
-import { useParams } from "react-router-dom";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
-import { buildPageUrl } from "@/features/page/page.utils.ts";
-import { notifications } from "@mantine/notifications";
-import { getAppUrl } from "@/lib/config.ts";
-import { extractPageSlugId } from "@/lib";
-import { useTreeMutation } from "@/features/page/tree/hooks/use-tree-mutation.ts";
-import { useDeletePageModal } from "@/features/page/hooks/use-delete-page-modal.tsx";
-import { PageWidthToggle } from "@/features/user/components/page-width-pref.tsx";
+import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 import ExportModal from "@/components/common/export-modal";
-import { htmlToMarkdown } from "@docmost/editor-ext";
-import {
-  pageEditorAtom,
-  yjsConnectionStatusAtom,
-} from "@/features/editor/atoms/editor-atoms.ts";
-import { formattedDate } from "@/lib/time.ts";
-import { PageEditModeToggle } from "@/features/user/components/page-state-pref.tsx";
-import MovePageModal from "@/features/page/components/move-page-modal.tsx";
-import PageAttachmentsModal from "@/features/attachments/components/page-attachments-modal.tsx";
-import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
 import { PageShareModal } from "@/ee/page-permission";
 import {
   PageVerificationMenuItem,
   PageVerificationModal,
 } from "@/ee/page-verification";
+import PageAttachmentsModal from "@/features/attachments/components/page-attachments-modal.tsx";
 import {
-  useFavoriteIds,
+  pageEditorAtom,
+  yjsConnectionStatusAtom,
+} from "@/features/editor/atoms/editor-atoms.ts";
+import {
   useAddFavoriteMutation,
+  useFavoriteIds,
   useRemoveFavoriteMutation,
 } from "@/features/favorite/queries/favorite-query";
+import MovePageModal from "@/features/page/components/move-page-modal.tsx";
+import { useDeletePageModal } from "@/features/page/hooks/use-delete-page-modal.tsx";
+import { buildPageUrl } from "@/features/page/page.utils.ts";
+import { usePageQuery } from "@/features/page/queries/page-query.ts";
 import {
-  useWatchStatusQuery,
-  useWatchPageMutation,
   useUnwatchPageMutation,
+  useWatchPageMutation,
+  useWatchStatusQuery,
 } from "@/features/page/queries/watcher-query";
+import { useTreeMutation } from "@/features/page/tree/hooks/use-tree-mutation.ts";
+import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
+import { PageEditModeToggle } from "@/features/user/components/page-state-pref.tsx";
+import { PageWidthToggle } from "@/features/user/components/page-width-pref.tsx";
+import { useClipboard } from "@/hooks/use-clipboard";
+import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
+import { useAsideTriggerProps } from "@/hooks/use-toggle-aside.tsx";
+import { extractPageSlugId } from "@/lib";
+import { getAppUrl } from "@/lib/config.ts";
+import { formattedDate } from "@/lib/time.ts";
 
 interface PageHeaderMenuProps {
   readOnly?: boolean;
@@ -92,7 +99,7 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
         { preventDefault: false },
       ],
     ],
-    [],
+    []
   );
 
   if (isDeleted) {
@@ -103,15 +110,15 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
     <>
       <ConnectionWarning />
 
-      {!readOnly && !page?.isBase && <PageEditModeToggle size="xs" />}
+      {!(readOnly || page?.isBase) && <PageEditModeToggle size="xs" />}
 
       <PageShareModal readOnly={readOnly} />
 
       <Tooltip label={t("Comments")} openDelay={250} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="dark"
           aria-label={t("Comments")}
+          color="dark"
+          variant="subtle"
           {...commentsTriggerProps}
         >
           <IconMessage size={20} stroke={2} />
@@ -121,9 +128,9 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
       {!page?.isBase && (
         <Tooltip label={t("Table of contents")} openDelay={250} withArrow>
           <ActionIcon
-            variant="subtle"
-            color="dark"
             aria-label={t("Table of contents")}
+            color="dark"
+            variant="subtle"
             {...tocTriggerProps}
           >
             <IconList size={20} stroke={2} />
@@ -182,7 +189,9 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   };
 
   const handleCopyAsMarkdown = () => {
-    if (!pageEditor) return;
+    if (!pageEditor) {
+      return;
+    }
     const html = pageEditor.getHTML();
     const markdown = htmlToMarkdown(html);
     const title = page?.title ? `# ${page.title}\n\n` : "";
@@ -205,8 +214,10 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   };
 
   const handleToggleFavorite = () => {
-    if (!page?.id) return;
-    const params = { type: "page" as const, pageId: page.id };
+    if (!page?.id) {
+      return;
+    }
+    const params = { pageId: page.id, type: "page" as const };
     if (isFavorited) {
       removeFavoriteMutation.mutate(params);
     } else {
@@ -217,18 +228,18 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   return (
     <>
       <Menu
-        shadow="xl"
-        position="bottom-end"
+        arrowPosition="center"
         offset={20}
+        position="bottom-end"
+        shadow="xl"
         width={230}
         withArrow
-        arrowPosition="center"
       >
         <Menu.Target>
           <ActionIcon
-            variant="subtle"
-            color="dark"
             aria-label={t("Page actions")}
+            color="dark"
+            variant="subtle"
           >
             <IconDots size={20} />
           </ActionIcon>
@@ -254,7 +265,10 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
           <Menu.Item
             leftSection={
               isFavorited ? (
-                <IconStarFilled size={16} color="var(--mantine-color-yellow-5)" />
+                <IconStarFilled
+                  color="var(--mantine-color-yellow-5)"
+                  size={16}
+                />
               ) : (
                 <IconStar size={16} />
               )
@@ -308,10 +322,10 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
             </Menu.Item>
           )}
 
-          {!readOnly && !page?.isBase && (
+          {!(readOnly || page?.isBase) && (
             <PageVerificationMenuItem
-              pageId={page?.id}
               onClick={openVerificationModal}
+              pageId={page?.id}
             />
           )}
 
@@ -356,7 +370,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
           <Menu.Divider />
 
           <>
-            <Group px="sm" wrap="nowrap" style={{ cursor: "pointer" }}>
+            <Group px="sm" style={{ cursor: "pointer" }} wrap="nowrap">
               <Tooltip
                 label={t("Edited by {{name}} {{time}}", {
                   name: page.lastUpdatedBy.name,
@@ -365,20 +379,20 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
                 position="left-start"
               >
                 <div style={{ width: 210 }}>
-                  <Text size="xs" c="dimmed" truncate="end">
+                  <Text c="dimmed" size="xs" truncate="end">
                     {t("Word count: {{wordCount}}", {
                       wordCount: pageEditor?.storage?.characterCount?.words(),
                     })}
                   </Text>
 
-                  <Text size="xs" c="dimmed" lineClamp={1}>
+                  <Text c="dimmed" lineClamp={1} size="xs">
                     <Trans
+                      components={{ b: <Text fw={500} span /> }}
                       defaults="Created by: <b>{{creatorName}}</b>"
                       values={{ creatorName: page?.creator?.name }}
-                      components={{ b: <Text span fw={500} /> }}
                     />
                   </Text>
-                  <Text size="xs" c="dimmed" truncate="end">
+                  <Text c="dimmed" size="xs" truncate="end">
                     {t("Created at: {{time}}", {
                       time: formattedDate(page.createdAt),
                     })}
@@ -391,30 +405,30 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
       </Menu>
 
       <ExportModal
-        type="page"
         id={page.id}
-        open={exportOpened}
         onClose={closeExportModal}
+        open={exportOpened}
+        type="page"
       />
 
       <MovePageModal
-        pageId={page.id}
-        slugId={page.slugId}
         currentSpaceSlug={spaceSlug}
         onClose={closeMoveSpaceModal}
         open={movePageModalOpened}
+        pageId={page.id}
+        slugId={page.slugId}
       />
 
       <PageVerificationModal
-        pageId={page.id}
-        opened={verificationOpened}
         onClose={closeVerificationModal}
+        opened={verificationOpened}
+        pageId={page.id}
       />
 
       <PageAttachmentsModal
-        pageId={page.id}
-        open={attachmentsOpened}
         onClose={closeAttachmentsModal}
+        open={attachmentsOpened}
+        pageId={page.id}
       />
     </>
   );
@@ -428,7 +442,7 @@ function ConnectionWarning() {
 
   useEffect(() => {
     const isDisconnected = ["disconnected", "connecting"].includes(
-      yjsConnectionStatus,
+      yjsConnectionStatus
     );
 
     if (isDisconnected) {
@@ -445,15 +459,18 @@ function ConnectionWarning() {
   }, [yjsConnectionStatus]);
 
   // Cleanup only on unmount
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-    };
-  }, []);
+    },
+    []
+  );
 
-  if (!showWarning) return null;
+  if (!showWarning) {
+    return null;
+  }
 
   return (
     <Tooltip
@@ -462,11 +479,11 @@ function ConnectionWarning() {
       withArrow
     >
       <ThemeIcon
-        variant="default"
+        aria-label={t("Real-time editor connection lost. Retrying...")}
         c="red"
         role="status"
-        aria-label={t("Real-time editor connection lost. Retrying...")}
         style={{ border: "none" }}
+        variant="default"
       >
         <IconWifiOff size={20} stroke={2} />
       </ThemeIcon>

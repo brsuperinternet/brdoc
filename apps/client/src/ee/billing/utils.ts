@@ -10,7 +10,9 @@ export function formatInterval(interval: string): string {
 }
 
 export function getTrialDaysLeft(trialEndAt: Date) {
-  if (!trialEndAt) return null;
+  if (!trialEndAt) {
+    return null;
+  }
 
   const daysLeft = differenceInCalendarDays(trialEndAt, new Date());
   return daysLeft > 0 ? daysLeft : 0;

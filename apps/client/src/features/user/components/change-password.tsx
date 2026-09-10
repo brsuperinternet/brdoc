@@ -1,36 +1,35 @@
-import { Button, Group, Text, Modal, PasswordInput } from "@mantine/core";
-import { z } from "zod/v4";
-import { useState } from "react";
-import { useDisclosure } from "@mantine/hooks";
-import * as React from "react";
+import { Button, Group, Modal, PasswordInput, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
-import { changePassword } from "@/features/auth/services/auth-service.ts";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import { changePassword } from "@/features/auth/services/auth-service.ts";
 
 export default function ChangePassword() {
   const { t } = useTranslation();
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
-      <div style={{ minWidth: 0, flex: 1 }}>
+    <Group gap="xl" justify="space-between" wrap="nowrap">
+      <div style={{ flex: 1, minWidth: 0 }}>
         <Text size="md">{t("Password")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t("You can change your password here.")}
         </Text>
       </div>
 
-      <Button onClick={open} variant="default" style={{ whiteSpace: "nowrap" }}>
+      <Button onClick={open} style={{ whiteSpace: "nowrap" }} variant="default">
         {t("Change password")}
       </Button>
 
       <Modal
-        opened={opened}
-        onClose={close}
-        title={t("Change password")}
         centered
+        onClose={close}
+        opened={opened}
+        title={t("Change password")}
       >
         <Text mb="md">
           {t("Your password must be a minimum of 8 characters.")}
@@ -42,10 +41,8 @@ export default function ChangePassword() {
 }
 
 const formSchema = z.object({
-  oldPassword: z
-    .string({ error: "your current password is required" })
-    .min(8),
   newPassword: z.string({ error: "New password is required" }).min(8),
+  oldPassword: z.string({ error: "your current password is required" }).min(8),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,19 +55,19 @@ function ChangePasswordForm({ onClose }: ChangePasswordFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
-      oldPassword: "",
       newPassword: "",
+      oldPassword: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   async function handleSubmit(data: FormValues) {
     setIsLoading(true);
     try {
       await changePassword({
-        oldPassword: data.oldPassword,
         newPassword: data.newPassword,
+        oldPassword: data.oldPassword,
       });
       notifications.show({
         message: t("Password changed successfully"),
@@ -79,8 +76,8 @@ function ChangePasswordForm({ onClose }: ChangePasswordFormProps) {
       onClose();
     } catch (err) {
       notifications.show({
-        message: `Error: ${err.response.data.message}`,
         color: "red",
+        message: `Error: ${err.response.data.message}`,
       });
     }
     setIsLoading(false);
@@ -89,15 +86,15 @@ function ChangePasswordForm({ onClose }: ChangePasswordFormProps) {
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <PasswordInput
+        data-autofocus
         label={t("Current password")}
+        mb="md"
         name="oldPassword"
         placeholder={t("Enter your current password")}
         variant="filled"
-        mb="md"
-        data-autofocus
         visibilityToggleButtonProps={{
-          "aria-label": t("Toggle password visibility"),
           "aria-hidden": false,
+          "aria-label": t("Toggle password visibility"),
           tabIndex: 0,
         }}
         {...form.getInputProps("oldPassword")}
@@ -105,19 +102,19 @@ function ChangePasswordForm({ onClose }: ChangePasswordFormProps) {
 
       <PasswordInput
         label={t("New password")}
+        mb="md"
         placeholder={t("Enter your new password")}
         variant="filled"
-        mb="md"
         visibilityToggleButtonProps={{
-          "aria-label": t("Toggle password visibility"),
           "aria-hidden": false,
+          "aria-label": t("Toggle password visibility"),
           tabIndex: 0,
         }}
         {...form.getInputProps("newPassword")}
       />
 
       <Group justify="flex-end" mt="md">
-        <Button type="submit" disabled={isLoading} loading={isLoading}>
+        <Button disabled={isLoading} loading={isLoading} type="submit">
           {t("Change password")}
         </Button>
       </Group>

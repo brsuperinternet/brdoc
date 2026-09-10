@@ -1,11 +1,11 @@
-import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
 import { useDocsSurface } from "@/features/public-space/components/docs/docs-surface-context.tsx";
 import { flattenTreePreorder } from "@/features/public-space/utils/docs-tree.ts";
-import { extractPageSlugId } from "@/lib";
 import { SharedPageTreeNode } from "@/features/share/utils.ts";
+import { extractPageSlugId } from "@/lib";
 import styles from "./docs.module.css";
 
 export default function DocsPageNav() {
@@ -16,8 +16,8 @@ export default function DocsPageNav() {
   const { prev, next } = useMemo(() => {
     if (!treeData?.length) {
       return {
-        prev: null as SharedPageTreeNode | null,
         next: null as SharedPageTreeNode | null,
+        prev: null as SharedPageTreeNode | null,
       };
     }
     const flat = flattenTreePreorder(treeData);
@@ -26,23 +26,25 @@ export default function DocsPageNav() {
       : treeData[0]?.slugId;
     const index = flat.findIndex((node) => node.slugId === currentSlugId);
     return {
-      prev: index > 0 ? flat[index - 1] : null,
       next: index >= 0 && index < flat.length - 1 ? flat[index + 1] : null,
+      prev: index > 0 ? flat[index - 1] : null,
     };
   }, [treeData, pageSlug]);
 
-  if (!prev && !next) return null;
+  if (!(prev || next)) {
+    return null;
+  }
 
   return (
-    <nav className={styles.pageNav} aria-label={t("Page navigation")}>
+    <nav aria-label={t("Page navigation")} className={styles.pageNav}>
       {prev && (
         <Link
-          to={getNodeUrl(prev)}
           className={styles.pageNavCard}
           data-direction="prev"
+          to={getNodeUrl(prev)}
         >
           <span className={styles.pageNavLabel}>
-            <IconArrowLeft size={13} stroke={2} aria-hidden />
+            <IconArrowLeft aria-hidden size={13} stroke={2} />
             {t("Previous")}
           </span>
           <span className={styles.pageNavTitle}>
@@ -52,13 +54,13 @@ export default function DocsPageNav() {
       )}
       {next && (
         <Link
-          to={getNodeUrl(next)}
           className={styles.pageNavCard}
           data-direction="next"
+          to={getNodeUrl(next)}
         >
           <span className={styles.pageNavLabel}>
             {t("Next")}
-            <IconArrowRight size={13} stroke={2} aria-hidden />
+            <IconArrowRight aria-hidden size={13} stroke={2} />
           </span>
           <span className={styles.pageNavTitle}>
             {next.name || t("untitled")}

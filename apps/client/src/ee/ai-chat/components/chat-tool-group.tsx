@@ -1,12 +1,12 @@
-import { useState } from "react";
 import {
-  IconChevronRight,
   IconChevronDown,
+  IconChevronRight,
   IconLoader2,
 } from "@tabler/icons-react";
+import { useState } from "react";
+import classes from "../styles/chat-message.module.css";
 import type { AiChatToolCall } from "../types/ai-chat.types";
 import ChatToolResult, { TOOL_LABELS } from "./chat-tool-result";
-import classes from "../styles/chat-message.module.css";
 
 type Props = {
   toolCalls: AiChatToolCall[];
@@ -16,7 +16,9 @@ type Props = {
 export default function ChatToolGroup({ toolCalls, isStreaming }: Props) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!toolCalls || toolCalls.length === 0) return null;
+  if (!toolCalls || toolCalls.length === 0) {
+    return null;
+  }
 
   const activeCall =
     isStreaming && toolCalls.length > 0
@@ -30,10 +32,8 @@ export default function ChatToolGroup({ toolCalls, isStreaming }: Props) {
   return (
     <div className={classes.toolGroup}>
       <div
-        className={classes.toolGroupHeader}
-        role="button"
-        tabIndex={0}
         aria-expanded={expanded}
+        className={classes.toolGroupHeader}
         onClick={() => setExpanded((prev) => !prev)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -41,9 +41,11 @@ export default function ChatToolGroup({ toolCalls, isStreaming }: Props) {
             setExpanded((prev) => !prev);
           }
         }}
+        role="button"
+        tabIndex={0}
       >
         {activeLabel ? (
-          <IconLoader2 size={12} className={classes.processingSpinner} />
+          <IconLoader2 className={classes.processingSpinner} size={12} />
         ) : expanded ? (
           <IconChevronDown size={12} />
         ) : (

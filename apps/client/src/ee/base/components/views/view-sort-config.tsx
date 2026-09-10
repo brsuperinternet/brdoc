@@ -1,22 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
 import {
-  Popover,
-  Stack,
-  Group,
-  Select,
   ActionIcon,
+  Button,
+  Group,
+  Popover,
+  Select,
+  Stack,
   Text,
   UnstyledButton,
-  Button,
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import {
-  IBaseProperty,
-  ViewSortConfig,
-} from "@/ee/base/types/base.types";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEscapeClose } from "@/ee/base/hooks/use-escape-close";
 import viewClasses from "@/ee/base/styles/views.module.css";
+import { IBaseProperty, ViewSortConfig } from "@/ee/base/types/base.types";
 
 type ViewSortConfigProps = {
   opened: boolean;
@@ -40,31 +37,37 @@ export function ViewSortConfigPopover({
   const [draft, setDraft] = useState<ViewSortConfig | null>(null);
 
   useEffect(() => {
-    if (!opened) setDraft(null);
+    if (!opened) {
+      setDraft(null);
+    }
   }, [opened]);
 
   // Page props sort by raw UUID; hide until title-based sort is supported.
   const sortableProperties = properties.filter((p) => p.type !== "page");
 
   const propertyOptions = sortableProperties.map((p) => ({
-    value: p.id,
     label: p.name,
+    value: p.id,
   }));
 
   const directionOptions = [
-    { value: "asc", label: t("Ascending") },
-    { value: "desc", label: t("Descending") },
+    { label: t("Ascending"), value: "asc" },
+    { label: t("Descending"), value: "desc" },
   ];
 
   const handleStartDraft = useCallback(() => {
     const usedIds = new Set(sorts.map((s) => s.propertyId));
     const available = sortableProperties.find((p) => !usedIds.has(p.id));
-    if (!available) return;
-    setDraft({ propertyId: available.id, direction: "asc" });
+    if (!available) {
+      return;
+    }
+    setDraft({ direction: "asc", propertyId: available.id });
   }, [sorts, sortableProperties]);
 
   const handleSaveDraft = useCallback(() => {
-    if (!draft) return;
+    if (!draft) {
+      return;
+    }
     onChange([...sorts, draft]);
     setDraft(null);
   }, [draft, sorts, onChange]);
@@ -77,87 +80,88 @@ export function ViewSortConfigPopover({
     (index: number) => {
       onChange(sorts.filter((_, i) => i !== index));
     },
-    [sorts, onChange],
+    [sorts, onChange]
   );
 
   const handlePropertyChange = useCallback(
     (index: number, propertyId: string | null) => {
-      if (!propertyId) return;
-      onChange(
-        sorts.map((s, i) => (i === index ? { ...s, propertyId } : s)),
-      );
+      if (!propertyId) {
+        return;
+      }
+      onChange(sorts.map((s, i) => (i === index ? { ...s, propertyId } : s)));
     },
-    [sorts, onChange],
+    [sorts, onChange]
   );
 
   const handleDirectionChange = useCallback(
     (index: number, direction: string | null) => {
-      if (!direction) return;
+      if (!direction) {
+        return;
+      }
       onChange(
         sorts.map((s, i) =>
-          i === index
-            ? { ...s, direction: direction as "asc" | "desc" }
-            : s,
-        ),
+          i === index ? { ...s, direction: direction as "asc" | "desc" } : s
+        )
       );
     },
-    [sorts, onChange],
+    [sorts, onChange]
   );
 
-  const canAddMore =
-    sortableProperties.length > sorts.length + (draft ? 1 : 0);
+  const canAddMore = sortableProperties.length > sorts.length + (draft ? 1 : 0);
 
   return (
     <Popover
-      opened={opened}
+      closeOnClickOutside
+      closeOnEscape
       onChange={(o) => {
-        if (!o) onClose();
+        if (!o) {
+          onClose();
+        }
       }}
       onClose={onClose}
+      opened={opened}
       position="bottom-end"
       shadow="md"
-      width={340}
       trapFocus
-      closeOnEscape
-      closeOnClickOutside
+      width={340}
       withinPortal
     >
       <Popover.Target>{children}</Popover.Target>
       <Popover.Dropdown>
         <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
+          <Text c="dimmed" fw={600} size="xs">
             {t("Sort by")}
           </Text>
 
           {sorts.length === 0 && !draft && (
-            <Text size="xs" c="dimmed">
+            <Text c="dimmed" size="xs">
               {t("No sorts applied")}
             </Text>
           )}
 
           {sorts.map((sort, index) => (
-            <Group key={index} gap="xs" wrap="nowrap">
+            <Group gap="xs" key={index} wrap="nowrap">
               <Select
-                size="xs"
                 comboboxProps={{ withinPortal: false }}
                 data={propertyOptions}
-                value={sort.propertyId}
                 onChange={(val) => handlePropertyChange(index, val)}
+                size="xs"
                 style={{ flex: 1 }}
+                value={sort.propertyId}
               />
               <Select
-                size="xs"
                 comboboxProps={{ withinPortal: false }}
                 data={directionOptions}
-                value={sort.direction}
                 onChange={(val) => handleDirectionChange(index, val)}
+                size="xs"
+                value={sort.direction}
                 w={110}
               />
               <ActionIcon
-                variant="subtle"
                 color="gray"
-                size="sm"
                 onClick={() => handleRemove(index)}
+                size="sm"
+                variant="subtle"
               >
                 <IconTrash size={14} />
               </ActionIcon>
@@ -168,20 +172,18 @@ export function ViewSortConfigPopover({
             <Stack gap={6}>
               <Group gap="xs" wrap="nowrap">
                 <Select
-                  size="xs"
                   comboboxProps={{ withinPortal: false }}
                   data={propertyOptions}
-                  value={draft.propertyId}
                   onChange={(val) =>
                     val && setDraft({ ...draft, propertyId: val })
                   }
+                  size="xs"
                   style={{ flex: 1 }}
+                  value={draft.propertyId}
                 />
                 <Select
-                  size="xs"
                   comboboxProps={{ withinPortal: false }}
                   data={directionOptions}
-                  value={draft.direction}
                   onChange={(val) =>
                     val &&
                     setDraft({
@@ -189,18 +191,16 @@ export function ViewSortConfigPopover({
                       direction: val as "asc" | "desc",
                     })
                   }
+                  size="xs"
+                  value={draft.direction}
                   w={110}
                 />
               </Group>
-              <Group justify="flex-end" gap="xs">
-                <Button
-                  variant="default"
-                  size="xs"
-                  onClick={handleCancelDraft}
-                >
+              <Group gap="xs" justify="flex-end">
+                <Button onClick={handleCancelDraft} size="xs" variant="default">
                   {t("Cancel")}
                 </Button>
-                <Button size="xs" onClick={handleSaveDraft}>
+                <Button onClick={handleSaveDraft} size="xs">
                   {t("Save")}
                 </Button>
               </Group>
@@ -209,8 +209,8 @@ export function ViewSortConfigPopover({
 
           {!draft && canAddMore && (
             <UnstyledButton
-              onClick={handleStartDraft}
               className={viewClasses.addActionButton}
+              onClick={handleStartDraft}
             >
               <IconPlus size={14} />
               {t("Add sort")}

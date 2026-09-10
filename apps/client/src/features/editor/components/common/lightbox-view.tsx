@@ -1,16 +1,16 @@
-import type { Editor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
+import type { Editor } from "@tiptap/react";
 import Lightbox, { type Slide } from "yet-another-react-lightbox";
 import type { LightboxRequest } from "@/features/editor/atoms/editor-atoms";
 import { getFileUrl } from "@/lib/config.ts";
 import "yet-another-react-lightbox/styles.css";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Download from "yet-another-react-lightbox/plugins/download";
 import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Video from "yet-another-react-lightbox/plugins/video";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import { useEffect, useMemo, useState } from "react";
 import i18n from "@/i18n.ts";
-import { useTranslation } from "react-i18next";
 
 type LightboxViewProps = {
   editor: Editor;
@@ -39,7 +39,9 @@ function getVideoMimeType(src: string) {
 
 function getFilename(src: string) {
   const filename = src.split(/[?#]/, 1)[0].split("/").pop();
-  if (!filename) return i18n.t("Media");
+  if (!filename) {
+    return i18n.t("Media");
+  }
 
   try {
     return decodeURIComponent(filename);
@@ -54,35 +56,38 @@ function getMedia(rawSrc: string, type?: string, alt?: string): Slide {
 
   if (type === "video") {
     return {
-      type: "video",
+      download: { filename, url: src },
       sources: [{ src, type: getVideoMimeType(rawSrc) }],
-      download: { url: src, filename },
-    };
-  } else {
-    return {
-      type: "image",
-      src,
-      alt: alt || undefined,
-      download: { url: src, filename },
+      type: "video",
     };
   }
+  return {
+    alt: alt || undefined,
+    download: { filename, url: src },
+    src,
+    type: "image",
+  };
 }
 
 const LIGHTBOX_NODE_TYPES: Record<string, "image" | "video"> = {
-  image: "image",
-  video: "video",
   drawio: "image",
   excalidraw: "image",
+  image: "image",
+  video: "video",
 };
 
 // video is excluded: clicks there operate the native controls
 const CLICK_TO_EXPAND_NODE_TYPES = new Set(["image", "drawio", "excalidraw"]);
 
 export function getLightboxClickRequest(node: PMNode): LightboxRequest {
-  if (!CLICK_TO_EXPAND_NODE_TYPES.has(node.type.name)) return null;
+  if (!CLICK_TO_EXPAND_NODE_TYPES.has(node.type.name)) {
+    return null;
+  }
 
   const src = typeof node.attrs.src === "string" ? node.attrs.src : "";
-  if (!src) return null;
+  if (!src) {
+    return null;
+  }
 
   return { src: getFileUrl(src), type: "image" };
 }
@@ -92,10 +97,14 @@ function getPageMedia(editor: Editor): Slide[] {
 
   editor.state.doc.descendants((node) => {
     const type = LIGHTBOX_NODE_TYPES[node.type.name];
-    if (!type) return;
+    if (!type) {
+      return;
+    }
 
     const rawSrc = typeof node.attrs.src === "string" ? node.attrs.src : "";
-    if (!rawSrc) return;
+    if (!rawSrc) {
+      return;
+    }
 
     media.push(getMedia(rawSrc, type, node.attrs.alt));
   });
@@ -122,11 +131,15 @@ export default function LightboxView({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    if (!open) setIsFullscreen(false);
+    if (!open) {
+      setIsFullscreen(false);
+    }
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
 
     setLoadedMediaKey(null);
 
@@ -140,7 +153,8 @@ export default function LightboxView({
     return () => cancelAnimationFrame(frame);
   }, [editor, open, type, src]);
 
-  const slides = loadedMediaKey === `${type}:${src}` ? pageSlides : [selectedSlide];
+  const slides =
+    loadedMediaKey === `${type}:${src}` ? pageSlides : [selectedSlide];
 
   const index = useMemo(() => {
     if (!(pageSlides.length > 0)) {
@@ -157,30 +171,30 @@ export default function LightboxView({
 
   return (
     <Lightbox
-      open={open}
       close={onClose}
-      index={index}
-      slides={slides}
-      plugins={[Download, Fullscreen, Video, Zoom]}
-      styles={{
-        container: { backgroundColor: "rgba(0, 0, 0, 0.8)" },
-        icon: { width: 24, height: 24 },
-        toolbar: {
-          margin: 8,
-          borderRadius: 8,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-        },
-      }}
       controller={{ closeOnBackdropClick: !isFullscreen }}
+      index={index}
       on={{
         enterFullscreen: () => setIsFullscreen(true),
         exitFullscreen: () => setIsFullscreen(false),
       }}
+      open={open}
+      plugins={[Download, Fullscreen, Video, Zoom]}
+      slides={slides}
+      styles={{
+        container: { backgroundColor: "rgba(0, 0, 0, 0.8)" },
+        icon: { height: 24, width: 24 },
+        toolbar: {
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          borderRadius: 8,
+          margin: 8,
+        },
+      }}
       video={{ controls: true, playsInline: true }}
       zoom={{
-        scrollToZoom: true,
-        maxZoomPixelRatio: 4,
         maxZoom: 4,
+        maxZoomPixelRatio: 4,
+        scrollToZoom: true,
         supports: ["video"],
       }}
     />

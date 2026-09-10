@@ -1,9 +1,9 @@
 import { Group, Menu, Text, UnstyledButton } from "@mantine/core";
 import {
+  IconCheck,
   IconChevronDown,
   IconLock,
   IconShieldLock,
-  IconCheck,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import classes from "./page-permission.module.css";
@@ -48,27 +48,30 @@ export function GeneralAccessSelect({
 
   const accessOptions = [
     {
-      value: "open" as const,
-      label: hasInheritedRestriction ? t("Restricted by parent") : t("Open"),
       description: hasInheritedRestriction
         ? t("Use only inherited restrictions")
         : t("No additional restrictions on this page"),
       icon: IconShieldLock,
+      label: hasInheritedRestriction ? t("Restricted by parent") : t("Open"),
+      value: "open" as const,
     },
     {
-      value: "restricted" as const,
-      label: t("Restricted"),
       description: hasInheritedRestriction
         ? t("Add restrictions on top of inherited")
         : t("Only specific people can access"),
       icon: IconLock,
+      label: t("Restricted"),
+      value: "restricted" as const,
     },
   ];
 
   return (
-    <Menu withArrow disabled={disabled}>
+    <Menu disabled={disabled} withArrow>
       <Menu.Target>
-        <UnstyledButton className={classes.generalAccessBox} disabled={disabled}>
+        <UnstyledButton
+          className={classes.generalAccessBox}
+          disabled={disabled}
+        >
           <div
             className={`${classes.generalAccessIcon} ${isDirectlyRestricted || showInheritedState ? classes.generalAccessIconRestricted : ""}`}
           >
@@ -76,12 +79,12 @@ export function GeneralAccessSelect({
           </div>
           <div style={{ flex: 1 }}>
             <Group gap={4}>
-              <Text size="sm" fw={500}>
+              <Text fw={500} size="sm">
                 {currentLabel}
               </Text>
               {!disabled && <IconChevronDown size={14} />}
             </Group>
-            <Text size="xs" c="dimmed">
+            <Text c="dimmed" size="xs">
               {currentDescription}
             </Text>
           </div>
@@ -92,15 +95,15 @@ export function GeneralAccessSelect({
         {accessOptions.map((option) => (
           <Menu.Item
             key={option.value}
-            onClick={() => onChange(option.value)}
             leftSection={<option.icon size={16} stroke={1.5} />}
+            onClick={() => onChange(option.value)}
             rightSection={
               option.value === value ? <IconCheck size={16} /> : null
             }
           >
             <div>
               <Text size="sm">{option.label}</Text>
-              <Text size="xs" c="dimmed">
+              <Text c="dimmed" size="xs">
                 {option.description}
               </Text>
             </div>

@@ -1,35 +1,35 @@
-import React, { useState } from "react";
 import {
-  Modal,
-  Stack,
-  Text,
+  Alert,
   Button,
-  Paper,
+  Code,
   Group,
   List,
-  Code,
-  Alert,
+  Modal,
+  Paper,
   PasswordInput,
+  Stack,
+  Text,
 } from "@mantine/core";
-import { CopyButton } from "@/components/common/copy-button";
+import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 import {
-  IconRefresh,
-  IconCopy,
-  IconCheck,
   IconAlertCircle,
+  IconCheck,
+  IconCopy,
+  IconRefresh,
 } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
-import { regenerateBackupCodes } from "@/ee/mfa";
-import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
+import { CopyButton } from "@/components/common/copy-button";
+import { regenerateBackupCodes } from "@/ee/mfa";
 import useCurrentUser from "@/features/user/hooks/use-current-user";
 
 interface MfaBackupCodesModalProps {
-  opened: boolean;
   onClose: () => void;
+  opened: boolean;
 }
 
 export function MfaBackupCodesModal({
@@ -51,31 +51,31 @@ export function MfaBackupCodesModal({
       });
 
   const form = useForm({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       confirmPassword: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   const regenerateMutation = useMutation({
     mutationFn: (data: { confirmPassword?: string }) =>
       regenerateBackupCodes(data),
+    onError: (error: any) => {
+      notifications.show({
+        color: "red",
+        message:
+          error.response?.data?.message ||
+          t("Failed to regenerate backup codes"),
+        title: t("Error"),
+      });
+    },
     onSuccess: (data) => {
       setBackupCodes(data.backupCodes);
       setShowNewCodes(true);
       form.reset();
       notifications.show({
-        title: t("Success"),
         message: t("New backup codes have been generated"),
-      });
-    },
-    onError: (error: any) => {
-      notifications.show({
-        title: t("Error"),
-        message:
-          error.response?.data?.message ||
-          t("Failed to regenerate backup codes"),
-        color: "red",
+        title: t("Success"),
       });
     },
   });
@@ -97,85 +97,34 @@ export function MfaBackupCodesModal({
 
   return (
     <Modal
-      opened={opened}
       onClose={handleClose}
-      title={t("Backup codes")}
+      opened={opened}
       size="md"
+      title={t("Backup codes")}
     >
       <Stack gap="md">
-        {!showNewCodes ? (
-          <form onSubmit={form.onSubmit(handleRegenerate)}>
-            <Stack gap="md">
-              <Alert
-                icon={<IconAlertCircle size={20} />}
-                title={t("About backup codes")}
-                color="blue"
-                variant="light"
-              >
-                <Text size="sm">
-                  {t(
-                    "Backup codes can be used to access your account if you lose access to your authenticator app. Each code can only be used once.",
-                  )}
-                </Text>
-              </Alert>
-
-              <Text size="sm">
-                {t(
-                  "You can regenerate new backup codes at any time. This will invalidate all existing codes.",
-                )}
-              </Text>
-
-              {requiresPassword && (
-                <PasswordInput
-                  label={t("Confirm password")}
-                  placeholder={t("Enter your password")}
-                  variant="filled"
-                  visibilityToggleButtonProps={{
-                    "aria-label": t("Toggle password visibility"),
-                    "aria-hidden": false,
-                    tabIndex: 0,
-                  }}
-                  {...form.getInputProps("confirmPassword")}
-                  autoFocus
-                  data-autofocus
-                />
-              )}
-
-              <Button
-                type="submit"
-                fullWidth
-                loading={regenerateMutation.isPending}
-                leftSection={<IconRefresh size={18} />}
-              >
-                {t("Generate new backup codes")}
-              </Button>
-            </Stack>
-          </form>
-        ) : (
+        {showNewCodes ? (
           <>
             <Alert
+              color="yellow"
               icon={<IconAlertCircle size={20} />}
               title={t("Save your new backup codes")}
-              color="yellow"
             >
               <Text size="sm">
                 {t(
-                  "Make sure to save these codes in a secure place. Your old backup codes are no longer valid.",
+                  "Make sure to save these codes in a secure place. Your old backup codes are no longer valid."
                 )}
               </Text>
             </Alert>
 
             <Paper p="md" withBorder>
               <Group justify="space-between" mb="sm">
-                <Text size="sm" fw={600}>
+                <Text fw={600} size="sm">
                   {t("Your new backup codes")}
                 </Text>
                 <CopyButton value={backupCodes.join("\n")}>
                   {({ copied, copy }) => (
                     <Button
-                      size="xs"
-                      variant="subtle"
-                      onClick={copy}
                       leftSection={
                         copied ? (
                           <IconCheck size={14} />
@@ -183,6 +132,9 @@ export function MfaBackupCodesModal({
                           <IconCopy size={14} />
                         )
                       }
+                      onClick={copy}
+                      size="xs"
+                      variant="subtle"
                     >
                       {copied ? t("Copied") : t("Copy")}
                     </Button>
@@ -200,12 +152,60 @@ export function MfaBackupCodesModal({
 
             <Button
               fullWidth
-              onClick={handleClose}
               leftSection={<IconCheck size={18} />}
+              onClick={handleClose}
             >
               {t("I've saved my backup codes")}
             </Button>
           </>
+        ) : (
+          <form onSubmit={form.onSubmit(handleRegenerate)}>
+            <Stack gap="md">
+              <Alert
+                color="blue"
+                icon={<IconAlertCircle size={20} />}
+                title={t("About backup codes")}
+                variant="light"
+              >
+                <Text size="sm">
+                  {t(
+                    "Backup codes can be used to access your account if you lose access to your authenticator app. Each code can only be used once."
+                  )}
+                </Text>
+              </Alert>
+
+              <Text size="sm">
+                {t(
+                  "You can regenerate new backup codes at any time. This will invalidate all existing codes."
+                )}
+              </Text>
+
+              {requiresPassword && (
+                <PasswordInput
+                  label={t("Confirm password")}
+                  placeholder={t("Enter your password")}
+                  variant="filled"
+                  visibilityToggleButtonProps={{
+                    "aria-hidden": false,
+                    "aria-label": t("Toggle password visibility"),
+                    tabIndex: 0,
+                  }}
+                  {...form.getInputProps("confirmPassword")}
+                  autoFocus
+                  data-autofocus
+                />
+              )}
+
+              <Button
+                fullWidth
+                leftSection={<IconRefresh size={18} />}
+                loading={regenerateMutation.isPending}
+                type="submit"
+              >
+                {t("Generate new backup codes")}
+              </Button>
+            </Stack>
+          </form>
         )}
       </Stack>
     </Modal>

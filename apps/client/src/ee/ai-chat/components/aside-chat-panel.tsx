@@ -1,28 +1,28 @@
-import { useState, useEffect, useCallback } from "react";
 import { ActionIcon, Popover, Tooltip, UnstyledButton } from "@mantine/core";
 import {
-  IconPlus,
-  IconChevronDown,
   IconArrowsDiagonal,
-  IconX,
-  IconSparkles,
+  IconChevronDown,
   IconFileText,
   IconLanguage,
+  IconPlus,
   IconSearch,
+  IconSparkles,
+  IconX,
 } from "@tabler/icons-react";
 import { useAtom } from "jotai";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
 import { asideStateAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom";
 import { usePageQuery } from "@/features/page/queries/page-query";
 import { extractPageSlugId } from "@/lib";
 import { useChatStream } from "../hooks/use-chat-stream";
 import { useChatInfoQuery } from "../queries/ai-chat-query";
-import ChatMessageList from "./chat-message-list";
-import ChatInput from "./chat-input";
-import AsideChatHistory from "./aside-chat-history";
-import type { ChatAttachment, PageMention } from "../types/ai-chat.types";
 import classes from "../styles/aside-chat-panel.module.css";
+import type { ChatAttachment, PageMention } from "../types/ai-chat.types";
+import AsideChatHistory from "./aside-chat-history";
+import ChatInput from "./chat-input";
+import ChatMessageList from "./chat-message-list";
 
 type QuickAction = {
   icon: React.ReactNode;
@@ -59,7 +59,9 @@ export default function AsideChatPanel() {
 
   useEffect(() => {
     if (page && !chatId) {
-      setContextPages([{ id: page.id, title: page.title || "", slugId: page.slugId }]);
+      setContextPages([
+        { id: page.id, slugId: page.slugId, title: page.title || "" },
+      ]);
     }
   }, [page, chatId]);
 
@@ -96,11 +98,11 @@ export default function AsideChatPanel() {
       setChatId(undefined);
       if (page) {
         setContextPages([
-          { id: page.id, title: page.title || "", slugId: page.slugId },
+          { id: page.id, slugId: page.slugId, title: page.title || "" },
         ]);
       }
     },
-    [page],
+    [page]
   );
 
   const handleSelectChat = useCallback((selectedChatId: string) => {
@@ -114,45 +116,62 @@ export default function AsideChatPanel() {
     } else {
       navigate("/ai");
     }
-    setAsideState({ tab: "", isAsideOpen: false });
+    setAsideState({ isAsideOpen: false, tab: "" });
   }, [chatId, navigate, setAsideState]);
 
   const handleClose = useCallback(() => {
-    setAsideState({ tab: "", isAsideOpen: false });
+    setAsideState({ isAsideOpen: false, tab: "" });
   }, [setAsideState]);
 
   const handleSend = useCallback(
-    (content: string, mentions: PageMention[], attachments: ChatAttachment[]) => {
-      const contextPageId = contextPages.length > 0 ? contextPages[0].id : undefined;
+    (
+      content: string,
+      mentions: PageMention[],
+      attachments: ChatAttachment[]
+    ) => {
+      const contextPageId =
+        contextPages.length > 0 ? contextPages[0].id : undefined;
       sendMessage(content, mentions, attachments, contextPageId);
     },
-    [sendMessage, contextPages],
+    [sendMessage, contextPages]
   );
 
   const handleQuickAction = useCallback(
     (prompt: string) => {
       handleSend(prompt, [], []);
     },
-    [handleSend],
+    [handleSend]
   );
 
   const hasMessages = messages.length > 0 || isStreaming;
 
   const quickActions: QuickAction[] = [
-    { icon: <IconFileText size={16} />, label: t("Summarize this page"), prompt: "Summarize this page" },
-    { icon: <IconLanguage size={16} />, label: t("Translate this page"), prompt: "Translate this page" },
-    { icon: <IconSearch size={16} />, label: t("Analyze for insights"), prompt: "Analyze this page for insights" },
+    {
+      icon: <IconFileText size={16} />,
+      label: t("Summarize this page"),
+      prompt: "Summarize this page",
+    },
+    {
+      icon: <IconLanguage size={16} />,
+      label: t("Translate this page"),
+      prompt: "Translate this page",
+    },
+    {
+      icon: <IconSearch size={16} />,
+      label: t("Analyze for insights"),
+      prompt: "Analyze this page for insights",
+    },
   ];
 
   return (
     <div className={classes.panel}>
       <div className={classes.toolbar}>
         <Popover
-          opened={historyOpen}
           onChange={setHistoryOpen}
+          opened={historyOpen}
           position="bottom-start"
-          width={280}
           shadow="md"
+          width={280}
         >
           <Popover.Target>
             <UnstyledButton
@@ -166,7 +185,10 @@ export default function AsideChatPanel() {
             </UnstyledButton>
           </Popover.Target>
           <Popover.Dropdown>
-            <AsideChatHistory activeChatId={chatId} onSelect={handleSelectChat} />
+            <AsideChatHistory
+              activeChatId={chatId}
+              onSelect={handleSelectChat}
+            />
           </Popover.Dropdown>
         </Popover>
 
@@ -174,12 +196,12 @@ export default function AsideChatPanel() {
 
         <Tooltip label={t("New chat")} openDelay={250}>
           <ActionIcon
+            aria-label={t("New chat")}
+            color="dark"
             component="a"
             href="/ai"
-            variant="subtle"
-            color="dark"
-            aria-label={t("New chat")}
             onClick={handleNewChat}
+            variant="subtle"
           >
             <IconPlus size={20} stroke={1.75} />
           </ActionIcon>
@@ -187,10 +209,10 @@ export default function AsideChatPanel() {
 
         <Tooltip label={t("Open full page")} openDelay={250}>
           <ActionIcon
-            variant="subtle"
-            color="dark"
             aria-label={t("Open full page")}
+            color="dark"
             onClick={handleExpand}
+            variant="subtle"
           >
             <IconArrowsDiagonal size={18} stroke={1.5} />
           </ActionIcon>
@@ -198,10 +220,10 @@ export default function AsideChatPanel() {
 
         <Tooltip label={t("Close")} openDelay={250}>
           <ActionIcon
-            variant="subtle"
-            color="dark"
             aria-label={t("Close")}
+            color="dark"
             onClick={handleClose}
+            variant="subtle"
           >
             <IconX size={20} stroke={1.75} />
           </ActionIcon>
@@ -211,9 +233,9 @@ export default function AsideChatPanel() {
       {error && (
         <div
           style={{
-            padding: "var(--mantine-spacing-xs) var(--mantine-spacing-sm)",
             color: "var(--mantine-color-red-6)",
             fontSize: "var(--mantine-font-size-xs)",
+            padding: "var(--mantine-spacing-xs) var(--mantine-spacing-sm)",
           }}
         >
           {error}
@@ -224,8 +246,8 @@ export default function AsideChatPanel() {
         <>
           <div className={classes.messages} data-aside-chat>
             <ChatMessageList
-              messages={messages}
               isStreaming={isStreaming}
+              messages={messages}
               streamingContent={streamingContent}
               streamingToolCalls={streamingToolCalls}
             />
@@ -233,15 +255,21 @@ export default function AsideChatPanel() {
         </>
       ) : (
         <div className={classes.emptyState}>
-          <IconSparkles size={36} stroke={1.5} className={classes.emptyStateIcon} />
-          <div className={classes.emptyStateTitle}>{t("How can I help you today?")}</div>
+          <IconSparkles
+            className={classes.emptyStateIcon}
+            size={36}
+            stroke={1.5}
+          />
+          <div className={classes.emptyStateTitle}>
+            {t("How can I help you today?")}
+          </div>
           <div className={classes.quickActions}>
             {quickActions.map((action) => (
               <button
-                key={action.label}
-                type="button"
                 className={classes.quickAction}
+                key={action.label}
                 onClick={() => handleQuickAction(action.prompt)}
+                type="button"
               >
                 <span className={classes.quickActionIcon}>{action.icon}</span>
                 {action.label}
@@ -253,15 +281,15 @@ export default function AsideChatPanel() {
 
       <div className={classes.inputArea}>
         <ChatInput
+          autofocus={false}
+          chatId={chatId}
+          contextPages={contextPages}
           isStreaming={isStreaming}
+          onRemoveContextPage={handleRemoveContextPage}
           onSend={handleSend}
           onStop={stopGeneration}
           placeholder={t("Ask anything...")}
-          autofocus={false}
-          contextPages={contextPages}
-          onRemoveContextPage={handleRemoveContextPage}
           variant="flat"
-          chatId={chatId}
         />
       </div>
     </div>

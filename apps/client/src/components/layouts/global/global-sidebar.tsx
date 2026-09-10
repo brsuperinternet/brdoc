@@ -1,29 +1,35 @@
-import { useEffect, useState } from "react";
-import { ScrollArea, Text, Divider, Modal, UnstyledButton, Tooltip } from "@mantine/core";
+import {
+  Divider,
+  Modal,
+  ScrollArea,
+  Text,
+  Tooltip,
+  UnstyledButton,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconHome,
-  IconClock,
-  IconStar,
   IconLayoutGrid,
   IconSettings,
-  IconUserPlus,
+  IconStar,
   IconTemplate,
+  IconUserPlus,
 } from "@tabler/icons-react";
-import { Link, useLocation } from "react-router-dom";
-import classes from "./global-sidebar.module.css";
-import { useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router-dom";
 import { mobileSidebarAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom";
 import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar";
-import { useFavoritesQuery } from "@/features/favorite/queries/favorite-query";
-import { getSpaceUrl } from "@/lib/config";
-import { useDisclosure } from "@mantine/hooks";
-import { WorkspaceInviteForm } from "@/features/workspace/components/members/components/workspace-invite-form";
 import { CustomAvatar } from "@/components/ui/custom-avatar";
-import { AvatarIconType } from "@/features/attachments/types/attachment.types";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import { AvatarIconType } from "@/features/attachments/types/attachment.types";
+import { useFavoritesQuery } from "@/features/favorite/queries/favorite-query";
+import { WorkspaceInviteForm } from "@/features/workspace/components/members/components/workspace-invite-form";
+import { getSpaceUrl } from "@/lib/config";
+import classes from "./global-sidebar.module.css";
 
 export default function GlobalSidebar() {
   const { t } = useTranslation();
@@ -34,23 +40,29 @@ export default function GlobalSidebar() {
   const hasTemplates = useHasFeature(Feature.TEMPLATES);
   const upgradeLabel = useUpgradeLabel();
   const mainNavItems = [
-    { label: "Home", icon: IconHome, path: "/home" },
-    { label: "Favorites", icon: IconStar, path: "/favorites" },
-    { label: "Spaces", icon: IconLayoutGrid, path: "/spaces" },
+    { icon: IconHome, label: "Home", path: "/home" },
+    { icon: IconStar, label: "Favorites", path: "/favorites" },
+    { icon: IconLayoutGrid, label: "Spaces", path: "/spaces" },
     {
-      label: "Templates",
-      icon: IconTemplate,
-      path: "/templates",
       disabled: !hasTemplates,
+      icon: IconTemplate,
+      label: "Templates",
+      path: "/templates",
     },
   ];
-  const { data: favoriteSpacesData, isPending: isFavoritesPending } = useFavoritesQuery("space");
-  const favoriteSpaces = favoriteSpacesData?.pages.flatMap((p) => p.items) ?? [];
+  const { data: favoriteSpacesData, isPending: isFavoritesPending } =
+    useFavoritesQuery("space");
+  const favoriteSpaces =
+    favoriteSpacesData?.pages.flatMap((p) => p.items) ?? [];
   const sortedFavoriteSpaces = [...favoriteSpaces]
     .filter((fav) => fav.space)
     .sort((a, b) => {
-      const cmp = (a.space!.name ?? "").localeCompare(b.space!.name ?? "", undefined, { sensitivity: "base" });
-      return cmp !== 0 ? cmp : a.id.localeCompare(b.id);
+      const cmp = (a.space!.name ?? "").localeCompare(
+        b.space!.name ?? "",
+        undefined,
+        { sensitivity: "base" }
+      );
+      return cmp === 0 ? a.id.localeCompare(b.id) : cmp;
     });
   const [inviteOpened, { open: openInvite, close: closeInvite }] =
     useDisclosure(false);
@@ -67,7 +79,7 @@ export default function GlobalSidebar() {
 
   return (
     <div className={classes.navbar}>
-      <ScrollArea w="100%" style={{ flex: 1 }}>
+      <ScrollArea style={{ flex: 1 }} w="100%">
         <div className={classes.section}>
           {mainNavItems.map((item) =>
             item.disabled ? (
@@ -78,9 +90,9 @@ export default function GlobalSidebar() {
                 withArrow
               >
                 <UnstyledButton
+                  aria-disabled="true"
                   className={classes.link}
                   data-disabled
-                  aria-disabled="true"
                   tabIndex={-1}
                 >
                   <item.icon className={classes.linkIcon} stroke={2} />
@@ -89,45 +101,47 @@ export default function GlobalSidebar() {
               </Tooltip>
             ) : (
               <Link
-                key={item.label}
+                aria-current={active === item.path ? "page" : undefined}
                 className={classes.link}
                 data-active={active === item.path || undefined}
-                aria-current={active === item.path ? "page" : undefined}
-                to={item.path}
+                key={item.label}
                 onClick={handleNavClick}
+                to={item.path}
               >
                 <item.icon className={classes.linkIcon} stroke={2} />
                 <span>{t(item.label)}</span>
               </Link>
-            ),
+            )
           )}
         </div>
 
         <Divider my="xs" />
         <div className={classes.section}>
-          <Text component="h2" className={classes.sectionHeader}>{t("Favorite spaces")}</Text>
+          <Text className={classes.sectionHeader} component="h2">
+            {t("Favorite spaces")}
+          </Text>
           {!isFavoritesPending && sortedFavoriteSpaces.length === 0 ? (
-            <Text size="xs" c="dimmed" pl="xs" py={4}>
+            <Text c="dimmed" pl="xs" py={4} size="xs">
               {t("Favorite spaces appear here")}
             </Text>
           ) : (
             <>
               {sortedFavoriteSpaces.slice(0, 10).map((fav) => (
                 <Link
-                  key={fav.id}
                   className={classes.spaceItem}
-                  to={getSpaceUrl(fav.space!.slug)}
+                  key={fav.id}
                   onClick={handleNavClick}
+                  to={getSpaceUrl(fav.space!.slug)}
                 >
                   <CustomAvatar
-                    name={fav.space!.name}
                     avatarUrl={fav.space!.logo}
-                    type={AvatarIconType.SPACE_ICON}
                     color="initials"
-                    variant="filled"
+                    name={fav.space!.name}
                     size={20}
+                    type={AvatarIconType.SPACE_ICON}
+                    variant="filled"
                   />
-                  <Text size="sm" fw={500} lineClamp={1}>
+                  <Text fw={500} lineClamp={1} size="sm">
                     {fav.space!.name}
                   </Text>
                 </Link>
@@ -135,10 +149,10 @@ export default function GlobalSidebar() {
               {sortedFavoriteSpaces.length > 10 && (
                 <Link
                   className={classes.spaceItem}
-                  to="/spaces"
                   onClick={handleNavClick}
+                  to="/spaces"
                 >
-                  <Text size="xs" c="dimmed">
+                  <Text c="dimmed" size="xs">
                     {t("View all")}
                   </Text>
                 </Link>
@@ -146,23 +160,19 @@ export default function GlobalSidebar() {
             </>
           )}
         </div>
-
       </ScrollArea>
 
       <div className={classes.bottomSection}>
-        <UnstyledButton
-          className={classes.link}
-          onClick={openInvite}
-        >
+        <UnstyledButton className={classes.link} onClick={openInvite}>
           <IconUserPlus className={classes.linkIcon} stroke={2} />
           <span>{t("Invite People")}</span>
         </UnstyledButton>
         <Link
+          aria-current={active.startsWith("/settings") ? "page" : undefined}
           className={classes.link}
           data-active={active.startsWith("/settings") || undefined}
-          aria-current={active.startsWith("/settings") ? "page" : undefined}
-          to="/settings/account/profile"
           onClick={handleNavClick}
+          to="/settings/account/profile"
         >
           <IconSettings className={classes.linkIcon} stroke={2} />
           <span>{t("Settings")}</span>
@@ -170,13 +180,13 @@ export default function GlobalSidebar() {
       </div>
 
       <Modal
-        size="550"
-        opened={inviteOpened}
-        onClose={closeInvite}
-        title={t("Invite new members")}
         centered
+        onClose={closeInvite}
+        opened={inviteOpened}
+        size="550"
+        title={t("Invite new members")}
       >
-        <Divider size="xs" mb="xs" />
+        <Divider mb="xs" size="xs" />
         <ScrollArea h="80%">
           <WorkspaceInviteForm onClose={closeInvite} />
         </ScrollArea>

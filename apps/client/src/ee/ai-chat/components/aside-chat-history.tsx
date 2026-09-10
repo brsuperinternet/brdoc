@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { TextInput, Loader, Text, ScrollArea } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
-import { useChatsQuery, useSearchChatsQuery } from "../queries/ai-chat-query";
+import { Loader, ScrollArea, Text, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
+import { IconSearch } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useChatsQuery, useSearchChatsQuery } from "../queries/ai-chat-query";
 import classes from "../styles/aside-chat-panel.module.css";
 
 type Props = {
@@ -28,12 +28,12 @@ export default function AsideChatHistory({ activeChatId, onSelect }: Props) {
   return (
     <div>
       <TextInput
-        placeholder={t("Search chats...")}
         leftSection={<IconSearch size={14} />}
-        size="xs"
         mb="xs"
-        value={searchValue}
         onChange={(e) => setSearchValue(e.currentTarget.value)}
+        placeholder={t("Search chats...")}
+        size="xs"
+        value={searchValue}
       />
 
       {isLoading ? (
@@ -41,7 +41,7 @@ export default function AsideChatHistory({ activeChatId, onSelect }: Props) {
           <Loader size="sm" />
         </div>
       ) : chats.length === 0 ? (
-        <Text size="sm" c="dimmed" ta="center" py="md">
+        <Text c="dimmed" py="md" size="sm" ta="center">
           {isSearching ? t("No chats found") : t("No chat history")}
         </Text>
       ) : (
@@ -49,9 +49,9 @@ export default function AsideChatHistory({ activeChatId, onSelect }: Props) {
           <div className={classes.historyList}>
             {chats.map((chat) => (
               <div
-                key={chat.id}
                 className={classes.historyItem}
                 data-active={chat.id === activeChatId || undefined}
+                key={chat.id}
                 onClick={() => onSelect(chat.id)}
               >
                 <span className={classes.historyItemTitle}>

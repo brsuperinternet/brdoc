@@ -1,33 +1,31 @@
-import React, { useEffect, useState } from "react";
-import { Group, Text, ScrollArea, ActionIcon, Tooltip } from "@mantine/core";
+import { ActionIcon, Group, ScrollArea, Text, Tooltip } from "@mantine/core";
 import {
-  IconUser,
-  IconSettings,
-  IconUsers,
   IconArrowLeft,
-  IconUsersGroup,
-  IconSpaces,
   IconBrush,
   IconCoin,
-  IconLock,
-  IconKey,
-  IconWorld,
-  IconSparkles,
   IconHistory,
+  IconKey,
+  IconLock,
+  IconSettings,
   IconShieldCheck,
+  IconSpaces,
+  IconSparkles,
+  IconUser,
+  IconUsers,
+  IconUsersGroup,
+  IconWorld,
 } from "@tabler/icons-react";
-import { Link, useLocation } from "react-router-dom";
-import classes from "./settings.module.css";
-import { useTranslation } from "react-i18next";
-import { isCloud } from "@/lib/config.ts";
-import useUserRole from "@/hooks/use-user-role.tsx";
 import { useAtom } from "jotai";
-import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
-import { Feature } from "@/ee/features";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router-dom";
+import { mobileSidebarAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
+import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar.ts";
+import AppVersion from "@/components/settings/app-version.tsx";
 import {
   prefetchApiKeyManagement,
   prefetchApiKeys,
+  prefetchAuditLogs,
   prefetchBilling,
   prefetchGroups,
   prefetchLicense,
@@ -35,14 +33,16 @@ import {
   prefetchShares,
   prefetchSpaces,
   prefetchSsoProviders,
-  prefetchWorkspaceMembers,
-  prefetchAuditLogs,
   prefetchVerifiedPages,
+  prefetchWorkspaceMembers,
 } from "@/components/settings/settings-queries.tsx";
-import AppVersion from "@/components/settings/app-version.tsx";
-import { mobileSidebarAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
-import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar.ts";
+import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
+import { Feature } from "@/ee/features";
+import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
 import { useSettingsNavigation } from "@/hooks/use-settings-navigation";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { isCloud } from "@/lib/config.ts";
+import classes from "./settings.module.css";
 
 type DataItem = {
   label: string;
@@ -62,68 +62,68 @@ const groupedData: DataGroup[] = [
   {
     heading: "Account",
     items: [
-      { label: "Profile", icon: IconUser, path: "/settings/account/profile" },
+      { icon: IconUser, label: "Profile", path: "/settings/account/profile" },
       {
-        label: "Preferences",
         icon: IconBrush,
+        label: "Preferences",
         path: "/settings/account/preferences",
       },
       {
-        label: "API keys",
-        icon: IconKey,
-        path: "/settings/account/api-keys",
         feature: Feature.API_KEYS,
+        icon: IconKey,
+        label: "API keys",
+        path: "/settings/account/api-keys",
       },
     ],
   },
   {
     heading: "Workspace",
     items: [
-      { label: "General", icon: IconSettings, path: "/settings/workspace" },
-      { label: "Members", icon: IconUsers, path: "/settings/members" },
+      { icon: IconSettings, label: "General", path: "/settings/workspace" },
+      { icon: IconUsers, label: "Members", path: "/settings/members" },
       {
-        label: "Billing",
+        env: "cloud",
         icon: IconCoin,
+        label: "Billing",
         path: "/settings/billing",
         role: "admin",
-        env: "cloud",
       },
       {
-        label: "Security & SSO",
-        icon: IconLock,
-        path: "/settings/security",
         feature: Feature.SECURITY_SETTINGS,
+        icon: IconLock,
+        label: "Security & SSO",
+        path: "/settings/security",
         role: "admin",
       },
-      { label: "Groups", icon: IconUsersGroup, path: "/settings/groups" },
-      { label: "Spaces", icon: IconSpaces, path: "/settings/spaces" },
-      { label: "Public sharing", icon: IconWorld, path: "/settings/sharing" },
+      { icon: IconUsersGroup, label: "Groups", path: "/settings/groups" },
+      { icon: IconSpaces, label: "Spaces", path: "/settings/spaces" },
+      { icon: IconWorld, label: "Public sharing", path: "/settings/sharing" },
       {
-        label: "Verified pages",
-        icon: IconShieldCheck,
-        path: "/settings/verifications",
         feature: Feature.PAGE_VERIFICATION,
+        icon: IconShieldCheck,
+        label: "Verified pages",
+        path: "/settings/verifications",
       },
       {
-        label: "API management",
-        icon: IconKey,
-        path: "/settings/api-keys",
         feature: Feature.API_KEYS,
+        icon: IconKey,
+        label: "API management",
+        path: "/settings/api-keys",
         role: "admin",
       },
       {
-        label: "AI settings",
         icon: IconSparkles,
+        label: "AI settings",
         path: "/settings/ai",
         role: "admin",
       },
       {
-        label: "Audit logs & SIEM",
-        icon: IconHistory,
-        path: "/settings/audit",
-        feature: Feature.AUDIT_LOGS,
-        role: "owner",
         env: "selfhosted",
+        feature: Feature.AUDIT_LOGS,
+        icon: IconHistory,
+        label: "Audit logs & SIEM",
+        path: "/settings/audit",
+        role: "owner",
       },
     ],
   },
@@ -131,8 +131,8 @@ const groupedData: DataGroup[] = [
     heading: "System",
     items: [
       {
-        label: "License & Edition",
         icon: IconKey,
+        label: "License & Edition",
         path: "/settings/license",
       },
     ],
@@ -158,15 +158,25 @@ export default function SettingsSidebar() {
     entitlements?.features?.includes(f) ?? false;
 
   const canShowItem = (item: DataItem) => {
-    if (item.env === "cloud" && !isCloud()) return false;
-    if (item.env === "selfhosted" && isCloud()) return false;
-    if (item.role === "admin" && !isAdmin) return false;
-    if (item.role === "owner" && !isOwner) return false;
+    if (item.env === "cloud" && !isCloud()) {
+      return false;
+    }
+    if (item.env === "selfhosted" && isCloud()) {
+      return false;
+    }
+    if (item.role === "admin" && !isAdmin) {
+      return false;
+    }
+    if (item.role === "owner" && !isOwner) {
+      return false;
+    }
     return true;
   };
 
   const isItemDisabled = (item: DataItem) => {
-    if (!item.feature) return false;
+    if (!item.feature) {
+      return false;
+    }
     return !hasFeature(item.feature);
   };
 
@@ -240,15 +250,15 @@ export default function SettingsSidebar() {
                 withArrow
               >
                 <span
+                  aria-disabled="true"
                   className={classes.link}
                   data-disabled
                   role="link"
-                  aria-disabled="true"
-                  tabIndex={0}
                   style={{
-                    opacity: 0.5,
                     cursor: "not-allowed",
+                    opacity: 0.5,
                   }}
+                  tabIndex={0}
                 >
                   <item.icon className={classes.linkIcon} stroke={2} />
                   <span>{t(item.label)}</span>
@@ -259,16 +269,16 @@ export default function SettingsSidebar() {
 
           return (
             <Link
-              onMouseEnter={prefetchHandler}
               className={classes.link}
               data-active={active.startsWith(item.path) || undefined}
               key={item.label}
-              to={item.path}
               onClick={() => {
                 if (mobileSidebarOpened) {
                   toggleMobileSidebar();
                 }
               }}
+              onMouseEnter={prefetchHandler}
+              to={item.path}
             >
               <item.icon className={classes.linkIcon} stroke={2} />
               <span>{t(item.label)}</span>
@@ -283,6 +293,8 @@ export default function SettingsSidebar() {
     <div className={classes.navbar}>
       <Group className={classes.title} justify="flex-start">
         <ActionIcon
+          aria-label={t("Back")}
+          c="gray"
           onClick={() => {
             goBack();
             if (mobileSidebarOpened) {
@@ -290,8 +302,6 @@ export default function SettingsSidebar() {
             }
           }}
           variant="transparent"
-          c="gray"
-          aria-label={t("Back")}
         >
           <IconArrowLeft stroke={2} />
         </ActionIcon>
@@ -305,10 +315,10 @@ export default function SettingsSidebar() {
       {isCloud() && (
         <div className={classes.text}>
           <Text
-            size="sm"
             c="dimmed"
             component="a"
             href="mailto:help@docmost.com"
+            size="sm"
           >
             help@docmost.com
           </Text>

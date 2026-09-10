@@ -7,21 +7,21 @@ import {
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { buildPageUrl, getPageTitle } from "@/features/page/page.utils.ts";
 import { useBacklinksQuery } from "@/features/page-details/queries/backlinks-query.ts";
 import {
   BacklinkDirection,
   IBacklinkPageItem,
 } from "@/features/page-details/types/backlink.types.ts";
-import { buildPageUrl, getPageTitle } from "@/features/page/page.utils.ts";
 import { getPageIcon } from "@/lib";
 
 interface BacklinksListProps {
-  pageId: string;
   direction: BacklinkDirection;
   enabled: boolean;
   onItemClick: () => void;
+  pageId: string;
 }
 
 export function BacklinksList({
@@ -34,7 +34,9 @@ export function BacklinksList({
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useBacklinksQuery(pageId, direction, enabled);
 
-  if (!enabled) return null;
+  if (!enabled) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -49,7 +51,7 @@ export function BacklinksList({
 
   if (items.length === 0) {
     return (
-      <Text c="dimmed" size="sm" py="md">
+      <Text c="dimmed" py="md" size="sm">
         {direction === "incoming"
           ? t("No pages link here yet.")
           : t("This page doesn't link to other pages yet.")}
@@ -68,28 +70,28 @@ export function BacklinksList({
     <Stack gap={4}>
       {items.map((item) => (
         <UnstyledButton
-          key={item.id}
           component={Link}
+          key={item.id}
+          onClick={handleClick}
+          style={{ borderRadius: 4, padding: "8px 4px", userSelect: "none" }}
           to={
             item.space?.slug
               ? buildPageUrl(
                   item.space.slug,
                   item.slugId,
-                  item.title ?? undefined,
+                  item.title ?? undefined
                 )
               : "#"
           }
-          onClick={handleClick}
-          style={{ padding: "8px 4px", borderRadius: 4, userSelect: "none" }}
         >
           <Group gap="xs" wrap="nowrap">
             {getPageIcon(item.icon ?? "")}
             <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
-              <Text size="sm" fw={500} lineClamp={1}>
+              <Text fw={500} lineClamp={1} size="sm">
                 {getPageTitle(item.title, undefined, t)}
               </Text>
               {item.space?.name && (
-                <Text size="xs" c="dimmed" lineClamp={1}>
+                <Text c="dimmed" lineClamp={1} size="xs">
                   {item.space.name}
                 </Text>
               )}
@@ -99,11 +101,11 @@ export function BacklinksList({
       ))}
       {hasNextPage && (
         <Button
-          variant="subtle"
-          size="xs"
           loading={isFetchingNextPage}
-          onClick={() => fetchNextPage()}
           mt="xs"
+          onClick={() => fetchNextPage()}
+          size="xs"
+          variant="subtle"
         >
           {t("Load more")}
         </Button>

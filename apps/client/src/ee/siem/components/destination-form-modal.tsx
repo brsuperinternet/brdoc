@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -14,39 +13,51 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { isCloud } from "@/lib/config.ts";
-import { DATADOG_SITES, ISiemDestination, ISiemTestResult } from "@/ee/siem/types/siem.types";
-import {
-  useCreateSiemDestinationMutation,
-  useTestSiemDestinationMutation,
-  useUpdateSiemDestinationMutation,
-} from "@/ee/siem/queries/siem-query";
 import {
   DestinationFormValues,
   initialValues,
   toPayload,
   validateForm,
 } from "@/ee/siem/lib/destination-form";
+import {
+  useCreateSiemDestinationMutation,
+  useTestSiemDestinationMutation,
+  useUpdateSiemDestinationMutation,
+} from "@/ee/siem/queries/siem-query";
+import {
+  DATADOG_SITES,
+  ISiemDestination,
+  ISiemTestResult,
+} from "@/ee/siem/types/siem.types";
+import { isCloud } from "@/lib/config.ts";
 import { DESTINATION_TYPE_LABELS } from "./destination-table";
 
 interface DestinationFormModalProps {
-  opened: boolean;
-  onClose: () => void;
   destination?: ISiemDestination | null;
+  onClose: () => void;
+  opened: boolean;
 }
 
 function connectionKey(values: DestinationFormValues): string {
   const { type, config, secrets } = toPayload(values);
-  return JSON.stringify({ type, config, secrets });
+  return JSON.stringify({ config, secrets, type });
 }
 
-export function DestinationFormModal({ opened, onClose, destination }: DestinationFormModalProps) {
+export function DestinationFormModal({
+  opened,
+  onClose,
+  destination,
+}: DestinationFormModalProps) {
   const { t } = useTranslation();
   const isEdit = Boolean(destination);
   const hasSecrets = destination?.hasSecrets ?? {};
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [testState, setTestState] = useState<{ result: ISiemTestResult | null; testedPayloadKey: string | null }>({
+  const [testState, setTestState] = useState<{
+    result: ISiemTestResult | null;
+    testedPayloadKey: string | null;
+  }>({
     result: null,
     testedPayloadKey: null,
   });
@@ -74,11 +85,11 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
     try {
       if (destination) {
         await updateMutation.mutateAsync({
-          destinationId: destination.id,
-          name: payload.name,
           config: payload.config,
-          secrets: payload.secrets,
+          destinationId: destination.id,
           enabled: payload.enabled,
+          name: payload.name,
+          secrets: payload.secrets,
         });
       } else {
         await createMutation.mutateAsync(payload);
@@ -88,16 +99,18 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
   };
 
   const handleTest = async () => {
-    if (form.validate().hasErrors) return;
+    if (form.validate().hasErrors) {
+      return;
+    }
     const payload = toPayload(form.values);
     const testedPayloadKey = connectionKey(form.values);
     setTestState((prev) => ({ ...prev, testedPayloadKey }));
     try {
       const result = await testMutation.mutateAsync({
-        type: payload.type,
         config: payload.config,
-        secrets: payload.secrets,
         destinationId: destination?.id,
+        secrets: payload.secrets,
+        type: payload.type,
       });
       setTestState({ result, testedPayloadKey });
     } catch {
@@ -108,38 +121,44 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
   const type = form.values.type;
   const showTls = type !== "datadog";
   const currentPayloadKey = connectionKey(form.values);
-  const showTestResult = testState.result !== null && testState.testedPayloadKey === currentPayloadKey;
-  const connectionChanged = currentPayloadKey !== connectionKey(initialValues(destination));
+  const showTestResult =
+    testState.result !== null &&
+    testState.testedPayloadKey === currentPayloadKey;
+  const connectionChanged =
+    currentPayloadKey !== connectionKey(initialValues(destination));
   const testPassed = showTestResult && testState.result.delivered;
   const requiresTest = (!isEdit || connectionChanged) && !testPassed;
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={isEdit ? t("Edit destination") : t("Add destination")}
-      size="lg"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      size="lg"
+      title={isEdit ? t("Edit destination") : t("Add destination")}
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
           <Select
-            label={t("Preset")}
-            data={[
-              { value: "splunk_hec", label: DESTINATION_TYPE_LABELS.splunk_hec },
-              { value: "datadog", label: DESTINATION_TYPE_LABELS.datadog },
-              { value: "http", label: DESTINATION_TYPE_LABELS.http },
-            ]}
             allowDeselect={false}
+            data={[
+              {
+                label: DESTINATION_TYPE_LABELS.splunk_hec,
+                value: "splunk_hec",
+              },
+              { label: DESTINATION_TYPE_LABELS.datadog, value: "datadog" },
+              { label: DESTINATION_TYPE_LABELS.http, value: "http" },
+            ]}
             disabled={isEdit}
+            label={t("Preset")}
             {...form.getInputProps("type")}
           />
 
           <TextInput
+            data-autofocus
             label={t("Name")}
             placeholder={t("e.g. Splunk prod")}
             required
-            data-autofocus
             {...form.getInputProps("name")}
           />
 
@@ -162,9 +181,12 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
           {type === "datadog" && (
             <>
               <Select
-                label={t("Datadog site")}
-                data={DATADOG_SITES.map((site) => ({ value: site, label: site }))}
                 allowDeselect={false}
+                data={DATADOG_SITES.map((site) => ({
+                  label: site,
+                  value: site,
+                }))}
+                label={t("Datadog site")}
                 {...form.getInputProps("site")}
               />
               <PasswordInput
@@ -184,20 +206,24 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
                 {...form.getInputProps("url")}
               />
               <PasswordInput
+                description={t(
+                  "Sent in the auth header below. Leave empty if your receiver does not need one."
+                )}
                 label={t("Token")}
-                description={t("Sent in the auth header below. Leave empty if your receiver does not need one.")}
                 {...form.getInputProps("token")}
               />
             </>
           )}
 
           <Button
-            variant="subtle"
-            size="compact-sm"
             onClick={() => setAdvancedOpen((open) => !open)}
+            size="compact-sm"
             style={{ alignSelf: "flex-start" }}
+            variant="subtle"
           >
-            {advancedOpen ? t("Hide advanced options") : t("Show advanced options")}
+            {advancedOpen
+              ? t("Hide advanced options")
+              : t("Show advanced options")}
           </Button>
 
           <Collapse expanded={advancedOpen}>
@@ -205,17 +231,25 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
               {type === "splunk_hec" && (
                 <>
                   <TextInput
+                    description={t(
+                      "Leave empty to use the token's default index"
+                    )}
                     label={t("Index")}
-                    description={t("Leave empty to use the token's default index")}
                     {...form.getInputProps("index")}
                   />
                   <Group grow>
-                    <TextInput label={t("Source")} {...form.getInputProps("source")} />
-                    <TextInput label={t("Sourcetype")} {...form.getInputProps("sourcetype")} />
+                    <TextInput
+                      label={t("Source")}
+                      {...form.getInputProps("source")}
+                    />
+                    <TextInput
+                      label={t("Sourcetype")}
+                      {...form.getInputProps("sourcetype")}
+                    />
                   </Group>
                   <TextInput
-                    label={t("Host")}
                     description={t("Defaults to this instance's hostname")}
+                    label={t("Host")}
                     {...form.getInputProps("host")}
                   />
                 </>
@@ -223,24 +257,37 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
 
               {type === "datadog" && (
                 <>
-                  <TextInput label={t("Service")} {...form.getInputProps("service")} />
-                  <TextInput label={t("Tags")} placeholder="env:prod,team:security" {...form.getInputProps("tags")} />
+                  <TextInput
+                    label={t("Service")}
+                    {...form.getInputProps("service")}
+                  />
+                  <TextInput
+                    label={t("Tags")}
+                    placeholder="env:prod,team:security"
+                    {...form.getInputProps("tags")}
+                  />
                 </>
               )}
 
               {type === "http" && (
                 <>
                   <Group grow>
-                    <TextInput label={t("Auth header name")} {...form.getInputProps("authHeaderName")} />
-                    <TextInput label={t("Auth header prefix")} {...form.getInputProps("authHeaderPrefix")} />
+                    <TextInput
+                      label={t("Auth header name")}
+                      {...form.getInputProps("authHeaderName")}
+                    />
+                    <TextInput
+                      label={t("Auth header prefix")}
+                      {...form.getInputProps("authHeaderPrefix")}
+                    />
                   </Group>
                   <Select
-                    label={t("Body format")}
-                    data={[
-                      { value: "json", label: t("JSON array") },
-                      { value: "ndjson", label: "NDJSON" },
-                    ]}
                     allowDeselect={false}
+                    data={[
+                      { label: t("JSON array"), value: "json" },
+                      { label: "NDJSON", value: "ndjson" },
+                    ]}
+                    label={t("Body format")}
                     {...form.getInputProps("format")}
                   />
                 </>
@@ -250,45 +297,68 @@ export function DestinationFormModal({ opened, onClose, destination }: Destinati
                 <>
                   {!isCloud() && (
                     <Switch
-                      label={t("Verify TLS certificate")}
                       description={
                         form.values.rejectUnauthorized
                           ? undefined
                           : t("Insecure: connections can be intercepted.")
                       }
-                      {...form.getInputProps("rejectUnauthorized", { type: "checkbox" })}
+                      label={t("Verify TLS certificate")}
+                      {...form.getInputProps("rejectUnauthorized", {
+                        type: "checkbox",
+                      })}
                     />
                   )}
                 </>
               )}
 
-              <Switch label={t("Enabled")} {...form.getInputProps("enabled", { type: "checkbox" })} />
+              <Switch
+                label={t("Enabled")}
+                {...form.getInputProps("enabled", { type: "checkbox" })}
+              />
             </Stack>
           </Collapse>
 
           {showTestResult && (
             <Alert
               color={testState.result.delivered ? "green" : "red"}
-              icon={testState.result.delivered ? <IconCheck size={16} /> : <IconAlertCircle size={16} />}
+              icon={
+                testState.result.delivered ? (
+                  <IconCheck size={16} />
+                ) : (
+                  <IconAlertCircle size={16} />
+                )
+              }
             >
-              {testState.result.delivered ? t("Test event delivered successfully.") : testState.result.error}
+              {testState.result.delivered
+                ? t("Test event delivered successfully.")
+                : testState.result.error}
             </Alert>
           )}
 
           <Group justify="space-between" mt="md">
             <Group gap="sm">
-              <Button variant="default" onClick={handleTest} loading={testMutation.isPending}>
+              <Button
+                loading={testMutation.isPending}
+                onClick={handleTest}
+                variant="default"
+              >
                 {t("Test connection")}
               </Button>
               {requiresTest && (
-                <Text size="xs" c="dimmed">
+                <Text c="dimmed" size="xs">
                   {t("Test the connection before saving.")}
                 </Text>
               )}
             </Group>
             <Group>
-              <Button variant="default" onClick={onClose}>{t("Cancel")}</Button>
-              <Button type="submit" disabled={requiresTest} loading={createMutation.isPending || updateMutation.isPending}>
+              <Button onClick={onClose} variant="default">
+                {t("Cancel")}
+              </Button>
+              <Button
+                disabled={requiresTest}
+                loading={createMutation.isPending || updateMutation.isPending}
+                type="submit"
+              >
                 {isEdit ? t("Save") : t("Create")}
               </Button>
             </Group>

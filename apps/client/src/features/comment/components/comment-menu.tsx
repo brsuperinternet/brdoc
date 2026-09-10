@@ -1,15 +1,15 @@
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import {
+  IconCircleCheck,
+  IconCircleCheckFilled,
   IconDots,
   IconEdit,
   IconTrash,
-  IconCircleCheck,
-  IconCircleCheckFilled,
 } from "@tabler/icons-react";
-import { modals } from "@mantine/modals";
 import { useTranslation } from "react-i18next";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
 
 type CommentMenuProps = {
@@ -33,23 +33,23 @@ function CommentMenu({
   const canResolve = useHasFeature(Feature.COMMENT_RESOLUTION);
   const upgradeLabel = useUpgradeLabel();
 
-  //@ts-ignore
+  //@ts-expect-error
   const openDeleteModal = () =>
     modals.openConfirmModal({
-      title: t("Are you sure you want to delete this comment?"),
       centered: true,
-      labels: { confirm: t("Delete"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Delete") },
       onConfirm: onDeleteComment,
+      title: t("Are you sure you want to delete this comment?"),
     });
 
   return (
     <Menu shadow="md" width={200}>
       <Menu.Target>
         <ActionIcon
-          variant="default"
-          style={{ border: "none" }}
           aria-label={t("Comment menu")}
+          style={{ border: "none" }}
+          variant="default"
         >
           <IconDots size={20} stroke={2} />
         </ActionIcon>
@@ -58,8 +58,8 @@ function CommentMenu({
       <Menu.Dropdown>
         {canEdit && (
           <Menu.Item
-            onClick={onEditComment}
             leftSection={<IconEdit size={14} />}
+            onClick={onEditComment}
           >
             {t("Edit comment")}
           </Menu.Item>
@@ -67,7 +67,6 @@ function CommentMenu({
         {isParentComment &&
           (canResolve ? (
             <Menu.Item
-              onClick={onResolveComment}
               leftSection={
                 isResolved ? (
                   <IconCircleCheckFilled size={14} />
@@ -75,6 +74,7 @@ function CommentMenu({
                   <IconCircleCheck size={14} />
                 )
               }
+              onClick={onResolveComment}
             >
               {isResolved ? t("Re-open comment") : t("Resolve comment")}
             </Menu.Item>

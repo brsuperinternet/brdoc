@@ -1,14 +1,14 @@
-import { Modal, TextInput, Button, Group, Divider } from "@mantine/core";
+import { Button, Divider, Group, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
-import { z } from "zod/v4";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { useAtomValue } from "jotai";
-import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { useCreatePersonalSpaceMutation } from "@/ee/personal-space/queries/personal-space-query";
-import { getSpaceUrl } from "@/lib/config.ts";
 import { notifications } from "@mantine/notifications";
+import { useAtomValue } from "jotai";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod/v4";
+import { useCreatePersonalSpaceMutation } from "@/ee/personal-space/queries/personal-space-query";
+import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { getSpaceUrl } from "@/lib/config.ts";
 
 const formSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -26,13 +26,14 @@ export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
   const currentUser = useAtomValue(currentUserAtom);
   const createMutation = useCreatePersonalSpaceMutation();
 
-  const firstName = (currentUser?.user?.name ?? "").trim().split(/\s+/)[0] || "";
+  const firstName =
+    (currentUser?.user?.name ?? "").trim().split(/\s+/)[0] || "";
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       name: firstName ? t("{{name}}'s space", { name: firstName }) : "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   const handleSubmit = async (values: FormValues) => {
@@ -44,31 +45,31 @@ export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
       navigate(getSpaceUrl(createdSpace.slug));
     } catch (err) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
   };
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={t("Create personal space")}
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      title={t("Create personal space")}
     >
-      <Divider size="xs" mb="md" />
+      <Divider mb="md" size="xs" />
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
-          withAsterisk
           data-autofocus
+          errorProps={{ role: "alert" }}
           label={t("Space name")}
           variant="filled"
-          errorProps={{ role: "alert" }}
+          withAsterisk
           {...form.getInputProps("name")}
         />
         <Group justify="flex-end" mt="md">
-          <Button type="submit" loading={createMutation.isPending}>
+          <Button loading={createMutation.isPending} type="submit">
             {t("Create")}
           </Button>
         </Group>

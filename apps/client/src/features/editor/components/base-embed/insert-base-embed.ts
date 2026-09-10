@@ -1,13 +1,13 @@
+import { notifications } from "@mantine/notifications";
 import type { Editor, Range } from "@tiptap/core";
 import { v7 as uuid7 } from "uuid";
-import { notifications } from "@mantine/notifications";
-import api from "@/lib/api-client";
 import i18n from "@/i18n.ts";
+import api from "@/lib/api-client";
 import { getApiErrorMessage } from "@/lib/api-error";
 
 function findBaseEmbedPlaceholderPos(
   editor: Editor,
-  pendingKey: string,
+  pendingKey: string
 ): number | null {
   let foundPos: number | null = null;
   editor.state.doc.descendants((node, pos) => {
@@ -22,16 +22,20 @@ function findBaseEmbedPlaceholderPos(
 
 export async function insertBaseEmbedBlock(
   editor: Editor,
-  opts: { template?: "kanban"; range?: Range } = {},
+  opts: { template?: "kanban"; range?: Range } = {}
 ): Promise<void> {
-  // @ts-ignore
+  // @ts-expect-error
   const parentPageId = editor.storage?.pageId as string | undefined;
-  if (!parentPageId) return;
+  if (!parentPageId) {
+    return;
+  }
 
   const pendingKey = uuid7();
 
   const chain = editor.chain().focus();
-  if (opts.range) chain.deleteRange(opts.range);
+  if (opts.range) {
+    chain.deleteRange(opts.range);
+  }
   chain.insertBaseEmbed({ pageId: null, pendingKey }).run();
 
   try {
@@ -41,7 +45,9 @@ export async function insertBaseEmbedBlock(
     });
 
     const pos = findBaseEmbedPlaceholderPos(editor, pendingKey);
-    if (pos === null) return;
+    if (pos === null) {
+      return;
+    }
     editor
       .chain()
       .command(({ tr }) => {
@@ -59,14 +65,16 @@ export async function insertBaseEmbedBlock(
         .chain()
         .command(({ tr }) => {
           const node = tr.doc.nodeAt(pos);
-          if (node) tr.delete(pos, pos + node.nodeSize);
+          if (node) {
+            tr.delete(pos, pos + node.nodeSize);
+          }
           return true;
         })
         .run();
     }
     notifications.show({
-      message: getApiErrorMessage(err, i18n.t("Failed to create base")),
       color: "red",
+      message: getApiErrorMessage(err, i18n.t("Failed to create base")),
     });
   }
 }

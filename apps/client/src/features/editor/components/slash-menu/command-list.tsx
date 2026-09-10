@@ -1,8 +1,3 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  SlashMenuGroupedItemsType,
-  SlashMenuItemType,
-} from "@/features/editor/components/slash-menu/types";
 import {
   ActionIcon,
   Badge,
@@ -14,12 +9,17 @@ import {
   UnstyledButton,
   VisuallyHidden,
 } from "@mantine/core";
-import classes from "./slash-menu.module.css";
 import clsx from "clsx";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import {
+  SlashMenuGroupedItemsType,
+  SlashMenuItemType,
+} from "@/features/editor/components/slash-menu/types";
+import classes from "./slash-menu.module.css";
 
 const CommandList = ({
   items,
@@ -46,9 +46,7 @@ const CommandList = ({
   const isItemDisabled = (item: SlashMenuItemType) =>
     !hasBases && item.requiresBases === true;
 
-  const flatItems = useMemo(() => {
-    return Object.values(items).flat();
-  }, [items]);
+  const flatItems = useMemo(() => Object.values(items).flat(), [items]);
 
   const selectItem = useCallback(
     (index: number) => {
@@ -57,7 +55,7 @@ const CommandList = ({
         command(item);
       }
     },
-    [command, flatItems, hasBases],
+    [command, flatItems, hasBases]
   );
 
   useEffect(() => {
@@ -68,7 +66,7 @@ const CommandList = ({
 
         if (e.key === "ArrowUp") {
           setSelectedIndex(
-            (selectedIndex + flatItems.length - 1) % flatItems.length,
+            (selectedIndex + flatItems.length - 1) % flatItems.length
           );
           return true;
         }
@@ -101,7 +99,7 @@ const CommandList = ({
       return;
     }
     setCountAnnouncement(
-      t("{{count}} command available", { count: flatItems.length }),
+      t("{{count}} command available", { count: flatItems.length })
     );
   }, [flatItems.length, t]);
 
@@ -122,83 +120,87 @@ const CommandList = ({
 
   return flatItems.length > 0 ? (
     <Paper
-      id="slash-command"
-      shadow="md"
-      p="xs"
-      withBorder
-      role="listbox"
-      aria-label={t("Slash commands")}
       aria-activedescendant={`slash-command-option-${selectedIndex}`}
+      aria-label={t("Slash commands")}
+      id="slash-command"
+      p="xs"
+      role="listbox"
+      shadow="md"
+      withBorder
     >
-      <VisuallyHidden role="status" aria-live="polite" aria-atomic="true">
+      <VisuallyHidden aria-atomic="true" aria-live="polite" role="status">
         {countAnnouncement}
       </VisuallyHidden>
-      <VisuallyHidden role="status" aria-live="polite" aria-atomic="true">
+      <VisuallyHidden aria-atomic="true" aria-live="polite" role="status">
         {selectionAnnouncement}
       </VisuallyHidden>
       <ScrollArea
-        viewportRef={viewportRef}
         h={350}
-        w={270}
-        scrollbarSize={8}
         overscrollBehavior="contain"
+        scrollbarSize={8}
+        viewportRef={viewportRef}
+        w={270}
       >
         {(() => {
           let flatIndex = -1;
           return Object.entries(items).map(([category, categoryItems]) => (
-          <div key={category} role="group" aria-label={category}>
-            <Text c="dimmed" mb={4} fw={500} tt="capitalize">
-              {category}
-            </Text>
-            {categoryItems.map((item: SlashMenuItemType) => {
-              flatIndex += 1;
-              const itemIndex = flatIndex;
-              const disabled = isItemDisabled(item);
-              return (
-              <Tooltip
-                key={itemIndex}
-                label={upgradeLabel}
-                disabled={!disabled}
-                position="right"
-              >
-              <UnstyledButton
-                data-item-index={itemIndex}
-                id={`slash-command-option-${itemIndex}`}
-                role="option"
-                aria-selected={itemIndex === selectedIndex}
-                aria-disabled={disabled}
-                onClick={() => selectItem(itemIndex)}
-                className={clsx(classes.menuBtn, {
-                  [classes.selectedItem]: itemIndex === selectedIndex,
-                  [classes.gatedItem]: disabled,
-                })}
-              >
-                <Group wrap="nowrap">
-                  <ActionIcon variant="default" component="div" aria-hidden="true">
-                    <item.icon size={18} />
-                  </ActionIcon>
+            <div aria-label={category} key={category} role="group">
+              <Text c="dimmed" fw={500} mb={4} tt="capitalize">
+                {category}
+              </Text>
+              {categoryItems.map((item: SlashMenuItemType) => {
+                flatIndex += 1;
+                const itemIndex = flatIndex;
+                const disabled = isItemDisabled(item);
+                return (
+                  <Tooltip
+                    disabled={!disabled}
+                    key={itemIndex}
+                    label={upgradeLabel}
+                    position="right"
+                  >
+                    <UnstyledButton
+                      aria-disabled={disabled}
+                      aria-selected={itemIndex === selectedIndex}
+                      className={clsx(classes.menuBtn, {
+                        [classes.selectedItem]: itemIndex === selectedIndex,
+                        [classes.gatedItem]: disabled,
+                      })}
+                      data-item-index={itemIndex}
+                      id={`slash-command-option-${itemIndex}`}
+                      onClick={() => selectItem(itemIndex)}
+                      role="option"
+                    >
+                      <Group wrap="nowrap">
+                        <ActionIcon
+                          aria-hidden="true"
+                          component="div"
+                          variant="default"
+                        >
+                          <item.icon size={18} />
+                        </ActionIcon>
 
-                  <div style={{ flex: 1 }}>
-                    <Text size="sm" fw={500}>
-                      {t(item.title)}
-                    </Text>
+                        <div style={{ flex: 1 }}>
+                          <Text fw={500} size="sm">
+                            {t(item.title)}
+                          </Text>
 
-                    <Text c="dimmed" size="xs">
-                      {t(item.description)}
-                    </Text>
-                  </div>
+                          <Text c="dimmed" size="xs">
+                            {t(item.description)}
+                          </Text>
+                        </div>
 
-                  {disabled && (
-                    <Badge size="xs" variant="light" color="gray">
-                      {t("Upgrade")}
-                    </Badge>
-                  )}
-                </Group>
-              </UnstyledButton>
-              </Tooltip>
-              );
-            })}
-          </div>
+                        {disabled && (
+                          <Badge color="gray" size="xs" variant="light">
+                            {t("Upgrade")}
+                          </Badge>
+                        )}
+                      </Group>
+                    </UnstyledButton>
+                  </Tooltip>
+                );
+              })}
+            </div>
           ));
         })()}
       </ScrollArea>

@@ -1,4 +1,3 @@
-import api from "@/lib/api-client";
 import {
   IPageVerificationInfo,
   ISetupVerification,
@@ -6,26 +5,27 @@ import {
   IVerificationListItem,
   IVerificationListParams,
 } from "@/ee/page-verification/types/page-verification.types";
+import api from "@/lib/api-client";
 import { IPagination } from "@/lib/types";
 
 export async function getVerificationInfo(
-  pageId: string,
+  pageId: string
 ): Promise<IPageVerificationInfo> {
   const req = await api.post<IPageVerificationInfo>(
     "/pages/verification-info",
-    { pageId },
+    { pageId }
   );
   return req.data;
 }
 
 export async function setupVerification(
-  data: ISetupVerification,
+  data: ISetupVerification
 ): Promise<void> {
   await api.post("/pages/create-verification", data);
 }
 
 export async function updateVerification(
-  data: IUpdateVerification,
+  data: IUpdateVerification
 ): Promise<void> {
   await api.post("/pages/update-verification", data);
 }
@@ -54,7 +54,7 @@ export async function markObsolete(pageId: string): Promise<void> {
 }
 
 export async function getVerificationList(
-  params?: IVerificationListParams,
+  params?: IVerificationListParams
 ): Promise<IPagination<IVerificationListItem>> {
   const req = await api.post("/pages/verifications", { ...params });
   return req.data;

@@ -4,9 +4,9 @@ import { useBacklinksCountQuery } from "@/features/page-details/queries/backlink
 import { BacklinksList } from "./backlinks-list";
 
 interface BacklinksModalProps {
-  pageId: string;
-  opened: boolean;
   onClose: () => void;
+  opened: boolean;
+  pageId: string;
 }
 
 export function BacklinksModal({
@@ -18,7 +18,7 @@ export function BacklinksModal({
   const { data: counts } = useBacklinksCountQuery(pageId);
 
   return (
-    <Modal.Root opened={opened} onClose={onClose} size={640} yOffset="10vh">
+    <Modal.Root onClose={onClose} opened={opened} size={640} yOffset="10vh">
       <Modal.Overlay />
       <Modal.Content>
         <Modal.Header>
@@ -28,30 +28,30 @@ export function BacklinksModal({
         <Modal.Body>
           <Stack gap="lg">
             <Stack gap="xs">
-              <Text size="sm" fw={500} c="dimmed">
+              <Text c="dimmed" fw={500} size="sm">
                 {t("Incoming links ({{count}})", {
                   count: counts?.incoming ?? 0,
                 })}
               </Text>
               <BacklinksList
-                pageId={pageId}
                 direction="incoming"
                 enabled={opened}
                 onItemClick={onClose}
+                pageId={pageId}
               />
             </Stack>
 
             <Stack gap="xs">
-              <Text size="sm" fw={500} c="dimmed">
+              <Text c="dimmed" fw={500} size="sm">
                 {t("Outgoing links ({{count}})", {
                   count: counts?.outgoing ?? 0,
                 })}
               </Text>
               <BacklinksList
-                pageId={pageId}
                 direction="outgoing"
                 enabled={opened}
                 onItemClick={onClose}
+                pageId={pageId}
               />
             </Stack>
           </Stack>

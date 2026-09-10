@@ -7,9 +7,9 @@ export default function NotFoundPlaceholder() {
   return (
     <div className={classes.placeholder}>
       <IconInfoCircle
+        className={classes.placeholderIcon}
         size={18}
         stroke={1.6}
-        className={classes.placeholderIcon}
       />
       <span>{t("The original synced block no longer exists")}</span>
     </div>

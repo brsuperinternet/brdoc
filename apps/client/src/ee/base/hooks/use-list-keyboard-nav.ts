@@ -9,30 +9,38 @@ type UseListKeyboardNavResult = {
 
 export function useListKeyboardNav(
   itemCount: number,
-  resetDeps: ReadonlyArray<unknown>,
+  resetDeps: ReadonlyArray<unknown>
 ): UseListKeyboardNavResult {
   const [activeIndex, setActiveIndex] = useState(-1);
   const optionRefs = useRef<Array<HTMLElement | null>>([]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setActiveIndex(-1); }, resetDeps);
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, resetDeps);
 
   useEffect(() => {
-    if (activeIndex < 0) return;
+    if (activeIndex < 0) {
+      return;
+    }
     const el = optionRefs.current[activeIndex];
-    if (el) el.scrollIntoView({ block: "nearest" });
+    if (el) {
+      el.scrollIntoView({ block: "nearest" });
+    }
   }, [activeIndex]);
 
   const setOptionRef = useCallback(
     (idx: number) => (el: HTMLElement | null) => {
       optionRefs.current[idx] = el;
     },
-    [],
+    []
   );
 
   const handleNavKey = useCallback(
     (e: React.KeyboardEvent): boolean => {
-      if (itemCount === 0) return false;
+      if (itemCount === 0) {
+        return false;
+      }
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setActiveIndex((idx) => (idx < itemCount - 1 ? idx + 1 : 0));
@@ -55,8 +63,8 @@ export function useListKeyboardNav(
       }
       return false;
     },
-    [itemCount],
+    [itemCount]
   );
 
-  return { activeIndex, setActiveIndex, handleNavKey, setOptionRef };
+  return { activeIndex, handleNavKey, setActiveIndex, setOptionRef };
 }

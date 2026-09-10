@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   Center,
@@ -10,24 +9,21 @@ import {
   TextInput,
   useComputedColorScheme,
 } from "@mantine/core";
-import {
-  IconChevronDown,
-  IconLabel,
-  IconSearch,
-} from "@tabler/icons-react";
-import { Link, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useDebouncedValue } from "@mantine/hooks";
-import { useLabelPagesQuery } from "@/features/label/queries/label-query.ts";
-import { useGetSpacesQuery } from "@/features/space/queries/space-query.ts";
-import { getLabelColor } from "@/features/label/utils/label-colors.ts";
+import { IconChevronDown, IconLabel, IconSearch } from "@tabler/icons-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LabelPageRow } from "@/features/label/components/label-page-row.tsx";
 import { LabelPageRowSkeleton } from "@/features/label/components/label-page-row-skeleton.tsx";
+import classes from "@/features/label/label.module.css";
+import { useLabelPagesQuery } from "@/features/label/queries/label-query.ts";
+import { getLabelColor } from "@/features/label/utils/label-colors.ts";
 import { normalizeLabelName } from "@/features/label/utils/normalize-label.ts";
 import { SpaceFilterMenu } from "@/features/space/components/space-filter-menu.tsx";
-import { EmptyState } from "@/components/ui/empty-state";
-import classes from "@/features/label/label.module.css";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { useGetSpacesQuery } from "@/features/space/queries/space-query.ts";
 
 export default function LabelPage() {
   const { t } = useTranslation();
@@ -55,27 +51,31 @@ export default function LabelPage() {
 
   const pages = useMemo(
     () => pagesData?.pages.flatMap((p) => p.items) ?? [],
-    [pagesData],
+    [pagesData]
   );
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) {
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      { rootMargin: "200px 0px" },
+      { rootMargin: "200px 0px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const selectedSpaceName = useMemo(() => {
-    if (!spaceId) return t("All spaces");
+    if (!spaceId) {
+      return t("All spaces");
+    }
     return spaces.find((s) => s.id === spaceId)?.name ?? t("All spaces");
   }, [spaceId, spaces, t]);
 
@@ -83,22 +83,22 @@ export default function LabelPage() {
     <>
       <DocumentTitle title={labelName} />
 
-      <Container size={820} py="xl">
+      <Container py="xl" size={820}>
         <Stack gap="lg">
           <Stack gap="sm">
-            <Text size="sm" c="dimmed">
+            <Text c="dimmed" size="sm">
               {t("Labels")}
               {" / "}
-              <Text component="span" c="bright" fw={500}>
+              <Text c="bright" component="span" fw={500}>
                 {labelName}
               </Text>
             </Text>
 
-            <Group gap="md" align="center" wrap="nowrap">
+            <Group align="center" gap="md" wrap="nowrap">
               <Link
-                to={`/labels/${encodeURIComponent(labelName)}`}
                 className={classes.headerChip}
                 style={{ background: c.bg, color: c.fg }}
+                to={`/labels/${encodeURIComponent(labelName)}`}
               >
                 <span
                   className={classes.headerDot}
@@ -109,20 +109,20 @@ export default function LabelPage() {
             </Group>
           </Stack>
 
-          <Group gap="sm" wrap="nowrap" align="center">
+          <Group align="center" gap="sm" wrap="nowrap">
             <TextInput
-              placeholder={t("Search by title")}
               leftSection={<IconSearch size={16} />}
-              value={search}
               onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("Search by title")}
               size="sm"
               style={{ flex: 1 }}
+              value={search}
             />
-            <SpaceFilterMenu value={spaceId} onChange={setSpaceId}>
+            <SpaceFilterMenu onChange={setSpaceId} value={spaceId}>
               <Button
-                variant="default"
-                size="sm"
                 rightSection={<IconChevronDown size={14} />}
+                size="sm"
+                variant="default"
               >
                 {selectedSpaceName}
               </Button>
@@ -131,19 +131,19 @@ export default function LabelPage() {
 
           {pagesLoading && pages.length === 0 ? (
             <div>
-              <LabelPageRowSkeleton titleWidth={260} metaWidth={170} />
-              <LabelPageRowSkeleton titleWidth={180} metaWidth={150} />
-              <LabelPageRowSkeleton titleWidth={220} metaWidth={190} />
-              <LabelPageRowSkeleton titleWidth={140} metaWidth={140} />
-              <LabelPageRowSkeleton titleWidth={240} metaWidth={170} />
+              <LabelPageRowSkeleton metaWidth={170} titleWidth={260} />
+              <LabelPageRowSkeleton metaWidth={150} titleWidth={180} />
+              <LabelPageRowSkeleton metaWidth={190} titleWidth={220} />
+              <LabelPageRowSkeleton metaWidth={140} titleWidth={140} />
+              <LabelPageRowSkeleton metaWidth={170} titleWidth={240} />
             </div>
           ) : pages.length > 0 ? (
             <div>
               {pages.map((page) => (
                 <LabelPageRow
+                  currentLabelName={labelName}
                   key={page.id}
                   page={page}
-                  currentLabelName={labelName}
                 />
               ))}
               <div ref={sentinelRef} />
@@ -155,16 +155,16 @@ export default function LabelPage() {
             </div>
           ) : (
             <EmptyState
+              description={
+                debouncedSearch
+                  ? t("No pages match your search.")
+                  : t("Pages tagged with this label will appear here.")
+              }
               icon={IconLabel}
               title={
                 debouncedSearch
                   ? t("No matches")
                   : t("No pages with this label")
-              }
-              description={
-                debouncedSearch
-                  ? t("No pages match your search.")
-                  : t("Pages tagged with this label will appear here.")
               }
             />
           )}

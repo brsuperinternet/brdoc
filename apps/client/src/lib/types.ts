@@ -1,9 +1,9 @@
 export interface QueryParams {
-  query?: string;
-  cursor?: string;
-  beforeCursor?: string;
-  limit?: number;
   adminView?: boolean;
+  beforeCursor?: string;
+  cursor?: string;
+  limit?: number;
+  query?: string;
 }
 
 export enum UserRole {
@@ -19,9 +19,9 @@ export enum SpaceRole {
 }
 
 export interface IRoleData {
+  description: string;
   label: string;
   value: string;
-  description: string;
 }
 
 export interface ApiResponse<T> {

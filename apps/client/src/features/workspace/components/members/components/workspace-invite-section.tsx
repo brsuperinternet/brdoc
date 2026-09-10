@@ -1,9 +1,9 @@
-import { useAtom } from "jotai";
-import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { useEffect, useState } from "react";
 import { Button, Group, Text, TextInput } from "@mantine/core";
-import { CopyButton } from "@/components/common/copy-button";
+import { useAtom } from "jotai";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CopyButton } from "@/components/common/copy-button";
+import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
 
 export default function WorkspaceInviteSection() {
   const { t } = useTranslation();
@@ -30,7 +30,7 @@ export default function WorkspaceInviteSection() {
 
       <Group>
         <div style={{ flex: 1 }}>
-          <TextInput variant="filled" value={inviteLink} readOnly />
+          <TextInput readOnly value={inviteLink} variant="filled" />
         </div>
         <CopyButton value={inviteLink}>
           {({ copied, copy }) => (

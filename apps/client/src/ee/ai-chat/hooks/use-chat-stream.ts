@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { sendChatMessage } from "../services/ai-chat-service";
 import type {
@@ -16,13 +16,13 @@ type ChatStreamOptions = {
 
 export function useChatStream(
   chatId: string | undefined,
-  options?: ChatStreamOptions,
+  options?: ChatStreamOptions
 ) {
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [streamingContent, setStreamingContent] = useState("");
-  const [streamingToolCalls, setStreamingToolCalls] = useState<AiChatToolCall[]>(
-    [],
-  );
+  const [streamingToolCalls, setStreamingToolCalls] = useState<
+    AiChatToolCall[]
+  >([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -42,7 +42,9 @@ export function useChatStream(
   // Skip the reset if the new chatId is one the hook itself already claimed
   // during a new-chat flow — in that case our optimistic state is the truth.
   useEffect(() => {
-    if (chatId && chatId === hydratedChatIdRef.current) return;
+    if (chatId && chatId === hydratedChatIdRef.current) {
+      return;
+    }
     hydratedChatIdRef.current = undefined;
     setMessages([]);
     setError(null);
@@ -52,15 +54,26 @@ export function useChatStream(
 
   const hydrateFromServer = useCallback((msgs: AiChatMessage[]) => {
     const forId = currentChatIdRef.current;
-    if (!forId) return;
-    if (hydratedChatIdRef.current === forId) return;
+    if (!forId) {
+      return;
+    }
+    if (hydratedChatIdRef.current === forId) {
+      return;
+    }
     hydratedChatIdRef.current = forId;
     setMessages(msgs);
   }, []);
 
   const sendMessage = useCallback(
-    (content: string, mentions: PageMention[] = [], attachments: ChatAttachment[] = [], contextPageId?: string) => {
-      if (isStreaming || (!content.trim() && attachments.length === 0)) return;
+    (
+      content: string,
+      mentions: PageMention[] = [],
+      attachments: ChatAttachment[] = [],
+      contextPageId?: string
+    ) => {
+      if (isStreaming || (!content.trim() && attachments.length === 0)) {
+        return;
+      }
 
       setError(null);
       setErrorCode(null);
@@ -75,20 +88,20 @@ export function useChatStream(
       }
       if (attachments.length) {
         metadata.attachments = attachments.map((a) => ({
-          id: a.id,
-          fileName: a.fileName,
           fileExt: a.fileExt,
+          fileName: a.fileName,
+          id: a.id,
         }));
       }
 
       const userMessage: AiChatMessage = {
-        id: `temp-${Date.now()}`,
         chatId: currentChatIdRef.current || "",
-        role: "user",
         content,
-        toolCalls: null,
-        metadata: Object.keys(metadata).length ? metadata : null,
         createdAt: new Date().toISOString(),
+        id: `temp-${Date.now()}`,
+        metadata: Object.keys(metadata).length ? metadata : null,
+        role: "user",
+        toolCalls: null,
       };
 
       setMessages((prev) => [...prev, userMessage]);
@@ -125,32 +138,32 @@ export function useChatStream(
               setStreamingToolCalls((prev) => [
                 ...prev,
                 {
+                  args: event.args,
                   id: event.id,
                   name: event.name,
-                  args: event.args,
                 },
               ]);
               break;
             case "tool_result":
               setStreamingToolCalls((prev) =>
                 prev.map((tc) =>
-                  tc.id === event.id ? { ...tc, result: event.result } : tc,
-                ),
+                  tc.id === event.id ? { ...tc, result: event.result } : tc
+                )
               );
               break;
             case "done": {
               setStreamingContent((currentContent) => {
                 setStreamingToolCalls((currentToolCalls) => {
                   const assistantMessage: AiChatMessage = {
-                    id: event.messageId,
                     chatId: currentChatIdRef.current || "",
-                    role: "assistant",
                     content: currentContent || null,
+                    createdAt: new Date().toISOString(),
+                    id: event.messageId,
+                    metadata: event.usage ? { tokenUsage: event.usage } : null,
+                    role: "assistant",
                     toolCalls: currentToolCalls.length
                       ? currentToolCalls
                       : null,
-                    metadata: event.usage ? { tokenUsage: event.usage } : null,
-                    createdAt: new Date().toISOString(),
                   };
 
                   setMessages((prev) => [...prev, assistantMessage]);
@@ -167,7 +180,7 @@ export function useChatStream(
             case "error":
               setError(event.message);
               setErrorCode(event.code || null);
-              setIsRetryable(event.retryable || false);
+              setIsRetryable(event.retryable);
               setIsStreaming(false);
               break;
           }
@@ -178,12 +191,12 @@ export function useChatStream(
         },
         () => {
           setIsStreaming(false);
-        },
+        }
       );
 
       abortRef.current = abortController;
     },
-    [isStreaming, navigate, queryClient],
+    [isStreaming, navigate, queryClient]
   );
 
   const stopGeneration = useCallback(() => {
@@ -194,13 +207,13 @@ export function useChatStream(
       setStreamingToolCalls((currentToolCalls) => {
         if (currentContent || currentToolCalls.length > 0) {
           const partialMessage: AiChatMessage = {
-            id: `stopped-${Date.now()}`,
             chatId: currentChatIdRef.current || "",
-            role: "assistant",
             content: currentContent || null,
-            toolCalls: currentToolCalls.length ? currentToolCalls : null,
-            metadata: null,
             createdAt: new Date().toISOString(),
+            id: `stopped-${Date.now()}`,
+            metadata: null,
+            role: "assistant",
+            toolCalls: currentToolCalls.length ? currentToolCalls : null,
           };
           setMessages((prev) => [...prev, partialMessage]);
         }
@@ -213,15 +226,15 @@ export function useChatStream(
   }, []);
 
   return {
-    messages,
-    streamingContent,
-    streamingToolCalls,
-    isStreaming,
     error,
     errorCode,
+    hydrateFromServer,
     isRetryable,
+    isStreaming,
+    messages,
     sendMessage,
     stopGeneration,
-    hydrateFromServer,
+    streamingContent,
+    streamingToolCalls,
   };
 }

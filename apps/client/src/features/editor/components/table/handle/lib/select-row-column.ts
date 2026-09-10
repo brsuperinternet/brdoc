@@ -9,13 +9,15 @@ export function buildRowOrColumnSelection(
   tableNode: ProseMirrorNode,
   tablePos: number,
   orientation: Orientation,
-  index: number,
+  index: number
 ): CellSelection | null {
   const map = TableMap.get(tableNode);
   const tableStart = tablePos + 1;
 
   if (orientation === "col") {
-    if (index < 0 || index >= map.width) return null;
+    if (index < 0 || index >= map.width) {
+      return null;
+    }
     const firstCellPos = tableStart + map.map[index];
     const lastCellPos =
       tableStart + map.map[(map.height - 1) * map.width + index];
@@ -24,10 +26,11 @@ export function buildRowOrColumnSelection(
     return CellSelection.colSelection($first, $last);
   }
 
-  if (index < 0 || index >= map.height) return null;
+  if (index < 0 || index >= map.height) {
+    return null;
+  }
   const firstCellPos = tableStart + map.map[index * map.width];
-  const lastCellPos =
-    tableStart + map.map[index * map.width + (map.width - 1)];
+  const lastCellPos = tableStart + map.map[index * map.width + (map.width - 1)];
   const $first = state.doc.resolve(firstCellPos);
   const $last = state.doc.resolve(lastCellPos);
   return CellSelection.rowSelection($first, $last);

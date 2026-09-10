@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { TextInput, Group } from "@mantine/core";
+import { Group, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface SearchInputProps {
-  placeholder?: string;
   ariaLabel?: string;
   debounceDelay?: number;
   onSearch: (value: string) => void;
+  placeholder?: string;
 }
 
 export function SearchInput({
@@ -28,12 +28,12 @@ export function SearchInput({
   return (
     <Group mb="sm">
       <TextInput
-        size="sm"
-        placeholder={placeholder || t("Search...")}
         aria-label={ariaLabel || placeholder || t("Search")}
         leftSection={<IconSearch size={16} />}
-        value={value}
         onChange={(e) => setValue(e.currentTarget.value)}
+        placeholder={placeholder || t("Search...")}
+        size="sm"
+        value={value}
       />
     </Group>
   );

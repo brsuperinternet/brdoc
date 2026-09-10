@@ -1,4 +1,3 @@
-import { useRef, useMemo, useCallback, useEffect, useState, useLayoutEffect } from "react";
 import { Table } from "@tanstack/react-table";
 import {
   observeWindowOffset,
@@ -6,40 +5,48 @@ import {
   useVirtualizer,
   windowScroll,
 } from "@tanstack/react-virtual";
-import { useAtom, useSetAtom, type PrimitiveAtom } from "jotai";
+import { type PrimitiveAtom, useAtom, useSetAtom } from "jotai";
 import {
-  IBaseRow,
-  IBaseProperty,
-  EditingCell,
-  FocusedCell,
-  CellCoord,
-} from "@/ee/base/types/base.types";
-import {
-  editingCellAtomFamily,
-  focusedCellAtomFamily,
-  activeFormulaEditorAtomFamily,
-  pendingTypeInsertAtom,
-  type FormulaEditorTarget,
-  type PendingTypeInsert,
-} from "@/ee/base/atoms/base-atoms";
-import { isSystemPropertyType } from "@/ee/base/property-types/property-type.registry";
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
+import {
+  activeFormulaEditorAtomFamily,
+  editingCellAtomFamily,
+  type FormulaEditorTarget,
+  focusedCellAtomFamily,
+  type PendingTypeInsert,
+  pendingTypeInsertAtom,
+} from "@/ee/base/atoms/base-atoms";
+import { useBaseEditable } from "@/ee/base/context/base-editable";
+import { GridRowOrderProvider } from "@/ee/base/context/grid-row-order";
+import { useRowExpand } from "@/ee/base/context/row-expand";
 import { useColumnResize } from "@/ee/base/hooks/use-column-resize";
+import { useDeleteSelectedRows } from "@/ee/base/hooks/use-delete-selected-rows";
+import { useGridAutoScroll } from "@/ee/base/hooks/use-grid-autoscroll";
 import { useGridKeyboardNav } from "@/ee/base/hooks/use-grid-keyboard-nav";
+import { useHorizontalScrollSync } from "@/ee/base/hooks/use-horizontal-scroll-sync";
 import { useRowAutoScroll } from "@/ee/base/hooks/use-row-autoscroll";
 import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
-import { useDeleteSelectedRows } from "@/ee/base/hooks/use-delete-selected-rows";
-import { useHorizontalScrollSync } from "@/ee/base/hooks/use-horizontal-scroll-sync";
-import { useGridAutoScroll } from "@/ee/base/hooks/use-grid-autoscroll";
-import { GridHeader } from "./grid-header";
-import { GridRow } from "./grid-row";
+import { isSystemPropertyType } from "@/ee/base/property-types/property-type.registry";
+import classes from "@/ee/base/styles/grid.module.css";
+import {
+  CellCoord,
+  EditingCell,
+  FocusedCell,
+  IBaseProperty,
+  IBaseRow,
+} from "@/ee/base/types/base.types";
 import { AddRowButton } from "./add-row-button";
 import { GridGhostRows } from "./grid-ghost-rows";
+import { GridHeader } from "./grid-header";
+import { GridRow } from "./grid-row";
 import { SelectionActionBar } from "./selection-action-bar";
-import { useBaseEditable } from "@/ee/base/context/base-editable";
-import { useRowExpand } from "@/ee/base/context/row-expand";
-import { GridRowOrderProvider } from "@/ee/base/context/grid-row-order";
-import classes from "@/ee/base/styles/grid.module.css";
 
 // Row box = 36px cell content + 1px row border-bottom. CSS pins .row to
 // var(--base-row-height) from this constant so the rendered height can
@@ -58,8 +65,8 @@ const ADD_COLUMN_TRACK_WIDTH = 40;
 // stable; only the wrapper object identity matters for downstream
 // memoization inside useVirtualizer.
 const WINDOW_SCROLL_OPTIONS = {
-  observeElementRect: observeWindowRect as never,
   observeElementOffset: observeWindowOffset as never,
+  observeElementRect: observeWindowRect as never,
   scrollToFn: windowScroll as never,
 } as const;
 
@@ -71,7 +78,11 @@ type GridContainerProps = {
   pageId: string;
   onColumnReorder?: (columnId: string, finishIndex: number) => void;
   onResizeEnd?: () => void;
-  onRowReorder?: (rowId: string, targetRowId: string, position: "above" | "below") => void;
+  onRowReorder?: (
+    rowId: string,
+    targetRowId: string,
+    position: "above" | "below"
+  ) => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onFetchNextPage?: () => void;
@@ -123,20 +134,32 @@ export function GridContainer({
   const editable = useBaseEditable();
   const onExpandRow = useRowExpand();
 
-  const [editingCell, setEditingCell] = useAtom(editingCellAtomFamily(pageId)) as unknown as [EditingCell, (val: EditingCell) => void];
+  const [editingCell, setEditingCell] = useAtom(
+    editingCellAtomFamily(pageId)
+  ) as unknown as [EditingCell, (val: EditingCell) => void];
   const editingCellRef = useRef(editingCell);
   editingCellRef.current = editingCell;
 
-  const { selectionCount, clear: clearSelection, toggle: toggleRow } = useRowSelection(pageId);
+  const {
+    selectionCount,
+    clear: clearSelection,
+    toggle: toggleRow,
+  } = useRowSelection(pageId);
   const { deleteSelected } = useDeleteSelectedRows(pageId);
 
   const { t } = useTranslation();
 
-  const [focusedCell, setFocusedCell] = useAtom(focusedCellAtomFamily(pageId)) as unknown as [FocusedCell, (val: FocusedCell) => void];
+  const [focusedCell, setFocusedCell] = useAtom(
+    focusedCellAtomFamily(pageId)
+  ) as unknown as [FocusedCell, (val: FocusedCell) => void];
   const focusedCellRef = useRef(focusedCell);
   focusedCellRef.current = focusedCell;
-  const [, setActiveFormulaEditor] = useAtom(activeFormulaEditorAtomFamily(pageId)) as unknown as [FormulaEditorTarget, (val: FormulaEditorTarget) => void];
-  const setPendingTypeInsert = useSetAtom(pendingTypeInsertAtom as PrimitiveAtom<PendingTypeInsert>);
+  const [, setActiveFormulaEditor] = useAtom(
+    activeFormulaEditorAtomFamily(pageId)
+  ) as unknown as [FormulaEditorTarget, (val: FormulaEditorTarget) => void];
+  const setPendingTypeInsert = useSetAtom(
+    pendingTypeInsertAtom as PrimitiveAtom<PendingTypeInsert>
+  );
 
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
@@ -146,17 +169,33 @@ export function GridContainer({
       // (text/number/url/email) when the user clicks elsewhere, since clicking
       // a non-focusable cell does not natively blur the input. Gating on
       // editingCell also stops it from stealing focus from unrelated inputs.
-      if (!editingCellRef.current) return;
+      if (!editingCellRef.current) {
+        return;
+      }
       const target = e.target as HTMLElement;
-      if (target.closest(`.${classes.headerCell}`)) return;
-      if (target.closest("[role=\"dialog\"]")) return;
-      if (target.closest("[role=\"listbox\"]")) return;
-      if (target.closest("[data-mantine-shared-portal-node]")) return;
-      if (target.closest(`.${classes.cellEditing}`)) return;
+      if (target.closest(`.${classes.headerCell}`)) {
+        return;
+      }
+      if (target.closest('[role="dialog"]')) {
+        return;
+      }
+      if (target.closest('[role="listbox"]')) {
+        return;
+      }
+      if (target.closest("[data-mantine-shared-portal-node]")) {
+        return;
+      }
+      if (target.closest(`.${classes.cellEditing}`)) {
+        return;
+      }
       // Blurring the input fires its onBlur -> commitOnce -> handleCommit,
       // which also clears editingCell. No setEditingCell(null) needed here.
       const active = document.activeElement as HTMLElement | null;
-      if (active && active !== document.body && typeof active.blur === "function") {
+      if (
+        active &&
+        active !== document.body &&
+        typeof active.blur === "function"
+      ) {
         active.blur();
       }
     };
@@ -165,7 +204,6 @@ export function GridContainer({
   }, []);
 
   useColumnResize(table, onResizeEnd ?? (() => {}));
-
 
   // When the scroll container is the window (inline embed mode), the default
   // Element-mode observers read scrollTop/scrollLeft, which Window does not
@@ -184,7 +222,9 @@ export function GridContainer({
   const [scrollMargin, setScrollMargin] = useState(0);
   useLayoutEffect(() => {
     const el = rowsContainerRef.current;
-    if (!el || !scrollElement) return;
+    if (!(el && scrollElement)) {
+      return;
+    }
     const update = () => {
       const rect = el.getBoundingClientRect();
       if (isWindowScroll) {
@@ -194,7 +234,7 @@ export function GridContainer({
         setScrollMargin(
           rect.top -
             scrollport.getBoundingClientRect().top +
-            scrollport.scrollTop,
+            scrollport.scrollTop
         );
       }
     };
@@ -215,21 +255,21 @@ export function GridContainer({
   // are inserted or reordered above the viewport.
   const getItemKey = useCallback(
     (index: number) => rowIds[index] ?? index,
-    [rowIds],
+    [rowIds]
   );
 
   const virtualizer = useVirtualizer({
     count: rows.length,
-    getScrollElement: () => scrollElement as Element | null,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: OVERSCAN,
-    scrollMargin,
-    getItemKey,
     directDomUpdates: true,
     // 'position' (writes `top`), not 'transform': a transform on the row
     // creates a containing block that breaks the position:sticky pinned
     // cells inside it.
     directDomUpdatesMode: "position",
+    estimateSize: () => ROW_HEIGHT,
+    getItemKey,
+    getScrollElement: () => scrollElement as Element | null,
+    overscan: OVERSCAN,
+    scrollMargin,
     ...windowScrollOptions,
     // virtual-core bug: on first attach _willUpdate calls
     // _scrollToOffset(getScrollOffset()), which returns undefined when no
@@ -251,18 +291,22 @@ export function GridContainer({
         .getVisibleLeafColumns()
         .filter((c) => c.getIsPinned() === "left")
         .reduce((sum, c) => sum + c.getSize(), 0),
-    [table],
+    [table]
   );
 
   const scrollCellIntoView = useCallback(
     (coord: CellCoord, rowIndex: number) => {
-      if (rowIndex >= 0) virtualizer.scrollToIndex(rowIndex, { align: "auto" });
+      if (rowIndex >= 0) {
+        virtualizer.scrollToIndex(rowIndex, { align: "auto" });
+      }
       requestAnimationFrame(() => {
         const scroller = bodyRef.current;
         const el = document.getElementById(
-          `base-cell-${coord.rowId}-${coord.propertyId}`,
+          `base-cell-${coord.rowId}-${coord.propertyId}`
         );
-        if (!scroller || !el) return;
+        if (!(scroller && el)) {
+          return;
+        }
         const cellRect = el.getBoundingClientRect();
         const scRect = scroller.getBoundingClientRect();
         const pinned = pinnedLeftWidth();
@@ -273,80 +317,120 @@ export function GridContainer({
         }
       });
     },
-    [virtualizer, pinnedLeftWidth],
+    [virtualizer, pinnedLeftWidth]
   );
 
   useEffect(() => {
-    if (!editingCell) return;
+    if (!editingCell) {
+      return;
+    }
     const idx = rowIdsRef.current.indexOf(editingCell.rowId);
-    if (idx >= 0) scrollCellIntoView(editingCell, idx);
+    if (idx >= 0) {
+      scrollCellIntoView(editingCell, idx);
+    }
   }, [editingCell, scrollCellIntoView]);
 
   const openEditor = useCallback(
     (coord: CellCoord) => {
       const prop = properties.find((p) => p.id === coord.propertyId);
-      if (!prop) return;
+      if (!prop) {
+        return;
+      }
       if (prop.type === "checkbox") {
-        if (!editable) return;
-        const current = table.getRow(coord.rowId, true)?.getValue(coord.propertyId);
+        if (!editable) {
+          return;
+        }
+        const current = table
+          .getRow(coord.rowId, true)
+          ?.getValue(coord.propertyId);
         onCellUpdate(coord.rowId, coord.propertyId, !current);
         return;
       }
       if (!editable) {
-        if (prop.type === "file") setEditingCell(coord);
+        if (prop.type === "file") {
+          setEditingCell(coord);
+        }
         return;
       }
       if (prop.type === "formula") {
-        setActiveFormulaEditor({ propertyId: coord.propertyId, rowId: coord.rowId });
+        setActiveFormulaEditor({
+          propertyId: coord.propertyId,
+          rowId: coord.rowId,
+        });
         return;
       }
-      if (isSystemPropertyType(prop.type)) return;
+      if (isSystemPropertyType(prop.type)) {
+        return;
+      }
       setEditingCell(coord);
     },
-    [properties, editable, table, onCellUpdate, setEditingCell, setActiveFormulaEditor],
+    [
+      properties,
+      editable,
+      table,
+      onCellUpdate,
+      setEditingCell,
+      setActiveFormulaEditor,
+    ]
   );
 
   const clearCell = useCallback(
     (coord: CellCoord) => {
-      if (!editable) return;
+      if (!editable) {
+        return;
+      }
       const prop = properties.find((p) => p.id === coord.propertyId);
-      if (!prop || isSystemPropertyType(prop.type)) return;
+      if (!prop || isSystemPropertyType(prop.type)) {
+        return;
+      }
       onCellUpdate(coord.rowId, coord.propertyId, null);
     },
-    [editable, properties, onCellUpdate],
+    [editable, properties, onCellUpdate]
   );
 
   const beginTypeToEdit = useCallback(
     (coord: CellCoord, char: string) => {
-      if (!editable) return;
+      if (!editable) {
+        return;
+      }
       const prop = properties.find((p) => p.id === coord.propertyId);
-      if (!prop || isSystemPropertyType(prop.type) || prop.type === "checkbox") return;
+      if (
+        !prop ||
+        isSystemPropertyType(prop.type) ||
+        prop.type === "checkbox"
+      ) {
+        return;
+      }
       if (["text", "number", "url", "email"].includes(prop.type)) {
-        setPendingTypeInsert({ rowId: coord.rowId, propertyId: coord.propertyId, char });
+        setPendingTypeInsert({
+          char,
+          propertyId: coord.propertyId,
+          rowId: coord.rowId,
+        });
         setEditingCell(coord);
       } else {
         openEditor(coord);
       }
     },
-    [editable, properties, setPendingTypeInsert, setEditingCell, openEditor],
+    [editable, properties, setPendingTypeInsert, setEditingCell, openEditor]
   );
 
   const toggleRowSelection = useCallback(
     (rowId: string) => {
       toggleRow(rowId, {
-        shiftKey: false,
-        rowIndex: rowIdsRef.current.indexOf(rowId),
         orderedRowIds: rowIdsRef.current,
+        rowIndex: rowIdsRef.current.indexOf(rowId),
+        shiftKey: false,
       });
     },
-    [toggleRow],
+    [toggleRow]
   );
 
   const expandRow = useCallback(
     (rowId: string) => {
       onExpandRow?.(rowId);
     },
-    [onExpandRow],
+    [onExpandRow]
   );
 
   const prevEditingRef = useRef(editingCell);
@@ -354,7 +438,9 @@ export function GridContainer({
     const prev = prevEditingRef.current;
     prevEditingRef.current = editingCell;
     if (prev && !editingCell) {
-      if (!focusedCellRef.current) setFocusedCell(prev);
+      if (!focusedCellRef.current) {
+        setFocusedCell(prev);
+      }
       const grid = bodyRef.current;
       const active = document.activeElement;
       if (grid && active && !grid.contains(active)) {
@@ -365,50 +451,67 @@ export function GridContainer({
 
   useEffect(() => {
     const fc = focusedCellRef.current;
-    if (!fc) return;
+    if (!fc) {
+      return;
+    }
     const rowOk = rowIds.includes(fc.rowId);
-    const colOk = table.getVisibleLeafColumns().some((c) => c.id === fc.propertyId);
-    if (!rowOk || !colOk) setFocusedCell(null);
-  }, [rowIds, table.getState().columnVisibility, table.getState().columnOrder, setFocusedCell]);
+    const colOk = table
+      .getVisibleLeafColumns()
+      .some((c) => c.id === fc.propertyId);
+    if (!(rowOk && colOk)) {
+      setFocusedCell(null);
+    }
+  }, [
+    rowIds,
+    table.getState().columnVisibility,
+    table.getState().columnOrder,
+    setFocusedCell,
+  ]);
 
   const handleGridFocus = useCallback(
     (e: React.FocusEvent<HTMLDivElement>) => {
-      if (e.target !== e.currentTarget) return;
-      if (editingCellRef.current || focusedCellRef.current) return;
+      if (e.target !== e.currentTarget) {
+        return;
+      }
+      if (editingCellRef.current || focusedCellRef.current) {
+        return;
+      }
       const firstRow = rowIdsRef.current[0];
       const firstCol = table
         .getVisibleLeafColumns()
         .find((c) => c.id !== "__row_number")?.id;
-      if (firstRow && firstCol) setFocusedCell({ rowId: firstRow, propertyId: firstCol });
+      if (firstRow && firstCol) {
+        setFocusedCell({ propertyId: firstCol, rowId: firstRow });
+      }
     },
-    [table, setFocusedCell],
+    [table, setFocusedCell]
   );
 
   const handleAddRowBelow = useCallback(
     (afterRowId: string, focusPropertyId: string) => {
       onAddRow?.(afterRowId, focusPropertyId);
     },
-    [onAddRow],
+    [onAddRow]
   );
 
   useGridKeyboardNav({
-    table,
-    properties,
-    containerRef: bodyRef,
-    focusedCell,
-    setFocusedCell,
-    editingCell,
-    setEditingCell,
-    openEditor,
-    clearCell,
+    addRow: handleAddRowBelow,
     beginTypeToEdit,
+    clearCell,
+    clearSelection,
+    containerRef: bodyRef,
+    deleteSelected,
+    editingCell,
+    expandRow,
+    focusedCell,
+    openEditor,
+    properties,
     scrollCellIntoView,
     selectionCount,
-    clearSelection,
-    deleteSelected,
+    setEditingCell,
+    setFocusedCell,
+    table,
     toggleRowSelection,
-    expandRow,
-    addRow: handleAddRowBelow,
   });
 
   const activeCell = editingCell ?? focusedCell;
@@ -417,14 +520,28 @@ export function GridContainer({
     : undefined;
 
   useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage || !onFetchNextPage) return;
+    if (!hasNextPage || isFetchingNextPage || !onFetchNextPage) {
+      return;
+    }
     const lastItem = virtualItems[virtualItems.length - 1];
-    if (!lastItem) return;
-    if (lastItem.index < rows.length - OVERSCAN * 2) return;
-    if (rows.length <= lastTriggeredRowsLenRef.current) return;
+    if (!lastItem) {
+      return;
+    }
+    if (lastItem.index < rows.length - OVERSCAN * 2) {
+      return;
+    }
+    if (rows.length <= lastTriggeredRowsLenRef.current) {
+      return;
+    }
     lastTriggeredRowsLenRef.current = rows.length;
     onFetchNextPage();
-  }, [virtualItems, rows.length, hasNextPage, isFetchingNextPage, onFetchNextPage]);
+  }, [
+    virtualItems,
+    rows.length,
+    hasNextPage,
+    isFetchingNextPage,
+    onFetchNextPage,
+  ]);
 
   useEffect(() => {
     // When the row set shrinks (filter/sort/view change) or resets to zero,
@@ -434,7 +551,6 @@ export function GridContainer({
     }
   }, [rows.length]);
 
-
   const gridTemplateColumns = useMemo(() => {
     const visibleColumns = table.getVisibleLeafColumns();
     const columnWidths = visibleColumns.map((col) => `${col.getSize()}px`);
@@ -442,7 +558,14 @@ export function GridContainer({
       columnWidths.join(" ") +
       (pageId && editable ? ` ${ADD_COLUMN_TRACK_WIDTH}px` : "")
     );
-  }, [table, table.getState().columnSizing, table.getState().columnVisibility, table.getState().columnOrder, pageId, editable]);
+  }, [
+    table,
+    table.getState().columnSizing,
+    table.getState().columnVisibility,
+    table.getState().columnOrder,
+    pageId,
+    editable,
+  ]);
 
   const totalColumnsWidth = useMemo(
     () =>
@@ -450,7 +573,14 @@ export function GridContainer({
         .getVisibleLeafColumns()
         .reduce((sum, col) => sum + col.getSize(), 0) +
       (pageId && editable ? ADD_COLUMN_TRACK_WIDTH : 0),
-    [table, table.getState().columnSizing, table.getState().columnVisibility, table.getState().columnOrder, pageId, editable],
+    [
+      table,
+      table.getState().columnSizing,
+      table.getState().columnVisibility,
+      table.getState().columnOrder,
+      pageId,
+      editable,
+    ]
   );
 
   const showGhostRows = rows.length === 0 && !isFiltered;
@@ -468,8 +598,8 @@ export function GridContainer({
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         bodyRef.current?.scrollTo({
-          left: bodyRef.current.scrollWidth,
           behavior: "smooth",
+          left: bodyRef.current.scrollWidth,
         });
       });
     });
@@ -477,7 +607,7 @@ export function GridContainer({
 
   const getColumnOrder = useCallback(
     () => table.getState().columnOrder,
-    [table],
+    [table]
   );
 
   return (
@@ -487,79 +617,81 @@ export function GridContainer({
         <div
           className={classes.headerGrid}
           ref={headerRef}
-          style={{ gridTemplateColumns }}
           role="row"
+          style={{ gridTemplateColumns }}
         >
           <GridHeader
-            table={table}
-            pageId={pageId}
             columnOrder={table.getState().columnOrder}
             columnVisibility={table.getState().columnVisibility}
-            properties={properties}
-            loadedRowIds={rowIds}
-            onPropertyCreated={handlePropertyCreated}
             getColumnOrder={getColumnOrder}
+            loadedRowIds={rowIds}
             onColumnReorder={onColumnReorder}
+            onPropertyCreated={handlePropertyCreated}
+            pageId={pageId}
+            properties={properties}
+            table={table}
           />
         </div>
       </div>
-        <GridRowOrderProvider value={getOrderedRowIds}>
+      <GridRowOrderProvider value={getOrderedRowIds}>
+        <div
+          aria-activedescendant={activeDescendantId}
+          aria-colcount={table.getVisibleLeafColumns().length}
+          aria-label={t("Base table")}
+          aria-multiselectable
+          aria-rowcount={rows.length}
+          className={classes.bodyGrid}
+          onFocus={handleGridFocus}
+          ref={bodyRef}
+          role="grid"
+          style={
+            {
+              "--base-grid-cols": bodyGridTemplateColumns,
+            } as React.CSSProperties
+          }
+          tabIndex={0}
+        >
           <div
-            className={classes.bodyGrid}
-            ref={bodyRef}
-            tabIndex={0}
-            role="grid"
-            aria-label={t("Base table")}
-            aria-rowcount={rows.length}
-            aria-colcount={table.getVisibleLeafColumns().length}
-            aria-multiselectable
-            aria-activedescendant={activeDescendantId}
-            onFocus={handleGridFocus}
-            style={
-              {
-                "--base-grid-cols": bodyGridTemplateColumns,
-              } as React.CSSProperties
-            }
+            className={classes.rowsContainer}
+            ref={(node) => {
+              rowsContainerRef.current = node;
+              virtualizer.containerRef(node);
+            }}
+            role="rowgroup"
+            style={{ minWidth: "100%", width: totalColumnsWidth }}
           >
-            <div
-              className={classes.rowsContainer}
-              ref={(node) => {
-                rowsContainerRef.current = node;
-                virtualizer.containerRef(node);
-              }}
-              role="rowgroup"
-              style={{ width: totalColumnsWidth, minWidth: "100%" }}
-            >
-              {virtualItems.map((virtualRow) => {
-                const row = rows[virtualRow.index];
-                if (!row) return null;
-                return (
-                  <GridRow
-                    key={row.id}
-                    row={row}
-                    rowIndex={virtualRow.index}
-                    measureRef={virtualizer.measureElement}
-                    onCellUpdate={onCellUpdate}
-                    properties={properties}
-                    columnVisibility={table.getState().columnVisibility}
-                    columnOrder={table.getState().columnOrder}
-                    pageId={pageId}
-                    onRowReorder={onRowReorder}
-                  />
-                );
-              })}
-            </div>
-            {showGhostRows && (
-              <GridGhostRows
-                count={3}
-                columnCount={table.getVisibleLeafColumns().length}
-                onCreate={editable ? handleAddRow : undefined}
-              />
-            )}
-            {editable && <AddRowButton onClick={handleAddRow} />}
-            {pageId && <SelectionActionBar pageId={pageId} />}
+            {virtualItems.map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              if (!row) {
+                return null;
+              }
+              return (
+                <GridRow
+                  columnOrder={table.getState().columnOrder}
+                  columnVisibility={table.getState().columnVisibility}
+                  key={row.id}
+                  measureRef={virtualizer.measureElement}
+                  onCellUpdate={onCellUpdate}
+                  onRowReorder={onRowReorder}
+                  pageId={pageId}
+                  properties={properties}
+                  row={row}
+                  rowIndex={virtualRow.index}
+                />
+              );
+            })}
           </div>
-        </GridRowOrderProvider>
+          {showGhostRows && (
+            <GridGhostRows
+              columnCount={table.getVisibleLeafColumns().length}
+              count={3}
+              onCreate={editable ? handleAddRow : undefined}
+            />
+          )}
+          {editable && <AddRowButton onClick={handleAddRow} />}
+          {pageId && <SelectionActionBar pageId={pageId} />}
+        </div>
+      </GridRowOrderProvider>
     </div>
   );
 }

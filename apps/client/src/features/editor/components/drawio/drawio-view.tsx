@@ -1,4 +1,3 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import {
   ActionIcon,
   Card,
@@ -7,10 +6,12 @@ import {
   Text,
   useComputedColorScheme,
 } from "@mantine/core";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { uploadFile } from "@/features/page/services/page-service.ts";
 import { useDisclosure } from "@mantine/hooks";
-import { getDrawioUrl } from "@/lib/config.ts";
+import { modals } from "@mantine/modals";
+import { IconEdit } from "@tabler/icons-react";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import clsx from "clsx";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DrawIoEmbed,
   DrawIoEmbedRef,
@@ -18,12 +19,11 @@ import {
   EventExport,
   EventSave,
 } from "react-drawio";
-import { IAttachment } from "@/features/attachments/types/attachment.types";
-import { decodeBase64ToSvgString, svgStringToFile } from "@/lib/utils";
-import clsx from "clsx";
-import { IconEdit } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { modals } from "@mantine/modals";
+import { IAttachment } from "@/features/attachments/types/attachment.types";
+import { uploadFile } from "@/features/page/services/page-service.ts";
+import { getDrawioUrl } from "@/lib/config.ts";
+import { decodeBase64ToSvgString, svgStringToFile } from "@/lib/utils";
 
 export default function DrawioView(props: NodeViewProps) {
   const { t } = useTranslation();
@@ -46,7 +46,9 @@ export default function DrawioView(props: NodeViewProps) {
   };
 
   const saveData = async (svgXml: string, updateSrc = true) => {
-    if (isSavingRef.current) return;
+    if (isSavingRef.current) {
+      return;
+    }
 
     isSavingRef.current = true;
     setIsSaving(true);
@@ -56,7 +58,7 @@ export default function DrawioView(props: NodeViewProps) {
       const fileName = "diagram.drawio.svg";
       const drawioSVGFile = await svgStringToFile(svgString, fileName);
 
-      //@ts-ignore
+      //@ts-expect-error
       const pageId = editor.storage?.pageId;
 
       let attachment: IAttachment = null;
@@ -68,10 +70,10 @@ export default function DrawioView(props: NodeViewProps) {
 
       if (updateSrc) {
         updateAttributes({
+          attachmentId: attachment.id,
+          size: attachment.fileSize,
           src: `/api/files/${attachment.id}/${attachment.fileName}?t=${new Date(attachment.updatedAt).getTime()}`,
           title: attachment.fileName,
-          size: attachment.fileSize,
-          attachmentId: attachment.id,
         });
       } else {
         updateAttributes({
@@ -93,24 +95,26 @@ export default function DrawioView(props: NodeViewProps) {
     }
 
     modals.openConfirmModal({
-      title: t("Unsaved changes"),
+      centered: true,
       children: (
         <Text size="sm">
           {t("You have unsaved changes that will be lost.")}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Discard"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Discard") },
       onConfirm: () => {
         isDirtyRef.current = false;
         close();
       },
+      title: t("Unsaved changes"),
     });
   }, [close, t]);
 
   useEffect(() => {
-    if (!opened) return;
+    if (!opened) {
+      return;
+    }
 
     const interval = setInterval(() => {
       if (isDirtyRef.current && !isSavingRef.current && drawioRef.current) {
@@ -122,7 +126,9 @@ export default function DrawioView(props: NodeViewProps) {
   }, [opened]);
 
   useEffect(() => {
-    if (!opened) return;
+    if (!opened) {
+      return;
+    }
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -138,11 +144,11 @@ export default function DrawioView(props: NodeViewProps) {
   return (
     <NodeViewWrapper data-drag-handle>
       <Modal.Root
-        opened={opened}
-        onClose={handleClose}
-        fullScreen
-        closeOnEscape={false}
         aria-label={t("Diagram editor")}
+        closeOnEscape={false}
+        fullScreen
+        onClose={handleClose}
+        opened={opened}
       >
         <Modal.Overlay />
         <Modal.Content style={{ overflow: "hidden" }}>
@@ -150,22 +156,10 @@ export default function DrawioView(props: NodeViewProps) {
             <LoadingOverlay visible={isSaving} />
             <div style={{ height: "100vh" }}>
               <DrawIoEmbed
-                ref={drawioRef}
-                xml={initialXML}
-                baseUrl={getDrawioUrl()}
                 autosave
-                urlParameters={{
-                  ui: computedColorScheme === "light" ? "kennedy" : "dark",
-                  spin: true,
-                  libraries: true,
-                  saveAndExit: true,
-                  noSaveBtn: true,
-                }}
-                onSave={(data: EventSave) => {
-                  if (data.parentEvent !== "save") {
-                    return;
-                  }
-                  saveData(data.xml, true).then(() => close()).catch(() => {});
+                baseUrl={getDrawioUrl()}
+                onAutoSave={() => {
+                  isDirtyRef.current = true;
                 }}
                 onClose={(data: EventExit) => {
                   if (data.parentEvent) {
@@ -173,12 +167,26 @@ export default function DrawioView(props: NodeViewProps) {
                   }
                   handleClose();
                 }}
-                onAutoSave={() => {
-                  isDirtyRef.current = true;
-                }}
                 onExport={(data: EventExport) => {
                   saveData(data.data, false).catch(() => {});
                 }}
+                onSave={(data: EventSave) => {
+                  if (data.parentEvent !== "save") {
+                    return;
+                  }
+                  saveData(data.xml, true)
+                    .then(() => close())
+                    .catch(() => {});
+                }}
+                ref={drawioRef}
+                urlParameters={{
+                  libraries: true,
+                  noSaveBtn: true,
+                  saveAndExit: true,
+                  spin: true,
+                  ui: computedColorScheme === "light" ? "kennedy" : "dark",
+                }}
+                xml={initialXML}
               />
             </div>
           </Modal.Body>
@@ -186,27 +194,27 @@ export default function DrawioView(props: NodeViewProps) {
       </Modal.Root>
 
       <Card
-        radius="md"
+        className={clsx(selected ? "ProseMirror-selectednode" : "")}
         onClick={(e) => e.detail === 2 && handleOpen()}
         p="xs"
+        radius="md"
         style={{
+          alignItems: "center",
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",
         }}
         withBorder
-        className={clsx(selected ? "ProseMirror-selectednode" : "")}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ alignItems: "center", display: "flex" }}>
           <ActionIcon
-            variant="transparent"
-            color="gray"
             aria-label={t("Edit diagram")}
+            color="gray"
+            variant="transparent"
           >
             <IconEdit size={18} />
           </ActionIcon>
 
-          <Text component="span" size="lg" c="dimmed">
+          <Text c="dimmed" component="span" size="lg">
             {t("Double-click to edit Draw.io diagram")}
           </Text>
         </div>

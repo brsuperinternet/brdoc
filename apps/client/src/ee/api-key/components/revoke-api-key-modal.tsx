@@ -1,13 +1,12 @@
-import { Modal, Text, Button, Group, Stack } from "@mantine/core";
+import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
-import { useRevokeApiKeyMutation } from "@/ee/api-key/queries/api-key-query.ts";
 import { IApiKey } from "@/ee/api-key";
+import { useRevokeApiKeyMutation } from "@/ee/api-key/queries/api-key-query.ts";
 
 interface RevokeApiKeyModalProps {
-  opened: boolean;
-  onClose: () => void;
   apiKey: IApiKey | null;
+  onClose: () => void;
+  opened: boolean;
 }
 
 export function RevokeApiKeyModal({
@@ -19,7 +18,9 @@ export function RevokeApiKeyModal({
   const revokeApiKeyMutation = useRevokeApiKeyMutation();
 
   const handleRevoke = async () => {
-    if (!apiKey) return;
+    if (!apiKey) {
+      return;
+    }
     await revokeApiKeyMutation.mutateAsync({
       apiKeyId: apiKey.id,
     });
@@ -28,11 +29,11 @@ export function RevokeApiKeyModal({
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={t("Revoke {{credential}}", { credential: t("API key") })}
-      size="md"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      size="md"
+      title={t("Revoke {{credential}}", { credential: t("API key") })}
     >
       <Stack gap="md">
         <Text>
@@ -41,20 +42,20 @@ export function RevokeApiKeyModal({
           })}{" "}
           <strong>{apiKey?.name}</strong>?
         </Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "This action cannot be undone. Any applications using this API key will stop working.",
+            "This action cannot be undone. Any applications using this API key will stop working."
           )}
         </Text>
 
         <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={onClose}>
+          <Button onClick={onClose} variant="default">
             {t("Cancel")}
           </Button>
           <Button
             color="red"
-            onClick={handleRevoke}
             loading={revokeApiKeyMutation.isPending}
+            onClick={handleRevoke}
           >
             {t("Revoke")}
           </Button>

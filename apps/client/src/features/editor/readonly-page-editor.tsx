@@ -1,4 +1,10 @@
 import "@/features/editor/styles/index.css";
+import { Heading, UniqueID } from "@docmost/editor-ext";
+import { Document } from "@tiptap/extension-document";
+import { Placeholder } from "@tiptap/extension-placeholder";
+import { Text } from "@tiptap/extension-text";
+import { Editor, EditorProvider } from "@tiptap/react";
+import { useAtom } from "jotai";
 import React, {
   useCallback,
   useEffect,
@@ -6,25 +12,20 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Editor, EditorProvider } from "@tiptap/react";
-import { mainExtensions } from "@/features/editor/extensions/extensions";
-import { Document } from "@tiptap/extension-document";
-import { Heading, UniqueID } from "@docmost/editor-ext";
-import { Text } from "@tiptap/extension-text";
-import { Placeholder } from "@tiptap/extension-placeholder";
-import { useAtom } from "jotai";
 import {
   lightboxRequestAtom,
   readOnlyEditorAtom,
 } from "@/features/editor/atoms/editor-atoms.ts";
-import { useEditorScroll } from "./hooks/use-editor-scroll";
-import { TransclusionLookupProvider } from "@/features/editor/components/transclusion/transclusion-lookup-context";
 import LightboxView, {
   getLightboxClickRequest,
 } from "@/features/editor/components/common/lightbox-view";
+import { TransclusionLookupProvider } from "@/features/editor/components/transclusion/transclusion-lookup-context";
+import { mainExtensions } from "@/features/editor/extensions/extensions";
+import { useEditorScroll } from "./hooks/use-editor-scroll";
 
 interface PageEditorProps {
-  title: string;
+  /** Rendered between the title and the content. */
+  byline?: React.ReactNode;
   content: any;
   pageId?: string;
   printMode?: boolean;
@@ -41,8 +42,7 @@ interface PageEditorProps {
    * personal permissions.
    */
   spaceSlug?: string;
-  /** Rendered between the title and the content. */
-  byline?: React.ReactNode;
+  title: string;
   /** Set false when the consumer renders its own end matter (e.g. prev/next). */
   trailingSpace?: boolean;
 }
@@ -66,7 +66,7 @@ export default function ReadonlyPageEditor({
 
   const canScroll = useCallback(
     () => isComponentMounted.current && editorCreated.current,
-    [isComponentMounted, editorCreated],
+    [isComponentMounted, editorCreated]
   );
   const initialScrollTo = window.location.hash
     ? window.location.hash.slice(1)
@@ -78,7 +78,9 @@ export default function ReadonlyPageEditor({
   }, []);
 
   useEffect(() => {
-    if (!isPublicView) return;
+    if (!isPublicView) {
+      return;
+    }
     setLightboxRequest(null);
   }, [pageId, isPublicView]);
 
@@ -88,7 +90,7 @@ export default function ReadonlyPageEditor({
       ...(printMode ? ["tableHeaderPin", "tableReadonlySort"] : []),
     ]);
     const filteredExtensions = mainExtensions.filter(
-      (ext) => !excludedExtensions.has(ext.name),
+      (ext) => !excludedExtensions.has(ext.name)
     );
 
     return [
@@ -116,28 +118,27 @@ export default function ReadonlyPageEditor({
     <TransclusionLookupProvider shareId={shareId} spaceSlug={spaceSlug}>
       <div className="page-title">
         <EditorProvider
+          content={title}
           editable={false}
+          extensions={titleExtensions}
           immediatelyRender={true}
           textDirection="auto"
-          extensions={titleExtensions}
-          content={title}
-        ></EditorProvider>
+        />
       </div>
 
       {byline}
 
       <EditorProvider
-        editable={false}
-        immediatelyRender={true}
-        textDirection="auto"
-        extensions={extensions}
         content={content}
+        editable={false}
         editorProps={
           isPublicView
             ? {
                 handleClickOn: (_view, _pos, node) => {
                   const request = getLightboxClickRequest(node);
-                  if (!request) return false;
+                  if (!request) {
+                    return false;
+                  }
 
                   setLightboxRequest(request);
                   return true;
@@ -145,13 +146,15 @@ export default function ReadonlyPageEditor({
               }
             : undefined
         }
+        extensions={extensions}
+        immediatelyRender={true}
         onCreate={({ editor }) => {
           if (editor) {
             if (pageId) {
-              // @ts-ignore
+              // @ts-expect-error
               editor.storage.pageId = pageId;
             }
-            // @ts-ignore
+            // @ts-expect-error
             setReadOnlyEditor(editor);
             setContentEditor(editor);
 
@@ -159,17 +162,18 @@ export default function ReadonlyPageEditor({
             editorCreated.current = true;
           }
         }}
-      ></EditorProvider>
+        textDirection="auto"
+      />
       {isPublicView && contentEditor && (
         <LightboxView
           editor={contentEditor}
+          onClose={() => setLightboxRequest(null)}
           open={!!lightboxRequest}
           src={lightboxRequest?.src ?? ""}
           type={lightboxRequest?.type ?? "image"}
-          onClose={() => setLightboxRequest(null)}
         />
       )}
-      {trailingSpace && <div style={{ paddingBottom: "20vh" }}></div>}
+      {trailingSpace && <div style={{ paddingBottom: "20vh" }} />}
     </TransclusionLookupProvider>
   );
 }

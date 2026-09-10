@@ -1,8 +1,8 @@
 import { ActionIcon, Group, Text, Tooltip } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar";
 import { IVerifier } from "@/ee/page-verification/types/page-verification.types";
-import { useTranslation } from "react-i18next";
 
 type VerifierListProps = {
   verifiers: IVerifier[];
@@ -17,15 +17,16 @@ export function VerifierList({
 }: VerifierListProps) {
   const { t } = useTranslation();
 
-  if (verifiers.length === 0) return null;
+  if (verifiers.length === 0) {
+    return null;
+  }
 
   return (
     <>
       {verifiers.map((verifier, index) => (
         <Group
-          key={verifier.id}
           justify="space-between"
-          wrap="nowrap"
+          key={verifier.id}
           py={6}
           style={{
             borderBottom:
@@ -33,8 +34,9 @@ export function VerifierList({
                 ? "1px solid var(--mantine-color-gray-1)"
                 : undefined,
           }}
+          wrap="nowrap"
         >
-          <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+          <Group gap="sm" style={{ minWidth: 0 }} wrap="nowrap">
             <CustomAvatar
               avatarUrl={verifier.avatarUrl}
               name={verifier.name}
@@ -45,7 +47,7 @@ export function VerifierList({
                 {verifier.name}
               </Text>
               {verifier.email && (
-                <Text size="xs" c="dimmed" truncate="end">
+                <Text c="dimmed" size="xs" truncate="end">
                   {verifier.email}
                 </Text>
               )}
@@ -54,10 +56,10 @@ export function VerifierList({
           {canManage && onRemove && (
             <Tooltip label={t("Remove")} withArrow>
               <ActionIcon
-                variant="subtle"
                 color="gray"
-                size="sm"
                 onClick={() => onRemove(verifier.id)}
+                size="sm"
+                variant="subtle"
               >
                 <IconX size={14} />
               </ActionIcon>

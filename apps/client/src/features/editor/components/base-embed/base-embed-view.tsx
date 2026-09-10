@@ -1,14 +1,14 @@
-import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
+import { pinOffsetWatcher } from "@docmost/editor-ext";
 import { ActionIcon, Box, Menu, Text } from "@mantine/core";
+import { IconDots, IconTable, IconX } from "@tabler/icons-react";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BaseView } from "@/ee/base/components/base-view";
 import { BaseTableSkeleton } from "@/ee/base/components/base-table-skeleton";
+import { BaseView } from "@/ee/base/components/base-view";
 import { useBaseQuery } from "@/ee/base/queries/base-query";
-import { pinOffsetWatcher } from "@docmost/editor-ext";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
-import { IconDots, IconTable, IconX } from "@tabler/icons-react";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { usePageQuery } from "@/features/page/queries/page-query";
 import classes from "./base-embed.module.css";
 
@@ -19,7 +19,9 @@ const SIDE_GUTTER = 8;
 // so the first cell still lines up with page-content on load.
 function applyExtension(wrapper: HTMLDivElement) {
   const rect = wrapper.getBoundingClientRect();
-  if (rect.width === 0) return;
+  if (rect.width === 0) {
+    return;
+  }
 
   const main = wrapper.closest("main") as HTMLElement | null;
   const mainRect = main?.getBoundingClientRect();
@@ -46,7 +48,7 @@ function applyExtension(wrapper: HTMLDivElement) {
   // of 0).
   wrapper.style.setProperty(
     "--sticky-band-top",
-    "var(--editor-pin-offset, var(--page-header-height))",
+    "var(--editor-pin-offset, var(--page-header-height))"
   );
 }
 
@@ -59,14 +61,18 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   // Suppress the query while the slash command awaits the server-assigned
   // pageId; useBaseQuery would otherwise fire with an empty key.
-  const { data: base, isLoading, isError } = useBaseQuery(
-    pendingKey ? "" : pageId ?? "",
-  );
+  const {
+    data: base,
+    isLoading,
+    isError,
+  } = useBaseQuery(pendingKey ? "" : (pageId ?? ""));
   const { data: page } = usePageQuery({ pageId: pageId ?? undefined });
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
-    if (!wrapper) return;
+    if (!wrapper) {
+      return;
+    }
 
     const update = () => applyExtension(wrapper);
     update();
@@ -76,7 +82,9 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
     // Sidebar collapse changes <main>'s left/width without resizing
     // the wrapper itself, so observe <main> too.
     const main = wrapper.closest("main");
-    if (main) ro.observe(main);
+    if (main) {
+      ro.observe(main);
+    }
 
     window.addEventListener("resize", update);
     return () => {
@@ -108,7 +116,7 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
     // empty row — see BaseService.create's `defaults`) so the swap
     // to the real table doesn't visibly collapse a large fake table
     // down to a small empty one.
-    content = <BaseTableSkeleton rows={1} columns={3} />;
+    content = <BaseTableSkeleton columns={3} rows={1} />;
   } else if (!pageId) {
     content = (
       <Box p="md">
@@ -123,16 +131,18 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
     );
   } else if (isError) {
     content = (
-      <Box p="md" bg="gray.0" style={{ borderRadius: 8 }}>
+      <Box bg="gray.0" p="md" style={{ borderRadius: 8 }}>
         <Text c="dimmed">You don't have access to this base.</Text>
       </Box>
     );
   } else {
     content = (
       <BaseView
-        pageId={pageId}
+        editable={
+          hasBases && editor.isEditable && (base?.permissions?.canEdit ?? false)
+        }
         embedded
-        editable={hasBases && editor.isEditable && (base?.permissions?.canEdit ?? false)}
+        pageId={pageId}
       />
     );
   }
@@ -148,12 +158,12 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
           contentEditable={false}
           onMouseDown={(e) => e.preventDefault()}
         >
-          <Menu position="bottom-end" withinPortal onChange={setMenuOpen}>
+          <Menu onChange={setMenuOpen} position="bottom-end" withinPortal>
             <Menu.Target>
               <ActionIcon
-                variant="default"
-                size="sm"
                 aria-label={t("Base options")}
+                size="sm"
+                variant="default"
               >
                 <IconDots size={16} />
               </ActionIcon>
@@ -169,7 +179,7 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
           </Menu>
         </div>
       )}
-      <div data-drag-preview hidden className={classes.dragPreview}>
+      <div className={classes.dragPreview} data-drag-preview hidden>
         <IconTable size={16} />
         <span>{page?.title?.trim() || "Untitled base"}</span>
       </div>

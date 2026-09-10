@@ -1,14 +1,14 @@
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconStar, IconStarFilled } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import {
-  useFavoriteIds,
   useAddFavoriteMutation,
+  useFavoriteIds,
   useRemoveFavoriteMutation,
 } from "../queries/favorite-query";
-import { FavoriteType } from "../types/favorite.types";
 import { ToggleFavoriteParams } from "../services/favorite-service";
-import { useTranslation } from "react-i18next";
+import { FavoriteType } from "../types/favorite.types";
 
 type StarButtonProps = {
   type: FavoriteType;
@@ -21,9 +21,15 @@ type StarButtonProps = {
 };
 
 function getEntityId(props: StarButtonProps): string | undefined {
-  if (props.type === "page") return props.pageId;
-  if (props.type === "space") return props.spaceId;
-  if (props.type === "template") return props.templateId;
+  if (props.type === "page") {
+    return props.pageId;
+  }
+  if (props.type === "space") {
+    return props.spaceId;
+  }
+  if (props.type === "template") {
+    return props.templateId;
+  }
   return undefined;
 }
 
@@ -43,10 +49,10 @@ export default function StarButton(props: StarButtonProps) {
     e.preventDefault();
 
     const params: ToggleFavoriteParams = {
-      type,
       pageId: props.pageId,
       spaceId: props.spaceId,
       templateId: props.templateId,
+      type,
     };
 
     if (isFavorited) {
@@ -87,12 +93,12 @@ export default function StarButton(props: StarButtonProps) {
   return (
     <Tooltip label={tooltipLabel} openDelay={250} withArrow>
       <ActionIcon
-        variant="subtle"
-        color={isFavorited ? "yellow" : "gray"}
         aria-label={ariaLabel}
         aria-pressed={isFavorited}
-        onClick={handleToggle}
+        color={isFavorited ? "yellow" : "gray"}
         loading={isPending}
+        onClick={handleToggle}
+        variant="subtle"
       >
         {isFavorited ? (
           <IconStarFilled size={size} />

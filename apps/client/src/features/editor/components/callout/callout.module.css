@@ -3,20 +3,20 @@
 }
 
 .icon {
-  font-size: 24px;
-  line-height: 1;
   width: 20px;
   height: 20px;
   margin-inline-end: var(--mantine-spacing-xs);
   margin-top: 4px;
+  font-size: 24px;
+  line-height: 1;
   cursor: pointer;
 }
 
 .message {
-  font-size: var(--mantine-font-size-md);
-  color: var(--mantine-color-default-color);
   overflow: visible;
   text-overflow: unset;
+  font-size: var(--mantine-font-size-md);
+  color: var(--mantine-color-default-color);
   word-break: break-word;
   overflow-wrap: break-word;
 }

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
 import { TextSelection } from "@tiptap/pm/state";
 import { useAtomValue } from "jotai";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { readOnlyEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import {
@@ -11,9 +11,9 @@ import styles from "./docs.module.css";
 
 function getHeaderOffset(): number {
   const raw = getComputedStyle(document.documentElement).getPropertyValue(
-    "--docs-header-h",
+    "--docs-header-h"
   );
-  const parsed = parseInt(raw, 10);
+  const parsed = Number.parseInt(raw, 10);
   return Number.isNaN(parsed) ? 56 : parsed;
 }
 
@@ -25,7 +25,9 @@ export default function DocsToc() {
   const [activeElement, setActiveElement] = useState<HTMLElement | null>(null);
 
   const handleUpdate = useCallback(() => {
-    if (!editor || editor.isDestroyed) return;
+    if (!editor || editor.isDestroyed) {
+      return;
+    }
     const result = recalculateLinks(editor.$nodes("heading"));
     setLinks(result.links);
     setHeadingDOMNodes(result.nodes);
@@ -53,10 +55,10 @@ export default function DocsToc() {
         });
       },
       {
+        root: null,
         rootMargin: `-${getHeaderOffset()}px 0px -85% 0px`,
         threshold: 0,
-        root: null,
-      },
+      }
     );
 
     headingDOMNodes.forEach((heading) => observer.observe(heading));
@@ -66,7 +68,9 @@ export default function DocsToc() {
   }, [headingDOMNodes]);
 
   const handleScrollToHeading = (position: number) => {
-    if (!editor || editor.isDestroyed) return;
+    if (!editor || editor.isDestroyed) {
+      return;
+    }
     const { view } = editor;
 
     const { node } = view.domAtPos(position);
@@ -77,7 +81,7 @@ export default function DocsToc() {
       getHeaderOffset() -
       16;
 
-    window.scrollTo({ top: scrollPosition, behavior: "smooth" });
+    window.scrollTo({ behavior: "smooth", top: scrollPosition });
 
     const tr = view.state.tr;
     tr.setSelection(new TextSelection(tr.doc.resolve(position)));
@@ -98,14 +102,14 @@ export default function DocsToc() {
       <div className={styles.tocList}>
         {links.map((item, idx) => (
           <button
-            type="button"
-            key={idx}
             className={styles.tocLink}
             data-active={item.element === effectiveActive || undefined}
+            key={idx}
+            onClick={() => handleScrollToHeading(item.position)}
             style={{
               paddingLeft: `${(item.level - minLevel) * 12 + 11}px`,
             }}
-            onClick={() => handleScrollToHeading(item.position)}
+            type="button"
           >
             {item.label}
           </button>

@@ -1,7 +1,7 @@
 import {
   Badge,
-  createTheme,
   CSSVariablesResolver,
+  createTheme,
   MantineColorsTuple,
   Tabs,
   Tooltip,
@@ -39,20 +39,14 @@ export const theme = createTheme({
     blue,
     red,
   },
-  defaultRadius: 'sm',
   components: {
-    Tooltip: Tooltip.extend({
-      defaultProps: {
-        events: { hover: true, focus: true, touch: false },
-      },
-    }),
     // Size badges to their content; fit-content collapses inside table cells.
     Badge: Badge.extend({
       styles: (_theme, props) => ({
         root:
           props.fullWidth || props.circle
             ? {}
-            : { width: "max-content", maxWidth: "100%" },
+            : { maxWidth: "100%", width: "max-content" },
       }),
     }),
     Tabs: Tabs.extend({
@@ -64,7 +58,13 @@ export const theme = createTheme({
         },
       }),
     }),
+    Tooltip: Tooltip.extend({
+      defaultProps: {
+        events: { focus: true, hover: true, touch: false },
+      },
+    }),
   },
+  defaultRadius: "sm",
   /***
   components: {
     ActionIcon: ActionIcon.extend({
@@ -85,15 +85,16 @@ export const theme = createTheme({
 });
 
 export const mantineCssResolver: CSSVariablesResolver = (theme) => ({
-  variables: {
-    ...v8CssVariablesResolver(theme).variables,
-    "--input-error-size": theme.fontSizes.sm,
+  dark: {
+    ...v8CssVariablesResolver(theme).dark,
+    "--mantine-color-dark-light-color": "var(--mantine-color-gray-4)",
+    "--mantine-color-dark-light-hover": "var(--mantine-color-default-hover)",
   },
   light: {
     ...v8CssVariablesResolver(theme).light,
-    "--mantine-color-dimmed": "#4b5563",
     "--mantine-color-dark-light-color": "#4e5359",
     "--mantine-color-dark-light-hover": "var(--mantine-color-gray-light-hover)",
+    "--mantine-color-dimmed": "#4b5563",
     // Override the semantic error color so input error text / borders /
     // required asterisks meet WCAG AA 4.5:1 contrast on the filled-input
     // background (#f1f3f5). red.6 (#d43535) lands at 4.36:1; red.7 (#bc2727)
@@ -104,6 +105,14 @@ export const mantineCssResolver: CSSVariablesResolver = (theme) => ({
     // Affects ActionIcon variant="subtle" color="gray" (password visibility
     // toggle, row action menus, etc.).
     "--mantine-color-gray-light-color": "var(--mantine-color-gray-7)",
+    // Bump variant="light" green text. Green is inherently bright in
+    // luminance, so even Mantine's green.9 (#2b8a3e, 3.78:1) fails 4.5:1
+    // on the light-green bg. Use a custom dark green (#1b5e20, Material
+    // green 900) outside the standard palette range. New contrast:
+    // ~6.8:1. Affects every <Badge color="green" variant="light"> and
+    // matching Button / Text usages.
+    "--mantine-color-green-light-color": "#1B5E20",
+    "--mantine-color-orange-light-color": "#a63508",
     // Bump input placeholder color from gray.5 (#adb5bd, 1.87:1 on filled
     // input — fails WCAG AA 4.5:1) to #686868 (5.01:1 on filled, 5.57:1 on
     // white). Halfway between Mantine's gray.6 and gray.7 so the placeholder
@@ -116,18 +125,9 @@ export const mantineCssResolver: CSSVariablesResolver = (theme) => ({
     // variant="light"> and matching Badge / Text usages (destructive
     // actions, red badges).
     "--mantine-color-red-light-color": "var(--mantine-color-red-7)",
-    // Bump variant="light" green text. Green is inherently bright in
-    // luminance, so even Mantine's green.9 (#2b8a3e, 3.78:1) fails 4.5:1
-    // on the light-green bg. Use a custom dark green (#1b5e20, Material
-    // green 900) outside the standard palette range. New contrast:
-    // ~6.8:1. Affects every <Badge color="green" variant="light"> and
-    // matching Button / Text usages.
-    "--mantine-color-green-light-color": "#1B5E20",
-    "--mantine-color-orange-light-color": "#a63508",
   },
-  dark: {
-    ...v8CssVariablesResolver(theme).dark,
-    "--mantine-color-dark-light-color": "var(--mantine-color-gray-4)",
-    "--mantine-color-dark-light-hover": "var(--mantine-color-default-hover)",
+  variables: {
+    ...v8CssVariablesResolver(theme).variables,
+    "--input-error-size": theme.fontSizes.sm,
   },
 });

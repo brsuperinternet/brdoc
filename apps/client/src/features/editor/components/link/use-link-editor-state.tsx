@@ -15,7 +15,7 @@ export const useLinkEditorState = ({
 
   const isSearchQuery = useMemo(
     () => url.length > 0 && !isValidUrl,
-    [url, isValidUrl],
+    [url, isValidUrl]
   );
 
   const handleSubmit = useCallback(
@@ -25,15 +25,15 @@ export const useLinkEditorState = ({
         onSetLink(url, false);
       }
     },
-    [url, isValidUrl, onSetLink],
+    [url, isValidUrl, onSetLink]
   );
 
   return {
-    url,
-    setUrl,
-    onChange,
     handleSubmit,
-    isValidUrl,
     isSearchQuery,
+    isValidUrl,
+    onChange,
+    setUrl,
+    url,
   };
 };

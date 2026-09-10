@@ -2,21 +2,24 @@
   display: flex;
   flex-direction: column;
   max-height: min(86vh, 820px);
-  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-7)
+  );
 }
 
 .topBar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px 0;
-  flex-shrink: 0;
 }
 
 .topBarGroup {
   display: flex;
-  align-items: center;
   gap: 2px;
+  align-items: center;
 }
 
 .iconButton {
@@ -25,100 +28,109 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
   cursor: pointer;
-  transition: background-color 100ms ease, color 100ms ease;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
 }
 
 .iconButton:hover {
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
   color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
 }
 
 .iconButton:disabled {
-  opacity: 0.35;
   cursor: default;
+  opacity: 0.35;
 }
 
 .iconButton:disabled:hover {
-  background-color: transparent;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  background-color: transparent;
 }
 
 .header {
-  padding: 14px 36px 4px;
   flex-shrink: 0;
+  padding: 14px 36px 4px;
 }
 
 .titleInput {
   box-sizing: border-box;
   width: calc(100% + 16px);
-  border: none;
-  outline: none;
-  background: transparent;
   padding: 2px 8px;
   margin: -2px -8px;
-  border-radius: 8px;
   font-family: inherit;
   font-size: 28px;
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: -0.012em;
   color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+  letter-spacing: -0.012em;
+  outline: none;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
   transition: background-color 100ms ease;
 }
 
 .titleInput:hover:not(:focus) {
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
-}
-
-.titleInput:focus-visible {
-  box-shadow: 0 0 0 2px light-dark(
-    rgba(34, 139, 230, 0.35),
-    rgba(34, 139, 230, 0.45)
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
   );
 }
 
+.titleInput:focus-visible {
+  box-shadow: 0 0 0 2px
+    light-dark(rgba(34, 139, 230, 0.35), rgba(34, 139, 230, 0.45));
+}
+
 .titleInput::placeholder {
-  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
   font-weight: 700;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
 }
 
 .titleStatic {
   font-size: 28px;
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: -0.012em;
   color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+  letter-spacing: -0.012em;
   word-break: break-word;
 }
 
 .metaRow {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
   margin-top: 10px;
   font-size: 12.5px;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  flex-wrap: wrap;
 }
 
 .metaDot {
+  flex-shrink: 0;
   width: 2.5px;
   height: 2.5px;
+  background-color: light-dark(
+    var(--mantine-color-gray-4),
+    var(--mantine-color-dark-3)
+  );
   border-radius: 50%;
-  background-color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-3));
-  flex-shrink: 0;
 }
 
 .body {
-  padding: 24px 36px 16px;
-  overflow-y: auto;
   flex: 1;
   min-height: 0;
+  padding: 24px 36px 16px;
+  overflow-y: auto;
 }
 
 .propertyList {
@@ -129,18 +141,18 @@
 
 .propertyRow {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
+  align-items: flex-start;
   padding: 6px 0;
   border-radius: 8px;
 }
 
 .propertyLabel {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 168px;
   flex: 0 0 168px;
+  gap: 10px;
+  align-items: center;
+  width: 168px;
   height: 34px;
   padding-left: 4px;
   font-size: 13.5px;
@@ -151,28 +163,33 @@
 /* The label doubles as the field-menu handle: a quiet button that grows a
    chevron on hover. */
 .propertyLabelButton {
-  border: none;
-  background: transparent;
+  padding-right: 6px;
   font-family: inherit;
   text-align: left;
-  padding-right: 6px;
-  border-radius: 7px;
   cursor: pointer;
-  transition: background-color 100ms ease, color 100ms ease;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
 }
 
 .propertyLabelButton:hover,
 .propertyLabelButton:focus-visible,
 .propertyLabelButton.propertyLabelActive {
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
   color: light-dark(var(--mantine-color-gray-8), var(--mantine-color-dark-0));
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-6)
+  );
 }
 
 .propertyLabelChevron {
   flex-shrink: 0;
   margin-left: auto;
-  opacity: 0;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  opacity: 0;
   transition: opacity 100ms ease;
 }
 
@@ -188,30 +205,36 @@
 }
 
 .propertyLabelText {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Every value renders inside the same shell: identical padding, identical
    left edge, identical focus treatment. Fields differ only in content. */
 
 .fieldShell {
+  display: flex;
   flex: 1;
+  gap: 6px;
+  align-items: center;
   min-width: 0;
   min-height: 34px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   padding: 5px 10px;
-  border: 1px solid transparent;
-  border-radius: 7px;
   /* Single type-scale declaration; field content inherits. Matches the
      grid's .cell base so cell components render identically here. */
   font-size: var(--mantine-font-size-sm);
   line-height: 22px;
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
-  transition: background-color 100ms ease, border-color 100ms ease, box-shadow 100ms ease;
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+  border: 1px solid transparent;
+  border-radius: 7px;
+  transition:
+    background-color 100ms ease,
+    border-color 100ms ease,
+    box-shadow 100ms ease;
 }
 
 .fieldShellTop {
@@ -228,18 +251,25 @@
 
 .fieldShellText:hover,
 .fieldShellPointer:hover {
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
 }
 
 .fieldShell:focus-within,
 .fieldShellActive,
 .fieldShellActive:hover {
-  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
-  border-color: light-dark(var(--mantine-color-blue-5), var(--mantine-color-blue-5));
-  box-shadow: 0 0 0 3px light-dark(
-    rgba(34, 139, 230, 0.12),
-    rgba(34, 139, 230, 0.22)
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-7)
   );
+  border-color: light-dark(
+    var(--mantine-color-blue-5),
+    var(--mantine-color-blue-5)
+  );
+  box-shadow: 0 0 0 3px
+    light-dark(rgba(34, 139, 230, 0.12), rgba(34, 139, 230, 0.22));
 }
 
 .fieldShellLocked {
@@ -255,31 +285,31 @@
 .fieldInput {
   flex: 1;
   min-width: 0;
-  border: none;
-  outline: none;
-  background: transparent;
   padding: 0;
   margin: 0;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
-  text-align: left;
   color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+  text-align: left;
+  outline: none;
+  background: transparent;
+  border: none;
 }
 
 .fieldValueText {
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: inherit;
   line-height: inherit;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .fieldValueTextMultiline {
   font-size: inherit;
   line-height: 1.5;
-  white-space: pre-wrap;
   word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .fieldTextarea {
@@ -288,29 +318,29 @@
 }
 
 .fieldTextareaInput {
-  border: none;
-  background: transparent;
   padding: 0;
   font-size: inherit;
   line-height: 1.5;
   color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+  background: transparent;
+  border: none;
 }
 
 .fieldChips {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
-  align-items: center;
   gap: 4px;
+  align-items: center;
+  min-width: 0;
   min-height: 22px;
 }
 
 .fieldCellDisplay {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 1;
   align-items: center;
+  min-width: 0;
 }
 
 /* Grid cells right-align numeric output (.numberValue); inside the modal
@@ -320,16 +350,18 @@
 }
 
 .fieldTrailing {
-  flex-shrink: 0;
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
-  border-radius: 5px;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  border-radius: 5px;
   opacity: 0;
-  transition: opacity 100ms ease, color 100ms ease;
+  transition:
+    opacity 100ms ease,
+    color 100ms ease;
 }
 
 .fieldShell:hover .fieldTrailing,
@@ -339,7 +371,10 @@
 
 .fieldTrailing:hover {
   color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
 }
 
 /* "Add property" rendered as the ghost next row of the ledger. */
@@ -348,58 +383,65 @@
   align-items: center;
   width: 100%;
   min-height: 34px;
-  margin-top: 6px;
   padding: 0 0 0 4px;
-  border: none;
-  border-radius: 7px;
-  background: transparent;
+  margin-top: 6px;
   font-family: inherit;
   font-size: 13.5px;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
   cursor: pointer;
-  transition: background-color 100ms ease, color 100ms ease;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
 }
 
 .addPropertyRow:hover,
 .addPropertyRow:focus-visible {
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
   color: light-dark(var(--mantine-color-gray-8), var(--mantine-color-dark-0));
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
 }
 
 .addPropertyLabel {
   display: inline-flex;
-  align-items: center;
   gap: 10px;
+  align-items: center;
 }
 
 .footer {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
+  min-height: 44px;
   padding: 12px 36px 16px;
-  border-top: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
   font-size: 12px;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  flex-shrink: 0;
-  min-height: 44px;
+  border-top: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
 }
 
 .footerStatus {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .savingDot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
   background-color: var(--mantine-color-yellow-5);
+  border-radius: 50%;
   animation: savingPulse 1.4s ease-in-out infinite;
 }
 
 @keyframes savingPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.6;
     box-shadow: 0 0 0 0 rgba(250, 176, 5, 0.45);
   }
@@ -411,37 +453,40 @@
 
 .lockedHint {
   display: inline-flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
 }
 
 .kbdHint {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
   width: 100%;
 }
 
 .kbdGroup {
   display: inline-flex;
-  align-items: center;
   gap: 6px;
-  white-space: nowrap;
+  align-items: center;
   height: fit-content;
+  white-space: nowrap;
 }
 
 .kbdPlus {
-  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
   font-size: 11px;
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
 }
 
 .kbdSeparator {
   width: 1px;
   height: 12px;
   margin: 0 2px;
-  background-color: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  background-color: light-dark(
+    var(--mantine-color-gray-3),
+    var(--mantine-color-dark-4)
+  );
 }
 
 .kbd {
@@ -451,13 +496,18 @@
   min-width: 26px;
   height: 20px;
   padding: 0 6px;
-  border-radius: 4px;
-  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
   font-family:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 11px;
   font-weight: 500;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  box-shadow: 0 1px 0 light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-5));
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-6)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border-radius: 4px;
+  box-shadow: 0 1px 0
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-5));
 }

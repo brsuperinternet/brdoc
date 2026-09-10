@@ -8,12 +8,14 @@ export function useHorizontalScrollSync<
   THeader extends HTMLElement,
 >(
   bodyRef: RefObject<TBody | null>,
-  headerRef: RefObject<THeader | null>,
+  headerRef: RefObject<THeader | null>
 ): void {
   useEffect(() => {
     const body = bodyRef.current;
     const header = headerRef.current;
-    if (!body || !header) return;
+    if (!(body && header)) {
+      return;
+    }
 
     let rafId = 0;
 
@@ -23,15 +25,21 @@ export function useHorizontalScrollSync<
     };
 
     const onBodyScroll = () => {
-      if (rafId !== 0) return;
+      if (rafId !== 0) {
+        return;
+      }
       rafId = requestAnimationFrame(sync);
     };
 
     const onHeaderWheel = (e: WheelEvent) => {
       // Trackpad horizontal-dominant gestures deliver deltaX; let those
       // flow naturally. Convert vertical ticks into horizontal pan.
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-      if (e.deltaY === 0) return;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        return;
+      }
+      if (e.deltaY === 0) {
+        return;
+      }
       // preventDefault suppresses the default vertical scroll (requires
       // non-passive listener, configured below).
       e.preventDefault();
@@ -39,7 +47,9 @@ export function useHorizontalScrollSync<
     };
 
     const onHeaderScroll = () => {
-      if (rafId !== 0) return;
+      if (rafId !== 0) {
+        return;
+      }
       if (body.scrollLeft !== header.scrollLeft) {
         body.scrollLeft = header.scrollLeft;
       }
@@ -56,7 +66,9 @@ export function useHorizontalScrollSync<
       body.removeEventListener("scroll", onBodyScroll);
       header.removeEventListener("scroll", onHeaderScroll);
       header.removeEventListener("wheel", onHeaderWheel);
-      if (rafId !== 0) cancelAnimationFrame(rafId);
+      if (rafId !== 0) {
+        cancelAnimationFrame(rafId);
+      }
     };
   }, [bodyRef, headerRef]);
 }

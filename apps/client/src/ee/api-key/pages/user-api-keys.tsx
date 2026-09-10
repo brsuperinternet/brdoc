@@ -1,24 +1,24 @@
-import React, { useState } from "react";
-import { Anchor, Alert, Button, Group, Space, Tabs, Text } from "@mantine/core";
+import { Alert, Anchor, Button, Group, Space, Tabs, Text } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { useAtom } from "jotai";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
+import Paginate from "@/components/common/paginate";
 import SettingsTitle from "@/components/settings/settings-title";
-import { getAppUrl } from "@/lib/config";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { IApiKey } from "@/ee/api-key";
+import { ApiKeyCreatedModal } from "@/ee/api-key/components/api-key-created-modal";
 import { ApiKeyTable } from "@/ee/api-key/components/api-key-table";
 import { CreateApiKeyModal } from "@/ee/api-key/components/create-api-key-modal";
-import { ApiKeyCreatedModal } from "@/ee/api-key/components/api-key-created-modal";
-import { UpdateApiKeyModal } from "@/ee/api-key/components/update-api-key-modal";
 import { RevokeApiKeyModal } from "@/ee/api-key/components/revoke-api-key-modal";
-import Paginate from "@/components/common/paginate";
-import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import { UpdateApiKeyModal } from "@/ee/api-key/components/update-api-key-modal";
 import { useGetApiKeysQuery } from "@/ee/api-key/queries/api-key-query.ts";
-import { IApiKey } from "@/ee/api-key";
-import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
-import useUserRole from "@/hooks/use-user-role.tsx";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
-import { useLocation, useNavigate } from "react-router-dom";
 import { AuthorizedAppsPanel } from "@/ee/oauth/components/authorized-apps-panel.tsx";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { getAppUrl } from "@/lib/config";
 
 export default function UserApiKeys() {
   const { t } = useTranslation();
@@ -58,42 +58,50 @@ export default function UserApiKeys() {
     navigate(
       value === "authorized-apps"
         ? "/settings/account/api-keys/authorized-apps"
-        : "/settings/account/api-keys",
+        : "/settings/account/api-keys"
     );
   };
 
   return (
     <>
       <DocumentTitle
-        title={activeTab === "authorized-apps" ? t("Authorized apps") : t("API keys")}
+        title={
+          activeTab === "authorized-apps" ? t("Authorized apps") : t("API keys")
+        }
       />
 
       <SettingsTitle title={t("API keys")} />
 
       {mcpEnabled && (
-        <Alert variant="light" color="blue" mb="md" p="sm" icon={<IconInfoCircle />}>
+        <Alert
+          color="blue"
+          icon={<IconInfoCircle />}
+          mb="md"
+          p="sm"
+          variant="light"
+        >
           <Text size="sm">
             {t(
-              "Your workspace has MCP enabled. Connect AI assistants with your Docmost account via OAuth.",
+              "Your workspace has MCP enabled. Connect AI assistants with your Docmost account via OAuth."
             )}{" "}
             <Anchor
               href="https://docmost.com/docs/user-guide/mcp"
-              target="_blank"
               size="sm"
+              target="_blank"
             >
               {t("Learn more")}
             </Anchor>
           </Text>
-          <Text size="sm" mt={4}>
+          <Text mt={4} size="sm">
             {t("MCP server URL:")}{" "}
-            <Text size="sm" fw={500} span ff="monospace">
+            <Text ff="monospace" fw={500} size="sm" span>
               {`${getAppUrl()}/mcp`}
             </Text>
           </Text>
         </Alert>
       )}
 
-      <Tabs color="dark" value={activeTab} onChange={handleTabChange}>
+      <Tabs color="dark" onChange={handleTabChange} value={activeTab}>
         <Tabs.List>
           <Tabs.Tab fw={500} value="api-keys">
             {t("API keys")}
@@ -103,89 +111,101 @@ export default function UserApiKeys() {
           </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="api-keys" pt="md">
-
-        <Group justify="space-between" align="center" mb="md">
-          <Text size="sm" c="dimmed">
-            <Trans
-              i18nKey="View the <anchor>API documentation</anchor> for usage details."
-              components={{
-                anchor: <Anchor href="https://docmost.com/api-docs" target="_blank" size="sm" />,
-              }}
-            />
-          </Text>
-
-          {canCreate && (
-            <Button
-              onClick={() => setCreateModalOpened(true)}
-              style={{ flexShrink: 0 }}
-            >
-              {t("Create API Key")}
-            </Button>
-          )}
-        </Group>
-
-        {!canCreate && restrictToAdmins && (
-          <Alert variant="light" color="yellow" mb="md" p="sm" icon={<IconInfoCircle />}>
-            <Text size="sm">
-              {t("API key creation is restricted to admins by your workspace administrator.")}
+        <Tabs.Panel pt="md" value="api-keys">
+          <Group align="center" justify="space-between" mb="md">
+            <Text c="dimmed" size="sm">
+              <Trans
+                components={{
+                  anchor: (
+                    <Anchor
+                      href="https://docmost.com/api-docs"
+                      size="sm"
+                      target="_blank"
+                    />
+                  ),
+                }}
+                i18nKey="View the <anchor>API documentation</anchor> for usage details."
+              />
             </Text>
-          </Alert>
-        )}
 
-        <ApiKeyTable
-          apiKeys={data?.items || []}
-          isLoading={isLoading}
-          onUpdate={handleUpdate}
-          onRevoke={handleRevoke}
-        />
+            {canCreate && (
+              <Button
+                onClick={() => setCreateModalOpened(true)}
+                style={{ flexShrink: 0 }}
+              >
+                {t("Create API Key")}
+              </Button>
+            )}
+          </Group>
 
-        <Space h="md" />
+          {!canCreate && restrictToAdmins && (
+            <Alert
+              color="yellow"
+              icon={<IconInfoCircle />}
+              mb="md"
+              p="sm"
+              variant="light"
+            >
+              <Text size="sm">
+                {t(
+                  "API key creation is restricted to admins by your workspace administrator."
+                )}
+              </Text>
+            </Alert>
+          )}
 
-        {data?.items.length > 0 && (
-          <Paginate
-            hasPrevPage={data?.meta?.hasPrevPage}
-            hasNextPage={data?.meta?.hasNextPage}
-            onNext={() => goNext(data?.meta?.nextCursor)}
-            onPrev={goPrev}
+          <ApiKeyTable
+            apiKeys={data?.items || []}
+            isLoading={isLoading}
+            onRevoke={handleRevoke}
+            onUpdate={handleUpdate}
           />
-        )}
 
+          <Space h="md" />
+
+          {data?.items.length > 0 && (
+            <Paginate
+              hasNextPage={data?.meta?.hasNextPage}
+              hasPrevPage={data?.meta?.hasPrevPage}
+              onNext={() => goNext(data?.meta?.nextCursor)}
+              onPrev={goPrev}
+            />
+          )}
         </Tabs.Panel>
 
-        <Tabs.Panel value="authorized-apps" pt="md">
+        <Tabs.Panel pt="md" value="authorized-apps">
           <AuthorizedAppsPanel />
         </Tabs.Panel>
       </Tabs>
 
       <CreateApiKeyModal
-        opened={createModalOpened}
         onClose={() => setCreateModalOpened(false)}
         onSuccess={handleCreateSuccess}
+        opened={createModalOpened}
       />
 
       <ApiKeyCreatedModal
-        opened={!!createdApiKey}
-        onClose={() => setCreatedApiKey(null)}
         apiKey={createdApiKey}
+        onClose={() => setCreatedApiKey(null)}
+        opened={!!createdApiKey}
       />
 
       <UpdateApiKeyModal
-        opened={updateModalOpened}
+        apiKey={selectedApiKey}
         onClose={() => {
           setUpdateModalOpened(false);
           setSelectedApiKey(null);
         }}
-        apiKey={selectedApiKey}
+        opened={updateModalOpened}
       />
 
       <RevokeApiKeyModal
-        opened={revokeModalOpened}
+        apiKey={selectedApiKey}
         onClose={() => {
           setRevokeModalOpened(false);
           setSelectedApiKey(null);
         }}
-        apiKey={selectedApiKey}
+        opened={revokeModalOpened}
       />
     </>
   );

@@ -1,25 +1,25 @@
-import { Fragment, useState } from "react";
 import {
-  Table,
-  Text,
+  Anchor,
+  Box,
+  Collapse,
   Group,
   Skeleton,
-  Anchor,
-  Collapse,
-  Box,
+  Table,
+  Text,
 } from "@mantine/core";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import {
-  IconChevronRight,
-  IconChevronDown,
   IconArrowRight,
+  IconChevronDown,
+  IconChevronRight,
 } from "@tabler/icons-react";
-import { IAuditLog } from "@/ee/audit/types/audit.types";
+import { Fragment, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import NoTableResults from "@/components/common/no-table-results";
 import { CustomAvatar } from "@/components/ui/custom-avatar";
 import { getEventLabel } from "@/ee/audit/lib/audit-event-labels";
+import { IAuditLog } from "@/ee/audit/types/audit.types";
 import { formattedDate } from "@/lib/time";
-import NoTableResults from "@/components/common/no-table-results";
 import classes from "./audit-logs.module.css";
 
 type AuditLogsTableProps = {
@@ -32,7 +32,9 @@ function hasDetails(entry: IAuditLog): boolean {
 }
 
 function getResourceUrl(entry: IAuditLog): string | null {
-  if (!entry.resource) return null;
+  if (!entry.resource) {
+    return null;
+  }
 
   switch (entry.resourceType) {
     case "group":
@@ -46,15 +48,23 @@ function getResourceUrl(entry: IAuditLog): string | null {
 }
 
 function formatValue(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "object") return JSON.stringify(value);
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
   return String(value);
 }
 
 function ChangesDiff({ changes }: { changes: IAuditLog["changes"] }) {
   const { t } = useTranslation();
-  if (!changes) return null;
+  if (!changes) {
+    return null;
+  }
 
   const { before, after } = changes;
   const allKeys = new Set([
@@ -62,11 +72,13 @@ function ChangesDiff({ changes }: { changes: IAuditLog["changes"] }) {
     ...Object.keys(after ?? {}),
   ]);
 
-  if (allKeys.size === 0) return null;
+  if (allKeys.size === 0) {
+    return null;
+  }
 
   return (
     <Box>
-      <Text fz="xs" fw={600} mb={4}>
+      <Text fw={600} fz="xs" mb={4}>
         {t("Changes")}
       </Text>
       {[...allKeys].map((key) => {
@@ -74,25 +86,25 @@ function ChangesDiff({ changes }: { changes: IAuditLog["changes"] }) {
         const hasAfter = after && key in after;
 
         return (
-          <Group key={key} gap={6} mb={2} wrap="nowrap" align="center">
+          <Group align="center" gap={6} key={key} mb={2} wrap="nowrap">
             <Text
-              fz="xs"
               c="dimmed"
               fw={500}
+              fz="xs"
               style={{ minWidth: "fit-content" }}
             >
               {key}:
             </Text>
             {hasBefore && (
-              <Text fz="xs" component="span">
+              <Text component="span" fz="xs">
                 {formatValue(before[key])}
               </Text>
             )}
             {hasBefore && hasAfter && (
-              <IconArrowRight size={10} color="var(--mantine-color-dimmed)" />
+              <IconArrowRight color="var(--mantine-color-dimmed)" size={10} />
             )}
             {hasAfter && (
-              <Text fz="xs" component="span">
+              <Text component="span" fz="xs">
                 {formatValue(after[key])}
               </Text>
             )}
@@ -106,16 +118,18 @@ function ChangesDiff({ changes }: { changes: IAuditLog["changes"] }) {
 function MetadataDisplay({ metadata }: { metadata: Record<string, any> }) {
   const { t } = useTranslation();
   const entries = Object.entries(metadata);
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return null;
+  }
 
   return (
     <Box>
-      <Text fz="xs" fw={600} mb={4}>
+      <Text fw={600} fz="xs" mb={4}>
         {t("Metadata")}
       </Text>
       {entries.map(([key, value]) => (
-        <Group key={key} gap={6} mb={2} wrap="nowrap">
-          <Text fz="xs" c="dimmed" fw={500}>
+        <Group gap={6} key={key} mb={2} wrap="nowrap">
+          <Text c="dimmed" fw={500} fz="xs">
             {key}:
           </Text>
           <Text fz="xs">{formatValue(value)}</Text>
@@ -134,7 +148,7 @@ function TableSkeleton() {
             <Group gap="sm" wrap="nowrap">
               <Skeleton circle height={36} />
               <div>
-                <Skeleton height={14} width={120} mb={4} />
+                <Skeleton height={14} mb={4} width={120} />
                 <Skeleton height={10} width={160} />
               </div>
             </Group>
@@ -157,7 +171,7 @@ function TableSkeleton() {
 function ResourceCell({ entry }: { entry: IAuditLog }) {
   if (!entry.resource?.name) {
     return (
-      <Text fz="sm" c="dimmed">
+      <Text c="dimmed" fz="sm">
         —
       </Text>
     );
@@ -168,17 +182,17 @@ function ResourceCell({ entry }: { entry: IAuditLog }) {
   if (url) {
     return (
       <Anchor
-        size="sm"
-        underline="never"
-        style={{
-          cursor: "pointer",
-          color: "var(--mantine-color-text)",
-        }}
         component={Link}
+        size="sm"
+        style={{
+          color: "var(--mantine-color-text)",
+          cursor: "pointer",
+        }}
         to={url}
+        underline="never"
       >
         <div className={classes.resourceLinkText}>
-          <Text fz="sm" fw={500} lineClamp={1}>
+          <Text fw={500} fz="sm" lineClamp={1}>
             {entry.resource.name}
           </Text>
         </div>
@@ -214,7 +228,7 @@ export default function AuditLogsTable({
 
   return (
     <Table.ScrollContainer minWidth={700}>
-      <Table highlightOnHover verticalSpacing="xs" className={classes.table}>
+      <Table className={classes.table} highlightOnHover verticalSpacing="xs">
         <Table.Thead>
           <Table.Tr>
             <Table.Th>{t("Actor")}</Table.Th>
@@ -245,13 +259,13 @@ export default function AuditLogsTable({
                         {expandable ? (
                           isExpanded ? (
                             <IconChevronDown
-                              size={16}
                               color="var(--mantine-color-dimmed)"
+                              size={16}
                             />
                           ) : (
                             <IconChevronRight
-                              size={16}
                               color="var(--mantine-color-dimmed)"
+                              size={16}
                             />
                           )
                         ) : (
@@ -265,16 +279,16 @@ export default function AuditLogsTable({
                               size={36}
                             />
                             <div>
-                              <Text fz="sm" fw={500} lineClamp={1}>
+                              <Text fw={500} fz="sm" lineClamp={1}>
                                 {entry.actor.name}
                               </Text>
-                              <Text fz="xs" c="dimmed">
+                              <Text c="dimmed" fz="xs">
                                 {entry.actor.email}
                               </Text>
                             </div>
                           </Group>
                         ) : (
-                          <Text fz="sm" c="dimmed" fs="italic">
+                          <Text c="dimmed" fs="italic" fz="sm">
                             {entry.actorType === "system"
                               ? t("System")
                               : t("System")}
@@ -303,11 +317,11 @@ export default function AuditLogsTable({
                       <Table.Td colSpan={4} p={0}>
                         <Collapse expanded={isExpanded}>
                           <Box
+                            className={classes.detailContent}
                             px="md"
                             py="sm"
-                            className={classes.detailContent}
                           >
-                            <Group gap="xl" align="flex-start">
+                            <Group align="flex-start" gap="xl">
                               {entry.changes && (
                                 <ChangesDiff changes={entry.changes} />
                               )}

@@ -6,15 +6,9 @@ import renderEmojiItems from "../components/emoji-menu/render-emoji-items";
 export const emojiMenuPluginKey = new PluginKey("emoji-command");
 
 const Command = Extension.create({
-  name: "emoji-command",
-
   addOptions() {
     return {
       suggestion: {
-        char: ":",
-        command: ({ editor, range, props }) => {
-          props.command({ editor, range, props });
-        },
         allow: ({ state, range }) => {
           const $from = state.doc.resolve(range.from);
           // Disable emoji menu inside code blocks
@@ -22,6 +16,10 @@ const Command = Extension.create({
             return false;
           }
           return true;
+        },
+        char: ":",
+        command: ({ editor, range, props }) => {
+          props.command({ editor, props, range });
         },
       } as Partial<SuggestionOptions>,
     };
@@ -36,6 +34,7 @@ const Command = Extension.create({
       }),
     ];
   },
+  name: "emoji-command",
 });
 
 const EmojiCommand = Command.configure({

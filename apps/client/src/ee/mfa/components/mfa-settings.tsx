@@ -1,16 +1,22 @@
-import React, { useState } from "react";
-import { Group, Text, Button, Tooltip } from "@mantine/core";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Group, Text, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getMfaStatus } from "@/ee/mfa";
-import { MfaSetupModal } from "@/ee/mfa";
-import { MfaDisableModal } from "@/ee/mfa";
-import { MfaBackupCodesModal } from "@/ee/mfa";
-import { useHasFeature } from "@/ee/hooks/use-feature";
+import {
+  ResponsiveSettingsContent,
+  ResponsiveSettingsControl,
+  ResponsiveSettingsRow,
+} from "@/components/ui/responsive-settings-row";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
-import { ResponsiveSettingsRow, ResponsiveSettingsContent, ResponsiveSettingsControl } from "@/components/ui/responsive-settings-row";
+import {
+  getMfaStatus,
+  MfaBackupCodesModal,
+  MfaDisableModal,
+  MfaSetupModal,
+} from "@/ee/mfa";
 
 export function MfaSettings() {
   const { t } = useTranslation();
@@ -22,8 +28,8 @@ export function MfaSettings() {
   const upgradeLabel = useUpgradeLabel();
 
   const { data: mfaStatus, isLoading } = useQuery({
-    queryKey: ["mfa-status"],
     queryFn: getMfaStatus,
+    queryKey: ["mfa-status"],
   });
 
   if (isLoading || !mfaStatus) {
@@ -37,8 +43,8 @@ export function MfaSettings() {
     setSetupModalOpen(false);
     queryClient.invalidateQueries({ queryKey: ["mfa-status"] });
     notifications.show({
-      title: t("Success"),
       message: t("Two-factor authentication has been enabled"),
+      title: t("Success"),
     });
   };
 
@@ -46,9 +52,9 @@ export function MfaSettings() {
     setDisableModalOpen(false);
     queryClient.invalidateQueries({ queryKey: ["mfa-status"] });
     notifications.show({
-      title: t("Success"),
-      message: t("Two-factor authentication has been disabled"),
       color: "blue",
+      message: t("Two-factor authentication has been disabled"),
+      title: t("Success"),
     });
   };
 
@@ -57,69 +63,66 @@ export function MfaSettings() {
       <ResponsiveSettingsRow>
         <ResponsiveSettingsContent>
           <Text size="md">{t("2-step verification")}</Text>
-          <Text size="sm" c="dimmed">
-            {!isMfaEnabled
-              ? t(
-                  "Protect your account with an additional verification layer when signing in.",
-                )
-              : t("Two-factor authentication is active on your account.")}
+          <Text c="dimmed" size="sm">
+            {isMfaEnabled
+              ? t("Two-factor authentication is active on your account.")
+              : t(
+                  "Protect your account with an additional verification layer when signing in."
+                )}
           </Text>
         </ResponsiveSettingsContent>
 
         <ResponsiveSettingsControl>
-          {!isMfaEnabled ? (
-            <Tooltip
-              label={upgradeLabel}
-              disabled={canUseMfa}
-            >
-              <Button
-                disabled={!canUseMfa}
-                variant="default"
-                onClick={() => setSetupModalOpen(true)}
-                style={{ whiteSpace: "nowrap" }}
-              >
-                {t("Add 2FA method")}
-              </Button>
-            </Tooltip>
-          ) : (
+          {isMfaEnabled ? (
             <Group gap="sm" wrap="nowrap">
               <Button
-                variant="default"
-                size="sm"
                 onClick={() => setBackupCodesModalOpen(true)}
+                size="sm"
                 style={{ whiteSpace: "nowrap" }}
+                variant="default"
               >
                 {t("Backup codes")} ({mfaStatus?.backupCodesCount || 0})
               </Button>
               <Button
-                variant="default"
-                size="sm"
                 color="red"
                 onClick={() => setDisableModalOpen(true)}
+                size="sm"
                 style={{ whiteSpace: "nowrap" }}
+                variant="default"
               >
                 {t("Disable")}
               </Button>
             </Group>
+          ) : (
+            <Tooltip disabled={canUseMfa} label={upgradeLabel}>
+              <Button
+                disabled={!canUseMfa}
+                onClick={() => setSetupModalOpen(true)}
+                style={{ whiteSpace: "nowrap" }}
+                variant="default"
+              >
+                {t("Add 2FA method")}
+              </Button>
+            </Tooltip>
           )}
         </ResponsiveSettingsControl>
       </ResponsiveSettingsRow>
 
       <MfaSetupModal
-        opened={setupModalOpen}
         onClose={() => setSetupModalOpen(false)}
         onComplete={handleSetupComplete}
+        opened={setupModalOpen}
       />
 
       <MfaDisableModal
-        opened={disableModalOpen}
         onClose={() => setDisableModalOpen(false)}
         onComplete={handleDisableComplete}
+        opened={disableModalOpen}
       />
 
       <MfaBackupCodesModal
-        opened={backupCodesModalOpen}
         onClose={() => setBackupCodesModalOpen(false)}
+        opened={backupCodesModalOpen}
       />
     </>
   );

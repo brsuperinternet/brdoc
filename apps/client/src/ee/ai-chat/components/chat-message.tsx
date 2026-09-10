@@ -1,27 +1,21 @@
-import { useCallback } from "react";
-import { useNavigate } from "react-router";
-import { useTranslation } from "react-i18next";
-import DOMPurify from "dompurify";
-import { ActionIcon, Tooltip } from "@mantine/core";
-import {
-  IconCheck,
-  IconCopy,
-  IconFile,
-  IconLoader2,
-  IconPhoto,
-} from "@tabler/icons-react";
 import { markdownToHtml } from "@docmost/editor-ext";
-import { CopyButton } from "@/components/common/copy-button";
+import { IconFile, IconLoader2, IconPhoto } from "@tabler/icons-react";
+import DOMPurify from "dompurify";
+import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
+import CopyTextButton from "@/components/common/copy.tsx";
+import classes from "../styles/chat-message.module.css";
 import type { AiChatMessage, AiChatToolCall } from "../types/ai-chat.types";
 import ChatToolGroup from "./chat-tool-group";
-import classes from "../styles/chat-message.module.css";
-import CopyTextButton from "@/components/common/copy.tsx";
 
 const PAGE_PATH_RE = /\/s\/[^/?#]+\/p\/[^/?#]+/;
 
 const chatSanitizer = DOMPurify();
 chatSanitizer.addHook("afterSanitizeAttributes", (node) => {
-  if (node.tagName !== "A") return;
+  if (node.tagName !== "A") {
+    return;
+  }
   const href = node.getAttribute("href") || "";
 
   // Recover the canonical /s/{slug}/p/{slugId} path if the model wrapped it
@@ -62,7 +56,9 @@ export default function ChatMessage({
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
       const anchor = target.closest("a");
-      if (!anchor) return;
+      if (!anchor) {
+        return;
+      }
 
       const href = anchor.getAttribute("href");
       if (href && (href.startsWith("/s/") || href.startsWith("/p/"))) {
@@ -70,10 +66,12 @@ export default function ChatMessage({
         navigate(href);
       }
     },
-    [navigate],
+    [navigate]
   );
 
-  if (message.role === "tool") return null;
+  if (message.role === "tool") {
+    return null;
+  }
 
   const isUser = message.role === "user";
   const content = isStreaming ? streamingContent : message.content;
@@ -82,7 +80,7 @@ export default function ChatMessage({
   if (isUser) {
     const displayContent = (content || "").replace(
       /\n\n<referenced_pages>[\s\S]*<\/referenced_pages>$/,
-      "",
+      ""
     );
     const attachments =
       (message.metadata?.attachments as {
@@ -93,15 +91,15 @@ export default function ChatMessage({
 
     return (
       <div
+        aria-label={t("You said:")}
         className={classes.userMessage}
         role="article"
-        aria-label={t("You said:")}
       >
         <div className={classes.userBubble}>
           {attachments.length > 0 && (
             <div className={classes.messageAttachments}>
               {attachments.map((a) => (
-                <span key={a.id} className={classes.messageAttachmentChip}>
+                <span className={classes.messageAttachmentChip} key={a.id}>
                   {IMAGE_EXTENSIONS.includes(a.fileExt) ? (
                     <IconPhoto size={13} />
                   ) : (
@@ -124,30 +122,30 @@ export default function ChatMessage({
 
   return (
     <div
+      aria-label={hasAnnouncableContent ? t("Assistant said:") : undefined}
       className={classes.assistantMessage}
       role="article"
-      aria-label={hasAnnouncableContent ? t("Assistant said:") : undefined}
     >
       <div className={classes.messageContent}>
         {toolCalls && toolCalls.length > 0 && (
-          <ChatToolGroup toolCalls={toolCalls} isStreaming={isStreaming} />
+          <ChatToolGroup isStreaming={isStreaming} toolCalls={toolCalls} />
         )}
         {content && (
           <div
-            onClick={handleContentClick}
             dangerouslySetInnerHTML={{
               __html: chatSanitizer.sanitize(
                 markdownToHtml(content) as string,
-                { ADD_ATTR: ["target", "rel"] },
+                { ADD_ATTR: ["target", "rel"] }
               ),
             }}
+            onClick={handleContentClick}
           />
         )}
         {isStreaming && (
           <>
             {!content && (
               <span className={classes.processingIndicator}>
-                <IconLoader2 size={16} className={classes.processingSpinner} />
+                <IconLoader2 className={classes.processingSpinner} size={16} />
                 Thinking
               </span>
             )}
@@ -158,8 +156,8 @@ export default function ChatMessage({
       {!isStreaming && message.content && (
         <div className={classes.messageActions}>
           <CopyTextButton
-            text={message?.content}
             label={t("Copy assistant response")}
+            text={message?.content}
           />
         </div>
       )}

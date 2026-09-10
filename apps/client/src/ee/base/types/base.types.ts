@@ -1,37 +1,41 @@
 import type { ResolvedPage } from "@/ee/base/queries/base-page-resolver-query";
 
-export type UserRef = { id: string; name: string | null; avatarUrl: string | null };
+export type UserRef = {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+};
 export type RowReferences = {
   users: Record<string, UserRef>;
   pages: Record<string, ResolvedPage>;
 };
 
 export type BasePropertyType =
-  | 'text'
-  | 'number'
-  | 'select'
-  | 'status'
-  | 'multiSelect'
-  | 'date'
-  | 'person'
-  | 'file'
-  | 'page'
-  | 'checkbox'
-  | 'url'
-  | 'email'
-  | 'createdAt'
-  | 'lastEditedAt'
-  | 'lastEditedBy'
-  | 'formula'
-  | 'longText';
+  | "text"
+  | "number"
+  | "select"
+  | "status"
+  | "multiSelect"
+  | "date"
+  | "person"
+  | "file"
+  | "page"
+  | "checkbox"
+  | "url"
+  | "email"
+  | "createdAt"
+  | "lastEditedAt"
+  | "lastEditedBy"
+  | "formula"
+  | "longText";
 
-export type BaseViewType = 'table' | 'kanban' | 'calendar';
+export type BaseViewType = "table" | "kanban" | "calendar";
 
 export type Choice = {
   id: string;
   name: string;
   color: string;
-  category?: 'todo' | 'inProgress' | 'complete';
+  category?: "todo" | "inProgress" | "complete";
 };
 
 export type SelectTypeOptions = {
@@ -42,15 +46,15 @@ export type SelectTypeOptions = {
 };
 
 export type NumberSeparatorStyle =
-  | 'none'
-  | 'local'
-  | 'comma_period'
-  | 'period_comma'
-  | 'space_comma'
-  | 'space_period';
+  | "none"
+  | "local"
+  | "comma_period"
+  | "period_comma"
+  | "space_comma"
+  | "space_period";
 
 export type NumberTypeOptions = {
-  format?: 'plain' | 'currency' | 'percent' | 'progress';
+  format?: "plain" | "currency" | "percent" | "progress";
   separators?: NumberSeparatorStyle;
   precision?: number;
   currencyCode?: string;
@@ -60,7 +64,7 @@ export type NumberTypeOptions = {
 
 export type DateTypeOptions = {
   dateFormat?: string;
-  timeFormat?: '12h' | '24h';
+  timeFormat?: "12h" | "24h";
   includeTime?: boolean;
   defaultValue?: string | null;
 };
@@ -133,56 +137,56 @@ export type IBaseRow = {
 
 export type ViewSortConfig = {
   propertyId: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 };
 
 // Matches the server's engine operator set (core/base/engine/schema.zod.ts).
 export type FilterOperator =
-  | 'eq'
-  | 'neq'
-  | 'gt'
-  | 'gte'
-  | 'lt'
-  | 'lte'
-  | 'contains'
-  | 'ncontains'
-  | 'startsWith'
-  | 'endsWith'
-  | 'isEmpty'
-  | 'isNotEmpty'
-  | 'before'
-  | 'after'
-  | 'onOrBefore'
-  | 'onOrAfter'
-  | 'any'
-  | 'none'
-  | 'all'
-  | 'isWithin';
+  | "eq"
+  | "neq"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "contains"
+  | "ncontains"
+  | "startsWith"
+  | "endsWith"
+  | "isEmpty"
+  | "isNotEmpty"
+  | "before"
+  | "after"
+  | "onOrBefore"
+  | "onOrAfter"
+  | "any"
+  | "none"
+  | "all"
+  | "isWithin";
 
 export type DateFilterAnchor =
-  | 'today'
-  | 'tomorrow'
-  | 'yesterday'
-  | 'oneWeekAgo'
-  | 'oneWeekFromNow'
-  | 'oneMonthAgo'
-  | 'oneMonthFromNow';
+  | "today"
+  | "tomorrow"
+  | "yesterday"
+  | "oneWeekAgo"
+  | "oneWeekFromNow"
+  | "oneMonthAgo"
+  | "oneMonthFromNow";
 
 export type DateFilterRange =
-  | 'pastWeek'
-  | 'pastMonth'
-  | 'pastYear'
-  | 'thisWeek'
-  | 'thisMonth'
-  | 'thisYear'
-  | 'nextWeek'
-  | 'nextMonth'
-  | 'nextYear';
+  | "pastWeek"
+  | "pastMonth"
+  | "pastYear"
+  | "thisWeek"
+  | "thisMonth"
+  | "thisYear"
+  | "nextWeek"
+  | "nextMonth"
+  | "nextYear";
 
 export type DateFilterValue =
-  | { mode: 'exact'; date: string }
-  | { mode: 'relative'; preset: DateFilterAnchor }
-  | { mode: 'range'; preset: DateFilterRange };
+  | { mode: "exact"; date: string }
+  | { mode: "relative"; preset: DateFilterAnchor }
+  | { mode: "range"; preset: DateFilterRange };
 
 export type FilterCondition = {
   propertyId: string;
@@ -191,17 +195,22 @@ export type FilterCondition = {
 };
 
 export type FilterGroup = {
-  op: 'and' | 'or';
+  op: "and" | "or";
   children: Array<FilterCondition | FilterGroup>;
 };
 
 export type FilterNode = FilterCondition | FilterGroup;
 
-export const NO_VALUE_CHOICE_ID = '__no_value';
+export const NO_VALUE_CHOICE_ID = "__no_value";
 
 export const KANBAN_CARD_DRAG_TYPE = "base-kanban-card";
 export const KANBAN_COLUMN_DRAG_TYPE = "base-kanban-column";
-export type KanbanColumn = { key: string; name: string; color?: string; isNoValue: boolean };
+export type KanbanColumn = {
+  key: string;
+  name: string;
+  color?: string;
+  isNoValue: boolean;
+};
 
 export type ViewConfig = {
   sorts?: ViewSortConfig[];
@@ -380,9 +389,9 @@ export type BaseViewDraft = {
 };
 
 export type {
-  FormulaTypeOptions,
-  FormulaResultType,
   ErrorCell as FormulaErrorCell,
   ErrorCode as FormulaErrorCode,
+  FormulaResultType,
+  FormulaTypeOptions,
 } from "@docmost/base-formula/client";
 export { isErrorCell as isFormulaErrorCell } from "@docmost/base-formula/client";

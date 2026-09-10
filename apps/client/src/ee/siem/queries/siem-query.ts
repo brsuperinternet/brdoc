@@ -1,10 +1,10 @@
+import { notifications } from "@mantine/notifications";
 import {
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import { useTranslation } from "react-i18next";
 import {
   createSiemDestination,
@@ -31,28 +31,32 @@ export function extractErrorMessage(error: Error): string {
 }
 
 function showError(error: Error) {
-  notifications.show({ message: extractErrorMessage(error), color: "red" });
+  notifications.show({ color: "red", message: extractErrorMessage(error) });
 }
 
 function isForbidden(error: unknown): boolean {
-  return (error as { response?: { status?: number } })?.response?.status === 403;
+  return (
+    (error as { response?: { status?: number } })?.response?.status === 403
+  );
 }
 
 export function useSiemDestinationsQuery(
-  enabled = true,
+  enabled = true
 ): UseQueryResult<ISiemDestination[], Error> {
   return useQuery({
-    queryKey: SIEM_DESTINATIONS_KEY,
-    queryFn: getSiemDestinations,
     enabled,
+    queryFn: getSiemDestinations,
+    queryKey: SIEM_DESTINATIONS_KEY,
+    refetchInterval: (query) =>
+      query.state.status === "error" ? false : 15_000,
     retry: (failureCount, error) => !isForbidden(error) && failureCount < 2,
-    refetchInterval: (query) => (query.state.status === "error" ? false : 15_000),
   });
 }
 
 function useInvalidateDestinations() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: SIEM_DESTINATIONS_KEY });
+  return () =>
+    queryClient.invalidateQueries({ queryKey: SIEM_DESTINATIONS_KEY });
 }
 
 export function useCreateSiemDestinationMutation() {
@@ -60,11 +64,11 @@ export function useCreateSiemDestinationMutation() {
   const invalidate = useInvalidateDestinations();
   return useMutation<ISiemDestination, Error, ISiemDestinationInput>({
     mutationFn: createSiemDestination,
+    onError: showError,
     onSuccess: () => {
       notifications.show({ message: t("Destination created") });
       invalidate();
     },
-    onError: showError,
   });
 }
 
@@ -73,11 +77,11 @@ export function useUpdateSiemDestinationMutation() {
   const invalidate = useInvalidateDestinations();
   return useMutation<ISiemDestination, Error, IUpdateSiemDestinationInput>({
     mutationFn: updateSiemDestination,
+    onError: showError,
     onSuccess: () => {
       notifications.show({ message: t("Destination updated") });
       invalidate();
     },
-    onError: showError,
   });
 }
 
@@ -86,11 +90,11 @@ export function useDeleteSiemDestinationMutation() {
   const invalidate = useInvalidateDestinations();
   return useMutation<void, Error, { destinationId: string }>({
     mutationFn: deleteSiemDestination,
+    onError: showError,
     onSuccess: () => {
       notifications.show({ message: t("Destination deleted") });
       invalidate();
     },
-    onError: showError,
   });
 }
 
@@ -99,11 +103,11 @@ export function useRetrySiemDestinationMutation() {
   const invalidate = useInvalidateDestinations();
   return useMutation<void, Error, { destinationId: string }>({
     mutationFn: retrySiemDestination,
+    onError: showError,
     onSuccess: () => {
       notifications.show({ message: t("Retry scheduled") });
       invalidate();
     },
-    onError: showError,
   });
 }
 

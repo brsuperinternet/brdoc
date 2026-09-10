@@ -1,32 +1,32 @@
-import { Badge, Group, Text, Switch, Tooltip } from "@mantine/core";
+import { Badge, Group, Switch, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
-import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 
 export default function AiChatWorkspaceKnowledgeOnly() {
   const { t } = useTranslation();
   const hasAccess = useHasFeature(Feature.AI_CONTROLS);
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
-        <Group gap="xs" align="center">
+        <Group align="center" gap="xs">
           <Text size="md">{t("Workspace knowledge only")}</Text>
           {!hasAccess && (
-            <Badge variant="light" size="sm" radius="sm">
+            <Badge radius="sm" size="sm" variant="light">
               {t("Enterprise")}
             </Badge>
           )}
         </Group>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "Restrict AI Chat to answering from your workspace pages and uploaded files only. It will not use outside knowledge.",
+            "Restrict AI Chat to answering from your workspace pages and uploaded files only. It will not use outside knowledge."
           )}
         </Text>
       </div>
@@ -40,7 +40,7 @@ function AiChatWorkspaceKnowledgeOnlyToggle() {
   const { t } = useTranslation();
   const [workspace, setWorkspace] = useAtom(workspaceAtom);
   const [checked, setChecked] = useState(
-    workspace?.settings?.ai?.chatWorkspaceKnowledgeOnly,
+    workspace?.settings?.ai?.chatWorkspaceKnowledgeOnly
   );
   const hasAccess = useHasFeature(Feature.AI_CONTROLS);
   const upgradeLabel = useUpgradeLabel();
@@ -55,19 +55,19 @@ function AiChatWorkspaceKnowledgeOnlyToggle() {
       setWorkspace(updatedWorkspace);
     } catch (err: any) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
   };
 
   return (
-    <Tooltip label={upgradeLabel} disabled={hasAccess} refProp="rootRef">
+    <Tooltip disabled={hasAccess} label={upgradeLabel} refProp="rootRef">
       <Switch
-        defaultChecked={checked}
-        onChange={handleChange}
-        disabled={!hasAccess}
         aria-label={t("Toggle workspace knowledge only")}
+        defaultChecked={checked}
+        disabled={!hasAccess}
+        onChange={handleChange}
       />
     </Tooltip>
   );

@@ -1,27 +1,27 @@
 export interface IAttachment {
-  id: string;
+  createdAt: string;
+  creatorId: string;
+  deletedAt: string | null;
+  fileExt: string;
   fileName: string;
   filePath: string;
   fileSize: number;
-  fileExt: string;
+  id: string;
   mimeType: string;
-  type: string;
-  creatorId: string;
   pageId: string | null;
   spaceId: string | null;
-  workspaceId: string;
-  createdAt: string;
+  type: string;
   updatedAt: string;
-  deletedAt: string | null;
+  workspaceId: string;
 }
 
 export interface IPageAttachment extends IAttachment {
-  url: string;
   creator: {
     id: string;
     name: string;
     avatarUrl: string | null;
   } | null;
+  url: string;
 }
 
 export enum AvatarIconType {

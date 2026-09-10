@@ -1,22 +1,22 @@
-import React, { useRef } from "react";
-import { Menu, Box, Loader } from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import { Box, Loader, Menu } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
+import React, { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
-import { notifications } from "@mantine/notifications";
 
 interface AvatarUploaderProps {
   currentImageUrl?: string | null;
+  disabled?: boolean;
   fallbackName?: string;
+  isLoading?: boolean;
+  onRemove: () => Promise<void>;
+  onUpload: (file: File) => Promise<void>;
   radius?: string | number;
   size?: string | number;
-  variant?: string;
   type: AvatarIconType;
-  onUpload: (file: File) => Promise<void>;
-  onRemove: () => Promise<void>;
-  isLoading?: boolean;
-  disabled?: boolean;
+  variant?: string;
 }
 
 export default function AvatarUploader({
@@ -35,7 +35,7 @@ export default function AvatarUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileInputChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file || disabled) {
@@ -46,8 +46,8 @@ export default function AvatarUploader({
     const maxSizeInBytes = 10 * 1024 * 1024;
     if (file.size > maxSizeInBytes) {
       notifications.show({
-        message: t("Image exceeds 10MB limit."),
         color: "red",
+        message: t("Image exceeds 10MB limit."),
       });
       // Reset the input
       if (fileInputRef.current) {
@@ -61,8 +61,8 @@ export default function AvatarUploader({
     } catch (error) {
       console.error(error);
       notifications.show({
-        message: t("Failed to upload image"),
         color: "red",
+        message: t("Failed to upload image"),
       });
     }
 
@@ -95,7 +95,9 @@ export default function AvatarUploader({
       : actionLabel;
 
   const handleRemove = async () => {
-    if (disabled) return;
+    if (disabled) {
+      return;
+    }
 
     try {
       await onRemove();
@@ -105,8 +107,8 @@ export default function AvatarUploader({
     } catch (error) {
       console.error(error);
       notifications.show({
-        message: t("Failed to remove image"),
         color: "red",
+        message: t("Failed to remove image"),
       });
     }
   };
@@ -114,39 +116,39 @@ export default function AvatarUploader({
   return (
     <Box>
       <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileInputChange}
         accept="image/png,image/jpeg,image/jpg"
         aria-label={ariaLabel}
-        tabIndex={-1}
+        onChange={handleFileInputChange}
+        ref={fileInputRef}
         style={{ display: "none" }}
+        tabIndex={-1}
+        type="file"
       />
 
-      <Menu shadow="md" width={200} withArrow disabled={disabled || isLoading}>
+      <Menu disabled={disabled || isLoading} shadow="md" width={200} withArrow>
         <Menu.Target>
-          <Box style={{ position: "relative", display: "inline-block" }}>
+          <Box style={{ display: "inline-block", position: "relative" }}>
             <CustomAvatar
-              component="button"
-              size={size}
-              avatarUrl={currentImageUrl}
-              name={fallbackName}
-              aria-label={ariaLabel}
               aria-haspopup="menu"
+              aria-label={ariaLabel}
+              avatarUrl={currentImageUrl}
+              component="button"
+              name={fallbackName}
+              radius={radius}
+              size={size}
               style={{
                 cursor: disabled || isLoading ? "default" : "pointer",
                 opacity: isLoading ? 0.6 : 1,
               }}
-              radius={radius}
-              variant={variant}
               type={type}
+              variant={variant}
             />
             {isLoading && (
               <Box
                 style={{
+                  left: "50%",
                   position: "absolute",
                   top: "50%",
-                  left: "50%",
                   transform: "translate(-50%, -50%)",
                   zIndex: 200,
                 }}
@@ -159,8 +161,8 @@ export default function AvatarUploader({
 
         <Menu.Dropdown>
           <Menu.Item
-            leftSection={<IconUpload size={16} />}
             disabled={isLoading || disabled}
+            leftSection={<IconUpload size={16} />}
             onClick={handleUploadClick}
           >
             {t("Upload image")}
@@ -168,10 +170,10 @@ export default function AvatarUploader({
 
           {currentImageUrl && (
             <Menu.Item
-              leftSection={<IconTrash size={16} />}
               color="red"
-              onClick={handleRemove}
               disabled={isLoading || disabled}
+              leftSection={<IconTrash size={16} />}
+              onClick={handleRemove}
             >
               {t("Remove image")}
             </Menu.Item>

@@ -1,18 +1,15 @@
-import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
-import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
-import { useCallback } from "react";
-import { Node as PMNode } from "@tiptap/pm/model";
 import { isEditorReady } from "@docmost/editor-ext";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconPaperclip, IconTrash } from "@tabler/icons-react";
+import { Node as PMNode } from "@tiptap/pm/model";
+import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
+import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
+import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   EditorMenuProps,
   ShouldShowProps,
 } from "@/features/editor/components/table/types/types.ts";
-import { ActionIcon, Tooltip } from "@mantine/core";
-import {
-  IconPaperclip,
-  IconTrash,
-} from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import classes from "../common/toolbar-menu.module.css";
 
 export function PdfMenu({ editor }: EditorMenuProps) {
@@ -28,30 +25,38 @@ export function PdfMenu({ editor }: EditorMenuProps) {
       const pdfAttrs = ctx.editor.getAttributes("pdf");
 
       return {
-        isPdf: ctx.editor.isActive("pdf"),
-        src: pdfAttrs?.src || null,
-        name: pdfAttrs?.name || null,
         attachmentId: pdfAttrs?.attachmentId || null,
+        isPdf: ctx.editor.isActive("pdf"),
+        name: pdfAttrs?.name || null,
+        src: pdfAttrs?.src || null,
       };
     },
   });
 
   const shouldShow = useCallback(
     ({ state }: ShouldShowProps) => {
-      if (!state || !isEditorReady(editor)) return false;
-      if (!editor.isActive("pdf")) return false;
+      if (!(state && isEditorReady(editor))) {
+        return false;
+      }
+      if (!editor.isActive("pdf")) {
+        return false;
+      }
 
       const { selection } = state;
       const dom = editor.view.nodeDOM(selection.from) as HTMLElement | null;
-      if (!dom) return false;
+      if (!dom) {
+        return false;
+      }
 
       return !!dom.querySelector("[data-pdf-error]");
     },
-    [editor],
+    [editor]
   );
 
   const getReferencedVirtualElement = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const { selection } = editor.state;
     const predicate = (node: PMNode) => node.type.name === "pdf";
     const parent = findParentNode(predicate)(selection);
@@ -73,27 +78,31 @@ export function PdfMenu({ editor }: EditorMenuProps) {
   }, [editor]);
 
   const handleConvertToAttachment = useCallback(() => {
-    if (!editorState?.src) return;
+    if (!editorState?.src) {
+      return;
+    }
 
     const { selection } = editor.state;
     const { from } = selection;
     const node = editor.state.doc.nodeAt(from);
-    if (!node || node.type.name !== "pdf") return;
+    if (!node || node.type.name !== "pdf") {
+      return;
+    }
 
     editor
       .chain()
       .insertContentAt(
         { from, to: from + node.nodeSize },
         {
-          type: "attachment",
           attrs: {
-            url: node.attrs.src,
-            name: node.attrs.name,
             attachmentId: node.attrs.attachmentId,
-            size: node.attrs.size,
             mime: "application/pdf",
+            name: node.attrs.name,
+            size: node.attrs.size,
+            url: node.attrs.src,
           },
-        },
+          type: "attachment",
+        }
       )
       .run();
   }, [editor, editorState]);
@@ -105,36 +114,42 @@ export function PdfMenu({ editor }: EditorMenuProps) {
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey={`pdf-menu`}
-      ref={(element) => {
-        if (element) element.style.zIndex = "99";
-      }}
-      updateDelay={0}
       getReferencedVirtualElement={getReferencedVirtualElement}
       options={{
-        placement: "top",
-        offset: 8,
         flip: false,
+        offset: 8,
+        placement: "top",
+      }}
+      pluginKey={"pdf-menu"}
+      ref={(element) => {
+        if (element) {
+          element.style.zIndex = "99";
+        }
       }}
       shouldShow={shouldShow}
+      updateDelay={0}
     >
       <div className={classes.toolbar}>
-        <Tooltip position="top" label={t("Convert to attachment")} withinPortal={false}>
+        <Tooltip
+          label={t("Convert to attachment")}
+          position="top"
+          withinPortal={false}
+        >
           <ActionIcon
+            aria-label={t("Convert to attachment")}
             onClick={handleConvertToAttachment}
             size="lg"
-            aria-label={t("Convert to attachment")}
             variant="subtle"
           >
             <IconPaperclip size={18} />
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip position="top" label={t("Delete")} withinPortal={false}>
+        <Tooltip label={t("Delete")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Delete")}
             onClick={handleDelete}
             size="lg"
-            aria-label={t("Delete")}
             variant="subtle"
           >
             <IconTrash size={18} />

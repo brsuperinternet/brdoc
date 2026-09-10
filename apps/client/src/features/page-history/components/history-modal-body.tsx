@@ -7,9 +7,10 @@ import {
   Switch,
   Text,
 } from "@mantine/core";
-import HistoryList from "@/features/page-history/components/history-list";
-import classes from "./css/history.module.css";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useAtom, useAtomValue } from "jotai";
+import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   activeHistoryIdAtom,
   activeHistoryPrevIdAtom,
@@ -17,16 +18,15 @@ import {
   diffCountsAtom,
   highlightChangesAtom,
 } from "@/features/page-history/atoms/history-atoms";
+import HistoryList from "@/features/page-history/components/history-list";
 import HistoryView from "@/features/page-history/components/history-view";
-import { useMemo, useRef } from "react";
-import { IconChevronUp, IconChevronDown } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import {
   useDiffNavigation,
   useHistoryReset,
 } from "@/features/page-history/hooks";
 import { usePageHistoryListQuery } from "@/features/page-history/queries/page-history-query";
 import { formattedDate } from "@/lib/time";
+import classes from "./css/history.module.css";
 
 interface Props {
   pageId: string;
@@ -45,18 +45,22 @@ export default function HistoryModalBody({ pageId }: Props) {
   const { data: pageHistoryData } = usePageHistoryListQuery(pageId);
   const historyItems = useMemo(
     () => pageHistoryData?.pages.flatMap((page) => page.items) ?? [],
-    [pageHistoryData],
+    [pageHistoryData]
   );
 
   const compareLabel = useMemo(() => {
-    if (!comparePair) return null;
+    if (!comparePair) {
+      return null;
+    }
     const newerItem = historyItems.find(
-      (item) => item.id === comparePair.newerId,
+      (item) => item.id === comparePair.newerId
     );
     const olderItem = historyItems.find(
-      (item) => item.id === comparePair.olderId,
+      (item) => item.id === comparePair.olderId
     );
-    if (!newerItem || !olderItem) return null;
+    if (!(newerItem && olderItem)) {
+      return null;
+    }
     return t("Comparing {{newer}} and {{older}}", {
       newer: formattedDate(new Date(newerItem.createdAt)),
       older: formattedDate(new Date(olderItem.createdAt)),
@@ -75,31 +79,31 @@ export default function HistoryModalBody({ pageId }: Props) {
         </div>
       </nav>
 
-      <div style={{ position: "relative", flex: 1 }}>
+      <div style={{ flex: 1, position: "relative" }}>
         {comparePair && (
           <Group
+            className={classes.compareBanner}
             justify="space-between"
-            wrap="nowrap"
             px="md"
             py={4}
-            className={classes.compareBanner}
+            wrap="nowrap"
           >
-            <Text size="sm" fw={500} lineClamp={1}>
+            <Text fw={500} lineClamp={1} size="sm">
               {compareLabel ?? t("Compare versions")}
             </Text>
             <CloseButton
-              size="sm"
               aria-label={t("Exit compare")}
               onClick={() => setComparePair(null)}
+              size="sm"
             />
           </Group>
         )}
 
         <ScrollArea
           h={650}
-          w="100%"
           scrollbarSize={5}
           viewportRef={scrollViewportRef}
+          w="100%"
         >
           <div className={classes.sidebarRightSection}>
             {comparePair ? (
@@ -115,40 +119,40 @@ export default function HistoryModalBody({ pageId }: Props) {
 
         {(comparePair || (activeHistoryId && activeHistoryPrevId)) && (
           <Paper
-            shadow="md"
-            radius="xl"
             px="md"
             py="xs"
+            radius="xl"
+            shadow="md"
             style={{
-              position: "absolute",
               bottom: 16,
               left: "50%",
+              position: "absolute",
               transform: "translateX(-50%)",
             }}
           >
             <Group gap="md" wrap="nowrap">
               <Switch
-                label={t("Highlight changes")}
                 checked={highlightChanges}
+                label={t("Highlight changes")}
                 onChange={(e) => setHighlightChanges(e.currentTarget.checked)}
                 styles={{ label: { userSelect: "none", whiteSpace: "nowrap" } }}
               />
               {highlightChanges && diffCounts && diffCounts.total > 0 && (
                 <Group gap="xs" wrap="nowrap">
-                  <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                  <Text c="dimmed" size="sm" style={{ whiteSpace: "nowrap" }}>
                     {currentChangeIndex} of {diffCounts.total}
                   </Text>
                   <ActionIcon
-                    variant="subtle"
-                    size="sm"
                     onClick={handlePrevChange}
+                    size="sm"
+                    variant="subtle"
                   >
                     <IconChevronUp size={16} />
                   </ActionIcon>
                   <ActionIcon
-                    variant="subtle"
-                    size="sm"
                     onClick={handleNextChange}
+                    size="sm"
+                    variant="subtle"
                   >
                     <IconChevronDown size={16} />
                   </ActionIcon>

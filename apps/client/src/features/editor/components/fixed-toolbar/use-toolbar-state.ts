@@ -2,18 +2,18 @@ import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
 
 export interface ToolbarState {
+  canRedo: boolean;
+  canUndo: boolean;
   isBold: boolean;
-  isItalic: boolean;
-  isUnderline: boolean;
-  isStrike: boolean;
+  isBulletList: boolean;
   isCode: boolean;
+  isItalic: boolean;
+  isOrderedList: boolean;
+  isStrike: boolean;
   isSubscript: boolean;
   isSuperscript: boolean;
-  isBulletList: boolean;
-  isOrderedList: boolean;
   isTaskList: boolean;
-  canUndo: boolean;
-  canRedo: boolean;
+  isUnderline: boolean;
 }
 
 // Undo/redo come from either StarterKit's history or the Yjs collaboration
@@ -30,20 +30,22 @@ export function useToolbarState(editor: Editor | null): ToolbarState | null {
   return useEditorState({
     editor,
     selector: (ctx) => {
-      if (!ctx.editor || ctx.editor.isDestroyed) return null;
+      if (!ctx.editor || ctx.editor.isDestroyed) {
+        return null;
+      }
       return {
+        canRedo: safeCan(ctx.editor, "redo"),
+        canUndo: safeCan(ctx.editor, "undo"),
         isBold: ctx.editor.isActive("bold"),
-        isItalic: ctx.editor.isActive("italic"),
-        isUnderline: ctx.editor.isActive("underline"),
-        isStrike: ctx.editor.isActive("strike"),
+        isBulletList: ctx.editor.isActive("bulletList"),
         isCode: ctx.editor.isActive("code"),
+        isItalic: ctx.editor.isActive("italic"),
+        isOrderedList: ctx.editor.isActive("orderedList"),
+        isStrike: ctx.editor.isActive("strike"),
         isSubscript: ctx.editor.isActive("subscript"),
         isSuperscript: ctx.editor.isActive("superscript"),
-        isBulletList: ctx.editor.isActive("bulletList"),
-        isOrderedList: ctx.editor.isActive("orderedList"),
         isTaskList: ctx.editor.isActive("taskList"),
-        canUndo: safeCan(ctx.editor, "undo"),
-        canRedo: safeCan(ctx.editor, "redo"),
+        isUnderline: ctx.editor.isActive("underline"),
       };
     },
   });

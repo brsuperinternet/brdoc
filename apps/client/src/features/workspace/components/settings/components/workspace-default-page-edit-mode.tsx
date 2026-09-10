@@ -1,23 +1,23 @@
-import { Group, Text, SegmentedControl } from "@mantine/core";
-import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
+import { Group, SegmentedControl, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { getApiErrorMessage } from "@/lib/api-error.ts";
+import { useAtom } from "jotai";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { PageEditMode } from "@/features/user/types/user.types.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
+import { getApiErrorMessage } from "@/lib/api-error.ts";
 
 export default function WorkspaceDefaultPageEditMode() {
   const { t } = useTranslation();
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
         <Text size="md">{t("Default page edit mode")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "Choose the page edit mode new members start with. Existing members are not affected.",
+            "Choose the page edit mode new members start with. Existing members are not affected."
           )}
         </Text>
       </div>
@@ -45,8 +45,8 @@ function DefaultPageEditModeControl() {
     } catch (err) {
       setValue(prevValue);
       notifications.show({
-        message: getApiErrorMessage(err, t("Failed to update setting")),
         color: "red",
+        message: getApiErrorMessage(err, t("Failed to update setting")),
       });
     }
   };
@@ -60,12 +60,12 @@ function DefaultPageEditModeControl() {
   return (
     <SegmentedControl
       aria-label={t("Default page edit mode")}
-      value={value}
-      onChange={handleChange}
       data={[
         { label: t("Edit"), value: PageEditMode.Edit },
         { label: t("Read"), value: PageEditMode.Read },
       ]}
+      onChange={handleChange}
+      value={value}
     />
   );
 }

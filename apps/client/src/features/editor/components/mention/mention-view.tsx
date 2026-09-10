@@ -1,15 +1,15 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { ActionIcon, Anchor, Text } from "@mantine/core";
 import { IconFileDescription } from "@tabler/icons-react";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
-import { useSharePageQuery } from "@/features/share/queries/share-query.ts";
-import { usePublicSpacePageQuery } from "@/features/public-space/queries/public-space-query.ts";
 import {
   buildPageUrl,
   buildPublicSpaceUrl,
   buildSharedPageUrl,
 } from "@/features/page/page.utils.ts";
+import { usePageQuery } from "@/features/page/queries/page-query.ts";
+import { usePublicSpacePageQuery } from "@/features/public-space/queries/public-space-query.ts";
+import { useSharePageQuery } from "@/features/share/queries/share-query.ts";
 import { extractPageSlugId } from "@/lib";
 import classes from "./mention.module.css";
 
@@ -41,10 +41,10 @@ export default function MentionView(props: NodeViewProps) {
   // Without the slugId guard the request resolves to the space home, which
   // would render a mention pointing at the wrong page.
   const { data: publicPageData } = usePublicSpacePageQuery({
+    contentless: true,
+    pageSlugId: slugId,
     spaceSlug:
       isPageMention && isPublicSpaceRoute && slugId ? spaceSlug : undefined,
-    pageSlugId: slugId,
-    contentless: true,
   });
 
   const currentPageSlugId = extractPageSlugId(pageSlug);
@@ -64,14 +64,14 @@ export default function MentionView(props: NodeViewProps) {
   const sharePageTitle = sharedPage?.page?.title || label;
 
   const shareSlugUrl = buildSharedPageUrl({
-    shareId,
+    anchorId,
     pageSlugId: slugId,
     pageTitle: sharePageTitle,
-    anchorId,
+    shareId,
   });
 
   return (
-    <NodeViewWrapper style={{ display: "inline" }} data-drag-handle>
+    <NodeViewWrapper data-drag-handle style={{ display: "inline" }}>
       {entityType === "user" && (
         <Text className={classes.userMention} component="span">
           @{label}
@@ -80,48 +80,46 @@ export default function MentionView(props: NodeViewProps) {
 
       {isPageMention && isShareRoute && (
         <Anchor
+          className={classes.pageMentionLink}
           component={Link}
           fw={500}
-          to={shareSlugUrl}
           onClick={handleClick}
+          to={shareSlugUrl}
           underline="never"
-          className={classes.pageMentionLink}
         >
           <ActionIcon
-            variant="transparent"
             color="gray"
             component="span"
             size={18}
             style={{ verticalAlign: "text-bottom" }}
+            variant="transparent"
           >
             <IconFileDescription size={18} />
           </ActionIcon>
-          <span className={classes.pageMentionText}>
-            {sharePageTitle}
-          </span>
+          <span className={classes.pageMentionText}>{sharePageTitle}</span>
         </Anchor>
       )}
 
       {isPageMention && isPublicSpaceRoute && publicPageData?.page && (
         <Anchor
+          className={classes.pageMentionLink}
           component={Link}
           fw={500}
+          onClick={handleClick}
           to={buildPublicSpaceUrl({
-            spaceSlug: publicPageData.space?.slug ?? spaceSlug,
+            anchorId,
             pageSlugId: slugId,
             pageTitle: publicPageData.page.title || label,
-            anchorId,
+            spaceSlug: publicPageData.space?.slug ?? spaceSlug,
           })}
-          onClick={handleClick}
           underline="never"
-          className={classes.pageMentionLink}
         >
           <ActionIcon
-            variant="transparent"
             color="gray"
             component="span"
             size={18}
             style={{ verticalAlign: "text-bottom" }}
+            variant="transparent"
           >
             <IconFileDescription size={18} />
           </ActionIcon>
@@ -136,19 +134,19 @@ export default function MentionView(props: NodeViewProps) {
           redirect chain never rewrites the docs tab's history. */}
       {isPageMention && isPublicSpaceRoute && !publicPageData?.page && (
         <Anchor
+          className={classes.pageMentionLink}
           fw={500}
           href={buildPageUrl(undefined, slugId, label, anchorId)}
-          target="_blank"
           rel="noopener noreferrer"
+          target="_blank"
           underline="never"
-          className={classes.pageMentionLink}
         >
           <ActionIcon
-            variant="transparent"
             color="gray"
             component="span"
             size={18}
             style={{ verticalAlign: "text-bottom" }}
+            variant="transparent"
           >
             <IconFileDescription size={18} />
           </ActionIcon>
@@ -158,46 +156,49 @@ export default function MentionView(props: NodeViewProps) {
 
       {isPageMention && !isShareRoute && !isPublicSpaceRoute && isError && (
         <Anchor
+          className={classes.pageMentionLink}
           component={Link}
           fw={500}
-          to={buildPageUrl(spaceSlug, slugId, label, anchorId)}
           onClick={handleClick}
+          to={buildPageUrl(spaceSlug, slugId, label, anchorId)}
           underline="never"
-          className={classes.pageMentionLink}
         >
           <ActionIcon
-            variant="transparent"
             color="gray"
             component="span"
             size={18}
             style={{ verticalAlign: "text-bottom" }}
+            variant="transparent"
           >
             <IconFileDescription size={18} />
           </ActionIcon>
-          <span className={classes.pageMentionText}>
-            {label}
-          </span>
+          <span className={classes.pageMentionText}>{label}</span>
         </Anchor>
       )}
 
       {isPageMention && !isShareRoute && !isPublicSpaceRoute && !isError && (
         <Anchor
+          className={classes.pageMentionLink}
           component={Link}
           fw={500}
-          to={buildPageUrl(page?.space?.slug || spaceSlug, slugId, page?.title || label, anchorId)}
           onClick={handleClick}
+          to={buildPageUrl(
+            page?.space?.slug || spaceSlug,
+            slugId,
+            page?.title || label,
+            anchorId
+          )}
           underline="never"
-          className={classes.pageMentionLink}
         >
           {page?.icon ? (
             <span style={{ marginRight: "4px" }}>{page.icon}</span>
           ) : (
             <ActionIcon
-              variant="transparent"
               color="gray"
               component="span"
               size={18}
               style={{ verticalAlign: "text-bottom" }}
+              variant="transparent"
             >
               <IconFileDescription size={18} />
             </ActionIcon>

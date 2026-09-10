@@ -1,16 +1,26 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { generateJitteredKeyBetween } from "fractional-indexing-jittered";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { type IBase, type IBaseProperty, type IBaseRow, type IBaseView, type FilterGroup, type KanbanColumn as KanbanColumnType, KANBAN_CARD_DRAG_TYPE } from "@/ee/base/types/base.types";
-import { buildColumnFilter } from "@/ee/base/services/kanban-column-filter";
-import { formatKanbanCount } from "@/ee/base/services/format-kanban-count";
-import { useKanbanColumnAutoScroll } from "@/ee/base/hooks/use-kanban-autoscroll";
-import { useBaseRowsQuery } from "@/ee/base/queries/base-row-query";
-import { useKanbanCreateCardMutation } from "@/ee/base/queries/base-row-query";
-import { KanbanColumnHeader } from "@/ee/base/components/kanban/kanban-column-header";
+import { generateJitteredKeyBetween } from "fractional-indexing-jittered";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { KanbanAddCardButton } from "@/ee/base/components/kanban/kanban-add-card-button";
 import { KanbanCard } from "@/ee/base/components/kanban/kanban-card";
+import { KanbanColumnHeader } from "@/ee/base/components/kanban/kanban-column-header";
+import { useKanbanColumnAutoScroll } from "@/ee/base/hooks/use-kanban-autoscroll";
+import {
+  useBaseRowsQuery,
+  useKanbanCreateCardMutation,
+} from "@/ee/base/queries/base-row-query";
+import { formatKanbanCount } from "@/ee/base/services/format-kanban-count";
+import { buildColumnFilter } from "@/ee/base/services/kanban-column-filter";
 import classes from "@/ee/base/styles/kanban.module.css";
+import {
+  type FilterGroup,
+  type IBase,
+  type IBaseProperty,
+  type IBaseRow,
+  type IBaseView,
+  KANBAN_CARD_DRAG_TYPE,
+  type KanbanColumn as KanbanColumnType,
+} from "@/ee/base/types/base.types";
 
 type KanbanColumnProps = {
   base: IBase;
@@ -23,7 +33,11 @@ type KanbanColumnProps = {
   canEdit: boolean;
   onOpenRow: (rowId: string) => void;
   onHide: (columnKey: string) => void;
-  registerCardRef: (rowId: string, columnKey: string, el: HTMLDivElement | null) => void;
+  registerCardRef: (
+    rowId: string,
+    columnKey: string,
+    el: HTMLDivElement | null
+  ) => void;
   registerColumnRows: (columnKey: string, rows: IBaseRow[]) => void;
 };
 
@@ -43,7 +57,7 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   const filter = useMemo(
     () => buildColumnFilter(viewFilter, groupByPropertyId, column.key),
-    [viewFilter, groupByPropertyId, column.key],
+    [viewFilter, groupByPropertyId, column.key]
   );
 
   const rowsQuery = useBaseRowsQuery(pageId, filter, undefined);
@@ -61,9 +75,11 @@ export function KanbanColumn({
         }
       }
     }
-    return flat.slice().sort((a, b) =>
-      a.position < b.position ? -1 : a.position > b.position ? 1 : 0,
-    );
+    return flat
+      .slice()
+      .sort((a, b) =>
+        a.position < b.position ? -1 : a.position > b.position ? 1 : 0
+      );
   }, [rowsQuery.data]);
 
   const count = rowsQuery.isSuccess
@@ -81,27 +97,36 @@ export function KanbanColumn({
 
   useEffect(() => {
     const placement = pendingScrollRef.current;
-    if (!placement) return;
+    if (!placement) {
+      return;
+    }
     pendingScrollRef.current = null;
     const el = listRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     el.scrollTop = placement === "top" ? 0 : el.scrollHeight;
   }, [rows]);
 
   useEffect(() => {
     const listEl = listRef.current;
-    if (!listEl) return;
+    if (!listEl) {
+      return;
+    }
     return dropTargetForElements({
-      element: listEl,
       canDrop: ({ source }) =>
-        source.data.type === KANBAN_CARD_DRAG_TYPE && source.data.pageId === pageId,
+        source.data.type === KANBAN_CARD_DRAG_TYPE &&
+        source.data.pageId === pageId,
+      element: listEl,
       getData: () => ({ columnKey: column.key, isColumnBody: true }),
     });
   }, [column.key, pageId]);
 
   const onScroll = useCallback(() => {
     const el = listRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     const { scrollHeight, scrollTop, clientHeight } = el;
     if (
       scrollHeight - scrollTop - clientHeight < 200 &&
@@ -110,7 +135,11 @@ export function KanbanColumn({
     ) {
       rowsQuery.fetchNextPage();
     }
-  }, [rowsQuery.hasNextPage, rowsQuery.isFetchingNextPage, rowsQuery.fetchNextPage]);
+  }, [
+    rowsQuery.hasNextPage,
+    rowsQuery.isFetchingNextPage,
+    rowsQuery.fetchNextPage,
+  ]);
 
   const addCard = useCallback(
     (placement: "top" | "bottom") => {
@@ -119,44 +148,53 @@ export function KanbanColumn({
         position =
           placement === "top"
             ? generateJitteredKeyBetween(null, rows[0]?.position ?? null)
-            : generateJitteredKeyBetween(rows[rows.length - 1]?.position ?? null, null);
+            : generateJitteredKeyBetween(
+                rows[rows.length - 1]?.position ?? null,
+                null
+              );
       } catch {
         position = undefined;
       }
       createCard.mutate(
-        { pageId, destColumnFilter: filter, groupByPropertyId, columnKey: column.key, position },
+        {
+          columnKey: column.key,
+          destColumnFilter: filter,
+          groupByPropertyId,
+          pageId,
+          position,
+        },
         {
           onSuccess: (newRow) => {
             pendingScrollRef.current = placement;
             onOpenRow(newRow.id);
           },
-        },
+        }
       );
     },
-    [createCard, pageId, filter, groupByPropertyId, column.key, onOpenRow, rows],
+    [createCard, pageId, filter, groupByPropertyId, column.key, onOpenRow, rows]
   );
 
   return (
     <div className={classes.column} data-column-key={column.key}>
       <KanbanColumnHeader
+        canEdit={canEdit}
         column={column}
+        count={count}
+        onAddCard={() => addCard("top")}
+        onHide={() => onHide(column.key)}
         pageId={pageId}
         property={groupByProperty}
-        count={count}
-        canEdit={canEdit}
-        onHide={() => onHide(column.key)}
-        onAddCard={() => addCard("top")}
       />
-      <div className={classes.cardList} ref={listRef} onScroll={onScroll}>
+      <div className={classes.cardList} onScroll={onScroll} ref={listRef}>
         {rows.map((row) => (
           <KanbanCard
-            key={row.id}
             base={base}
-            view={view}
-            row={row}
             columnKey={column.key}
+            key={row.id}
             onOpen={onOpenRow}
             ref={(el) => registerCardRef(row.id, column.key, el)}
+            row={row}
+            view={view}
           />
         ))}
         {canEdit && <KanbanAddCardButton onAddCard={() => addCard("bottom")} />}

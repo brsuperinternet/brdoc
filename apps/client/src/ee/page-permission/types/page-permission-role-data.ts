@@ -3,14 +3,14 @@ import { PagePermissionRole } from "./page-permission.types";
 
 export const pagePermissionRoleData: IRoleData[] = [
   {
+    description: "Can edit page and manage access",
     label: "Can edit",
     value: PagePermissionRole.WRITER,
-    description: "Can edit page and manage access",
   },
   {
+    description: "Can only view page",
     label: "Can view",
     value: PagePermissionRole.READER,
-    description: "Can only view page",
   },
 ];
 

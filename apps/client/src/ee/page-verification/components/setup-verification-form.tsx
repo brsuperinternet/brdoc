@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -15,24 +14,25 @@ import {
   IconCheck,
   IconRefresh,
 } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
-import classes from "./page-verification-modal.module.css";
-import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSetupVerificationMutation } from "@/ee/page-verification/queries/page-verification-query";
 import {
   ExpirationMode,
   PeriodUnit,
   VerificationType,
 } from "@/ee/page-verification/types/page-verification.types";
+import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
 import {
   ExpirationFields,
   PERIOD_AMOUNT_MIN,
   PERIOD_UNIT_MAX_AMOUNT,
 } from "./expiration-fields";
-import { VerifierPicker } from "./verifier-picker";
-import { VerifierList } from "./verifier-list";
+import classes from "./page-verification-modal.module.css";
 import { MAX_VERIFIERS, UserOptionItem } from "./user-option";
+import { VerifierList } from "./verifier-list";
+import { VerifierPicker } from "./verifier-picker";
 
 type WorkflowChooserProps = {
   onSelect: (type: VerificationType) => void;
@@ -49,10 +49,10 @@ function WorkflowChooser({ onSelect }: WorkflowChooserProps) {
 
       <div className={classes.chooser}>
         <UnstyledButton
-          component="button"
-          type="button"
           className={classes.card}
+          component="button"
           onClick={() => onSelect("expiring" as VerificationType)}
+          type="button"
         >
           <div className={classes.titleRow}>
             <span className={classes.iconStamp}>
@@ -68,7 +68,7 @@ function WorkflowChooser({ onSelect }: WorkflowChooserProps) {
 
           <div className={classes.meta}>
             <div className={classes.metaItem}>
-              <IconCheck size={13} stroke={2.4} className={classes.metaIcon} />
+              <IconCheck className={classes.metaIcon} size={13} stroke={2.4} />
               {t("Re-verify on a schedule (e.g every 30 days )")}
             </div>
           </div>
@@ -84,10 +84,10 @@ function WorkflowChooser({ onSelect }: WorkflowChooserProps) {
         </UnstyledButton>
 
         <UnstyledButton
-          component="button"
-          type="button"
           className={classes.card}
+          component="button"
           onClick={() => onSelect("qms" as VerificationType)}
+          type="button"
         >
           <div className={classes.titleRow}>
             <span className={classes.iconStamp}>
@@ -103,11 +103,11 @@ function WorkflowChooser({ onSelect }: WorkflowChooserProps) {
 
           <div className={classes.meta}>
             <div className={classes.metaItem}>
-              <IconCheck size={13} stroke={2.4} className={classes.metaIcon} />
+              <IconCheck className={classes.metaIcon} size={13} stroke={2.4} />
               {t("Draft → In approval → Approved → Obsolete")}
             </div>
             <div className={classes.metaItem}>
-              <IconCheck size={13} stroke={2.4} className={classes.metaIcon} />
+              <IconCheck className={classes.metaIcon} size={13} stroke={2.4} />
               {t("Designed for ISO 9001, ISO 13485, and FDA")}
             </div>
           </div>
@@ -145,7 +145,7 @@ export function SetupVerificationForm({
   const [fixedDate, setFixedDate] = useState<string>("");
   const [confirmed, setConfirmed] = useState(false);
   const [selectedVerifiers, setSelectedVerifiers] = useState<UserOptionItem[]>(
-    [],
+    []
   );
   const didInitCurrentUser = useRef(false);
 
@@ -155,10 +155,10 @@ export function SetupVerificationForm({
       const u = currentUser.user;
       setSelectedVerifiers([
         {
-          value: u.id,
-          label: u.name,
-          email: u.email,
           avatarUrl: u.avatarUrl,
+          email: u.email,
+          label: u.name,
+          value: u.id,
         },
       ]);
     }
@@ -173,7 +173,7 @@ export function SetupVerificationForm({
 
   const handleAddVerifier = (user: UserOptionItem) => {
     setSelectedVerifiers((prev) =>
-      prev.some((v) => v.value === user.value) ? prev : [...prev, user],
+      prev.some((v) => v.value === user.value) ? prev : [...prev, user]
     );
   };
 
@@ -182,7 +182,9 @@ export function SetupVerificationForm({
   };
 
   const handleSetup = () => {
-    if (selectedVerifiers.length === 0) return;
+    if (selectedVerifiers.length === 0) {
+      return;
+    }
     setupMutation.mutate(
       {
         pageId,
@@ -206,7 +208,7 @@ export function SetupVerificationForm({
             onClose();
           }
         },
-      },
+      }
     );
   };
 
@@ -228,9 +230,9 @@ export function SetupVerificationForm({
     <Stack>
       <div>
         <button
-          type="button"
           className={classes.backButton}
           onClick={() => setType(null)}
+          type="button"
         >
           <IconArrowLeft size={12} stroke={2.2} />
           {t("Back")}
@@ -247,11 +249,11 @@ export function SetupVerificationForm({
             <span className={classes.configureEyebrow}>
               {isQms ? t("Quality management") : t("Recurring")}
             </span>
-            <Text size="sm" c="dimmed" mt={2}>
+            <Text c="dimmed" mt={2} size="sm">
               {isQms
                 ? t("Pages move through draft, approval, and approved stages.")
                 : t(
-                    "Assigned verifiers must periodically re-verify this page.",
+                    "Assigned verifiers must periodically re-verify this page."
                   )}
             </Text>
           </div>
@@ -259,20 +261,20 @@ export function SetupVerificationForm({
       </div>
 
       <div>
-        <Text size="sm" fw={600} tt="uppercase" c="dimmed" mb={4}>
+        <Text c="dimmed" fw={600} mb={4} size="sm" tt="uppercase">
           {t("Verifiers")}
         </Text>
         {selectedVerifiers.length > 0 && (
           <div style={{ marginBottom: "var(--mantine-spacing-xs)" }}>
             <VerifierList
-              verifiers={selectedVerifiers.map((v) => ({
-                id: v.value,
-                name: v.label,
-                email: v.email,
-                avatarUrl: v.avatarUrl,
-              }))}
               canManage
               onRemove={handleRemoveVerifier}
+              verifiers={selectedVerifiers.map((v) => ({
+                avatarUrl: v.avatarUrl,
+                email: v.email,
+                id: v.value,
+                name: v.label,
+              }))}
             />
           </div>
         )}
@@ -289,32 +291,32 @@ export function SetupVerificationForm({
           <Divider />
 
           <div>
-            <Text size="sm" fw={600} mb={6}>
+            <Text fw={600} mb={6} size="sm">
               {t("Expiration")}
             </Text>
             <ExpirationFields
-              mode={mode}
-              periodAmount={periodAmount}
-              periodUnit={periodUnit}
               fixedDate={fixedDate}
+              mode={mode}
+              onFixedDateChange={setFixedDate}
               onModeChange={setMode}
               onPeriodAmountChange={setPeriodAmount}
               onPeriodUnitChange={setPeriodUnit}
-              onFixedDateChange={setFixedDate}
+              periodAmount={periodAmount}
+              periodUnit={periodUnit}
             />
           </div>
 
           <Divider />
 
           <div>
-            <Text size="sm" fw={600} mb={4}>
+            <Text fw={600} mb={4} size="sm">
               {t("Confirm")}
             </Text>
             <Checkbox
-              label={t("I've reviewed this page for accuracy")}
               checked={confirmed}
-              onChange={(event) => setConfirmed(event.currentTarget.checked)}
               color="dark"
+              label={t("I've reviewed this page for accuracy")}
+              onChange={(event) => setConfirmed(event.currentTarget.checked)}
             />
           </div>
         </>
@@ -322,10 +324,10 @@ export function SetupVerificationForm({
 
       <Group justify="flex-end">
         <Button
-          onClick={handleSetup}
+          color="dark"
           disabled={!canSubmit}
           loading={setupMutation.isPending}
-          color="dark"
+          onClick={handleSetup}
         >
           {isQms ? t("Set up") : t("Verify")}
         </Button>

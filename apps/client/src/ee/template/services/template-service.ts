@@ -1,6 +1,6 @@
-import api from "@/lib/api-client";
 import { ITemplate } from "@/ee/template/types/template.types";
 import { IPage } from "@/features/page/types/page.types";
+import api from "@/lib/api-client";
 import { IPagination } from "@/lib/types.ts";
 
 export async function getTemplates(params?: {
@@ -12,22 +12,20 @@ export async function getTemplates(params?: {
   return req.data;
 }
 
-export async function getTemplateById(
-  templateId: string,
-): Promise<ITemplate> {
+export async function getTemplateById(templateId: string): Promise<ITemplate> {
   const req = await api.post<ITemplate>("/templates/info", { templateId });
   return req.data;
 }
 
 export async function createTemplate(
-  data: Partial<ITemplate>,
+  data: Partial<ITemplate>
 ): Promise<ITemplate> {
   const req = await api.post<ITemplate>("/templates/create", data);
   return req.data;
 }
 
 export async function updateTemplate(
-  data: Partial<ITemplate> & { templateId: string },
+  data: Partial<ITemplate> & { templateId: string }
 ): Promise<ITemplate> {
   const req = await api.post<ITemplate>("/templates/update", data);
   return req.data;

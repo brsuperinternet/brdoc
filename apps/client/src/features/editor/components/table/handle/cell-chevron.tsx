@@ -1,21 +1,21 @@
-import React, { useCallback, useEffect } from "react";
-import type { Editor } from "@tiptap/react";
-import { useEditorState } from "@tiptap/react";
+import { isCellSelection, isEditorReady } from "@docmost/editor-ext";
+import { autoUpdate, hide, offset, useFloating } from "@floating-ui/react";
+import { Menu, UnstyledButton } from "@mantine/core";
+import { IconChevronDown } from "@tabler/icons-react";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import { columnResizingPluginKey } from "@tiptap/pm/tables";
-import { useFloating, offset, autoUpdate, hide } from "@floating-ui/react";
-import { Menu, UnstyledButton } from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
+import type { Editor } from "@tiptap/react";
+import { useEditorState } from "@tiptap/react";
 import clsx from "clsx";
+import React, { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { isCellSelection, isEditorReady } from "@docmost/editor-ext";
-import { CellChevronMenu } from "./menus/cell-chevron-menu";
 import classes from "./handle.module.css";
+import { CellChevronMenu } from "./menus/cell-chevron-menu";
 
 interface CellChevronProps {
-  editor: Editor;
   cellPos: number;
+  editor: Editor;
   tableNode: ProseMirrorNode;
   tablePos: number;
 }
@@ -32,15 +32,15 @@ export const CellChevron = React.memo(function CellChevron({
     : null;
 
   const { refs, floatingStyles, middlewareData } = useFloating({
-    placement: "top-end",
     // crossAxis pulls the chevron INWARD from the cell's right edge. We need
     // enough inset that we don't overlap PM-tables' column-resize hot zone
     // (~5px wide around the column boundary). Without this, hovering near the
     // column edge picks up the chevron's `cursor: pointer` instead of
     // `col-resize`, and a drag near the edge clicks the chevron.
-    middleware: [offset({ mainAxis: -22, crossAxis: -10 }), hide()],
-    whileElementsMounted: autoUpdate,
+    middleware: [offset({ crossAxis: -10, mainAxis: -22 }), hide()],
+    placement: "top-end",
     strategy: "absolute",
+    whileElementsMounted: autoUpdate,
   });
   const isReferenceHidden = !!middlewareData.hide?.referenceHidden;
 
@@ -54,7 +54,9 @@ export const CellChevron = React.memo(function CellChevron({
   const isResizingColumn = useEditorState({
     editor,
     selector: (ctx) => {
-      if (!ctx.editor) return false;
+      if (!ctx.editor) {
+        return false;
+      }
       const state = columnResizingPluginKey.getState(ctx.editor.state) as
         | { activeHandle: number }
         | undefined;
@@ -63,7 +65,9 @@ export const CellChevron = React.memo(function CellChevron({
   });
 
   const onOpen = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const current = editor.state.selection;
 
     // Preserve an existing multi-cell CellSelection that already covers
@@ -71,7 +75,9 @@ export const CellChevron = React.memo(function CellChevron({
     let preserveExisting = false;
     if (isCellSelection(current)) {
       current.forEachCell((_node, pos) => {
-        if (pos === cellPos) preserveExisting = true;
+        if (pos === cellPos) {
+          preserveExisting = true;
+        }
       });
     }
 
@@ -89,38 +95,44 @@ export const CellChevron = React.memo(function CellChevron({
   }, [editor, cellPos]);
 
   const onClose = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     editor.commands.unfreezeHandles();
   }, [editor]);
 
-  if (!cellDom) return null;
-  if (isResizingColumn) return null;
+  if (!cellDom) {
+    return null;
+  }
+  if (isResizingColumn) {
+    return null;
+  }
 
   return (
     <Menu
-      position="bottom-end"
-      onOpen={onOpen}
       onClose={onClose}
-      withinPortal
+      onOpen={onOpen}
+      position="bottom-end"
       shadow="md"
+      withinPortal
     >
       <Menu.Target>
         <UnstyledButton
+          aria-label={t("Cell actions")}
+          className={clsx(classes.cellChevron)}
           ref={refs.setFloating}
           style={{
             ...floatingStyles,
             ...(isReferenceHidden ? { visibility: "hidden" as const } : {}),
           }}
-          className={clsx(classes.cellChevron)}
-          aria-label={t("Cell actions")}
         >
           <IconChevronDown size={14} />
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
         <CellChevronMenu
-          editor={editor}
           cellPos={cellPos}
+          editor={editor}
           tableNode={tableNode}
           tablePos={tablePos}
         />

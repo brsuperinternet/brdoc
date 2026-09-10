@@ -1,5 +1,5 @@
-import api from "@/lib/api-client.ts";
 import { IAuthProvider } from "@/ee/security/types/security.types.ts";
+import api from "@/lib/api-client.ts";
 import { IPagination } from "@/lib/types.ts";
 
 export async function getSsoProviderById(data: {
@@ -26,7 +26,7 @@ export async function deleteSsoProvider(data: {
 }
 
 export async function updateSsoProvider(
-  data: Partial<IAuthProvider>,
+  data: Partial<IAuthProvider>
 ): Promise<IAuthProvider> {
   const req = await api.post<IAuthProvider>("/sso/update", data);
   return req.data;

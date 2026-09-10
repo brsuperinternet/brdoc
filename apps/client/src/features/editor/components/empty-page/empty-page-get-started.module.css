@@ -2,18 +2,18 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  /* Push the bar to the bottom of the full-height editor container. */
-  margin-top: auto;
   padding-top: 24px;
+  padding-right: 3rem;
   padding-bottom: 8px;
   /* Match the content indent used by .byline and .ProseMirror so the bar
      lines up with the title and paragraph rather than the container edge. */
   padding-left: 3rem;
-  padding-right: 3rem;
+  /* Push the bar to the bottom of the full-height editor container. */
+  margin-top: auto;
 
   @media (max-width: $mantine-breakpoint-sm) {
-    padding-left: 1rem;
     padding-right: 1rem;
+    padding-left: 1rem;
   }
 }
 

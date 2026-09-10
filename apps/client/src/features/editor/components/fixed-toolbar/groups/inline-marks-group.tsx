@@ -1,5 +1,3 @@
-import { FC } from "react";
-import type { Editor } from "@tiptap/react";
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
 import {
   IconBold,
@@ -14,10 +12,12 @@ import {
   IconSuperscript,
   IconUnderline,
 } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
+import type { Editor } from "@tiptap/react";
 import clsx from "clsx";
-import type { ToolbarState } from "../use-toolbar-state";
+import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import classes from "../fixed-toolbar.module.css";
+import type { ToolbarState } from "../use-toolbar-state";
 
 interface Props {
   editor: Editor;
@@ -31,50 +31,50 @@ export const InlineMarksGroup: FC<Props> = ({ editor, state }) => {
     <ActionIcon.Group>
       <Tooltip label={t("Bold")} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="dark"
-          size="md"
           aria-label={t("Bold")}
           aria-pressed={state.isBold}
           className={clsx({ [classes.active]: state.isBold })}
+          color="dark"
           onClick={() => editor.chain().focus().toggleBold().run()}
+          size="md"
+          variant="subtle"
         >
           <IconBold size={16} />
         </ActionIcon>
       </Tooltip>
       <Tooltip label={t("Underline")} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="dark"
-          size="md"
           aria-label={t("Underline")}
           aria-pressed={state.isUnderline}
           className={clsx({ [classes.active]: state.isUnderline })}
+          color="dark"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
+          size="md"
+          variant="subtle"
         >
           <IconUnderline size={16} />
         </ActionIcon>
       </Tooltip>
       <Tooltip label={t("Italic")} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="dark"
-          size="md"
           aria-label={t("Italic")}
           aria-pressed={state.isItalic}
           className={clsx({ [classes.active]: state.isItalic })}
+          color="dark"
           onClick={() => editor.chain().focus().toggleItalic().run()}
+          size="md"
+          variant="subtle"
         >
           <IconItalic size={16} />
         </ActionIcon>
       </Tooltip>
-      <Menu shadow="md" position="bottom-start" withArrow={false}>
+      <Menu position="bottom-start" shadow="md" withArrow={false}>
         <Menu.Target>
           <ActionIcon
-            variant="subtle"
+            aria-label={t("More inline formatting")}
             color="dark"
             size="md"
-            aria-label={t("More inline formatting")}
+            variant="subtle"
           >
             <IconChevronDown size={14} />
           </ActionIcon>

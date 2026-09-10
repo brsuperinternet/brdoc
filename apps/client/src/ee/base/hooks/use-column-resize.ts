@@ -1,10 +1,10 @@
-import { useEffect, useRef, useCallback } from "react";
 import { Table } from "@tanstack/react-table";
+import { useCallback, useEffect, useRef } from "react";
 import { IBaseRow } from "@/ee/base/types/base.types";
 
 export function useColumnResize(
   table: Table<IBaseRow>,
-  onResizeEnd: () => void,
+  onResizeEnd: () => void
 ) {
   const wasResizingRef = useRef(false);
 

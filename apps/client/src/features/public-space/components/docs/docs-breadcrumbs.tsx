@@ -1,8 +1,8 @@
 import { Menu } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Link, useParams } from "react-router-dom";
+import { Fragment, type ReactNode, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Fragment, useMemo, type ReactNode } from "react";
+import { Link, useParams } from "react-router-dom";
 import { useDocsSurface } from "@/features/public-space/components/docs/docs-surface-context.tsx";
 import { findAncestorTrail } from "@/features/public-space/utils/docs-tree.ts";
 import { extractPageSlugId } from "@/lib";
@@ -21,15 +21,21 @@ export default function DocsBreadcrumbs() {
   const isMobile = useMediaQuery("(max-width: 48em)");
 
   const crumbs = useMemo<Crumb[] | null>(() => {
-    if (!treeData?.length) return null;
+    if (!treeData?.length) {
+      return null;
+    }
 
     const currentSlugId = pageSlug
       ? extractPageSlugId(pageSlug)
       : treeData[0]?.slugId;
-    if (!currentSlugId) return null;
+    if (!currentSlugId) {
+      return null;
+    }
 
     const trail = findAncestorTrail(treeData, currentSlugId);
-    if (trail === null) return null;
+    if (trail === null) {
+      return null;
+    }
 
     const siteCrumbs: Crumb[] =
       siteName && homeUrl
@@ -47,62 +53,64 @@ export default function DocsBreadcrumbs() {
     return list.length ? list : null;
   }, [treeData, siteName, homeUrl, getNodeUrl, pageSlug, t]);
 
-  if (!crumbs) return null;
+  if (!crumbs) {
+    return null;
+  }
 
   // Mobile keeps a single line (menu + last crumb, like the app header's
   // breadcrumb); desktop collapses the middle beyond 4 crumbs.
   const collapsed = crumbs.length > (isMobile ? 1 : 4);
-  const hidden = !collapsed
-    ? []
-    : isMobile
+  const hidden = collapsed
+    ? isMobile
       ? crumbs.slice(0, crumbs.length - 1)
-      : crumbs.slice(1, crumbs.length - 1);
+      : crumbs.slice(1, crumbs.length - 1)
+    : [];
 
   const items: ReactNode[] = [];
   if (collapsed && !isMobile) {
     items.push(
-      <Link key={crumbs[0].key} to={crumbs[0].url} className={styles.crumbLink}>
+      <Link className={styles.crumbLink} key={crumbs[0].key} to={crumbs[0].url}>
         {crumbs[0].name}
-      </Link>,
+      </Link>
     );
   }
   if (collapsed) {
     items.push(
-      <Menu shadow="md" position="bottom-start" key="hidden">
+      <Menu key="hidden" position="bottom-start" shadow="md">
         <Menu.Target>
           <button
-            type="button"
-            className={styles.crumbEllipsis}
             aria-label={t("Show hidden pages")}
+            className={styles.crumbEllipsis}
+            type="button"
           >
             …
           </button>
         </Menu.Target>
         <Menu.Dropdown>
           {hidden.map((item) => (
-            <Menu.Item key={item.key} component={Link} to={item.url}>
+            <Menu.Item component={Link} key={item.key} to={item.url}>
               {item.name}
             </Menu.Item>
           ))}
         </Menu.Dropdown>
-      </Menu>,
+      </Menu>
     );
   }
   const trailing = collapsed ? [crumbs[crumbs.length - 1]] : crumbs;
   for (const crumb of trailing) {
     items.push(
-      <Link key={crumb.key} to={crumb.url} className={styles.crumbLink}>
+      <Link className={styles.crumbLink} key={crumb.key} to={crumb.url}>
         {crumb.name}
-      </Link>,
+      </Link>
     );
   }
 
   return (
-    <nav className={styles.breadcrumbs} aria-label={t("Breadcrumb")}>
+    <nav aria-label={t("Breadcrumb")} className={styles.breadcrumbs}>
       {items.map((item, index) => (
         <Fragment key={index}>
           {index > 0 && (
-            <span className={styles.crumbSeparator} aria-hidden>
+            <span aria-hidden className={styles.crumbSeparator}>
               /
             </span>
           )}

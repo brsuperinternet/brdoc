@@ -1,16 +1,16 @@
-import { useState, useMemo } from "react";
-import { Group, MultiSelect, Select, Space, TextInput } from "@mantine/core";
+import { Group, Space, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { useTranslation } from "react-i18next";
 import { IconSearch } from "@tabler/icons-react";
-import SettingsTitle from "@/components/settings/settings-title";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Paginate from "@/components/common/paginate";
-import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import SettingsTitle from "@/components/settings/settings-title";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import VerificationListTable from "@/ee/page-verification/components/verification-list-table";
 import { useVerificationListQuery } from "@/ee/page-verification/queries/page-verification-query";
 import { IVerificationListParams } from "@/ee/page-verification/types/page-verification.types";
-import VerificationListTable from "@/ee/page-verification/components/verification-list-table";
 import { useGetSpacesQuery } from "@/features/space/queries/space-query";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
 
 export default function VerifiedPages() {
   const { t } = useTranslation();
@@ -26,26 +26,26 @@ export default function VerifiedPages() {
   const spaceOptions = useMemo(
     () =>
       spacesData?.items?.map((space) => ({
-        value: space.id,
         label: space.name,
+        value: space.id,
       })) ?? [],
-    [spacesData],
+    [spacesData]
   );
 
   const typeOptions = [
-    { value: "expiring", label: t("Expiring") },
-    { value: "qms", label: t("QMS") },
+    { label: t("Expiring"), value: "expiring" },
+    { label: t("QMS"), value: "qms" },
   ];
 
   const params: IVerificationListParams = useMemo(
     () => ({
       cursor,
       limit: 50,
+      query: debouncedSearch || undefined,
       spaceIds: spaceFilter.length > 0 ? spaceFilter : undefined,
       type: typeFilter as IVerificationListParams["type"],
-      query: debouncedSearch || undefined,
     }),
-    [cursor, spaceFilter, typeFilter, debouncedSearch],
+    [cursor, spaceFilter, typeFilter, debouncedSearch]
   );
 
   const { data, isLoading } = useVerificationListQuery(params);
@@ -71,13 +71,13 @@ export default function VerifiedPages() {
 
       <SettingsTitle title={t("Verified pages")} />
 
-      <Group mb="md" gap="sm">
+      <Group gap="sm" mb="md">
         <TextInput
-          placeholder={t("Search by title")}
           leftSection={<IconSearch size={16} />}
-          value={searchValue}
           onChange={handleSearchChange}
+          placeholder={t("Search by title")}
           size="sm"
+          value={searchValue}
           w={220}
         />
 
@@ -105,14 +105,14 @@ export default function VerifiedPages() {
         */}
       </Group>
 
-      <VerificationListTable items={data?.items} isLoading={isLoading} />
+      <VerificationListTable isLoading={isLoading} items={data?.items} />
 
       <Space h="md" />
 
       {data?.items && data.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
           hasNextPage={data?.meta?.hasNextPage}
+          hasPrevPage={data?.meta?.hasPrevPage}
           onNext={() => goNext(data?.meta?.nextCursor)}
           onPrev={goPrev}
         />

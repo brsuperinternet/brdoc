@@ -1,6 +1,6 @@
 import api from "@/lib/api-client";
-import { INotification } from "../types/notification.types";
 import { IPagination } from "@/lib/types";
+import { INotification } from "../types/notification.types";
 
 export async function getNotifications(params: {
   limit?: number;
@@ -9,20 +9,18 @@ export async function getNotifications(params: {
 }): Promise<IPagination<INotification>> {
   const req = await api.post<IPagination<INotification>>(
     "/notifications",
-    params,
+    params
   );
   return req.data;
 }
 
 export async function getUnreadCount(): Promise<{ count: number }> {
-  const req = await api.post<{ count: number }>(
-    "/notifications/unread-count",
-  );
+  const req = await api.post<{ count: number }>("/notifications/unread-count");
   return req.data;
 }
 
 export async function markNotificationsRead(
-  notificationIds: string[],
+  notificationIds: string[]
 ): Promise<void> {
   await api.post("/notifications/mark-read", { notificationIds });
 }

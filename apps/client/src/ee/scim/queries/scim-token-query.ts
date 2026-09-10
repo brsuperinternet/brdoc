@@ -1,11 +1,12 @@
-import { IPagination, QueryParams } from "@/lib/types.ts";
+import { notifications } from "@mantine/notifications";
 import {
   keepPreviousData,
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   createScimToken,
   getScimTokens,
@@ -13,21 +14,20 @@ import {
   updateScimToken,
 } from "@/ee/scim/services/scim-token-service";
 import {
-  IScimToken,
   ICreateScimTokenRequest,
   IRevokeScimTokenRequest,
+  IScimToken,
   IUpdateScimTokenRequest,
 } from "@/ee/scim/types/scim-token.types";
-import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
+import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export function useGetScimTokensQuery(
-  params?: QueryParams,
+  params?: QueryParams
 ): UseQueryResult<IPagination<IScimToken>, Error> {
   return useQuery({
-    queryKey: ["scim-token-list", params],
-    queryFn: () => getScimTokens(params),
     placeholderData: keepPreviousData,
+    queryFn: () => getScimTokens(params),
+    queryKey: ["scim-token-list", params],
   });
 }
 
@@ -37,6 +37,10 @@ export function useCreateScimTokenMutation() {
 
   return useMutation<IScimToken, Error, ICreateScimTokenRequest>({
     mutationFn: (data) => createScimToken(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       notifications.show({
         message: t("{{credential}} created successfully", {
@@ -48,10 +52,6 @@ export function useCreateScimTokenMutation() {
           ["scim-token-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
-    },
   });
 }
 
@@ -61,16 +61,16 @@ export function useUpdateScimTokenMutation() {
 
   return useMutation<void, Error, IUpdateScimTokenRequest>({
     mutationFn: (data) => updateScimToken(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       notifications.show({ message: t("Updated successfully") });
       queryClient.invalidateQueries({
         predicate: (item) =>
           ["scim-token-list"].includes(item.queryKey[0] as string),
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -81,16 +81,16 @@ export function useRevokeScimTokenMutation() {
 
   return useMutation<void, Error, IRevokeScimTokenRequest>({
     mutationFn: (data) => revokeScimToken(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       notifications.show({ message: t("Revoked successfully") });
       queryClient.invalidateQueries({
         predicate: (item) =>
           ["scim-token-list"].includes(item.queryKey[0] as string),
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }

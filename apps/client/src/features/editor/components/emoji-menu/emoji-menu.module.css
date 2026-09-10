@@ -1,7 +1,7 @@
 .row {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 6px 10px;
   border-radius: var(--mantine-radius-sm);
 
@@ -43,14 +43,14 @@
 }
 
 .catTab {
-  background: transparent;
-  border: none;
-  cursor: pointer;
+  flex-shrink: 0;
+  padding: 4px 5px;
   font-size: 16px;
   line-height: 1;
-  padding: 4px 5px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
   border-radius: var(--mantine-radius-sm);
-  flex-shrink: 0;
 
   &:hover {
     @mixin light {
@@ -85,14 +85,14 @@
 }
 
 .emojiBtn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  padding: 3px;
   font-size: 20px;
   line-height: 1;
-  padding: 3px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
   border-radius: var(--mantine-radius-sm);
-  aspect-ratio: 1 / 1;
 
   &:hover {
     @mixin light {
@@ -104,4 +104,3 @@
     }
   }
 }
-

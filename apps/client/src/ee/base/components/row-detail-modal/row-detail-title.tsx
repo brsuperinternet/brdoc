@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import classes from "@/ee/base/styles/row-detail-modal.module.css";
 import { IBaseProperty, IBaseRow } from "@/ee/base/types/base.types";
 import { timeAgo } from "@/lib/time.ts";
-import classes from "@/ee/base/styles/row-detail-modal.module.css";
 
 type RowDetailTitleProps = {
   row: IBaseRow;
@@ -33,7 +33,9 @@ export function RowDetailTitle({
       setValue(initial);
       return;
     }
-    if (value !== initial) onCommit(value);
+    if (value !== initial) {
+      onCommit(value);
+    }
   };
 
   // Re-sync when the row changes underneath us (navigation or remote edit).
@@ -47,18 +49,16 @@ export function RowDetailTitle({
     <header className={classes.header}>
       {canEdit ? (
         <input
-          type="text"
           className={classes.titleInput}
-          {...(!initial ? { "data-autofocus": true } : {})}
-          placeholder={t("Untitled")}
+          type="text"
+          {...(initial ? {} : { "data-autofocus": true })}
           aria-label={primaryProperty?.name ?? t("Untitled")}
-          value={value}
           maxLength={1000}
+          onBlur={commit}
+          onChange={(e) => setValue(e.currentTarget.value)}
           onFocus={() => {
             onEditingChange?.(true);
           }}
-          onChange={(e) => setValue(e.currentTarget.value)}
-          onBlur={commit}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
               cancelRef.current = true;
@@ -68,6 +68,8 @@ export function RowDetailTitle({
               e.currentTarget.blur();
             }
           }}
+          placeholder={t("Untitled")}
+          value={value}
         />
       ) : (
         <h1 className={classes.titleStatic}>{value || t("Untitled")}</h1>

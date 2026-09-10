@@ -13,10 +13,10 @@ export type UserOptionItem = {
 
 export function toUserOptions(users: IUser[] | undefined): UserOptionItem[] {
   return (users ?? []).map((user) => ({
-    value: user.id,
-    label: user.name,
-    email: user.email,
     avatarUrl: user.avatarUrl,
+    email: user.email,
+    label: user.name,
+    value: user.id,
   }));
 }
 
@@ -26,15 +26,15 @@ export const renderUserSelectOption: SelectProps["renderOption"] = ({
   <Group gap="sm" wrap="nowrap">
     <CustomAvatar
       avatarUrl={option["avatarUrl"]}
-      size={20}
       name={option.label}
+      size={20}
     />
     <div>
-      <Text size="sm" lineClamp={1}>
+      <Text lineClamp={1} size="sm">
         {option.label}
       </Text>
       {option["email"] && (
-        <Text size="xs" c="dimmed" lineClamp={1}>
+        <Text c="dimmed" lineClamp={1} size="xs">
           {option["email"]}
         </Text>
       )}

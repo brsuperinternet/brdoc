@@ -1,15 +1,13 @@
-import { NodeViewContent, NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { ActionIcon, Group, Select, Tooltip } from "@mantine/core";
-import { CopyButton } from "@/components/common/copy-button";
-import { useEffect, useState } from "react";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
-import classes from "./code-block.module.css";
-import React from "react";
-import { Suspense } from "react";
+import { NodeViewContent, NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CopyButton } from "@/components/common/copy-button";
+import classes from "./code-block.module.css";
 
 const MermaidView = React.lazy(
-  () => import("@/features/editor/components/code-block/mermaid-view.tsx"),
+  () => import("@/features/editor/components/code-block/mermaid-view.tsx")
 );
 
 export default function CodeBlockView(props: NodeViewProps) {
@@ -17,7 +15,7 @@ export default function CodeBlockView(props: NodeViewProps) {
   const { node, updateAttributes, extension, editor, getPos } = props;
   const { language } = node.attrs;
   const [languageValue, setLanguageValue] = useState<string | null>(
-    language || null,
+    language || null
   );
   const [isSelected, setIsSelected] = useState(false);
 
@@ -41,40 +39,40 @@ export default function CodeBlockView(props: NodeViewProps) {
   function changeLanguage(language: string) {
     setLanguageValue(language);
     updateAttributes({
-      language: language,
+      language,
     });
   }
 
   return (
     <NodeViewWrapper className="codeBlock">
       <Group
-        justify="flex-end"
-        contentEditable={false}
         className={classes.menuGroup}
+        contentEditable={false}
+        justify="flex-end"
       >
         <Select
-          placeholder="auto"
           checkIconPosition="right"
+          classNames={{ input: classes.selectInput }}
           data={extension.options.lowlight.listLanguages().sort()}
-          value={languageValue}
+          disabled={!editor.isEditable}
           onChange={changeLanguage}
+          placeholder="auto"
           searchable
           style={{ maxWidth: "130px" }}
-          classNames={{ input: classes.selectInput }}
-          disabled={!editor.isEditable}
+          value={languageValue}
         />
 
-        <CopyButton value={node?.textContent} timeout={2000}>
+        <CopyButton timeout={2000} value={node?.textContent}>
           {({ copied, copy }) => (
             <Tooltip
               label={copied ? t("Copied") : t("Copy")}
-              withArrow
               position="right"
+              withArrow
             >
               <ActionIcon
                 color={copied ? "teal" : "gray"}
-                variant="subtle"
                 onClick={copy}
+                variant="subtle"
               >
                 {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
               </ActionIcon>
@@ -84,12 +82,12 @@ export default function CodeBlockView(props: NodeViewProps) {
       </Group>
 
       <pre
-        spellCheck="false"
         hidden={
           ((language === "mermaid" && !editor.isEditable) ||
             (language === "mermaid" && !isSelected)) &&
           node.textContent.length > 0
         }
+        spellCheck="false"
       >
         {/* @ts-ignore */}
         <NodeViewContent as="code" className={`language-${language}`} />

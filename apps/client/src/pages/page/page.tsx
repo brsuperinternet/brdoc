@@ -1,23 +1,23 @@
-import { useParams } from "react-router-dom";
-import { usePageQuery } from "@/features/page/queries/page-query";
+import { Button } from "@mantine/core";
+import { IconAlertTriangle, IconFileOff } from "@tabler/icons-react";
+import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { EmptyState } from "@/components/ui/empty-state.tsx";
+import { BaseView } from "@/ee/base/components/base-view";
+import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { FullEditor } from "@/features/editor/full-editor";
 import { TitleEditor } from "@/features/editor/title-editor";
-import HistoryModal from "@/features/page-history/components/history-modal";
 import PageHeader from "@/features/page/components/header/page-header.tsx";
-import { extractPageSlugId } from "@/lib";
-import { useGetSpaceBySlugQuery } from "@/features/space/queries/space-query.ts";
-import { useTranslation } from "react-i18next";
-import React from "react";
-import { EmptyState } from "@/components/ui/empty-state.tsx";
-import { IconAlertTriangle, IconFileOff } from "@tabler/icons-react";
-import { Button } from "@mantine/core";
-import { Link } from "react-router-dom";
-import { ErrorBoundary } from "react-error-boundary";
-import { BaseView } from "@/ee/base/components/base-view";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { Feature } from "@/ee/features";
 import { getPageTitle } from "@/features/page/page.utils";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { usePageQuery } from "@/features/page/queries/page-query";
+import HistoryModal from "@/features/page-history/components/history-modal";
+import { useGetSpaceBySlugQuery } from "@/features/space/queries/space-query.ts";
+import { extractPageSlugId } from "@/lib";
+
 const MemoizedFullEditor = React.memo(FullEditor);
 const MemoizedTitleEditor = React.memo(TitleEditor);
 const MemoizedPageHeader = React.memo(PageHeader);
@@ -29,18 +29,23 @@ export default function Page() {
 
   return (
     <ErrorBoundary
-      resetKeys={[pageSlug]}
       fallbackRender={({ resetErrorBoundary }) => (
         <EmptyState
-          icon={IconAlertTriangle}
-          title={t("Failed to load page. An error occurred.")}
           action={
-            <Button variant="default" size="sm" mt="xs" onClick={resetErrorBoundary}>
+            <Button
+              mt="xs"
+              onClick={resetErrorBoundary}
+              size="sm"
+              variant="default"
+            >
               {t("Try again")}
             </Button>
           }
+          icon={IconAlertTriangle}
+          title={t("Failed to load page. An error occurred.")}
         />
       )}
+      resetKeys={[pageSlug]}
     >
       <PageContent pageSlug={pageSlug} />
     </ErrorBoundary>
@@ -61,8 +66,7 @@ function PageContent({ pageSlug }: { pageSlug: string | undefined }) {
   const hasBases = useHasFeature(Feature.BASES);
   const canEdit = !page?.deletedAt && (page?.permissions?.canEdit ?? false);
   const canComment =
-    canEdit ||
-    (space?.settings?.comments?.allowViewerComments === true);
+    canEdit || space?.settings?.comments?.allowViewerComments === true;
 
   if (isLoading) {
     return <></>;
@@ -72,24 +76,27 @@ function PageContent({ pageSlug }: { pageSlug: string | undefined }) {
     if ([401, 403, 404].includes(error?.["status"])) {
       return (
         <EmptyState
-          icon={IconFileOff}
-          title={t("Page not found")}
-          description={t(
-            "This page may have been deleted, moved, or you may not have access.",
-          )}
           action={
-            <Button component={Link} to="/home" variant="default" size="sm" mt="xs">
+            <Button
+              component={Link}
+              mt="xs"
+              size="sm"
+              to="/home"
+              variant="default"
+            >
               {t("Go to homepage")}
             </Button>
           }
+          description={t(
+            "This page may have been deleted, moved, or you may not have access."
+          )}
+          icon={IconFileOff}
+          title={t("Page not found")}
         />
       );
     }
     return (
-      <EmptyState
-        icon={IconFileOff}
-        title={t("Error fetching page data.")}
-      />
+      <EmptyState icon={IconFileOff} title={t("Error fetching page data.")} />
     );
   }
 
@@ -117,36 +124,36 @@ function PageContent({ pageSlug }: { pageSlug: string | undefined }) {
         <MemoizedPageHeader readOnly={!canEdit} />
         <div
           style={{
-            flex: 1,
-            minHeight: 0,
             display: "flex",
+            flex: 1,
             flexDirection: "column",
+            minHeight: 0,
             paddingInline: 24,
           }}
         >
           <div
             style={{
-              flex: 1,
-              minHeight: 0,
               display: "flex",
+              flex: 1,
               flexDirection: "column",
+              minHeight: 0,
             }}
           >
             <BaseView
-              pageId={page.id}
               editable={hasBases && canEdit}
+              pageId={page.id}
               titleSlot={
                 <div
                   className="base-page-title"
-                  style={{ paddingTop: 2, paddingBottom: 6 }}
+                  style={{ paddingBottom: 6, paddingTop: 2 }}
                 >
                   <MemoizedTitleEditor
-                    pageId={page.id}
-                    slugId={page.slugId}
-                    title={page.title}
-                    spaceSlug={page.space?.slug ?? ""}
                     editable={hasBases && canEdit}
                     isBase
+                    pageId={page.id}
+                    slugId={page.slugId}
+                    spaceSlug={page.space?.slug ?? ""}
+                    title={page.title}
                   />
                 </div>
               }
@@ -168,16 +175,16 @@ function PageContent({ pageSlug }: { pageSlug: string | undefined }) {
         <MemoizedPageHeader readOnly={!canEdit} />
 
         <MemoizedFullEditor
+          canComment={canComment}
+          content={page.content}
+          contributors={page.contributors}
+          creator={page.creator}
+          editable={canEdit}
           key={page.id}
           pageId={page.id}
-          title={page.title}
-          content={page.content}
           slugId={page.slugId}
           spaceSlug={page?.space?.slug}
-          editable={canEdit}
-          creator={page.creator}
-          contributors={page.contributors}
-          canComment={canComment}
+          title={page.title}
         />
         <MemoizedHistoryModal pageId={page.id} />
       </div>

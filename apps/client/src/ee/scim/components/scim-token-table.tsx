@@ -1,17 +1,16 @@
 import { ActionIcon, Group, Menu, Table, Text } from "@mantine/core";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import React from "react";
 import NoTableResults from "@/components/common/no-table-results";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { IScimToken } from "@/ee/scim/types/scim-token.types";
 import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
 
 interface ScimTokenTableProps {
-  tokens: IScimToken[];
   isLoading?: boolean;
-  onUpdate?: (token: IScimToken) => void;
   onRevoke?: (token: IScimToken) => void;
+  onUpdate?: (token: IScimToken) => void;
+  tokens: IScimToken[];
 }
 
 export function ScimTokenTable({
@@ -24,7 +23,9 @@ export function ScimTokenTable({
   const locale = useDateFnsLocale();
 
   const formatDate = (date: Date | string | null) => {
-    if (!date) return t("Never");
+    if (!date) {
+      return t("Never");
+    }
     return formatLocalized(date, "MMM dd, yyyy", "PP", locale);
   };
 
@@ -47,13 +48,13 @@ export function ScimTokenTable({
             tokens.map((token) => (
               <Table.Tr key={token.id}>
                 <Table.Td>
-                  <Text fz="sm" fw={500}>
+                  <Text fw={500} fz="sm">
                     {token.name}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
-                  <Text fz="sm" ff="monospace" c="dimmed">
+                  <Text c="dimmed" ff="monospace" fz="sm">
                     ••••{token.tokenLastFour}
                   </Text>
                 </Table.Td>
@@ -73,7 +74,7 @@ export function ScimTokenTable({
                   </Table.Td>
                 ) : (
                   <Table.Td>
-                    <Text fz="sm" c="dimmed">
+                    <Text c="dimmed" fz="sm">
                       —
                     </Text>
                   </Table.Td>
@@ -95,9 +96,9 @@ export function ScimTokenTable({
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
                       <ActionIcon
-                        variant="subtle"
-                        color="gray"
                         aria-label={t("Token actions")}
+                        color="gray"
+                        variant="subtle"
                       >
                         <IconDots size={16} />
                       </ActionIcon>
@@ -113,8 +114,8 @@ export function ScimTokenTable({
                       )}
                       {onRevoke && (
                         <Menu.Item
-                          leftSection={<IconTrash size={16} />}
                           color="red"
+                          leftSection={<IconTrash size={16} />}
                           onClick={() => onRevoke(token)}
                         >
                           {t("Revoke")}

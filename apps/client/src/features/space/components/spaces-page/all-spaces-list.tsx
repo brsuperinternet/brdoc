@@ -1,41 +1,54 @@
 import {
+  ActionIcon,
+  Anchor,
+  Box,
+  Group,
+  Menu,
+  Space,
   Table,
   Text,
-  Group,
-  ActionIcon,
-  Box,
-  Space,
-  Menu,
-  Anchor,
   Tooltip,
   VisuallyHidden,
 } from "@mantine/core";
-import { IconDots, IconSettings, IconEye, IconEyeOff } from "@tabler/icons-react";
-import StarButton from "@/features/favorite/components/star-button";
-import {
-  useWatchedSpaceIds,
-  useWatchSpaceMutation,
-  useUnwatchSpaceMutation,
-} from "@/features/space/queries/space-watcher-query";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import React, { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { formatMemberCount } from "@/lib";
-import { getSpaceUrl } from "@/lib/config";
-import { prefetchSpace } from "@/features/space/queries/space-query";
-import { SearchInput } from "@/components/common/search-input";
-import Paginate from "@/components/common/paginate";
-import NoTableResults from "@/components/common/no-table-results";
-import SpaceSettingsModal from "@/features/space/components/settings-modal";
-import classes from "./all-spaces-list.module.css";
-import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import {
+  IconDots,
+  IconEye,
+  IconEyeOff,
+  IconSettings,
+} from "@tabler/icons-react";
 import clsx from "clsx";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import NoTableResults from "@/components/common/no-table-results";
+import Paginate from "@/components/common/paginate";
+import { SearchInput } from "@/components/common/search-input";
+import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
+import rowClasses from "@/components/ui/clickable-table-row.module.css";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
-import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
+import StarButton from "@/features/favorite/components/star-button";
+import SpaceSettingsModal from "@/features/space/components/settings-modal";
+import { prefetchSpace } from "@/features/space/queries/space-query";
+import {
+  useUnwatchSpaceMutation,
+  useWatchedSpaceIds,
+  useWatchSpaceMutation,
+} from "@/features/space/queries/space-watcher-query";
+import { formatMemberCount } from "@/lib";
+import { getSpaceUrl } from "@/lib/config";
+import classes from "./all-spaces-list.module.css";
 
-function WatchButton({ spaceId, watchedIds, size = 16 }: { spaceId: string; watchedIds: Set<string>; size?: number }) {
+function WatchButton({
+  spaceId,
+  watchedIds,
+  size = 16,
+}: {
+  spaceId: string;
+  watchedIds: Set<string>;
+  size?: number;
+}) {
   const { t } = useTranslation();
   const watchMutation = useWatchSpaceMutation();
   const unwatchMutation = useUnwatchSpaceMutation();
@@ -57,12 +70,12 @@ function WatchButton({ spaceId, watchedIds, size = 16 }: { spaceId: string; watc
   return (
     <Tooltip label={label} openDelay={250} withArrow>
       <ActionIcon
-        variant="subtle"
-        color={isWatching ? "blue" : "gray"}
         aria-label={label}
         aria-pressed={isWatching}
-        onClick={handleToggle}
+        color={isWatching ? "blue" : "gray"}
         loading={isPending}
+        onClick={handleToggle}
+        variant="subtle"
       >
         {isWatching ? (
           <IconEyeOff size={size} stroke={2} />
@@ -75,12 +88,12 @@ function WatchButton({ spaceId, watchedIds, size = 16 }: { spaceId: string; watc
 }
 
 interface AllSpacesListProps {
-  spaces: any[];
-  onSearch: (query: string) => void;
-  hasPrevPage?: boolean;
   hasNextPage?: boolean;
+  hasPrevPage?: boolean;
   onNext: () => void;
   onPrev: () => void;
+  onSearch: (query: string) => void;
+  spaces: any[];
 }
 
 export default function AllSpacesList({
@@ -128,38 +141,44 @@ export default function AllSpacesList({
           <Table.Tbody>
             {spaces.length > 0 ? (
               spaces.map((space) => (
-                <Table.Tr key={space.id} className={rowClasses.row}>
+                <Table.Tr className={rowClasses.row} key={space.id}>
                   <Table.Td>
                     <Anchor
-                      size="sm"
-                      underline="never"
-                      style={{
-                        cursor: "pointer",
-                        color: "var(--mantine-color-text)",
-                      }}
                       className={clsx(classes.spaceLink, rowClasses.link)}
                       component={Link}
+                      size="sm"
+                      style={{
+                        color: "var(--mantine-color-text)",
+                        cursor: "pointer",
+                      }}
                       to={getSpaceUrl(space.slug)}
+                      underline="never"
                     >
                       <Group
                         gap="sm"
-                        wrap="nowrap"
                         onMouseEnter={() => prefetchSpace(space.slug, space.id)}
+                        wrap="nowrap"
                       >
                         <CustomAvatar
-                          name={space.name}
                           avatarUrl={space.logo}
-                          type={AvatarIconType.SPACE_ICON}
                           color="initials"
-                          variant="filled"
+                          name={space.name}
                           size="md"
+                          type={AvatarIconType.SPACE_ICON}
+                          variant="filled"
                         />
-                        <div style={{ minWidth: 0, overflow: "hidden", maxWidth: 350 }}>
-                          <AutoTooltipText fz="sm" fw={500} lineClamp={1}>
+                        <div
+                          style={{
+                            maxWidth: 350,
+                            minWidth: 0,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <AutoTooltipText fw={500} fz="sm" lineClamp={1}>
                             {space.name}
                           </AutoTooltipText>
                           {space.description && (
-                            <Text fz="xs" c="dimmed" lineClamp={2}>
+                            <Text c="dimmed" fz="xs" lineClamp={2}>
                               {space.description}
                             </Text>
                           )}
@@ -174,14 +193,23 @@ export default function AllSpacesList({
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs" justify="flex-end" wrap="nowrap">
-                      <StarButton type="space" spaceId={space.id} name={space.name} size={16} />
-                      <WatchButton spaceId={space.id} watchedIds={watchedIds} size={16} />
+                      <StarButton
+                        name={space.name}
+                        size={16}
+                        spaceId={space.id}
+                        type="space"
+                      />
+                      <WatchButton
+                        size={16}
+                        spaceId={space.id}
+                        watchedIds={watchedIds}
+                      />
                       <Menu position="bottom-end">
                         <Menu.Target>
                           <ActionIcon
-                            variant="subtle"
-                            color="gray"
                             aria-label={t("Space menu")}
+                            color="gray"
+                            variant="subtle"
                           >
                             <IconDots size={16} />
                           </ActionIcon>
@@ -208,8 +236,8 @@ export default function AllSpacesList({
 
       {spaces.length > 0 && (
         <Paginate
-          hasPrevPage={hasPrevPage}
           hasNextPage={hasNextPage}
+          hasPrevPage={hasPrevPage}
           onNext={onNext}
           onPrev={onPrev}
         />
@@ -217,9 +245,9 @@ export default function AllSpacesList({
 
       {selectedSpaceId && (
         <SpaceSettingsModal
-          spaceId={selectedSpaceId}
-          opened={settingsOpened}
           onClose={closeSettings}
+          opened={settingsOpened}
+          spaceId={selectedSpaceId}
         />
       )}
     </Box>

@@ -1,32 +1,32 @@
 .handleGutter {
   position: relative;
-  margin-left: -1.5rem;
   padding-left: 1.5rem;
+  margin-left: -1.5rem;
 }
 
 .controls {
   position: absolute;
-  bottom: calc(100% + 4px);
   right: 0;
+  bottom: calc(100% + 4px);
   z-index: 20;
-  opacity: 0;
   pointer-events: none;
+  opacity: 0;
   transition: opacity 120ms ease;
 }
 
 .controls::after {
-  content: "";
   position: absolute;
   top: 100%;
-  left: 0;
   right: 0;
+  left: 0;
   height: 8px;
+  content: "";
 }
 
 .handleGutter:hover .controls,
 .handleGutter[data-menu-open="true"] .controls {
-  opacity: 1;
   pointer-events: auto;
+  opacity: 1;
 }
 
 @media print {
@@ -37,27 +37,27 @@
 
 @media (max-width: 48em) {
   .handleGutter {
-    margin-left: -1rem;
     padding-left: 1rem;
+    margin-left: -1rem;
   }
 }
 
 .dragPreview {
   display: inline-flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   max-width: 260px;
   padding: 4px 10px;
-  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
   background-color: light-dark(
     var(--mantine-color-white),
     var(--mantine-color-dark-6)
   );
-  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
   border: 1px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border-radius: 6px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 

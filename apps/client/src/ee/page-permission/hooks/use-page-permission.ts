@@ -1,9 +1,9 @@
-import { useSpaceAbility } from "@/features/space/permissions/use-space-ability";
+import { usePageRestrictionInfoQuery } from "@/ee/page-permission/queries/page-permission-query";
 import {
   SpaceCaslAction,
   SpaceCaslSubject,
 } from "@/features/space/permissions/permissions.type";
-import { usePageRestrictionInfoQuery } from "@/ee/page-permission/queries/page-permission-query";
+import { useSpaceAbility } from "@/features/space/permissions/use-space-ability";
 
 export function usePagePermission(pageId: string, spaceRules: any) {
   const spaceAbility = useSpaceAbility(spaceRules);

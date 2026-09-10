@@ -1,8 +1,3 @@
-import React, { useCallback, type JSX } from "react";
-import {
-  EditorMenuProps,
-  ShouldShowProps,
-} from "@/features/editor/components/table/types/types.ts";
 import { isCellSelection } from "@docmost/editor-ext";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import {
@@ -12,11 +7,16 @@ import {
   IconSquareToggle,
   IconTableRow,
 } from "@tabler/icons-react";
+import { BubbleMenu } from "@tiptap/react/menus";
+import React, { type JSX, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  EditorMenuProps,
+  ShouldShowProps,
+} from "@/features/editor/components/table/types/types.ts";
+import classes from "../common/toolbar-menu.module.css";
 import { TableBackgroundColor } from "./table-background-color";
 import { TableTextAlignment } from "./table-text-alignment";
-import { BubbleMenu } from "@tiptap/react/menus";
-import classes from "../common/toolbar-menu.module.css";
 
 export const TableCellMenu = React.memo(
   ({ editor, appendTo }: EditorMenuProps): JSX.Element => {
@@ -54,21 +54,19 @@ export const TableCellMenu = React.memo(
 
     return (
       <BubbleMenu
+        appendTo={() => appendTo?.current}
         editor={editor}
-        pluginKey="table-cell-menu"
-        updateDelay={0}
-        appendTo={() => {
-          return appendTo?.current;
-        }}
-        ref={(element) => {
-          element.style.zIndex = "99";
-        }}
         options={{
           offset: {
             mainAxis: 15,
           },
         }}
+        pluginKey="table-cell-menu"
+        ref={(element) => {
+          element.style.zIndex = "99";
+        }}
         shouldShow={shouldShow}
+        updateDelay={0}
       >
         <div className={classes.toolbar}>
           <TableBackgroundColor editor={editor} />
@@ -76,23 +74,23 @@ export const TableCellMenu = React.memo(
 
           <div className={classes.divider} />
 
-          <Tooltip position="top" label={t("Merge cells")}>
+          <Tooltip label={t("Merge cells")} position="top">
             <ActionIcon
-              onClick={mergeCells}
-              variant="subtle"
-              size="lg"
               aria-label={t("Merge cells")}
+              onClick={mergeCells}
+              size="lg"
+              variant="subtle"
             >
               <IconBoxMargin size={18} />
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip position="top" label={t("Split cell")}>
+          <Tooltip label={t("Split cell")} position="top">
             <ActionIcon
-              onClick={splitCell}
-              variant="subtle"
-              size="lg"
               aria-label={t("Split cell")}
+              onClick={splitCell}
+              size="lg"
+              variant="subtle"
             >
               <IconSquareToggle size={18} />
             </ActionIcon>
@@ -100,23 +98,23 @@ export const TableCellMenu = React.memo(
 
           <div className={classes.divider} />
 
-          <Tooltip position="top" label={t("Delete column")}>
+          <Tooltip label={t("Delete column")} position="top">
             <ActionIcon
-              onClick={deleteColumn}
-              variant="subtle"
-              size="lg"
               aria-label={t("Delete column")}
+              onClick={deleteColumn}
+              size="lg"
+              variant="subtle"
             >
               <IconColumnRemove size={18} />
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip position="top" label={t("Delete row")}>
+          <Tooltip label={t("Delete row")} position="top">
             <ActionIcon
-              onClick={deleteRow}
-              variant="subtle"
-              size="lg"
               aria-label={t("Delete row")}
+              onClick={deleteRow}
+              size="lg"
+              variant="subtle"
             >
               <IconRowRemove size={18} />
             </ActionIcon>
@@ -124,12 +122,12 @@ export const TableCellMenu = React.memo(
 
           <div className={classes.divider} />
 
-          <Tooltip position="top" label={t("Toggle header cell")}>
+          <Tooltip label={t("Toggle header cell")} position="top">
             <ActionIcon
-              onClick={toggleHeaderCell}
-              variant="subtle"
-              size="lg"
               aria-label={t("Toggle header cell")}
+              onClick={toggleHeaderCell}
+              size="lg"
+              variant="subtle"
             >
               <IconTableRow size={18} />
             </ActionIcon>

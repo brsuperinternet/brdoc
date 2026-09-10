@@ -1,9 +1,8 @@
-import { Text, Divider, Title } from "@mantine/core";
-import React from "react";
+import { Divider, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ISpace } from "@/features/space/types/space.types.ts";
 import SpacePublicSharingToggle from "@/ee/security/components/space-public-sharing-toggle.tsx";
 import SpaceViewerCommentsToggle from "@/ee/security/components/space-viewer-comments-toggle.tsx";
+import { ISpace } from "@/features/space/types/space.types.ts";
 
 type SpaceSecuritySettingsProps = {
   space: ISpace;
@@ -16,11 +15,13 @@ export default function SpaceSecuritySettings({
 }: SpaceSecuritySettingsProps) {
   const { t } = useTranslation();
 
-  if (readOnly) return null;
+  if (readOnly) {
+    return null;
+  }
 
   return (
     <div>
-      <Title order={3} my="md" size="h6" fw={600}>
+      <Title fw={600} my="md" order={3} size="h6">
         {t("Security")}
       </Title>
 

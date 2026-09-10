@@ -1,10 +1,12 @@
+import { notifications } from "@mantine/notifications";
 import {
   keepPreviousData,
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   getAuditLogs,
   getAuditRetention,
@@ -12,23 +14,21 @@ import {
 } from "@/ee/audit/services/audit-service";
 import { IAuditLog, IAuditLogParams } from "@/ee/audit/types/audit.types";
 import { IPagination } from "@/lib/types";
-import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
 
 export function useAuditLogsQuery(
-  params?: IAuditLogParams,
+  params?: IAuditLogParams
 ): UseQueryResult<IPagination<IAuditLog>, Error> {
   return useQuery({
-    queryKey: ["audit-logs", params],
-    queryFn: () => getAuditLogs(params),
     placeholderData: keepPreviousData,
+    queryFn: () => getAuditLogs(params),
+    queryKey: ["audit-logs", params],
   });
 }
 
 export function useAuditRetentionQuery() {
   return useQuery({
-    queryKey: ["audit-retention"],
     queryFn: () => getAuditRetention(),
+    queryKey: ["audit-retention"],
   });
 }
 
@@ -39,13 +39,13 @@ export function useUpdateAuditRetentionMutation() {
   return useMutation({
     mutationFn: (data: { auditRetentionDays: number }) =>
       updateAuditRetention(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       notifications.show({ message: t("Audit retention updated") });
       queryClient.invalidateQueries({ queryKey: ["audit-retention"] });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }

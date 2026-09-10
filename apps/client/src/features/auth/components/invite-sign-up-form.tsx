@@ -1,24 +1,22 @@
-import * as React from "react";
-import { z } from "zod/v4";
-
-import { useForm } from "@mantine/form";
 import {
-  Container,
-  Title,
-  TextInput,
-  Button,
-  PasswordInput,
   Box,
+  Button,
+  Container,
+  PasswordInput,
   Stack,
+  TextInput,
+  Title,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useParams, useSearchParams } from "react-router-dom";
-import useAuth from "@/features/auth/hooks/use-auth";
-import classes from "@/features/auth/components/auth.module.css";
-import { useGetInvitationQuery } from "@/features/workspace/queries/workspace-query.ts";
-import { useRedirectIfAuthenticated } from "@/features/auth/hooks/use-redirect-if-authenticated.ts";
 import { useTranslation } from "react-i18next";
+import { useParams, useSearchParams } from "react-router-dom";
+import { z } from "zod/v4";
 import SsoLogin from "@/ee/components/sso-login.tsx";
+import classes from "@/features/auth/components/auth.module.css";
+import useAuth from "@/features/auth/hooks/use-auth";
+import { useRedirectIfAuthenticated } from "@/features/auth/hooks/use-redirect-if-authenticated.ts";
+import { useGetInvitationQuery } from "@/features/workspace/queries/workspace-query.ts";
 import { AuthLayout } from "./auth-layout.tsx";
 
 const formSchema = z.object({
@@ -34,17 +32,17 @@ export function InviteSignUpForm() {
   const [searchParams] = useSearchParams();
 
   const { data: invitation, isError } = useGetInvitationQuery(
-    params?.invitationId,
+    params?.invitationId
   );
   const { invitationSignup, isLoading } = useAuth();
   useRedirectIfAuthenticated();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       name: "",
       password: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   async function onSubmit(data: FormValues) {
@@ -63,61 +61,61 @@ export function InviteSignUpForm() {
   }
 
   if (!invitation) {
-    return <div></div>;
+    return <div />;
   }
 
   return (
     <AuthLayout>
-    <Container size={420} className={classes.container}>
-      <Box p="xl" className={classes.containerBox}>
-        <Title order={2} ta="center" fw={500} mb="md">
-          {t("Join the workspace")}
-        </Title>
+      <Container className={classes.container} size={420}>
+        <Box className={classes.containerBox} p="xl">
+          <Title fw={500} mb="md" order={2} ta="center">
+            {t("Join the workspace")}
+          </Title>
 
-        <SsoLogin />
+          <SsoLogin />
 
-        {!invitation.enforceSso && (
-          <Stack align="stretch" justify="center" gap="xl">
-            <form onSubmit={form.onSubmit(onSubmit)}>
-              <TextInput
-                id="name"
-                type="text"
-                label={t("Name")}
-                placeholder={t("enter your full name")}
-                variant="filled"
-                {...form.getInputProps("name")}
-              />
+          {!invitation.enforceSso && (
+            <Stack align="stretch" gap="xl" justify="center">
+              <form onSubmit={form.onSubmit(onSubmit)}>
+                <TextInput
+                  id="name"
+                  label={t("Name")}
+                  placeholder={t("enter your full name")}
+                  type="text"
+                  variant="filled"
+                  {...form.getInputProps("name")}
+                />
 
-              <TextInput
-                id="email"
-                type="email"
-                label={t("Email")}
-                value={invitation.email}
-                disabled
-                variant="filled"
-                mt="md"
-              />
+                <TextInput
+                  disabled
+                  id="email"
+                  label={t("Email")}
+                  mt="md"
+                  type="email"
+                  value={invitation.email}
+                  variant="filled"
+                />
 
-              <PasswordInput
-                label={t("Password")}
-                placeholder={t("Your password")}
-                variant="filled"
-                mt="md"
-                visibilityToggleButtonProps={{
-                  "aria-label": t("Toggle password visibility"),
-                  "aria-hidden": false,
-                  tabIndex: 0,
-                }}
-                {...form.getInputProps("password")}
-              />
-              <Button type="submit" fullWidth mt="xl" loading={isLoading}>
-                {t("Sign Up")}
-              </Button>
-            </form>
-          </Stack>
-        )}
-      </Box>
-    </Container>
+                <PasswordInput
+                  label={t("Password")}
+                  mt="md"
+                  placeholder={t("Your password")}
+                  variant="filled"
+                  visibilityToggleButtonProps={{
+                    "aria-hidden": false,
+                    "aria-label": t("Toggle password visibility"),
+                    tabIndex: 0,
+                  }}
+                  {...form.getInputProps("password")}
+                />
+                <Button fullWidth loading={isLoading} mt="xl" type="submit">
+                  {t("Sign Up")}
+                </Button>
+              </form>
+            </Stack>
+          )}
+        </Box>
+      </Container>
     </AuthLayout>
   );
 }

@@ -2,19 +2,19 @@ import { IRoleData, SpaceRole } from "@/lib/types.ts";
 
 export const spaceRoleData: IRoleData[] = [
   {
+    description: "Has full access to space settings and pages.",
     label: "Full access",
     value: SpaceRole.ADMIN,
-    description: "Has full access to space settings and pages.",
   },
   {
+    description: "Can create and edit pages in space.",
     label: "Can edit",
     value: SpaceRole.WRITER,
-    description: "Can create and edit pages in space.",
   },
   {
+    description: "Can view pages in space but not edit.",
     label: "Can view",
     value: SpaceRole.READER,
-    description: "Can view pages in space but not edit.",
   },
 ];
 

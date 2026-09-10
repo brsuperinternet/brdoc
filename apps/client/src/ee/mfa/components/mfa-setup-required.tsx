@@ -1,11 +1,10 @@
-import React from "react";
-import { Container, Paper, Title, Text, Alert, Stack } from "@mantine/core";
+import { Alert, Container, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { MfaSetupModal } from "@/ee/mfa";
-import APP_ROUTE, { getPostLoginRedirect } from "@/lib/app-route.ts";
 import { useNavigate } from "react-router-dom";
+import { MfaSetupModal } from "@/ee/mfa";
 import { AuthLayout } from "@/features/auth/components/auth-layout.tsx";
+import { getPostLoginRedirect } from "@/lib/app-route.ts";
 
 export default function MfaSetupRequired() {
   const { t } = useTranslation();
@@ -17,35 +16,35 @@ export default function MfaSetupRequired() {
 
   return (
     <AuthLayout>
-    <Container size="sm" py="xl">
-      <Paper shadow="sm" p="xl" radius="md" withBorder>
-        <Stack>
-          <Title order={2} ta="center">
-            {t("Two-factor authentication required")}
-          </Title>
+      <Container py="xl" size="sm">
+        <Paper p="xl" radius="md" shadow="sm" withBorder>
+          <Stack>
+            <Title order={2} ta="center">
+              {t("Two-factor authentication required")}
+            </Title>
 
-          <Alert icon={<IconAlertCircle size="1rem" />} color="yellow">
-            <Text size="sm">
+            <Alert color="yellow" icon={<IconAlertCircle size="1rem" />}>
+              <Text size="sm">
+                {t(
+                  "Your workspace requires two-factor authentication. Please set it up to continue."
+                )}
+              </Text>
+            </Alert>
+
+            <Text c="dimmed" size="sm" ta="center">
               {t(
-                "Your workspace requires two-factor authentication. Please set it up to continue.",
+                "This adds an extra layer of security to your account by requiring a verification code from your authenticator app."
               )}
             </Text>
-          </Alert>
 
-          <Text c="dimmed" size="sm" ta="center">
-            {t(
-              "This adds an extra layer of security to your account by requiring a verification code from your authenticator app.",
-            )}
-          </Text>
-
-          <MfaSetupModal
-            opened={true}
-            onComplete={handleSetupComplete}
-            isRequired={true}
-          />
-        </Stack>
-      </Paper>
-    </Container>
+            <MfaSetupModal
+              isRequired={true}
+              onComplete={handleSetupComplete}
+              opened={true}
+            />
+          </Stack>
+        </Paper>
+      </Container>
     </AuthLayout>
   );
 }

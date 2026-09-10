@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { ActionIcon, Menu, TextInput } from "@mantine/core";
-import { IconDots, IconTrash, IconEdit } from "@tabler/icons-react";
-import { Link } from "react-router-dom";
+import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AiChat } from "../types/ai-chat.types";
+import { Link } from "react-router-dom";
 import classes from "../styles/chat-sidebar.module.css";
+import type { AiChat } from "../types/ai-chat.types";
 
 type Props = {
   chat: AiChat;
@@ -15,16 +15,18 @@ type Props = {
 
 function formatChatDate(
   isoString: string | Date,
-  locale: string | undefined,
+  locale: string | undefined
 ): string {
   const date = new Date(isoString);
-  if (Number.isNaN(date.getTime())) return "";
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
 
   const now = new Date();
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
-    now.getDate(),
+    now.getDate()
   ).getTime();
   const ts = date.getTime();
   const sameYear = date.getFullYear() === now.getFullYear();
@@ -38,14 +40,14 @@ function formatChatDate(
 
   if (sameYear) {
     return date.toLocaleDateString(locale, {
-      month: "short",
       day: "numeric",
+      month: "short",
     });
   }
 
   return date.toLocaleDateString(locale, {
-    month: "short",
     day: "numeric",
+    month: "short",
     year: "numeric",
   });
 }
@@ -63,7 +65,7 @@ export default function AiChatSidebarItem({
 
   const formattedDate = useMemo(
     () => formatChatDate(chat.updatedAt, i18n.language),
-    [chat.updatedAt, i18n.language],
+    [chat.updatedAt, i18n.language]
   );
 
   const chatTitle = chat.title || t("Untitled chat");
@@ -93,11 +95,8 @@ export default function AiChatSidebarItem({
     return (
       <div className={classes.chatItem} data-active={isActive || undefined}>
         <TextInput
-          ref={inputRef}
-          size="xs"
-          variant="unstyled"
-          placeholder={t("Chat name")}
-          value={renameValue}
+          classNames={{ input: classes.chatItemRenameInput }}
+          onBlur={submitRename}
           onChange={(e) => setRenameValue(e.currentTarget.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -108,9 +107,12 @@ export default function AiChatSidebarItem({
               setRenaming(false);
             }
           }}
-          onBlur={submitRename}
-          classNames={{ input: classes.chatItemRenameInput }}
+          placeholder={t("Chat name")}
+          ref={inputRef}
+          size="xs"
           style={{ flex: 1 }}
+          value={renameValue}
+          variant="unstyled"
         />
       </div>
     );
@@ -118,9 +120,9 @@ export default function AiChatSidebarItem({
 
   return (
     <Link
-      to={`/ai/chat/${chat.id}`}
       className={classes.chatItem}
       data-active={isActive || undefined}
+      to={`/ai/chat/${chat.id}`}
     >
       <span className={classes.chatItemTitle}>{chatTitle}</span>
       <span className={classes.chatItemDate}>{formattedDate}</span>
@@ -128,11 +130,11 @@ export default function AiChatSidebarItem({
         <Menu position="bottom-end" withinPortal>
           <Menu.Target>
             <ActionIcon
-              variant="subtle"
-              size="xs"
+              aria-label={t("Chat menu for {{title}}", { title: chatTitle })}
               color="gray"
               onClick={(e) => e.preventDefault()}
-              aria-label={t("Chat menu for {{title}}", { title: chatTitle })}
+              size="xs"
+              variant="subtle"
             >
               <IconDots size={14} />
             </ActionIcon>
@@ -149,8 +151,8 @@ export default function AiChatSidebarItem({
               {t("Rename")}
             </Menu.Item>
             <Menu.Item
-              leftSection={<IconTrash size={14} />}
               color="red"
+              leftSection={<IconTrash size={14} />}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

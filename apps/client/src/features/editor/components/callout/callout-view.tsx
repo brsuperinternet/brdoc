@@ -1,4 +1,5 @@
-import { NodeViewContent, NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import { CalloutType } from "@docmost/editor-ext";
+import { Alert } from "@mantine/core";
 import {
   IconAlertTriangleFilled,
   IconCircleCheckFilled,
@@ -6,9 +7,8 @@ import {
   IconInfoCircleFilled,
   IconNotes,
 } from "@tabler/icons-react";
-import { Alert } from "@mantine/core";
+import { NodeViewContent, NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import classes from "./callout.module.css";
-import { CalloutType } from "@docmost/editor-ext";
 
 export default function CalloutView(props: NodeViewProps) {
   const { node } = props;
@@ -17,16 +17,16 @@ export default function CalloutView(props: NodeViewProps) {
   return (
     <NodeViewWrapper>
       <Alert
-        variant="light"
-        title=""
+        classNames={{
+          icon: classes.icon,
+          message: classes.message,
+          root: classes.root,
+        }}
         color={getCalloutColor(type)}
         icon={getCalloutIcon(type, icon)}
         p="xs"
-        classNames={{
-          root: classes.root,
-          message: classes.message,
-          icon: classes.icon,
-        }}
+        title=""
+        variant="light"
       >
         <NodeViewContent />
       </Alert>

@@ -1,13 +1,9 @@
-import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
-import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
-import React, { useCallback } from "react";
-import { Node as PMNode } from "@tiptap/pm/model";
 import {
-  EditorMenuProps,
-  ShouldShowProps,
-} from "@/features/editor/components/table/types/types.ts";
+  CalloutType,
+  isEditorReady,
+  isTextSelected,
+} from "@docmost/editor-ext";
 import { ActionIcon, Tooltip } from "@mantine/core";
-import clsx from "clsx";
 import {
   IconAlertTriangleFilled,
   IconCircleCheckFilled,
@@ -16,9 +12,17 @@ import {
   IconMoodSmile,
   IconNotes,
 } from "@tabler/icons-react";
-import { CalloutType, isEditorReady, isTextSelected } from "@docmost/editor-ext";
+import { Node as PMNode } from "@tiptap/pm/model";
+import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
+import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
+import clsx from "clsx";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import EmojiPicker from "@/components/ui/emoji-picker.tsx";
+import {
+  EditorMenuProps,
+  ShouldShowProps,
+} from "@/features/editor/components/table/types/types.ts";
 import classes from "../common/toolbar-menu.module.css";
 
 export function CalloutMenu({ editor }: EditorMenuProps) {
@@ -29,11 +33,13 @@ export function CalloutMenu({ editor }: EditorMenuProps) {
       if (!state) {
         return false;
       }
-      if (isTextSelected(editor)) return false;
+      if (isTextSelected(editor)) {
+        return false;
+      }
 
       return editor.isActive("callout");
     },
-    [editor],
+    [editor]
   );
 
   const editorState = useEditorState({
@@ -45,17 +51,19 @@ export function CalloutMenu({ editor }: EditorMenuProps) {
 
       return {
         isCallout: ctx.editor.isActive("callout"),
+        isDanger: ctx.editor.isActive("callout", { type: "danger" }),
         isInfo: ctx.editor.isActive("callout", { type: "info" }),
         isNote: ctx.editor.isActive("callout", { type: "note" }),
         isSuccess: ctx.editor.isActive("callout", { type: "success" }),
         isWarning: ctx.editor.isActive("callout", { type: "warning" }),
-        isDanger: ctx.editor.isActive("callout", { type: "danger" }),
       };
     },
   });
 
   const getReferencedVirtualElement = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const { selection } = editor.state;
     const predicate = (node: PMNode) => node.type.name === "callout";
     const parent = findParentNode(predicate)(selection);
@@ -84,7 +92,7 @@ export function CalloutMenu({ editor }: EditorMenuProps) {
         .updateCalloutType(calloutType)
         .run();
     },
-    [editor],
+    [editor]
   );
 
   const setCalloutIcon = useCallback(
@@ -96,7 +104,7 @@ export function CalloutMenu({ editor }: EditorMenuProps) {
         .updateCalloutIcon(emojiChar)
         .run();
     },
-    [editor],
+    [editor]
   );
 
   const removeCalloutIcon = useCallback(() => {
@@ -120,98 +128,100 @@ export function CalloutMenu({ editor }: EditorMenuProps) {
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey={`callout-menu`}
-      ref={(element) => {
-        if (element) element.style.zIndex = "99";
-      }}
-      updateDelay={0}
       getReferencedVirtualElement={getReferencedVirtualElement}
       options={{
-        placement: "bottom",
         // offset: 233, //      //         offset: [0, 10],
         flip: false,
+        placement: "bottom",
+      }}
+      pluginKey={"callout-menu"}
+      ref={(element) => {
+        if (element) {
+          element.style.zIndex = "99";
+        }
       }}
       shouldShow={shouldShow}
+      updateDelay={0}
     >
       <div className={classes.toolbar}>
-        <Tooltip position="top" label={t("Info")} withinPortal={false}>
+        <Tooltip label={t("Info")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Info")}
+            className={clsx({ [classes.active]: editorState?.isInfo })}
             onClick={() => setCalloutType("info")}
             size="lg"
-            aria-label={t("Info")}
             variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isInfo })}
           >
             <IconInfoCircleFilled
-              size={18}
               color="var(--mantine-color-blue-5)"
+              size={18}
             />
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip position="top" label={t("Note")} withinPortal={false}>
+        <Tooltip label={t("Note")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Note")}
+            className={clsx({ [classes.active]: editorState?.isNote })}
             onClick={() => setCalloutType("note")}
             size="lg"
-            aria-label={t("Note")}
             variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isNote })}
           >
-            <IconNotes size={18} color="var(--mantine-color-grape-5)" />
+            <IconNotes color="var(--mantine-color-grape-5)" size={18} />
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip position="top" label={t("Success")} withinPortal={false}>
+        <Tooltip label={t("Success")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Success")}
+            className={clsx({ [classes.active]: editorState?.isSuccess })}
             onClick={() => setCalloutType("success")}
             size="lg"
-            aria-label={t("Success")}
             variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isSuccess })}
           >
             <IconCircleCheckFilled
-              size={18}
               color="var(--mantine-color-green-5)"
+              size={18}
             />
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip position="top" label={t("Warning")} withinPortal={false}>
+        <Tooltip label={t("Warning")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Warning")}
+            className={clsx({ [classes.active]: editorState?.isWarning })}
             onClick={() => setCalloutType("warning")}
             size="lg"
-            aria-label={t("Warning")}
             variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isWarning })}
           >
             <IconAlertTriangleFilled
-              size={18}
               color="var(--mantine-color-orange-5)"
+              size={18}
             />
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip position="top" label={t("Danger")} withinPortal={false}>
+        <Tooltip label={t("Danger")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Danger")}
+            className={clsx({ [classes.active]: editorState?.isDanger })}
             onClick={() => setCalloutType("danger")}
             size="lg"
-            aria-label={t("Danger")}
             variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isDanger })}
           >
-            <IconCircleXFilled size={18} color="var(--mantine-color-red-5)" />
+            <IconCircleXFilled color="var(--mantine-color-red-5)" size={18} />
           </ActionIcon>
         </Tooltip>
 
         <EmojiPicker
-          onEmojiSelect={setCalloutIcon}
-          removeEmojiAction={removeCalloutIcon}
-          readOnly={false}
-          icon={currentIcon || <IconMoodSmile size={18} />}
           actionIconProps={{
             size: "lg",
             variant: "subtle",
           }}
+          icon={currentIcon || <IconMoodSmile size={18} />}
+          onEmojiSelect={setCalloutIcon}
+          readOnly={false}
+          removeEmojiAction={removeCalloutIcon}
         />
       </div>
     </BaseBubbleMenu>

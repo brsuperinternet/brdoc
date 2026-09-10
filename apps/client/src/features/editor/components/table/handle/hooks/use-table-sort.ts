@@ -1,29 +1,29 @@
-import { useCallback, useMemo } from "react";
-import type { Editor } from "@tiptap/react";
-import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import {
   convertArrayOfRowsToTableNode,
   convertTableNodeToArrayOfRows,
   isEditorReady,
   transpose,
 } from "@docmost/editor-ext";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Editor } from "@tiptap/react";
+import { useCallback, useMemo } from "react";
 import {
   getCellSortText,
   isCellEmpty,
   isHeaderCell,
-  type SortDirection,
   type SortableItem,
+  type SortDirection,
   sortItems,
   weaveItems,
 } from "../lib/sort-cells";
 
 interface Args {
+  direction: SortDirection;
   editor: Editor;
-  orientation: "col" | "row";
   index: number;
+  orientation: "col" | "row";
   tableNode: ProseMirrorNode;
   tablePos: number;
-  direction: SortDirection;
 }
 
 function tableHasMergedCells(tableNode: ProseMirrorNode): boolean {
@@ -31,7 +31,9 @@ function tableHasMergedCells(tableNode: ProseMirrorNode): boolean {
     const row = tableNode.child(r);
     for (let c = 0; c < row.childCount; c++) {
       const { colspan = 1, rowspan = 1 } = row.child(c).attrs;
-      if (colspan > 1 || rowspan > 1) return true;
+      if (colspan > 1 || rowspan > 1) {
+        return true;
+      }
     }
   }
   return false;
@@ -50,21 +52,29 @@ export function useTableSort({
   direction,
 }: Args) {
   const canSort = useMemo(() => {
-    if (tableHasMergedCells(tableNode)) return false;
+    if (tableHasMergedCells(tableNode)) {
+      return false;
+    }
 
     const rows = convertTableNodeToArrayOfRows(tableNode);
     const axes = orientation === "col" ? rows : transpose(rows);
-    if (axes.length < 2) return false;
+    if (axes.length < 2) {
+      return false;
+    }
 
     return axes.some((cells) => {
-      if (isAllHeader(cells)) return false;
+      if (isAllHeader(cells)) {
+        return false;
+      }
       const sortCell = cells[index];
       return !!sortCell && !isCellEmpty(sortCell);
     });
   }, [tableNode, orientation, index]);
 
   const handleSort = useCallback(() => {
-    if (!canSort || !isEditorReady(editor)) return;
+    if (!(canSort && isEditorReady(editor))) {
+      return;
+    }
 
     const rows = convertTableNodeToArrayOfRows(tableNode);
     const axes = orientation === "col" ? rows : transpose(rows);
@@ -73,13 +83,13 @@ export function useTableSort({
       (cells, originalOrder) => {
         const sortCell = cells[index];
         return {
+          isEmpty: !sortCell || isCellEmpty(sortCell),
+          isHeader: isAllHeader(cells),
+          originalOrder,
           payload: cells,
           text: sortCell ? getCellSortText(sortCell) : "",
-          isHeader: isAllHeader(cells),
-          isEmpty: !sortCell || isCellEmpty(sortCell),
-          originalOrder,
         };
-      },
+      }
     );
 
     const dataItems = items.filter((it) => !it.isHeader);
@@ -94,7 +104,9 @@ export function useTableSort({
     const tr = editor.state.tr;
     tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
 
-    if (tr.docChanged) editor.view.dispatch(tr);
+    if (tr.docChanged) {
+      editor.view.dispatch(tr);
+    }
   }, [editor, tableNode, tablePos, orientation, index, direction, canSort]);
 
   return { canSort, handleSort };

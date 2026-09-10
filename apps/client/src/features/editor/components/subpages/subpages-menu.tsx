@@ -1,20 +1,20 @@
-import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
-import { posToDOMRect, findParentNode } from "@tiptap/react";
-import { Node as PMNode } from "@tiptap/pm/model";
-import React, { useCallback, type JSX } from "react";
+import { isEditorReady } from "@docmost/editor-ext";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { Editor } from "@tiptap/core";
-import { isEditorReady } from "@docmost/editor-ext";
+import { Node as PMNode } from "@tiptap/pm/model";
+import { findParentNode, posToDOMRect } from "@tiptap/react";
+import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
+import React, { type JSX, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 interface SubpagesMenuProps {
   editor: Editor;
 }
 
 interface ShouldShowProps {
-  state: any;
   from?: number;
+  state: any;
   to?: number;
 }
 
@@ -34,7 +34,9 @@ export const SubpagesMenu = React.memo(
     );
 
     const getReferenceClientRect = useCallback(() => {
-      if (!isEditorReady(editor)) return new DOMRect();
+      if (!isEditorReady(editor)) {
+        return new DOMRect();
+      }
       const { selection } = editor.state;
       const predicate = (node: PMNode) => node.type.name === "subpages";
       const parent = findParentNode(predicate)(selection);
@@ -60,20 +62,22 @@ export const SubpagesMenu = React.memo(
     return (
       <BaseBubbleMenu
         editor={editor}
-        pluginKey={`subpages-menu`}
+        pluginKey={"subpages-menu"}
         ref={(element) => {
-          if (element) element.style.zIndex = "99";
+          if (element) {
+            element.style.zIndex = "99";
+          }
         }}
-        updateDelay={0}
         shouldShow={shouldShow}
+        updateDelay={0}
       >
-        <Tooltip position="top" label={t("Delete")}>
+        <Tooltip label={t("Delete")} position="top">
           <ActionIcon
-            onClick={deleteNode}
-            variant="default"
-            size="lg"
-            color="red"
             aria-label={t("Delete")}
+            color="red"
+            onClick={deleteNode}
+            size="lg"
+            variant="default"
           >
             <IconTrash size={18} />
           </ActionIcon>

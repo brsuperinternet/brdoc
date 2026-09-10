@@ -1,5 +1,5 @@
-import { useTranslation } from "react-i18next";
 import { IconPlus } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import classes from "@/ee/base/styles/kanban.module.css";
 
 type KanbanAddCardButtonProps = {
@@ -11,8 +11,6 @@ export function KanbanAddCardButton({ onAddCard }: KanbanAddCardButtonProps) {
   return (
     <div
       className={classes.addCard}
-      role="button"
-      tabIndex={0}
       onClick={onAddCard}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -20,6 +18,8 @@ export function KanbanAddCardButton({ onAddCard }: KanbanAddCardButtonProps) {
           onAddCard();
         }
       }}
+      role="button"
+      tabIndex={0}
     >
       <IconPlus size={16} />
       {t("New row")}

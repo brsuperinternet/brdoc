@@ -1,51 +1,51 @@
 import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 
 export interface IWorkspace {
-  id: string;
-  name: string;
-  description: string;
-  logo: string;
-  hostname: string;
-  defaultSpaceId: string;
-  customDomain: string;
-  enableInvite: boolean;
-  settings: IWorkspaceSettings;
-  status: string;
-  enforceSso: boolean;
-  stripeCustomerId: string;
-  billingEmail: string;
-  trialEndAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  emailDomains: string[];
-  memberCount?: number;
-  plan?: string;
-  enforceMfa?: boolean;
-  aiSearch?: boolean;
-  generativeAi?: boolean;
-  disablePublicSharing?: boolean;
-  allowPublicSpaces?: boolean;
-  publicSpacesDirectory?: boolean;
-  mcpEnabled?: boolean;
   aiChatReadOnly?: boolean;
   aiChatWorkspaceKnowledgeOnly?: boolean;
-  enforceMcpOauth?: boolean;
-  trashRetentionDays?: number;
-  restrictApiToAdmins?: boolean;
+  aiSearch?: boolean;
   allowMemberTemplates?: boolean;
   allowPersonalSpaces?: boolean;
+  allowPublicSpaces?: boolean;
+  billingEmail: string;
+  createdAt: Date;
+  customDomain: string;
   defaultPageEditMode?: string;
+  defaultSpaceId: string;
+  description: string;
+  disablePublicSharing?: boolean;
+  emailDomains: string[];
+  enableInvite: boolean;
+  enforceMcpOauth?: boolean;
+  enforceMfa?: boolean;
+  enforceSso: boolean;
+  generativeAi?: boolean;
+  hostname: string;
+  id: string;
   isScimEnabled?: boolean;
+  logo: string;
+  mcpEnabled?: boolean;
+  memberCount?: number;
+  name: string;
+  plan?: string;
+  publicSpacesDirectory?: boolean;
+  restrictApiToAdmins?: boolean;
+  settings: IWorkspaceSettings;
+  status: string;
+  stripeCustomerId: string;
+  trashRetentionDays?: number;
+  trialEndAt: Date;
+  updatedAt: Date;
 }
 
 export interface IWorkspaceSettings {
   ai?: IWorkspaceAiSettings;
-  sharing?: IWorkspaceSharingSettings;
   api?: IWorkspaceApiSettings;
-  templates?: IWorkspaceTemplateSettings;
-  spaces?: IWorkspaceSpaceSettings;
-  publicSpaces?: IWorkspacePublicSpacesSettings;
   defaultPageEditMode?: string;
+  publicSpaces?: IWorkspacePublicSpacesSettings;
+  sharing?: IWorkspaceSharingSettings;
+  spaces?: IWorkspaceSpaceSettings;
+  templates?: IWorkspaceTemplateSettings;
 }
 
 export interface IWorkspaceApiSettings {
@@ -53,13 +53,13 @@ export interface IWorkspaceApiSettings {
 }
 
 export interface IWorkspaceAiSettings {
-  search?: boolean;
-  generative?: boolean;
-  mcp?: boolean;
-  enforceMcpOauth?: boolean;
   chat?: boolean;
   chatReadOnly?: boolean;
   chatWorkspaceKnowledgeOnly?: boolean;
+  enforceMcpOauth?: boolean;
+  generative?: boolean;
+  mcp?: boolean;
+  search?: boolean;
 }
 
 export interface IWorkspaceSharingSettings {
@@ -75,24 +75,24 @@ export interface IWorkspaceSpaceSettings {
 }
 
 export interface IWorkspacePublicSpacesSettings {
-  enabled?: boolean;
   directory?: boolean;
+  enabled?: boolean;
 }
 
 export interface ICreateInvite {
-  role: string;
   emails: string[];
   groupIds: string[];
+  role: string;
 }
 
 export interface IInvitation {
-  id: string;
-  role: string;
-  email: string;
-  workspaceId: string;
-  invitedById: string;
   createdAt: Date;
+  email: string;
   enforceSso: boolean;
+  id: string;
+  invitedById: string;
+  role: string;
+  workspaceId: string;
 }
 
 export interface IInvitationLink {
@@ -107,12 +107,12 @@ export interface IAcceptInvite {
 }
 
 export interface IPublicWorkspace {
-  id: string;
-  name: string;
-  logo: string;
-  hostname: string;
-  enforceSso: boolean;
   authProviders: IAuthProvider[];
+  enforceSso: boolean;
+  hostname: string;
+  id: string;
+  logo: string;
+  name: string;
 }
 
 export interface IVersion {

@@ -4,9 +4,9 @@
 
 .wrapper {
   position: relative;
-  border-radius: 8px;
-  overflow: visible;
   max-width: 100%;
+  overflow: visible;
+  border-radius: 8px;
 }
 
 .wrapper img {
@@ -21,14 +21,14 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 16px;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 16px;
   cursor: ew-resize;
   opacity: 0;
   transition: opacity 0.2s ease;
-  z-index: 2;
 }
 
 .handle[data-resize-handle="left"] {
@@ -50,15 +50,24 @@
 .handleBar {
   width: 4px;
   height: 48px;
+  background-color: light-dark(
+    var(--mantine-color-blue-4),
+    var(--mantine-color-blue-5)
+  );
   border-radius: 4px;
   transition: background-color 0.15s ease;
-  background-color: light-dark(var(--mantine-color-blue-4), var(--mantine-color-blue-5));
 }
 
 .handle:hover .handleBar {
-  background-color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
+  background-color: light-dark(
+    var(--mantine-color-blue-6),
+    var(--mantine-color-blue-4)
+  );
 }
 
 .resizing .handleBar {
-  background-color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
+  background-color: light-dark(
+    var(--mantine-color-blue-6),
+    var(--mantine-color-blue-4)
+  );
 }

@@ -1,12 +1,12 @@
 .breadcrumbs {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   overflow: hidden;
-  flex-wrap: nowrap;
 
   a {
-    color: var(--mantine-color-default-color);
     line-height: inherit;
+    color: var(--mantine-color-default-color);
   }
 
   .mantine-Breadcrumbs-breadcrumb {
@@ -16,10 +16,10 @@
 }
 
 .truncatedText {
-  white-space: nowrap;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  white-space: nowrap;
 }
 
 .breadcrumbDiv {

@@ -1,65 +1,65 @@
 import { ISpace } from "@/features/space/types/space.types.ts";
 
 export interface IPage {
-  id: string;
-  slugId: string;
-  title: string;
-  content: string;
-  icon: string;
-  coverPhoto: string;
-  parentPageId: string;
-  creatorId: string;
-  spaceId: string;
-  workspaceId: string;
-  isLocked: boolean;
-  isBase: boolean;
-  lastUpdatedById: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
-  position: string;
-  hasChildren: boolean;
   canEdit?: boolean;
-  creator: ICreator;
-  lastUpdatedBy: ILastUpdatedBy;
-  deletedBy: IDeletedBy;
+  content: string;
   contributors?: IContributor[];
-  space: Partial<ISpace>;
+  coverPhoto: string;
+  createdAt: Date;
+  creator: ICreator;
+  creatorId: string;
+  deletedAt: Date;
+  deletedBy: IDeletedBy;
+  hasChildren: boolean;
+  icon: string;
+  id: string;
+  isBase: boolean;
+  isLocked: boolean;
+  lastUpdatedBy: ILastUpdatedBy;
+  lastUpdatedById: string;
+  parentPageId: string;
   permissions?: {
     canEdit: boolean;
     hasRestriction: boolean;
   };
+  position: string;
+  slugId: string;
+  space: Partial<ISpace>;
+  spaceId: string;
+  title: string;
+  updatedAt: Date;
+  workspaceId: string;
 }
 
 export interface IContributor {
+  avatarUrl: string;
   id: string;
   name: string;
-  avatarUrl: string;
 }
 
 interface ICreator {
+  avatarUrl: string;
   id: string;
   name: string;
-  avatarUrl: string;
 }
 interface ILastUpdatedBy {
+  avatarUrl: string;
   id: string;
   name: string;
-  avatarUrl: string;
 }
 
 interface IDeletedBy {
+  avatarUrl: string;
   id: string;
   name: string;
-  avatarUrl: string;
 }
 
 export interface IMovePage {
-  pageId: string;
-  position?: string;
   after?: string;
   before?: string;
+  pageId: string;
   parentPageId?: string;
+  position?: string;
 }
 
 export interface IMovePageToSpace {
@@ -73,27 +73,27 @@ export interface ICopyPageToSpace {
 }
 
 export interface SidebarPagesParams {
-  spaceId?: string;
-  pageId?: string;
   cursor?: string;
   limit?: number;
+  pageId?: string;
+  spaceId?: string;
 }
 
 export interface IPageInput {
-  pageId: string;
-  title: string;
-  parentPageId: string;
-  icon: string;
   coverPhoto: string;
-  position: string;
+  icon: string;
   isLocked: boolean;
+  pageId: string;
+  parentPageId: string;
+  position: string;
+  title: string;
 }
 
 export interface IExportPageParams {
-  pageId: string;
   format: ExportFormat;
-  includeChildren?: boolean;
   includeAttachments?: boolean;
+  includeChildren?: boolean;
+  pageId: string;
 }
 
 export enum ExportFormat {

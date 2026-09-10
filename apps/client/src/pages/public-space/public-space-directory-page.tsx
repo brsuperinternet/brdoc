@@ -1,21 +1,21 @@
 import "@fontsource-variable/inter";
 import "@/styles/public-typography.css";
-import { useMemo, useState } from "react";
 import { Skeleton } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import clsx from "clsx";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { IconSearch } from "@tabler/icons-react";
-import { usePublicSpaceDirectoryQuery } from "@/features/public-space/queries/public-space-query.ts";
-import { useAuthenticatedUser } from "@/features/public-space/hooks/use-authenticated-user.ts";
-import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
-import { getAvatarUrl } from "@/lib/config.ts";
-import { Error404 } from "@/components/ui/error-404.tsx";
+import clsx from "clsx";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { Error404 } from "@/components/ui/error-404.tsx";
 import { MAIN_CONTENT_ID, SkipToMain } from "@/components/ui/skip-to-main.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
+import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
 import styles from "@/features/public-space/components/docs/docs-hub.module.css";
+import { useAuthenticatedUser } from "@/features/public-space/hooks/use-authenticated-user.ts";
+import { usePublicSpaceDirectoryQuery } from "@/features/public-space/queries/public-space-query.ts";
+import { getAvatarUrl } from "@/lib/config.ts";
 
 const TILE_COLORS = [
   "#1f9d55",
@@ -56,11 +56,13 @@ export default function PublicSpaceDirectoryPage() {
       initials: getInitials(space.name),
     }));
     const needle = query.trim().toLowerCase();
-    if (!needle) return all;
+    if (!needle) {
+      return all;
+    }
     return all.filter(
       (space) =>
         space.name.toLowerCase().includes(needle) ||
-        space.description?.toLowerCase().includes(needle),
+        space.description?.toLowerCase().includes(needle)
     );
   }, [data?.spaces, query]);
 
@@ -83,8 +85,8 @@ export default function PublicSpaceDirectoryPage() {
 
       <div className={styles.topBar}>
         <div className={clsx(styles.container, styles.topBarInner)}>
-          <Link to="/docs" className={styles.brand}>
-            <span className={styles.brandTile} aria-hidden>
+          <Link className={styles.brand} to="/docs">
+            <span aria-hidden className={styles.brandTile}>
               {title.charAt(0).toUpperCase()}
             </span>
             <span>{title}</span>
@@ -92,11 +94,11 @@ export default function PublicSpaceDirectoryPage() {
 
           <div className={styles.topActions}>
             {currentUser?.user ? (
-              <Link to="/home" className={styles.signIn}>
+              <Link className={styles.signIn} to="/home">
                 {t("Open app")}
               </Link>
             ) : (
-              <Link to="/login" className={styles.signIn}>
+              <Link className={styles.signIn} to="/login">
                 {t("Sign in")}
               </Link>
             )}
@@ -113,35 +115,35 @@ export default function PublicSpaceDirectoryPage() {
             {isMobile
               ? t("Guides, references and answers across all our spaces.")
               : t(
-                  "Guides, references and answers across all our published spaces.",
+                  "Guides, references and answers across all our published spaces."
                 )}
           </p>
 
           <form
             className={styles.search}
-            role="search"
             onSubmit={(event) => event.preventDefault()}
+            role="search"
           >
             <input
-              type="search"
+              aria-label={searchLabel}
               className={styles.searchInput}
-              value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={searchLabel}
-              aria-label={searchLabel}
+              type="search"
+              value={query}
             />
             <button
-              type="submit"
-              className={styles.searchButton}
               aria-label={t("Search")}
+              className={styles.searchButton}
+              type="submit"
             >
-              <IconSearch size={isMobile ? 16 : 18} stroke={2.4} aria-hidden />
+              <IconSearch aria-hidden size={isMobile ? 16 : 18} stroke={2.4} />
             </button>
           </form>
         </div>
       </header>
 
-      <main id={MAIN_CONTENT_ID} tabIndex={-1} className={styles.main}>
+      <main className={styles.main} id={MAIN_CONTENT_ID} tabIndex={-1}>
         <div className={clsx(styles.container, styles.mainInner)}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>{t("Spaces")}</h2>
@@ -155,7 +157,7 @@ export default function PublicSpaceDirectoryPage() {
           </div>
 
           {isLoading && (
-            <div className={styles.grid} aria-hidden>
+            <div aria-hidden className={styles.grid}>
               <Skeleton height={220} radius={14} />
               <Skeleton height={220} radius={14} />
               <Skeleton height={220} radius={14} />
@@ -168,9 +170,7 @@ export default function PublicSpaceDirectoryPage() {
           )}
 
           {!isLoading && total > 0 && spaces.length === 0 && (
-            <p className={styles.empty}>
-              {t("No spaces match your search.")}
-            </p>
+            <p className={styles.empty}>{t("No spaces match your search.")}</p>
           )}
 
           {spaces.length > 0 && (
@@ -178,22 +178,22 @@ export default function PublicSpaceDirectoryPage() {
               {spaces.map((space) => {
                 const logoUrl = getAvatarUrl(
                   space.logo,
-                  AvatarIconType.SPACE_ICON,
+                  AvatarIconType.SPACE_ICON
                 );
                 return (
                   <Link
+                    className={styles.card}
                     key={space.slug}
                     to={buildPublicSpaceUrl({ spaceSlug: space.slug })}
-                    className={styles.card}
                   >
                     <span className={styles.cardHeader}>
                       <span
+                        aria-hidden
                         className={styles.cardTile}
                         style={{ backgroundColor: space.color }}
-                        aria-hidden
                       >
                         {logoUrl ? (
-                          <img src={logoUrl} alt="" />
+                          <img alt="" src={logoUrl} />
                         ) : (
                           space.initials
                         )}
@@ -221,8 +221,8 @@ export default function PublicSpaceDirectoryPage() {
               <a
                 className={styles.footerBranding}
                 href="https://docmost.com?ref=public-space"
-                target="_blank"
                 rel="noreferrer"
+                target="_blank"
               >
                 Docmost
               </a>

@@ -1,9 +1,9 @@
-import api from "@/lib/api-client";
 import { IAuditLog, IAuditLogParams } from "@/ee/audit/types/audit.types";
+import api from "@/lib/api-client";
 import { IPagination } from "@/lib/types";
 
 export async function getAuditLogs(
-  params?: IAuditLogParams,
+  params?: IAuditLogParams
 ): Promise<IPagination<IAuditLog>> {
   const req = await api.post("/audit", { ...params });
   return req.data;

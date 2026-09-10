@@ -1,4 +1,3 @@
-import { type RefObject, useEffect, useState } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import {
   draggable,
@@ -6,9 +5,10 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import {
   attachClosestEdge,
-  extractClosestEdge,
   type Edge,
+  extractClosestEdge,
 } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import { type RefObject, useEffect, useState } from "react";
 import { KANBAN_COLUMN_DRAG_TYPE } from "@/ee/base/types/base.types";
 
 export function useKanbanColumnDnd({
@@ -28,34 +28,36 @@ export function useKanbanColumnDnd({
   useEffect(() => {
     const headerEl = headerRef.current;
     const handleEl = handleRef.current;
-    if (!headerEl || !handleEl) return;
+    if (!(headerEl && handleEl)) {
+      return;
+    }
     return combine(
       draggable({
-        element: headerEl,
         dragHandle: handleEl,
+        element: headerEl,
         getInitialData: () => ({
-          type: KANBAN_COLUMN_DRAG_TYPE,
           columnKey,
           pageId,
+          type: KANBAN_COLUMN_DRAG_TYPE,
         }),
         onDragStart: () => setIsDragging(true),
         onDrop: () => setIsDragging(false),
       }),
       dropTargetForElements({
-        element: headerEl,
         canDrop: ({ source }) =>
           source.data.type === KANBAN_COLUMN_DRAG_TYPE &&
           source.data.pageId === pageId &&
           source.data.columnKey !== columnKey,
+        element: headerEl,
         getData: ({ input, element }) =>
           attachClosestEdge(
             { columnKey },
-            { input, element, allowedEdges: ["left", "right"] },
+            { allowedEdges: ["left", "right"], element, input }
           ),
         onDrag: ({ self }) => setClosestEdge(extractClosestEdge(self.data)),
         onDragLeave: () => setClosestEdge(null),
         onDrop: () => setClosestEdge(null),
-      }),
+      })
     );
   }, [headerRef, handleRef, columnKey, pageId]);
 

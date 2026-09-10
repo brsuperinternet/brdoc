@@ -1,35 +1,35 @@
-import React, { useState, useRef, useCallback, memo, useMemo } from "react";
-import { useParams } from "react-router-dom";
 import {
   ActionIcon,
+  Badge,
   Center,
   Divider,
   Group,
   Paper,
+  ScrollArea,
   Stack,
   Tabs,
-  Badge,
   Text,
-  ScrollArea,
 } from "@mantine/core";
+import { useFocusWithin } from "@mantine/hooks";
+import { IconArrowUp, IconMessageOff } from "@tabler/icons-react";
+import { useAtom } from "jotai";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import CommentActions from "@/features/comment/components/comment-actions";
+import CommentEditor from "@/features/comment/components/comment-editor";
 import CommentListItem from "@/features/comment/components/comment-list-item";
 import {
   useCommentsQuery,
   useCreateCommentMutation,
 } from "@/features/comment/queries/comment-query";
-import CommentEditor from "@/features/comment/components/comment-editor";
-import CommentActions from "@/features/comment/components/comment-actions";
-import { useFocusWithin } from "@mantine/hooks";
 import { IComment } from "@/features/comment/types/comment.types.ts";
 import { usePageQuery } from "@/features/page/queries/page-query.ts";
-import { IPagination } from "@/lib/types.ts";
-import { extractPageSlugId } from "@/lib";
-import { useTranslation } from "react-i18next";
 import { useGetSpaceBySlugQuery } from "@/features/space/queries/space-query.ts";
-import { IconArrowUp, IconMessageOff } from "@tabler/icons-react";
-import { useAtom } from "jotai";
 import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import { extractPageSlugId } from "@/lib";
+import { IPagination } from "@/lib/types.ts";
 
 function CommentListWithTabs() {
   const { t } = useTranslation();
@@ -46,7 +46,7 @@ function CommentListWithTabs() {
 
   const canComment =
     (page?.permissions?.canEdit ?? false) ||
-    (space?.settings?.comments?.allowViewerComments === true);
+    space?.settings?.comments?.allowViewerComments === true;
 
   // Separate active and resolved comments
   const { activeComments, resolvedComments } = useMemo(() => {
@@ -55,14 +55,14 @@ function CommentListWithTabs() {
     }
 
     const parentComments = comments.items.filter(
-      (comment: IComment) => comment.parentCommentId === null,
+      (comment: IComment) => comment.parentCommentId === null
     );
 
     const active = parentComments.filter(
-      (comment: IComment) => !comment.resolvedAt,
+      (comment: IComment) => !comment.resolvedAt
     );
     const resolved = parentComments.filter(
-      (comment: IComment) => comment.resolvedAt,
+      (comment: IComment) => comment.resolvedAt
     );
 
     return { activeComments: active, resolvedComments: resolved };
@@ -75,8 +75,8 @@ function CommentListWithTabs() {
       try {
         setIsPageCommentLoading(true);
         const createdComment = await createCommentMutation.mutateAsync({
-          pageId: page?.id,
           content: JSON.stringify(content),
+          pageId: page?.id,
         });
 
         setTimeout(() => {
@@ -93,7 +93,7 @@ function CommentListWithTabs() {
         setIsPageCommentLoading(false);
       }
     },
-    [createCommentMutation, page?.id],
+    [createCommentMutation, page?.id]
   );
 
   const handleAddReply = useCallback(
@@ -101,9 +101,9 @@ function CommentListWithTabs() {
       try {
         setIsLoading(true);
         const commentData = {
+          content: JSON.stringify(content),
           pageId: page?.id,
           parentCommentId: commentId,
-          content: JSON.stringify(content),
         };
 
         await createCommentMutation.mutateAsync(commentData);
@@ -113,32 +113,32 @@ function CommentListWithTabs() {
         setIsLoading(false);
       }
     },
-    [createCommentMutation, page?.id],
+    [createCommentMutation, page?.id]
   );
 
   const renderComments = useCallback(
     (comment: IComment) => (
       <Paper
-        shadow="sm"
-        radius="md"
-        p="sm"
-        mb="sm"
-        withBorder
-        key={comment.id}
         data-comment-id={comment.id}
+        key={comment.id}
+        mb="sm"
+        p="sm"
+        radius="md"
+        shadow="sm"
+        withBorder
       >
         <div>
           <CommentListItem
+            canComment={canComment}
             comment={comment}
             pageId={page?.id}
-            canComment={canComment}
             userSpaceRole={space?.membership?.role}
           />
           <MemoizedChildComments
-            comments={comments}
-            parentId={comment.id}
-            pageId={page?.id}
             canComment={canComment}
+            comments={comments}
+            pageId={page?.id}
+            parentId={comment.id}
             userSpaceRole={space?.membership?.role}
           />
         </div>
@@ -148,14 +148,14 @@ function CommentListWithTabs() {
             <Divider my={4} />
             <CommentEditorWithActions
               commentId={comment.id}
-              onSave={handleAddReply}
               isLoading={isLoading}
+              onSave={handleAddReply}
             />
           </>
         )}
       </Paper>
     ),
-    [comments, handleAddReply, isLoading, space?.membership?.role, canComment],
+    [comments, handleAddReply, isLoading, space?.membership?.role, canComment]
   );
 
   if (isCommentsLoading) {
@@ -170,69 +170,69 @@ function CommentListWithTabs() {
 
   const pageCommentInput = canComment ? (
     <PageCommentInput
-      onSave={handleAddPageComment}
       isLoading={isPageCommentLoading}
+      onSave={handleAddPageComment}
     />
   ) : null;
 
   return (
     <div
       style={{
-        flex: 1,
-        minHeight: 0,
         display: "flex",
+        flex: 1,
         flexDirection: "column",
+        minHeight: 0,
       }}
     >
       <Tabs
         defaultValue="open"
-        variant="default"
         style={{
-          flex: "1 1 auto",
           display: "flex",
+          flex: "1 1 auto",
           flexDirection: "column",
           overflow: "hidden",
         }}
+        variant="default"
       >
         <Tabs.List justify="center">
           <Tabs.Tab
-            value="open"
             leftSection={
-              <Badge size="sm" variant="light" color="blue">
+              <Badge color="blue" size="sm" variant="light">
                 {activeComments.length}
               </Badge>
             }
+            value="open"
           >
             {t("Open")}
           </Tabs.Tab>
           <Tabs.Tab
-            value="resolved"
             leftSection={
-              <Badge size="sm" variant="light" color="green">
+              <Badge color="green" size="sm" variant="light">
                 {resolvedComments.length}
               </Badge>
             }
+            value="resolved"
           >
             {t("Resolved")}
           </Tabs.Tab>
         </Tabs.List>
 
         <ScrollArea
-          style={{ flex: "1 1 auto" }}
           scrollbarSize={5}
+          style={{ flex: "1 1 auto" }}
           type="scroll"
         >
           <div style={{ paddingBottom: "8px" }}>
-            <Tabs.Panel value="open" pt="xs">
+            <Tabs.Panel pt="xs" value="open">
               {activeComments.length === 0 ? (
                 <Center py="xl">
                   <Stack align="center" gap="xs">
                     <IconMessageOff
+                      color="var(--mantine-color-dimmed)"
                       size={32}
                       stroke={1.5}
-                      color="var(--mantine-color-dimmed)"
                     />
-                    <Text size="sm" c="dimmed">
+                    <Text c="dimmed" size="sm">
                       {t("No open comments.")}
                     </Text>
                   </Stack>
@@ -242,16 +242,16 @@ function CommentListWithTabs() {
               )}
             </Tabs.Panel>
 
-            <Tabs.Panel value="resolved" pt="xs">
+            <Tabs.Panel pt="xs" value="resolved">
               {resolvedComments.length === 0 ? (
                 <Center py="xl">
                   <Stack align="center" gap="xs">
                     <IconMessageOff
+                      color="var(--mantine-color-dimmed)"
                       size={32}
                       stroke={1.5}
-                      color="var(--mantine-color-dimmed)"
                     />
-                    <Text size="sm" c="dimmed">
+                    <Text c="dimmed" size="sm">
                       {t("No resolved comments.")}
                     </Text>
                   </Stack>
@@ -269,10 +269,10 @@ function CommentListWithTabs() {
 }
 
 interface ChildCommentsProps {
-  comments: IPagination<IComment>;
-  parentId: string;
-  pageId: string;
   canComment: boolean;
+  comments: IPagination<IComment>;
+  pageId: string;
+  parentId: string;
   userSpaceRole?: string;
 }
 const ChildComments = ({
@@ -285,9 +285,9 @@ const ChildComments = ({
   const getChildComments = useCallback(
     (parentId: string) =>
       comments.items.filter(
-        (comment: IComment) => comment.parentCommentId === parentId,
+        (comment: IComment) => comment.parentCommentId === parentId
       ),
-    [comments.items],
+    [comments.items]
   );
 
   return (
@@ -295,16 +295,16 @@ const ChildComments = ({
       {getChildComments(parentId).map((childComment) => (
         <div key={childComment.id}>
           <CommentListItem
+            canComment={canComment}
             comment={childComment}
             pageId={pageId}
-            canComment={canComment}
             userSpaceRole={userSpaceRole}
           />
           <MemoizedChildComments
-            comments={comments}
-            parentId={childComment.id}
-            pageId={pageId}
             canComment={canComment}
+            comments={comments}
+            pageId={pageId}
+            parentId={childComment.id}
             userSpaceRole={userSpaceRole}
           />
         </div>
@@ -319,7 +319,7 @@ const CommentEditorWithActions = ({
   commentId,
   onSave,
   isLoading,
-  placeholder = undefined,
+  placeholder,
 }) => {
   const [content, setContent] = useState("");
   const { ref, focused } = useFocusWithin();
@@ -334,13 +334,13 @@ const CommentEditorWithActions = ({
   return (
     <div ref={ref}>
       <CommentEditor
-        ref={commentEditorRef}
-        onUpdate={setContent}
-        onSave={handleSave}
         editable={true}
+        onSave={handleSave}
+        onUpdate={setContent}
         placeholder={placeholder}
+        ref={commentEditorRef}
       />
-      {focused && <CommentActions onSave={handleSave} isLoading={isLoading} />}
+      {focused && <CommentActions isLoading={isLoading} onSave={handleSave} />}
     </div>
   );
 };
@@ -362,41 +362,41 @@ const PageCommentInput = ({ onSave, isLoading }) => {
     <div
       ref={ref}
       style={{
-        flex: "0 0 auto",
         borderTop: "1px solid var(--mantine-color-default-border)",
-        paddingTop: "var(--mantine-spacing-sm)",
+        flex: "0 0 auto",
         paddingBottom: 25,
+        paddingTop: "var(--mantine-spacing-sm)",
         position: "relative",
       }}
     >
-      <Group wrap="nowrap" align="flex-start" gap="xs">
+      <Group align="flex-start" gap="xs" wrap="nowrap">
         <CustomAvatar
-          size="sm"
           avatarUrl={currentUser?.user?.avatarUrl}
           name={currentUser?.user?.name}
+          size="sm"
           style={{ flexShrink: 0, marginTop: 10 }}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <CommentEditor
-            ref={commentEditorRef}
-            onUpdate={setContent}
-            onSave={handleSave}
             editable={true}
+            onSave={handleSave}
+            onUpdate={setContent}
             placeholder={t("Add a comment...")}
+            ref={commentEditorRef}
             surface="muted"
           />
         </div>
       </Group>
       {focused && (
         <ActionIcon
-          variant="filled"
-          radius="xl"
-          size="sm"
           aria-label={t("Send comment")}
+          loading={isLoading}
           onClick={handleSave}
           onMouseDown={(e) => e.preventDefault()}
-          loading={isLoading}
-          style={{ position: "absolute", right: 8, bottom: 30 }}
+          radius="xl"
+          size="sm"
+          style={{ bottom: 30, position: "absolute", right: 8 }}
+          variant="filled"
         >
           <IconArrowUp size={16} />
         </ActionIcon>

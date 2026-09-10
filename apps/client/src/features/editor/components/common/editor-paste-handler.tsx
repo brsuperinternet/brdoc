@@ -1,14 +1,14 @@
-import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
-import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action.tsx";
-import { uploadAttachmentAction } from "../attachment/upload-attachment-action";
-import { uploadPdfAction } from "../pdf/upload-pdf-action";
-import { createMentionAction } from "@/features/editor/components/link/internal-link-paste.ts";
-import { INTERNAL_LINK_REGEX } from "@/lib/constants.ts";
 import { Editor } from "@tiptap/core";
+import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
+import { createMentionAction } from "@/features/editor/components/link/internal-link-paste.ts";
+import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action.tsx";
 import {
   getAttachmentInfo,
   uploadFile,
 } from "@/features/page/services/page-service.ts";
+import { INTERNAL_LINK_REGEX } from "@/lib/constants.ts";
+import { uploadAttachmentAction } from "../attachment/upload-attachment-action";
+import { uploadPdfAction } from "../pdf/upload-pdf-action";
 
 const ATTACHMENT_NODE_TYPES = [
   "image",
@@ -26,7 +26,7 @@ export const handlePaste = (
   editor: Editor,
   event: ClipboardEvent,
   pageId: string,
-  creatorId?: string,
+  creatorId?: string
 ) => {
   const clipboardData = event.clipboardData.getData("text/plain");
 
@@ -52,7 +52,7 @@ export const handlePaste = (
       editor.view,
       pos,
       creatorId,
-      anchorId,
+      anchorId
     );
     return true;
   }
@@ -85,10 +85,12 @@ export const handlePaste = (
 async function reuploadPastedAttachments(
   editor: Editor,
   pageId: string,
-  pasteFrom: number,
+  pasteFrom: number
 ) {
   const pasteEnd = editor.state.selection.from;
-  if (pasteEnd <= pasteFrom) return;
+  if (pasteEnd <= pasteFrom) {
+    return;
+  }
 
   type PastedNode = {
     pos: number;
@@ -103,30 +105,37 @@ async function reuploadPastedAttachments(
   const seenAttachmentIds = new Set<string>();
 
   editor.state.doc.nodesBetween(pasteFrom, pasteEnd, (node, pos) => {
-    if (!ATTACHMENT_NODE_TYPES.includes(node.type.name)) return;
+    if (!ATTACHMENT_NODE_TYPES.includes(node.type.name)) {
+      return;
+    }
     const attachmentId = node.attrs.attachmentId;
-    if (!attachmentId) return;
+    if (!attachmentId) {
+      return;
+    }
 
     const src = node.attrs.src || node.attrs.url || "";
     const match = ATTACHMENT_URL_RE.exec(src);
-    if (!match) return;
+    if (!match) {
+      return;
+    }
 
     const cleanSrc = src.split("?")[0];
-    const fileName =
-      node.attrs.name || cleanSrc.split("/").pop() || "file";
+    const fileName = node.attrs.name || cleanSrc.split("/").pop() || "file";
 
     pastedNodes.push({
-      pos,
       attachmentId,
+      fileName,
       nodeTypeName: node.type.name,
+      pos,
       src: node.attrs.src,
       url: node.attrs.url,
-      fileName,
     });
     seenAttachmentIds.add(attachmentId);
   });
 
-  if (pastedNodes.length === 0) return;
+  if (pastedNodes.length === 0) {
+    return;
+  }
 
   const attachmentPageMap = new Map<string, string | null>();
   await Promise.all(
@@ -137,7 +146,7 @@ async function reuploadPastedAttachments(
       } catch {
         attachmentPageMap.set(id, null);
       }
-    }),
+    })
   );
 
   const nodesToReupload = pastedNodes.filter((n) => {
@@ -145,7 +154,9 @@ async function reuploadPastedAttachments(
     return ownerPageId !== null && ownerPageId !== pageId;
   });
 
-  if (nodesToReupload.length === 0) return;
+  if (nodesToReupload.length === 0) {
+    return;
+  }
 
   const uniqueNodes = new Map<string, (typeof nodesToReupload)[0]>();
   for (const node of nodesToReupload) {
@@ -162,67 +173,81 @@ async function reuploadPastedAttachments(
   await Promise.all(
     [...uniqueNodes.values()].map(async (node) => {
       const fileUrl = node.src || node.url;
-      if (!fileUrl) return;
+      if (!fileUrl) {
+        return;
+      }
 
       try {
         const response = await fetch(fileUrl, { credentials: "include" });
-        if (!response.ok) return;
+        if (!response.ok) {
+          return;
+        }
         const blob = await response.blob();
         const file = new File([blob], node.fileName, { type: blob.type });
         const newAttachment = await uploadFile(file, pageId);
         reuploadResults.set(node.attachmentId, {
-          id: newAttachment.id,
           fileName: newAttachment.fileName,
           fileSize: newAttachment.fileSize,
+          id: newAttachment.id,
           mimeType: newAttachment.mimeType,
         });
       } catch {
         // keep original reference on failure
       }
-    }),
+    })
   );
 
-  if (reuploadResults.size === 0) return;
-  if (editor.isDestroyed) return;
+  if (reuploadResults.size === 0) {
+    return;
+  }
+  if (editor.isDestroyed) {
+    return;
+  }
 
-  editor.chain().command(({ tr }) => {
-    const sorted = [...nodesToReupload].sort((a, b) => b.pos - a.pos);
+  editor
+    .chain()
+    .command(({ tr }) => {
+      const sorted = [...nodesToReupload].sort((a, b) => b.pos - a.pos);
 
-    for (const pastedNode of sorted) {
-      const result = reuploadResults.get(pastedNode.attachmentId);
-      if (!result) continue;
+      for (const pastedNode of sorted) {
+        const result = reuploadResults.get(pastedNode.attachmentId);
+        if (!result) {
+          continue;
+        }
 
-      const node = tr.doc.nodeAt(pastedNode.pos);
-      if (!node || node.attrs.attachmentId !== pastedNode.attachmentId)
-        continue;
+        const node = tr.doc.nodeAt(pastedNode.pos);
+        if (!node || node.attrs.attachmentId !== pastedNode.attachmentId) {
+          continue;
+        }
 
-      const newAttrs = { ...node.attrs };
-      newAttrs.attachmentId = result.id;
+        const newAttrs = { ...node.attrs };
+        newAttrs.attachmentId = result.id;
 
-      if (newAttrs.src) {
-        newAttrs.src = `/api/files/${result.id}/${result.fileName}`;
+        if (newAttrs.src) {
+          newAttrs.src = `/api/files/${result.id}/${result.fileName}`;
+        }
+        if (newAttrs.url) {
+          newAttrs.url = `/api/files/${result.id}/${result.fileName}`;
+        }
+        if (pastedNode.nodeTypeName === "attachment") {
+          newAttrs.name = result.fileName;
+          newAttrs.mime = result.mimeType;
+          newAttrs.size = result.fileSize;
+        }
+
+        tr.setNodeMarkup(pastedNode.pos, undefined, newAttrs);
       }
-      if (newAttrs.url) {
-        newAttrs.url = `/api/files/${result.id}/${result.fileName}`;
-      }
-      if (pastedNode.nodeTypeName === "attachment") {
-        newAttrs.name = result.fileName;
-        newAttrs.mime = result.mimeType;
-        newAttrs.size = result.fileSize;
-      }
 
-      tr.setNodeMarkup(pastedNode.pos, undefined, newAttrs);
-    }
-
-    return true;
-  }).run();
+      return true;
+    })
+    .run();
 }
 
 export const handleFileDrop = (
   editor: Editor,
   event: DragEvent,
   moved: boolean,
-  pageId: string,
+  pageId: string
 ) => {
   if (!moved && event.dataTransfer?.files.length) {
     event.preventDefault();

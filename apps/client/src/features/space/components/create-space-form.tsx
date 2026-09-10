@@ -1,15 +1,24 @@
-import { Group, Box, Button, TextInput, Stack, Textarea, Text } from "@mantine/core";
-import React, { useEffect } from "react";
+import {
+  Box,
+  Button,
+  Group,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { z } from "zod/v4";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { z } from "zod/v4";
 import { useCreateSpaceMutation } from "@/features/space/queries/space-query.ts";
 import { computeSpaceSlug } from "@/lib";
 import { getSpaceUrl } from "@/lib/config.ts";
-import { useTranslation } from "react-i18next";
 
 const formSchema = z.object({
+  description: z.string().max(500),
   name: z.string().trim().min(2).max(100),
   slug: z
     .string()
@@ -18,9 +27,8 @@ const formSchema = z.object({
     .max(100)
     .regex(
       /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/,
-      "Space slug must start with a letter or number and may contain hyphens and underscores",
+      "Space slug must start with a letter or number and may contain hyphens and underscores"
     ),
-  description: z.string().max(500),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -30,13 +38,13 @@ export function CreateSpaceForm() {
   const navigate = useNavigate();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
-    validateInputOnChange: ["slug"],
     initialValues: {
+      description: "",
       name: "",
       slug: "",
-      description: "",
     },
+    validate: zod4Resolver(formSchema),
+    validateInputOnChange: ["slug"],
   });
 
   useEffect(() => {
@@ -60,9 +68,9 @@ export function CreateSpaceForm() {
     description?: string;
   }) => {
     const spaceData = {
+      description: data.description,
       name: data.name,
       slug: data.slug,
-      description: data.description,
     };
 
     const createdSpace = await createSpaceMutation.mutateAsync(spaceData);
@@ -82,43 +90,43 @@ export function CreateSpaceForm() {
         <form
           onSubmit={form.onSubmit(
             (values) => handleSubmit(values),
-            handleValidationFailure,
+            handleValidationFailure
           )}
         >
-          <Text size="sm" c="dimmed" mb="sm">
+          <Text c="dimmed" mb="sm" size="sm">
             {t("* indicates required fields")}
           </Text>
           <Stack>
             <TextInput
-              withAsterisk
+              data-autofocus
+              errorProps={{ role: "alert" }}
               id="name"
               label={t("Space name")}
               placeholder={t("e.g Product Team")}
               variant="filled"
-              data-autofocus
-              errorProps={{ role: "alert" }}
+              withAsterisk
               {...form.getInputProps("name")}
             />
 
             <TextInput
-              withAsterisk
+              errorProps={{ role: "alert" }}
               id="slug"
               label={t("Space slug")}
               placeholder={t("e.g product")}
               variant="filled"
-              errorProps={{ role: "alert" }}
+              withAsterisk
               {...form.getInputProps("slug")}
             />
 
             <Textarea
+              autosize
+              errorProps={{ role: "alert" }}
               id="description"
               label={t("Space description")}
+              maxRows={8}
+              minRows={2}
               placeholder={t("e.g Space for product team")}
               variant="filled"
-              autosize
-              minRows={2}
-              maxRows={8}
-              errorProps={{ role: "alert" }}
               {...form.getInputProps("description")}
             />
           </Stack>

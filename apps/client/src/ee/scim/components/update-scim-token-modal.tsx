@@ -1,9 +1,9 @@
-import { Modal, TextInput, Button, Group, Stack } from "@mantine/core";
+import { Button, Group, Modal, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { z } from "zod/v4";
-import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
 import { useUpdateScimTokenMutation } from "@/ee/scim/queries/scim-token-query";
 import { IScimToken } from "@/ee/scim/types/scim-token.types";
 
@@ -13,8 +13,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface UpdateScimTokenModalProps {
-  opened: boolean;
   onClose: () => void;
+  opened: boolean;
   scimToken: IScimToken | null;
 }
 
@@ -27,8 +27,8 @@ export function UpdateScimTokenModal({
   const updateMutation = useUpdateScimTokenMutation();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: { name: "" },
+    validate: zod4Resolver(formSchema),
   });
 
   useEffect(() => {
@@ -38,21 +38,23 @@ export function UpdateScimTokenModal({
   }, [opened, scimToken]);
 
   const handleSubmit = async (data: FormValues) => {
-    if (!scimToken) return;
+    if (!scimToken) {
+      return;
+    }
     await updateMutation.mutateAsync({
-      tokenId: scimToken.id,
       name: data.name,
+      tokenId: scimToken.id,
     });
     onClose();
   };
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={t("Update {{credential}}", { credential: t("SCIM token") })}
-      size="md"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      size="md"
+      title={t("Update {{credential}}", { credential: t("SCIM token") })}
     >
       <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
         <Stack gap="md">
@@ -64,10 +66,10 @@ export function UpdateScimTokenModal({
           />
 
           <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>
+            <Button onClick={onClose} variant="default">
               {t("Cancel")}
             </Button>
-            <Button type="submit" loading={updateMutation.isPending}>
+            <Button loading={updateMutation.isPending} type="submit">
               {t("Update")}
             </Button>
           </Group>

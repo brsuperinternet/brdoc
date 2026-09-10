@@ -1,5 +1,3 @@
-import { FC } from "react";
-import type { Editor } from "@tiptap/react";
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
 import {
   IconAt,
@@ -8,9 +6,11 @@ import {
   IconMoodSmile,
   IconTable,
 } from "@tabler/icons-react";
+import type { Editor } from "@tiptap/react";
+import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { IconColumns4 } from "@/components/icons/icon-columns-4";
 import { IconColumns5 } from "@/components/icons/icon-columns-5";
-import { useTranslation } from "react-i18next";
 
 interface Props {
   editor: Editor;
@@ -23,34 +23,34 @@ export const QuickInsertsGroup: FC<Props> = ({ editor }) => {
     <ActionIcon.Group>
       <Tooltip label={t("Mention")} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="dark"
-          size="md"
           aria-label={t("Mention")}
+          color="dark"
           onClick={() => editor.chain().focus().insertContent("@").run()}
+          size="md"
+          variant="subtle"
         >
           <IconAt size={16} />
         </ActionIcon>
       </Tooltip>
       <Tooltip label={t("Emoji")} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="dark"
-          size="md"
           aria-label={t("Emoji")}
+          color="dark"
           onClick={() => editor.chain().focus().insertContent(":").run()}
+          size="md"
+          variant="subtle"
         >
           <IconMoodSmile size={16} />
         </ActionIcon>
       </Tooltip>
-      <Menu shadow="md" position="bottom-start" withArrow={false}>
+      <Menu position="bottom-start" shadow="md" withArrow={false}>
         <Menu.Target>
           <Tooltip label={t("Columns")} withArrow>
             <ActionIcon
-              variant="subtle"
+              aria-label={t("Columns")}
               color="dark"
               size="md"
-              aria-label={t("Columns")}
+              variant="subtle"
             >
               <IconColumns2 size={16} />
             </ActionIcon>
@@ -60,7 +60,11 @@ export const QuickInsertsGroup: FC<Props> = ({ editor }) => {
           <Menu.Item
             leftSection={<IconColumns2 size={16} />}
             onClick={() =>
-              editor.chain().focus().insertColumns({ layout: "two_equal" }).run()
+              editor
+                .chain()
+                .focus()
+                .insertColumns({ layout: "two_equal" })
+                .run()
             }
           >
             {t("{{count}} Columns", { count: 2 })}
@@ -80,7 +84,11 @@ export const QuickInsertsGroup: FC<Props> = ({ editor }) => {
           <Menu.Item
             leftSection={<IconColumns4 size={16} />}
             onClick={() =>
-              editor.chain().focus().insertColumns({ layout: "four_equal" }).run()
+              editor
+                .chain()
+                .focus()
+                .insertColumns({ layout: "four_equal" })
+                .run()
             }
           >
             {t("{{count}} Columns", { count: 4 })}
@@ -88,7 +96,11 @@ export const QuickInsertsGroup: FC<Props> = ({ editor }) => {
           <Menu.Item
             leftSection={<IconColumns5 size={16} />}
             onClick={() =>
-              editor.chain().focus().insertColumns({ layout: "five_equal" }).run()
+              editor
+                .chain()
+                .focus()
+                .insertColumns({ layout: "five_equal" })
+                .run()
             }
           >
             {t("{{count}} Columns", { count: 5 })}
@@ -97,17 +109,17 @@ export const QuickInsertsGroup: FC<Props> = ({ editor }) => {
       </Menu>
       <Tooltip label={t("Table")} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="dark"
-          size="md"
           aria-label={t("Table")}
+          color="dark"
           onClick={() =>
             editor
               .chain()
               .focus()
-              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+              .insertTable({ cols: 3, rows: 3, withHeaderRow: true })
               .run()
           }
+          size="md"
+          variant="subtle"
         >
           <IconTable size={16} />
         </ActionIcon>

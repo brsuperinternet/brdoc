@@ -1,27 +1,27 @@
-import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
-import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
-import { useCallback } from "react";
-import { useSetAtom } from "jotai";
-import { Node as PMNode } from "@tiptap/pm/model";
 import { isEditorReady } from "@docmost/editor-ext";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import {
+  IconDownload,
+  IconLayoutAlignCenter,
+  IconLayoutAlignLeft,
+  IconLayoutAlignRight,
+  IconTrash,
+  IconZoomIn,
+} from "@tabler/icons-react";
+import { Node as PMNode } from "@tiptap/pm/model";
+import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
+import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
+import clsx from "clsx";
+import { useSetAtom } from "jotai";
+import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { lightboxRequestAtom } from "@/features/editor/atoms/editor-atoms";
+import { useAltTextControl } from "@/features/editor/components/common/use-alt-text-control.tsx";
 import {
   EditorMenuProps,
   ShouldShowProps,
 } from "@/features/editor/components/table/types/types.ts";
-import { ActionIcon, Tooltip } from "@mantine/core";
-import clsx from "clsx";
-import {
-  IconLayoutAlignCenter,
-  IconLayoutAlignLeft,
-  IconLayoutAlignRight,
-  IconDownload,
-  IconTrash,
-  IconZoomIn,
-} from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { getFileUrl } from "@/lib/config.ts";
-import { useAltTextControl } from "@/features/editor/components/common/use-alt-text-control.tsx";
-import { lightboxRequestAtom } from "@/features/editor/atoms/editor-atoms";
 import classes from "../common/toolbar-menu.module.css";
 
 export function VideoMenu({ editor }: EditorMenuProps) {
@@ -38,12 +38,12 @@ export function VideoMenu({ editor }: EditorMenuProps) {
       const videoAttrs = ctx.editor.getAttributes("video");
 
       return {
-        isVideo: ctx.editor.isActive("video"),
-        isAlignLeft: ctx.editor.isActive("video", { align: "left" }),
-        isAlignCenter: ctx.editor.isActive("video", { align: "center" }),
-        isAlignRight: ctx.editor.isActive("video", { align: "right" }),
-        src: videoAttrs?.src || null,
         alt: videoAttrs?.alt || "",
+        isAlignCenter: ctx.editor.isActive("video", { align: "center" }),
+        isAlignLeft: ctx.editor.isActive("video", { align: "left" }),
+        isAlignRight: ctx.editor.isActive("video", { align: "right" }),
+        isVideo: ctx.editor.isActive("video"),
+        src: videoAttrs?.src || null,
       };
     },
   });
@@ -56,11 +56,13 @@ export function VideoMenu({ editor }: EditorMenuProps) {
 
       return editor.isActive("video") && editor.getAttributes("video").src;
     },
-    [editor],
+    [editor]
   );
 
   const getReferencedVirtualElement = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const { selection } = editor.state;
     const predicate = (node: PMNode) => node.type.name === "video";
     const parent = findParentNode(predicate)(selection);
@@ -106,7 +108,9 @@ export function VideoMenu({ editor }: EditorMenuProps) {
   }, [editor]);
 
   const handleDownload = useCallback(() => {
-    if (!editorState?.src) return;
+    if (!editorState?.src) {
+      return;
+    }
     const url = getFileUrl(editorState.src);
     const a = document.createElement("a");
     a.href = url;
@@ -123,111 +127,117 @@ export function VideoMenu({ editor }: EditorMenuProps) {
     panel: altTextPanel,
     isEditing: isEditingAlt,
   } = useAltTextControl({
+    currentAlt: editorState?.alt || "",
     editor,
     nodeName: "video",
-    currentAlt: editorState?.alt || "",
   });
 
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey={`video-menu`}
-      ref={(element) => {
-        if (element) element.style.zIndex = "99";
-      }}
-      updateDelay={0}
       getReferencedVirtualElement={getReferencedVirtualElement}
       options={{
-        placement: "top",
-        offset: 8,
         flip: false,
+        offset: 8,
+        placement: "top",
+      }}
+      pluginKey={"video-menu"}
+      ref={(element) => {
+        if (element) {
+          element.style.zIndex = "99";
+        }
       }}
       shouldShow={shouldShow}
+      updateDelay={0}
     >
       {isEditingAlt ? (
         altTextPanel
       ) : (
         <div className={classes.toolbar}>
-        <Tooltip position="top" label={t("Align left")} withinPortal={false}>
-          <ActionIcon
-            onClick={alignLeft}
-            size="lg"
-            aria-label={t("Align left")}
-            variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isAlignLeft })}
+          <Tooltip label={t("Align left")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Align left")}
+              className={clsx({ [classes.active]: editorState?.isAlignLeft })}
+              onClick={alignLeft}
+              size="lg"
+              variant="subtle"
+            >
+              <IconLayoutAlignLeft size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip
+            label={t("Align center")}
+            position="top"
+            withinPortal={false}
           >
-            <IconLayoutAlignLeft size={18} />
-          </ActionIcon>
-        </Tooltip>
+            <ActionIcon
+              aria-label={t("Align center")}
+              className={clsx({ [classes.active]: editorState?.isAlignCenter })}
+              onClick={alignCenter}
+              size="lg"
+              variant="subtle"
+            >
+              <IconLayoutAlignCenter size={18} />
+            </ActionIcon>
+          </Tooltip>
 
-        <Tooltip position="top" label={t("Align center")} withinPortal={false}>
-          <ActionIcon
-            onClick={alignCenter}
-            size="lg"
-            aria-label={t("Align center")}
-            variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isAlignCenter })}
-          >
-            <IconLayoutAlignCenter size={18} />
-          </ActionIcon>
-        </Tooltip>
+          <Tooltip label={t("Align right")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Align right")}
+              className={clsx({ [classes.active]: editorState?.isAlignRight })}
+              onClick={alignRight}
+              size="lg"
+              variant="subtle"
+            >
+              <IconLayoutAlignRight size={18} />
+            </ActionIcon>
+          </Tooltip>
 
-        <Tooltip position="top" label={t("Align right")} withinPortal={false}>
-          <ActionIcon
-            onClick={alignRight}
-            size="lg"
-            aria-label={t("Align right")}
-            variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isAlignRight })}
-          >
-            <IconLayoutAlignRight size={18} />
-          </ActionIcon>
-        </Tooltip>
+          <div className={classes.divider} />
 
-        <div className={classes.divider} />
+          {altTextButton}
 
-        {altTextButton}
+          <div className={classes.divider} />
 
-        <div className={classes.divider} />
+          <Tooltip label={t("Expand")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Expand")}
+              onClick={() =>
+                editorState?.src &&
+                setLightboxRequest({
+                  src: getFileUrl(editorState.src),
+                  type: "video",
+                })
+              }
+              size="lg"
+              variant="subtle"
+            >
+              <IconZoomIn size={18} />
+            </ActionIcon>
+          </Tooltip>
 
-        <Tooltip position="top" label={t("Expand")} withinPortal={false}>
-          <ActionIcon
-            onClick={() =>
-              editorState?.src &&
-              setLightboxRequest({
-                src: getFileUrl(editorState.src),
-                type: "video",
-              })
-            }
-            size="lg"
-            aria-label={t("Expand")}
-            variant="subtle"
-          >
-            <IconZoomIn size={18} />
-          </ActionIcon>
-        </Tooltip>
+          <Tooltip label={t("Download")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Download")}
+              onClick={handleDownload}
+              size="lg"
+              variant="subtle"
+            >
+              <IconDownload size={18} />
+            </ActionIcon>
+          </Tooltip>
 
-        <Tooltip position="top" label={t("Download")} withinPortal={false}>
-          <ActionIcon
-            onClick={handleDownload}
-            size="lg"
-            aria-label={t("Download")}
-            variant="subtle"
-          >
-            <IconDownload size={18} />
-          </ActionIcon>
-        </Tooltip>
-
-        <Tooltip position="top" label={t("Delete")} withinPortal={false}>
-          <ActionIcon
-            onClick={handleDelete}
-            size="lg"
-            aria-label={t("Delete")}
-            variant="subtle"
-          >
-            <IconTrash size={18} />
-          </ActionIcon>
-        </Tooltip>
+          <Tooltip label={t("Delete")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Delete")}
+              onClick={handleDelete}
+              size="lg"
+              variant="subtle"
+            >
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Tooltip>
         </div>
       )}
     </BaseBubbleMenu>

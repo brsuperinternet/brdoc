@@ -1,25 +1,26 @@
-import { Menu, Text, UnstyledButton, Group } from "@mantine/core";
-import { IconChevronDown, IconCheck } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
+import { Group, Menu, Text, UnstyledButton } from "@mantine/core";
+import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import { useAtomValue } from "jotai";
-import { CustomAvatar } from "@/components/ui/custom-avatar";
-import { AutoTooltipText } from "@/components/ui/auto-tooltip-text";
+import { useTranslation } from "react-i18next";
 import { IconGroupCircle } from "@/components/icons/icon-people-circle";
+import { AutoTooltipText } from "@/components/ui/auto-tooltip-text";
+import { CustomAvatar } from "@/components/ui/custom-avatar";
+import { IPagePermissionMember } from "@/ee/page-permission/types/page-permission.types";
+import {
+  getPagePermissionRoleLabel,
+  pagePermissionRoleData,
+} from "@/ee/page-permission/types/page-permission-role-data";
 import { userAtom } from "@/features/user/atoms/current-user-atom";
 import { formatMemberCount } from "@/lib";
-import {
-  IPagePermissionMember,
-  PagePermissionRole,
-} from "@/ee/page-permission/types/page-permission.types";
-import {
-  pagePermissionRoleData,
-  getPagePermissionRoleLabel,
-} from "@/ee/page-permission/types/page-permission-role-data";
 import classes from "./page-permission.module.css";
 
 type PagePermissionItemProps = {
   member: IPagePermissionMember;
-  onRoleChange: (memberId: string, type: "user" | "group", role: string) => void;
+  onRoleChange: (
+    memberId: string,
+    type: "user" | "group",
+    role: string
+  ) => void;
   onRemove: (memberId: string, type: "user" | "group") => void;
   disabled?: boolean;
 };
@@ -45,26 +46,35 @@ export function PagePermissionItem({
 
         <div className={classes.permissionItemDetails}>
           <AutoTooltipText
-            fz="sm"
             fw={500}
-            tooltipLabel={isCurrentUser ? `${member.name} (${t("You")})` : member.name}
+            fz="sm"
+            tooltipLabel={
+              isCurrentUser ? `${member.name} (${t("You")})` : member.name
+            }
           >
             {member.name}
-            {isCurrentUser && <Text span c="dimmed"> ({t("You")})</Text>}
+            {isCurrentUser && (
+              <Text c="dimmed" span>
+                {" "}
+                ({t("You")})
+              </Text>
+            )}
           </AutoTooltipText>
-          <AutoTooltipText fz="xs" c="dimmed">
-            {member.type === "user" ? member.email : formatMemberCount(member.memberCount, t)}
+          <AutoTooltipText c="dimmed" fz="xs">
+            {member.type === "user"
+              ? member.email
+              : formatMemberCount(member.memberCount, t)}
           </AutoTooltipText>
         </div>
       </div>
 
       <div className={classes.permissionItemRole}>
         {isCurrentUser || disabled ? (
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             {t(roleLabel)}
           </Text>
         ) : (
-          <Menu withArrow position="bottom-end">
+          <Menu position="bottom-end" withArrow>
             <Menu.Target>
               <UnstyledButton>
                 <Group gap={4}>
@@ -78,14 +88,16 @@ export function PagePermissionItem({
               {pagePermissionRoleData.map((role) => (
                 <Menu.Item
                   key={role.value}
-                  onClick={() => onRoleChange(member.id, member.type, role.value)}
+                  onClick={() =>
+                    onRoleChange(member.id, member.type, role.value)
+                  }
                   rightSection={
                     role.value === member.role ? <IconCheck size={16} /> : null
                   }
                 >
                   <div>
                     <Text size="sm">{t(role.label)}</Text>
-                    <Text size="xs" c="dimmed">
+                    <Text c="dimmed" size="xs">
                       {t(role.description)}
                     </Text>
                   </div>

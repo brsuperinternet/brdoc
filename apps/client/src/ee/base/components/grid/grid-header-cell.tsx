@@ -1,38 +1,49 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Header, flexRender } from "@tanstack/react-table";
-import { Badge, Popover } from "@mantine/core";
-import { useTranslation } from "react-i18next";
-import { useAtom } from "jotai";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { triggerPostMoveFlash } from "@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash";
 import {
   attachClosestEdge,
-  extractClosestEdge,
   type Edge,
+  extractClosestEdge,
 } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index";
-import { triggerPostMoveFlash } from "@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash";
 import * as liveRegion from "@atlaskit/pragmatic-drag-and-drop-live-region";
-import { IBaseRow, IBaseProperty, EditingCell } from "@/ee/base/types/base.types";
+import { Badge, Popover } from "@mantine/core";
+import { flexRender, Header } from "@tanstack/react-table";
+import { useAtom } from "jotai";
 import {
-  activePropertyMenuAtomFamily,
-  propertyMenuDirtyAtomFamily,
-  propertyMenuCloseRequestAtomFamily,
-  editingCellAtomFamily,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { useTranslation } from "react-i18next";
+import {
   activeFormulaEditorAtomFamily,
+  activePropertyMenuAtomFamily,
+  editingCellAtomFamily,
   FormulaEditorTarget,
+  propertyMenuCloseRequestAtomFamily,
+  propertyMenuDirtyAtomFamily,
 } from "@/ee/base/atoms/base-atoms";
-import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
-import { PropertyMenuContent } from "@/ee/base/components/property/property-menu";
 import { FormulaPropertyEditor } from "@/ee/base/components/formula/formula-property-editor";
-import { RowNumberHeaderCell } from "./row-number-header-cell";
-import { BaseDropEdgeIndicator } from "./base-drop-edge-indicator";
-import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
+import { PropertyMenuContent } from "@/ee/base/components/property/property-menu";
 import { useBaseEditable } from "@/ee/base/context/base-editable";
+import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
+import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
 import classes from "@/ee/base/styles/grid.module.css";
+import {
+  EditingCell,
+  IBaseProperty,
+  IBaseRow,
+} from "@/ee/base/types/base.types";
+import { BaseDropEdgeIndicator } from "./base-drop-edge-indicator";
+import { RowNumberHeaderCell } from "./row-number-header-cell";
 
 export const COLUMN_DRAG_TYPE = "base-column";
 
@@ -64,14 +75,22 @@ export const GridHeaderCell = memo(function GridHeaderCell({
   const isRowNumberHeaderInteractive =
     isRowNumber && editable && loadedRowIds.length > 0;
 
-  const [activePropertyMenu, setActivePropertyMenu] = useAtom(activePropertyMenuAtomFamily(pageId)) as unknown as [string | null, (val: string | null) => void];
+  const [activePropertyMenu, setActivePropertyMenu] = useAtom(
+    activePropertyMenuAtomFamily(pageId)
+  ) as unknown as [string | null, (val: string | null) => void];
   const menuOpened = activePropertyMenu === header.column.id;
   const cellRef = useRef<HTMLDivElement>(null);
-  const [propertyMenuDirty, setPropertyMenuDirty] = useAtom(propertyMenuDirtyAtomFamily(pageId)) as unknown as [boolean, (val: boolean) => void];
-  const [closeRequest, setCloseRequest] = useAtom(propertyMenuCloseRequestAtomFamily(pageId)) as unknown as [number, (val: number) => void];
-  const [, setEditingCell] = useAtom(editingCellAtomFamily(pageId)) as unknown as [EditingCell, (val: EditingCell) => void];
+  const [propertyMenuDirty, setPropertyMenuDirty] = useAtom(
+    propertyMenuDirtyAtomFamily(pageId)
+  ) as unknown as [boolean, (val: boolean) => void];
+  const [closeRequest, setCloseRequest] = useAtom(
+    propertyMenuCloseRequestAtomFamily(pageId)
+  ) as unknown as [number, (val: number) => void];
+  const [, setEditingCell] = useAtom(
+    editingCellAtomFamily(pageId)
+  ) as unknown as [EditingCell, (val: EditingCell) => void];
   const [activeFormulaEditor, setActiveFormulaEditor] = useAtom(
-    activeFormulaEditorAtomFamily(pageId),
+    activeFormulaEditorAtomFamily(pageId)
   ) as unknown as [FormulaEditorTarget, (val: FormulaEditorTarget) => void];
 
   const [isDragging, setIsDragging] = useState(false);
@@ -79,9 +98,12 @@ export const GridHeaderCell = memo(function GridHeaderCell({
 
   const resizeIntentRef = useRef(false);
 
-  const handleDirtyChange = useCallback((dirty: boolean) => {
-    setPropertyMenuDirty(dirty);
-  }, [setPropertyMenuDirty]);
+  const handleDirtyChange = useCallback(
+    (dirty: boolean) => {
+      setPropertyMenuDirty(dirty);
+    },
+    [setPropertyMenuDirty]
+  );
 
   const isSortableDisabled = isRowNumber || !!isPinned || !editable;
 
@@ -98,51 +120,62 @@ export const GridHeaderCell = memo(function GridHeaderCell({
 
   useEffect(() => {
     const el = cellRef.current;
-    if (!el || isSortableDisabled) return;
+    if (!el || isSortableDisabled) {
+      return;
+    }
     return combine(
       draggable({
-        element: el,
         canDrag: () => !resizeIntentRef.current,
+        element: el,
         getInitialData: () => ({
-          type: COLUMN_DRAG_TYPE,
           columnId: header.column.id,
           pageId,
+          type: COLUMN_DRAG_TYPE,
         }),
         onDragStart: () => setIsDragging(true),
         onDrop: () => setIsDragging(false),
       }),
       dropTargetForElements({
-        element: el,
         canDrop: ({ source }) =>
           source.data.type === COLUMN_DRAG_TYPE &&
           source.data.columnId !== header.column.id,
+        element: el,
         getData: ({ input, element }) =>
           attachClosestEdge(
             { columnId: header.column.id },
-            { input, element, allowedEdges: ["left", "right"] },
+            { allowedEdges: ["left", "right"], element, input }
           ),
         onDrag: ({ self }) => setClosestEdge(extractClosestEdge(self.data)),
         onDragLeave: () => setClosestEdge(null),
         onDrop: ({ source, self }) => {
           setClosestEdge(null);
           const edge = extractClosestEdge(self.data);
-          if (!edge) return;
+          if (!edge) {
+            return;
+          }
           const order = getColumnOrder();
           const startIndex = order.indexOf(source.data.columnId as string);
           const indexOfTarget = order.indexOf(header.column.id);
-          if (startIndex === -1 || indexOfTarget === -1) return;
+          if (startIndex === -1 || indexOfTarget === -1) {
+            return;
+          }
           const finishIndex = getReorderDestinationIndex({
-            startIndex,
-            indexOfTarget,
-            closestEdgeOfTarget: edge,
             axis: "horizontal",
+            closestEdgeOfTarget: edge,
+            indexOfTarget,
+            startIndex,
           });
-          if (finishIndex === startIndex) return;
-          onColumnReorderRef.current?.(source.data.columnId as string, finishIndex);
+          if (finishIndex === startIndex) {
+            return;
+          }
+          onColumnReorderRef.current?.(
+            source.data.columnId as string,
+            finishIndex
+          );
           triggerPostMoveFlash(el);
           liveRegion.announce(`Moved column to position ${finishIndex + 1}`);
         },
-      }),
+      })
     );
   }, [header.column.id, isSortableDisabled, getColumnOrder]);
 
@@ -152,26 +185,42 @@ export const GridHeaderCell = memo(function GridHeaderCell({
       return;
     }
     setEditingCell(null);
-    if (!editable) return;
+    if (!editable) {
+      return;
+    }
     if (!isRowNumber && property && !isDragging) {
-      if (propertyMenuDirty && !menuOpened) return;
+      if (propertyMenuDirty && !menuOpened) {
+        return;
+      }
       setActivePropertyMenu(menuOpened ? null : header.column.id);
     }
-  }, [editable, isRowNumber, property, isDragging, header.column.id, menuOpened, propertyMenuDirty, setActivePropertyMenu, setEditingCell]);
+  }, [
+    editable,
+    isRowNumber,
+    property,
+    isDragging,
+    header.column.id,
+    menuOpened,
+    propertyMenuDirty,
+    setActivePropertyMenu,
+    setEditingCell,
+  ]);
 
   const handleMenuClose = useCallback(() => {
     setActivePropertyMenu(null);
   }, [setActivePropertyMenu]);
 
   const handleEditFormula = useCallback(() => {
-    if (!property) return;
+    if (!property) {
+      return;
+    }
     handleMenuClose();
     setActiveFormulaEditor({ propertyId: property.id, rowId: null });
   }, [property, handleMenuClose, setActiveFormulaEditor]);
 
   const closeFormulaEditor = useCallback(
     () => setActiveFormulaEditor(null),
-    [setActiveFormulaEditor],
+    [setActiveFormulaEditor]
   );
 
   const formulaEditorOpen =
@@ -195,7 +244,9 @@ export const GridHeaderCell = memo(function GridHeaderCell({
 
   const handleMenuOpenChange = useCallback(
     (next: boolean) => {
-      if (next) return; // opening is driven by the atom, not Mantine
+      if (next) {
+        return; // opening is driven by the atom, not Mantine
+      }
       if (propertyMenuDirty) {
         // Veto the close and route through the discard-confirm flow.
         setCloseRequest(closeRequest + 1);
@@ -203,19 +254,37 @@ export const GridHeaderCell = memo(function GridHeaderCell({
         handleMenuClose();
       }
     },
-    [propertyMenuDirty, closeRequest, setCloseRequest, handleMenuClose],
+    [propertyMenuDirty, closeRequest, setCloseRequest, handleMenuClose]
   );
 
   const TypeIcon = property ? getDescriptor(property.type)?.icon : undefined;
 
   return (
     <div
+      aria-haspopup={isHeaderInteractive ? "menu" : undefined}
+      aria-label={
+        isRowNumberHeaderInteractive ? t("Select all loaded rows") : undefined
+      }
+      className={`${classes.headerCell} ${isPinned ? classes.headerCellPinned : ""} ${hasSelection ? classes.hasSelection : ""}`}
+      data-dragging={isDragging || undefined}
+      onClick={handleHeaderClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (isRowNumber) {
+            if (isRowNumberHeaderInteractive) {
+              toggleAll(loadedRowIds);
+            }
+          } else {
+            handleHeaderClick();
+          }
+        }
+      }}
+      onPointerDown={() => {
+        resizeIntentRef.current = false;
+      }}
       ref={cellRef}
       role="columnheader"
-      tabIndex={isHeaderInteractive || isRowNumberHeaderInteractive ? 0 : undefined}
-      aria-haspopup={isHeaderInteractive ? "menu" : undefined}
-      aria-label={isRowNumberHeaderInteractive ? t("Select all loaded rows") : undefined}
-      className={`${classes.headerCell} ${isPinned ? classes.headerCellPinned : ""} ${hasSelection ? classes.hasSelection : ""}`}
       style={{
         ...(isPinned
           ? ({ "--pin-offset": `${pinOffset}px` } as React.CSSProperties)
@@ -223,34 +292,22 @@ export const GridHeaderCell = memo(function GridHeaderCell({
         ...(isRowNumber || !editable ? {} : { cursor: "pointer" }),
         opacity: isDragging ? 0.4 : 1,
       }}
-      onPointerDown={() => {
-        resizeIntentRef.current = false;
-      }}
-      onClick={handleHeaderClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          if (isRowNumber) {
-            if (isRowNumberHeaderInteractive) toggleAll(loadedRowIds);
-          } else {
-            handleHeaderClick();
-          }
-        }
-      }}
-      data-dragging={isDragging || undefined}
+      tabIndex={
+        isHeaderInteractive || isRowNumberHeaderInteractive ? 0 : undefined
+      }
     >
       {isRowNumber ? (
         <RowNumberHeaderCell loadedRowIds={loadedRowIds} pageId={pageId} />
       ) : (
         <div className={classes.headerCellContent}>
           {TypeIcon && (
-            <TypeIcon size={14} className={classes.headerTypeIcon} />
+            <TypeIcon className={classes.headerTypeIcon} size={14} />
           )}
           <span className={classes.headerCellName}>
             {flexRender(header.column.columnDef.header, header.getContext())}
           </span>
           {property?.pendingType && (
-            <Badge size="xs" color="gray" variant="light" ml={6}>
+            <Badge color="gray" ml={6} size="xs" variant="light">
               {t("Converting…")}
             </Badge>
           )}
@@ -261,11 +318,8 @@ export const GridHeaderCell = memo(function GridHeaderCell({
           className={`${classes.resizeHandle} ${
             header.column.getIsResizing() ? classes.resizeHandleActive : ""
           }`}
+          onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => {
-            e.stopPropagation();
-            header.getResizeHandler()(e);
-          }}
-          onTouchStart={(e) => {
             e.stopPropagation();
             header.getResizeHandler()(e);
           }}
@@ -273,64 +327,68 @@ export const GridHeaderCell = memo(function GridHeaderCell({
             resizeIntentRef.current = true;
             e.stopPropagation();
           }}
-          onClick={(e) => e.stopPropagation()}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            header.getResizeHandler()(e);
+          }}
         />
       )}
       {closestEdge && <BaseDropEdgeIndicator edge={closestEdge} />}
       {editable && property && !isRowNumber && (
         <Popover
-          opened={menuOpened}
-          onChange={handleMenuOpenChange}
-          onClose={handleMenuClose}
-          position="bottom-start"
-          shadow="md"
-          width={260}
-          trapFocus
-          returnFocus
-          withinPortal
           closeOnClickOutside
           closeOnEscape
+          onChange={handleMenuOpenChange}
+          onClose={handleMenuClose}
+          opened={menuOpened}
+          position="bottom-start"
+          returnFocus
+          shadow="md"
+          trapFocus
+          width={260}
+          withinPortal
         >
           <Popover.Target>
             <div className={classes.popoverAnchor} />
           </Popover.Target>
           <Popover.Dropdown
-            p={0}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
+            p={0}
           >
             <PropertyMenuContent
-              property={property}
-              opened={menuOpened}
               onClose={handleMenuClose}
               onDirtyChange={handleDirtyChange}
               onEditFormula={
                 property.type === "formula" ? handleEditFormula : undefined
               }
+              opened={menuOpened}
               pageId={pageId}
+              property={property}
             />
           </Popover.Dropdown>
         </Popover>
       )}
       {property && !isRowNumber && property.type === "formula" && (
         <Popover
-          opened={formulaEditorOpen}
-          onChange={(o) => {
-            if (!o) closeFormulaEditor();
-          }}
-          position="bottom-start"
-          width={460}
-          shadow="md"
-          withinPortal
           closeOnClickOutside
           closeOnEscape={false}
+          onChange={(o) => {
+            if (!o) {
+              closeFormulaEditor();
+            }
+          }}
+          opened={formulaEditorOpen}
+          position="bottom-start"
+          shadow="md"
           trapFocus
+          width={460}
+          withinPortal
         >
           <Popover.Target>
             <div className={classes.popoverAnchor} />
           </Popover.Target>
           <Popover.Dropdown
-            p={0}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               e.stopPropagation();
@@ -339,13 +397,14 @@ export const GridHeaderCell = memo(function GridHeaderCell({
                 closeFormulaEditor();
               }
             }}
+            p={0}
             style={{ maxWidth: "calc(100vw - 32px)" }}
           >
             {formulaEditorOpen && (
               <FormulaPropertyEditor
-                property={property}
-                pageId={pageId}
                 onClose={closeFormulaEditor}
+                pageId={pageId}
+                property={property}
               />
             )}
           </Popover.Dropdown>

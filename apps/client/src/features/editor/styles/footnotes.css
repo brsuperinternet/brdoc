@@ -1,8 +1,8 @@
 .ProseMirror sup a.footnote-ref {
+  font-weight: 600;
   color: var(--mantine-primary-color-filled);
   text-decoration: none;
   cursor: pointer;
-  font-weight: 600;
 }
 
 .ProseMirror sup:has(a.footnote-ref) {
@@ -10,8 +10,8 @@
 }
 
 .ProseMirror ol.footnotes {
-  margin-top: 2rem;
   padding-top: 0.75rem;
+  margin-top: 2rem;
   font-size: 0.875rem;
   color: var(--mantine-color-dimmed);
   list-style-type: decimal;

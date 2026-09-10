@@ -1,17 +1,21 @@
+import { Text } from "@mantine/core";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Text } from "@mantine/core";
+import { useParams } from "react-router-dom";
+import { getPageTitle } from "@/features/page/page.utils";
 import {
   fetchAllAncestorChildren,
   useGetRootSidebarPagesQuery,
   usePageQuery,
 } from "@/features/page/queries/page-query.ts";
-import classes from "@/features/page/tree/styles/tree.module.css";
-import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom.ts";
+import { getPageBreadcrumbs } from "@/features/page/services/page-service.ts";
 import { openTreeNodesAtom } from "@/features/page/tree/atoms/open-tree-nodes-atom.ts";
+import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom.ts";
 import { useTreeMutation } from "@/features/page/tree/hooks/use-tree-mutation.ts";
+import { treeModel } from "@/features/page/tree/model/tree-model";
+import classes from "@/features/page/tree/styles/tree.module.css";
+import { SpaceTreeNode } from "@/features/page/tree/types.ts";
 import {
   buildTree,
   buildTreeWithChildren,
@@ -19,18 +23,14 @@ import {
   spaceRoots,
   updateSpaceRoots,
 } from "@/features/page/tree/utils/utils.ts";
-import { SpaceTreeNode } from "@/features/page/tree/types.ts";
-import { getPageTitle } from "@/features/page/page.utils";
-import { treeModel } from "@/features/page/tree/model/tree-model";
-import { getPageBreadcrumbs } from "@/features/page/services/page-service.ts";
 import { IPage } from "@/features/page/types/page.types.ts";
 import { extractPageSlugId } from "@/lib";
 import { DocTree } from "./doc-tree";
 import { SpaceTreeRow } from "./space-tree-row";
 
 interface SpaceTreeProps {
-  spaceId: string;
   readOnly: boolean;
+  spaceId: string;
 }
 
 export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
@@ -63,7 +63,9 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
   }, [hasNextPage, fetchNextPage, isFetching, spaceId]);
 
   useEffect(() => {
-    if (!pagesData?.pages || hasNextPage) return;
+    if (!pagesData?.pages || hasNextPage) {
+      return;
+    }
 
     const allItems = pagesData.pages.flatMap((page) => page.items);
     const treeData = buildTree(allItems);
@@ -73,8 +75,8 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
     // and open-state when the user returns to a previously-visited space.
     setData((prev) =>
       updateSpaceRoots(prev, spaceId, (roots) =>
-        roots.length > 0 ? mergeRootTrees(roots, treeData) : treeData,
-      ),
+        roots.length > 0 ? mergeRootTrees(roots, treeData) : treeData
+      )
     );
     setIsDataLoaded(true);
   }, [pagesData, hasNextPage, spaceId]);
@@ -92,17 +94,23 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
         }
 
         // if not found, fetch and build its ancestors and their children
-        if (!currentPage.id) return;
+        if (!currentPage.id) {
+          return;
+        }
         const ancestors = await getPageBreadcrumbs(currentPage.id);
 
-        if (spaceIdRef.current !== effectSpaceId) return;
+        if (spaceIdRef.current !== effectSpaceId) {
+          return;
+        }
 
         if (ancestors && ancestors.length > 1) {
           let flatTreeItems = [...buildTree(ancestors)];
 
           const fetchAndUpdateChildren = async (ancestor: IPage) => {
             // we don't want to fetch the children of the opened page
-            if (ancestor.id === currentPage.id) return;
+            if (ancestor.id === currentPage.id) {
+              return;
+            }
             const children = await fetchAllAncestorChildren({
               pageId: ancestor.id,
               spaceId: ancestor.spaceId,
@@ -111,17 +119,19 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
             flatTreeItems = [
               ...flatTreeItems,
               ...children.filter(
-                (child) => !flatTreeItems.some((item) => item.id === child.id),
+                (child) => !flatTreeItems.some((item) => item.id === child.id)
               ),
             ];
           };
 
           const fetchPromises = ancestors.map((ancestor) =>
-            fetchAndUpdateChildren(ancestor),
+            fetchAndUpdateChildren(ancestor)
           );
 
           Promise.all(fetchPromises).then(() => {
-            if (spaceIdRef.current !== effectSpaceId) return;
+            if (spaceIdRef.current !== effectSpaceId) {
+              return;
+            }
 
             // build tree with children
             const ancestorsTree = buildTreeWithChildren(flatTreeItems);
@@ -133,8 +143,8 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
               treeModel.appendChildren(
                 currentData,
                 rootChild.id,
-                rootChild.children ?? [],
-              ),
+                rootChild.children ?? []
+              )
             );
 
             // open all ancestors of the current page. DocTree picks up the
@@ -143,7 +153,9 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
             setOpenTreeNodes((prev) => {
               const next = { ...prev };
               for (const a of ancestors) {
-                if (a.id !== currentPage.id) next[a.id] = true;
+                if (a.id !== currentPage.id) {
+                  next[a.id] = true;
+                }
               }
               return next;
             });
@@ -157,7 +169,7 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
 
   const openIds = useMemo(
     () => new Set(Object.keys(openTreeNodes).filter((k) => openTreeNodes[k])),
-    [openTreeNodes],
+    [openTreeNodes]
   );
 
   const handleToggle = useCallback(
@@ -177,12 +189,12 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
         }
       }
     },
-    [data, setOpenTreeNodes, setData],
+    [data, setOpenTreeNodes, setData]
   );
 
   const filteredData = useMemo(
     () => spaceRoots(data, spaceId),
-    [data, spaceId],
+    [data, spaceId]
   );
 
   // Stable callbacks for DocTree. Without these, every parent render recreates
@@ -192,37 +204,37 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
     (rowProps: Parameters<typeof SpaceTreeRow>[0]) => (
       <SpaceTreeRow {...rowProps} readOnly={readOnly} />
     ),
-    [readOnly],
+    [readOnly]
   );
   const disableDragDrop = useCallback(
     (n: SpaceTreeNode) => n.canEdit === false,
-    [],
+    []
   );
   const getDragLabel = useCallback(
     (n: SpaceTreeNode) => getPageTitle(n.name, n.isBase, t),
-    [t],
+    [t]
   );
 
   return (
     <div className={classes.treeContainer}>
       {isDataLoaded && filteredData.length === 0 && (
-        <Text size="xs" c="dimmed" py="xs" px="sm">
+        <Text c="dimmed" px="sm" py="xs" size="xs">
           {t("No pages yet")}
         </Text>
       )}
       {isDataLoaded && filteredData.length > 0 && (
         <DocTree<SpaceTreeNode>
+          aria-label={t("Pages")}
           data={filteredData}
-          openIds={openIds}
-          selectedId={currentPage?.id}
-          renderRow={renderRow}
-          onMove={handleMove}
-          onToggle={handleToggle}
-          readOnly={readOnly}
           disableDrag={disableDragDrop}
           disableDrop={disableDragDrop}
           getDragLabel={getDragLabel}
-          aria-label={t("Pages")}
+          onMove={handleMove}
+          onToggle={handleToggle}
+          openIds={openIds}
+          readOnly={readOnly}
+          renderRow={renderRow}
+          selectedId={currentPage?.id}
         />
       )}
     </div>

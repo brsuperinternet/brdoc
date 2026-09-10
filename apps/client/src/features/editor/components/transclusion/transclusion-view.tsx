@@ -1,8 +1,3 @@
-import {
-  NodeViewContent,
-  NodeViewProps,
-  NodeViewWrapper,
-} from "@tiptap/react";
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -12,10 +7,11 @@ import {
   IconLinkOff,
   IconTrash,
 } from "@tabler/icons-react";
+import { NodeViewContent, NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import classes from "./transclusion.module.css";
 import SyncBlockReferencesDropdown from "@/features/transclusion/components/sync-block-references-dropdown";
+import classes from "./transclusion.module.css";
 
 export default function TransclusionView(props: NodeViewProps) {
   const { editor, node, deleteNode } = props;
@@ -25,13 +21,15 @@ export default function TransclusionView(props: NodeViewProps) {
     setOpenMenus((n) => Math.max(0, n + (open ? 1 : -1)));
 
   const isEditable = editor.isEditable;
-  // @ts-ignore - editor.storage.pageId is set by the host editor (page-editor.tsx onCreate)
+  // @ts-expect-error - editor.storage.pageId is set by the host editor (page-editor.tsx onCreate)
   const sourcePageId: string | undefined = editor.storage?.pageId;
   const transclusionId: string | null = node.attrs.id ?? null;
 
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
-    if (!sourcePageId || !transclusionId) return;
+    if (!(sourcePageId && transclusionId)) {
+      return;
+    }
     const html = `<div data-type="transclusionReference" data-source-page-id="${sourcePageId}" data-transclusion-id="${transclusionId}"></div>`;
     try {
       await navigator.clipboard.write([
@@ -63,8 +61,8 @@ export default function TransclusionView(props: NodeViewProps) {
     <NodeViewWrapper
       className={classes.transclusionWrap}
       data-editable={isEditable ? "true" : "false"}
-      data-menu-open={openMenus > 0 ? "true" : "false"}
       data-id={transclusionId ?? undefined}
+      data-menu-open={openMenus > 0 ? "true" : "false"}
     >
       {isEditable && (
         <div
@@ -74,11 +72,11 @@ export default function TransclusionView(props: NodeViewProps) {
         >
           {sourcePageId && transclusionId && (
             <SyncBlockReferencesDropdown
-              sourcePageId={sourcePageId}
-              transclusionId={transclusionId}
               currentPageId={sourcePageId}
               mode="source"
               onOpenChange={trackOpen}
+              sourcePageId={sourcePageId}
+              transclusionId={transclusionId}
             />
           )}
 
@@ -86,19 +84,19 @@ export default function TransclusionView(props: NodeViewProps) {
 
           <Tooltip label={copied ? t("Copied") : t("Copy synced block")}>
             <ActionIcon
-              variant="subtle"
               color={copied ? "teal" : "gray"}
-              size="sm"
+              disabled={!(sourcePageId && transclusionId)}
               onClick={handleCopy}
-              disabled={!sourcePageId || !transclusionId}
+              size="sm"
+              variant="subtle"
             >
               {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
             </ActionIcon>
           </Tooltip>
 
-          <Menu position="bottom-end" withinPortal onChange={trackOpen}>
+          <Menu onChange={trackOpen} position="bottom-end" withinPortal>
             <Menu.Target>
-              <ActionIcon variant="subtle" color="gray" size="sm">
+              <ActionIcon color="gray" size="sm" variant="subtle">
                 <IconDots size={14} />
               </ActionIcon>
             </Menu.Target>

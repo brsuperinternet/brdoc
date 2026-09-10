@@ -1,49 +1,49 @@
-import { useCallback, useEffect, useState } from "react";
 import {
-  Popover,
-  Stack,
-  Group,
-  Select,
-  TextInput,
   ActionIcon,
-  Text,
-  UnstyledButton,
   Button,
+  Group,
   MultiSelect,
+  Popover,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  UnstyledButton,
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useEscapeClose } from "@/ee/base/hooks/use-escape-close";
 import {
-  IBaseProperty,
-  SelectTypeOptions,
+  DEFAULT_FILTER_OPERATORS,
+  getDescriptor,
+} from "@/ee/base/property-types/property-type.registry";
+import viewClasses from "@/ee/base/styles/views.module.css";
+import {
   FilterCondition,
   FilterOperator,
+  IBaseProperty,
+  SelectTypeOptions,
 } from "@/ee/base/types/base.types";
-import { useTranslation } from "react-i18next";
-import {
-  getDescriptor,
-  DEFAULT_FILTER_OPERATORS,
-} from "@/ee/base/property-types/property-type.registry";
-import { FilterPersonInput } from "./filter-person-input";
 import { FilterDateInput } from "./filter-date-input";
-import { useEscapeClose } from "@/ee/base/hooks/use-escape-close";
-import viewClasses from "@/ee/base/styles/views.module.css";
+import { FilterPersonInput } from "./filter-person-input";
 
 const OPERATORS: { value: FilterOperator; labelKey: string }[] = [
-  { value: "eq", labelKey: "Is" },
-  { value: "neq", labelKey: "Is not" },
-  { value: "contains", labelKey: "Contains" },
-  { value: "ncontains", labelKey: "Doesn't contain" },
-  { value: "any", labelKey: "Is any of" },
-  { value: "none", labelKey: "Is none of" },
-  { value: "before", labelKey: "Is before" },
-  { value: "after", labelKey: "Is after" },
-  { value: "onOrBefore", labelKey: "Is on or before" },
-  { value: "onOrAfter", labelKey: "Is on or after" },
-  { value: "isWithin", labelKey: "Is within" },
-  { value: "gt", labelKey: "Greater than" },
-  { value: "lt", labelKey: "Less than" },
-  { value: "isEmpty", labelKey: "Is empty" },
-  { value: "isNotEmpty", labelKey: "Is not empty" },
+  { labelKey: "Is", value: "eq" },
+  { labelKey: "Is not", value: "neq" },
+  { labelKey: "Contains", value: "contains" },
+  { labelKey: "Doesn't contain", value: "ncontains" },
+  { labelKey: "Is any of", value: "any" },
+  { labelKey: "Is none of", value: "none" },
+  { labelKey: "Is before", value: "before" },
+  { labelKey: "Is after", value: "after" },
+  { labelKey: "Is on or before", value: "onOrBefore" },
+  { labelKey: "Is on or after", value: "onOrAfter" },
+  { labelKey: "Is within", value: "isWithin" },
+  { labelKey: "Greater than", value: "gt" },
+  { labelKey: "Less than", value: "lt" },
+  { labelKey: "Is empty", value: "isEmpty" },
+  { labelKey: "Is not empty", value: "isNotEmpty" },
 ];
 
 const NO_VALUE_OPERATORS: FilterOperator[] = ["isEmpty", "isNotEmpty"];
@@ -52,7 +52,9 @@ const NO_VALUE_OPERATORS: FilterOperator[] = ["isEmpty", "isNotEmpty"];
 // Switching across classes (e.g. eq→any, exact-date→isWithin) must reset the
 // stored value so a stale shape isn't sent to the engine.
 function valueClass(op: FilterOperator, inputKind: string): string {
-  if (NO_VALUE_OPERATORS.includes(op)) return "none";
+  if (NO_VALUE_OPERATORS.includes(op)) {
+    return "none";
+  }
   if (inputKind === "choices") {
     return op === "any" || op === "none" ? "choicesMulti" : "choicesSingle";
   }
@@ -92,10 +94,10 @@ function FilterValueInput({
   if (!property) {
     return (
       <TextInput
-        size="xs"
-        placeholder={t("Value")}
-        value={(condition.value as string) ?? ""}
         onChange={(e) => onChange(e.currentTarget.value)}
+        placeholder={t("Value")}
+        size="xs"
+        value={(condition.value as string) ?? ""}
         w={100}
       />
     );
@@ -106,11 +108,11 @@ function FilterValueInput({
   if (kind === "person") {
     return (
       <FilterPersonInput
-        pageId={property.pageId}
         multiple={condition.op === "any" || condition.op === "none"}
-        value={condition.value}
         onChange={onChange}
+        pageId={property.pageId}
         placeholder={t("Select")}
+        value={condition.value}
       />
     );
   }
@@ -118,9 +120,9 @@ function FilterValueInput({
   if (kind === "date") {
     return (
       <FilterDateInput
+        onChange={onChange}
         op={condition.op}
         value={condition.value}
-        onChange={onChange}
       />
     );
   }
@@ -128,7 +130,7 @@ function FilterValueInput({
   if (kind === "choices") {
     const typeOptions = property.typeOptions as SelectTypeOptions | undefined;
     const choices = typeOptions?.choices ?? [];
-    const choiceOptions = choices.map((c) => ({ value: c.id, label: c.name }));
+    const choiceOptions = choices.map((c) => ({ label: c.name, value: c.id }));
 
     if (isMultiChoice(condition.op)) {
       const { value } = condition;
@@ -138,32 +140,32 @@ function FilterValueInput({
 
       return (
         <MultiSelect
-          size="xs"
-          data={choiceOptions}
           comboboxProps={{ withinPortal: false }}
-          value={selected}
+          data={choiceOptions}
+          maxDropdownHeight={220}
           onChange={(values) => onChange(values)}
-          w={160}
+          size="xs"
           styles={{
             pillsList: {
               maxHeight: 70,
               overflowY: "auto",
             },
           }}
-          maxDropdownHeight={220}
+          value={selected}
+          w={160}
         />
       );
     }
 
     return (
       <Select
-        size="xs"
         comboboxProps={{ withinPortal: false }}
         data={choiceOptions}
-        value={(condition.value as string) ?? null}
         onChange={(val) => onChange(val ?? "")}
-        w={120}
         placeholder={t("Select")}
+        size="xs"
+        value={(condition.value as string) ?? null}
+        w={120}
       />
     );
   }
@@ -171,11 +173,11 @@ function FilterValueInput({
   if (kind === "number") {
     return (
       <TextInput
+        onChange={(e) => onChange(e.currentTarget.value)}
+        placeholder={t("Value")}
         size="xs"
         type="number"
-        placeholder={t("Value")}
         value={(condition.value as string) ?? ""}
-        onChange={(e) => onChange(e.currentTarget.value)}
         w={100}
       />
     );
@@ -184,14 +186,14 @@ function FilterValueInput({
   if (kind === "boolean") {
     return (
       <Select
-        size="xs"
         comboboxProps={{ withinPortal: false }}
         data={[
-          { value: "true", label: t("True") },
-          { value: "false", label: t("False") },
+          { label: t("True"), value: "true" },
+          { label: t("False"), value: "false" },
         ]}
-        value={(condition.value as string) ?? null}
         onChange={(val) => onChange(val ?? "")}
+        size="xs"
+        value={(condition.value as string) ?? null}
         w={100}
       />
     );
@@ -199,10 +201,10 @@ function FilterValueInput({
 
   return (
     <TextInput
-      size="xs"
-      placeholder={t("Value")}
-      value={(condition.value as string) ?? ""}
       onChange={(e) => onChange(e.currentTarget.value)}
+      placeholder={t("Value")}
+      size="xs"
+      value={(condition.value as string) ?? ""}
       w={100}
     />
   );
@@ -229,11 +231,11 @@ export function ViewFilterConfigPopover({
   useEscapeClose(opened, onClose);
 
   const propertyOptions = properties.map((p) => ({
-    value: p.id,
     label: p.name,
+    value: p.id,
   }));
 
-  const [unSaved, setUnSaved] = useState(false)
+  const [unSaved, setUnSaved] = useState(false);
   const [draft, setDraft] = useState<FilterCondition | null>(null);
   const [draftConditions, setDraftConditions] =
     useState<FilterCondition[]>(conditions);
@@ -242,18 +244,20 @@ export function ViewFilterConfigPopover({
     if (opened) {
       setDraftConditions(conditions);
       setDraft(null);
-      setUnSaved(false)
+      setUnSaved(false);
     }
   }, [opened, conditions]);
 
   const handleStartDraft = useCallback(() => {
     const firstProperty = properties[0];
-    if (!firstProperty) return;
+    if (!firstProperty) {
+      return;
+    }
     const validOperators = getOperatorsForType(firstProperty.type);
     const defaultOperator = validOperators.includes("contains")
       ? ("contains" as FilterOperator)
       : validOperators[0];
-    setDraft({ propertyId: firstProperty.id, op: defaultOperator });
+    setDraft({ op: defaultOperator, propertyId: firstProperty.id });
   }, [properties]);
 
   const handleSaveDraft = useCallback(() => {
@@ -263,19 +267,20 @@ export function ViewFilterConfigPopover({
 
     onChange(nextConditions);
     setDraft(null);
-    setUnSaved(false)
-
+    setUnSaved(false);
   }, [draft, draftConditions, onChange]);
 
   const handleCancelDraft = useCallback(() => {
-    setDraftConditions(conditions)
+    setDraftConditions(conditions);
     setDraft(null);
-    setUnSaved(false)
+    setUnSaved(false);
   }, [conditions]);
 
   const handleDraftPropertyChange = useCallback(
     (propertyId: string | null) => {
-      if (!propertyId || !draft) return;
+      if (!(propertyId && draft)) {
+        return;
+      }
       const newProperty = properties.find((p) => p.id === propertyId);
       if (!newProperty) {
         setDraft({ ...draft, propertyId });
@@ -285,118 +290,126 @@ export function ViewFilterConfigPopover({
       const currentOperatorValid = validOperators.includes(draft.op);
       const sameKind =
         inputKindForProperty(
-          properties.find((p) => p.id === draft.propertyId),
+          properties.find((p) => p.id === draft.propertyId)
         ) === inputKindForProperty(newProperty);
       setDraft({
         ...draft,
-        propertyId,
         op: currentOperatorValid ? draft.op : validOperators[0],
+        propertyId,
         value: currentOperatorValid && sameKind ? draft.value : undefined,
       });
     },
-    [draft, properties],
+    [draft, properties]
   );
 
   const handleDraftOperatorChange = useCallback(
     (operator: string | null) => {
-      if (!operator || !draft) return;
+      if (!(operator && draft)) {
+        return;
+      }
       const op = operator as FilterOperator;
       const kind = inputKindForProperty(
-        properties.find((p) => p.id === draft.propertyId),
+        properties.find((p) => p.id === draft.propertyId)
       );
       const keep = valueClass(draft.op, kind) === valueClass(op, kind);
       setDraft({ ...draft, op, value: keep ? draft.value : undefined });
     },
-    [draft, properties],
+    [draft, properties]
   );
 
   const handleDraftValueChange = useCallback(
     (value: unknown) => {
-      if (!draft) return;
+      if (!draft) {
+        return;
+      }
       setDraft({ ...draft, value });
     },
-    [draft],
+    [draft]
   );
 
-  const handleRemove = useCallback(
-    (index: number) => {
-      setUnSaved(true);
-      setDraftConditions((current) => current.filter((_, i) => i !== index));
-    },
-    [],
-  );
+  const handleRemove = useCallback((index: number) => {
+    setUnSaved(true);
+    setDraftConditions((current) => current.filter((_, i) => i !== index));
+  }, []);
 
   const handlePropertyChange = useCallback(
     (index: number, propertyId: string | null) => {
-      if (!propertyId) return;
+      if (!propertyId) {
+        return;
+      }
       const newProperty = properties.find((p) => p.id === propertyId);
-      setUnSaved(true)
+      setUnSaved(true);
       setDraftConditions((current) =>
         current.map((f, i) => {
-          if (i !== index) return f;
+          if (i !== index) {
+            return f;
+          }
           if (newProperty) {
             const validOperators = getOperatorsForType(newProperty.type);
             const currentOperatorValid = validOperators.includes(f.op);
             const sameKind =
               inputKindForProperty(
-                properties.find((p) => p.id === f.propertyId),
+                properties.find((p) => p.id === f.propertyId)
               ) === inputKindForProperty(newProperty);
             return {
               ...f,
-              propertyId,
               op: currentOperatorValid ? f.op : validOperators[0],
+              propertyId,
               value: currentOperatorValid && sameKind ? f.value : undefined,
             };
           }
           return { ...f, propertyId };
-        }),
+        })
       );
     },
-    [properties],
+    [properties]
   );
 
   const handleOperatorChange = useCallback(
     (index: number, operator: string | null) => {
-      if (!operator) return;
+      if (!operator) {
+        return;
+      }
       const op = operator as FilterOperator;
-      setUnSaved(true)
+      setUnSaved(true);
       setDraftConditions((current) =>
         current.map((f, i) => {
-          if (i !== index) return f;
+          if (i !== index) {
+            return f;
+          }
           const kind = inputKindForProperty(
-            properties.find((p) => p.id === f.propertyId),
+            properties.find((p) => p.id === f.propertyId)
           );
           const keep = valueClass(f.op, kind) === valueClass(op, kind);
           return { ...f, op, value: keep ? f.value : undefined };
-        }),
+        })
       );
     },
-    [properties],
+    [properties]
   );
 
-  const handleValueChange = useCallback(
-    (index: number, value: unknown) => {
-      setUnSaved(true)
-      setDraftConditions((current) =>
-        current.map((f, i) => (i === index ? { ...f, value } : f)),
-      );
-    },
-    [],
-  );
+  const handleValueChange = useCallback((index: number, value: unknown) => {
+    setUnSaved(true);
+    setDraftConditions((current) =>
+      current.map((f, i) => (i === index ? { ...f, value } : f))
+    );
+  }, []);
 
   return (
     <Popover
-      opened={opened}
+      closeOnClickOutside
+      closeOnEscape={false}
       onChange={(o) => {
-        if (!o) onClose();
+        if (!o) {
+          onClose();
+        }
       }}
       onClose={onClose}
+      opened={opened}
       position="bottom-end"
       shadow="md"
-      width={520}
       trapFocus
-      closeOnEscape={false}
-      closeOnClickOutside
+      width={520}
       withinPortal
     >
       <Popover.Target>{children}</Popover.Target>
@@ -406,16 +419,18 @@ export function ViewFilterConfigPopover({
           // would fire before a nested picker can consume Escape, closing the
           // whole panel. Handle it on bubble instead so an open inner picker
           // (which preventDefaults Escape) keeps the panel open.
-          if (e.key === "Escape" && !e.defaultPrevented) onClose();
+          if (e.key === "Escape" && !e.defaultPrevented) {
+            onClose();
+          }
         }}
       >
         <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
+          <Text c="dimmed" fw={600} size="xs">
             {t("Filter by")}
           </Text>
 
           {draftConditions.length === 0 && !draft && (
-            <Text size="xs" c="dimmed">
+            <Text c="dimmed" size="xs">
               {t("No filters applied")}
             </Text>
           )}
@@ -423,55 +438,55 @@ export function ViewFilterConfigPopover({
           {draftConditions.map((condition, index) => {
             const needsValue = !NO_VALUE_OPERATORS.includes(condition.op);
             const property = properties.find(
-              (p) => p.id === condition.propertyId,
+              (p) => p.id === condition.propertyId
             );
             const validOperators = property
               ? getOperatorsForType(property.type)
               : OPERATORS.map((op) => op.value);
             const operatorOptions = OPERATORS.filter((op) =>
-              validOperators.includes(op.value),
+              validOperators.includes(op.value)
             ).map((op) => ({
-              value: op.value,
               label: t(op.labelKey),
+              value: op.value,
             }));
 
             return (
-              <Group key={index} gap="xs" wrap="nowrap">
+              <Group gap="xs" key={index} wrap="nowrap">
                 <Select
-                  size="xs"
                   comboboxProps={{ withinPortal: false }}
                   data={propertyOptions}
-                  searchable
-                  openOnFocus={false}
                   nothingFoundMessage={t("No match")}
-                  value={condition.propertyId}
                   onChange={(val) => handlePropertyChange(index, val)}
+                  openOnFocus={false}
+                  searchable
+                  size="xs"
                   style={{ flex: 1 }}
+                  value={condition.propertyId}
                 />
                 <Select
-                  size="xs"
                   comboboxProps={{ withinPortal: false }}
                   data={operatorOptions}
-                  searchable
-                  openOnFocus={false}
                   nothingFoundMessage={t("No match")}
-                  value={condition.op}
                   onChange={(val) => handleOperatorChange(index, val)}
+                  openOnFocus={false}
+                  searchable
+                  size="xs"
+                  value={condition.op}
                   w={130}
                 />
                 {needsValue && (
                   <FilterValueInput
                     condition={condition}
-                    property={property}
                     onChange={(val) => handleValueChange(index, val)}
+                    property={property}
                     t={t}
                   />
                 )}
                 <ActionIcon
-                  variant="subtle"
                   color="gray"
-                  size="sm"
                   onClick={() => handleRemove(index)}
+                  size="sm"
+                  variant="subtle"
                 >
                   <IconTrash size={14} />
                 </ActionIcon>
@@ -479,74 +494,81 @@ export function ViewFilterConfigPopover({
             );
           })}
 
-          {draft && (() => {
-            const needsValue = !NO_VALUE_OPERATORS.includes(draft.op);
-            const property = properties.find((p) => p.id === draft.propertyId);
-            const validOperators = property
-              ? getOperatorsForType(property.type)
-              : OPERATORS.map((op) => op.value);
-            const operatorOptions = OPERATORS.filter((op) =>
-              validOperators.includes(op.value),
-            ).map((op) => ({ value: op.value, label: t(op.labelKey) }));
+          {draft &&
+            (() => {
+              const needsValue = !NO_VALUE_OPERATORS.includes(draft.op);
+              const property = properties.find(
+                (p) => p.id === draft.propertyId
+              );
+              const validOperators = property
+                ? getOperatorsForType(property.type)
+                : OPERATORS.map((op) => op.value);
+              const operatorOptions = OPERATORS.filter((op) =>
+                validOperators.includes(op.value)
+              ).map((op) => ({ label: t(op.labelKey), value: op.value }));
 
-            return (
-              <Stack gap={6}>
-                <Group gap="xs" wrap="nowrap">
-                  <Select
-                    size="xs"
-                    comboboxProps={{ withinPortal: false }}
-                    data={propertyOptions}
-                    searchable
-                    openOnFocus={false}
-                    nothingFoundMessage={t("No match")}
-                    value={draft.propertyId}
-                    onChange={handleDraftPropertyChange}
-                    style={{ flex: 1 }}
-                  />
-                  <Select
-                    size="xs"
-                    comboboxProps={{ withinPortal: false }}
-                    data={operatorOptions}
-                    searchable
-                    openOnFocus={false}
-                    nothingFoundMessage={t("No match")}
-                    value={draft.op}
-                    onChange={handleDraftOperatorChange}
-                    w={130}
-                  />
-                  {needsValue && (
-                    <FilterValueInput
-                      condition={draft}
-                      property={property}
-                      onChange={handleDraftValueChange}
-                      t={t}
+              return (
+                <Stack gap={6}>
+                  <Group gap="xs" wrap="nowrap">
+                    <Select
+                      comboboxProps={{ withinPortal: false }}
+                      data={propertyOptions}
+                      nothingFoundMessage={t("No match")}
+                      onChange={handleDraftPropertyChange}
+                      openOnFocus={false}
+                      searchable
+                      size="xs"
+                      style={{ flex: 1 }}
+                      value={draft.propertyId}
                     />
-                  )}
-                </Group>
-              </Stack>
-            );
-          })()}
+                    <Select
+                      comboboxProps={{ withinPortal: false }}
+                      data={operatorOptions}
+                      nothingFoundMessage={t("No match")}
+                      onChange={handleDraftOperatorChange}
+                      openOnFocus={false}
+                      searchable
+                      size="xs"
+                      value={draft.op}
+                      w={130}
+                    />
+                    {needsValue && (
+                      <FilterValueInput
+                        condition={draft}
+                        onChange={handleDraftValueChange}
+                        property={property}
+                        t={t}
+                      />
+                    )}
+                  </Group>
+                </Stack>
+              );
+            })()}
 
           {!draft && (
             <UnstyledButton
-              onClick={handleStartDraft}
               className={viewClasses.addActionButton}
+              onClick={handleStartDraft}
             >
               <IconPlus size={14} />
               {t("Add filter")}
             </UnstyledButton>
           )}
-          <Group justify="flex-end" gap="xs">
+          <Group gap="xs" justify="flex-end">
             <Button
-              variant="default"
-              size="xs"
+              disabled={!(draft || unSaved)}
               onClick={handleCancelDraft}
-              disabled={!draft && !unSaved}
+              size="xs"
+              variant="default"
             >
               {t("Cancel")}
             </Button>
 
-            <Button size="xs" onClick={handleSaveDraft} disabled={!draft && !unSaved}>
+            <Button
+              disabled={!(draft || unSaved)}
+              onClick={handleSaveDraft}
+              size="xs"
+            >
               {t("Save")}
             </Button>
           </Group>

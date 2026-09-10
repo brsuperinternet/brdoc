@@ -1,13 +1,13 @@
-import { useMemo, useRef, useState, KeyboardEvent } from "react";
-import clsx from "clsx";
-import { IconPlus } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { useComputedColorScheme } from "@mantine/core";
-import { ILabel } from "@/features/label/types/label.types.ts";
+import { IconPlus } from "@tabler/icons-react";
+import clsx from "clsx";
+import { KeyboardEvent, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import classes from "@/features/label/label.module.css";
 import { useWorkspaceLabelsQuery } from "@/features/label/queries/label-query.ts";
+import { ILabel } from "@/features/label/types/label.types.ts";
 import { getLabelColor } from "@/features/label/utils/label-colors.ts";
 import { normalizeLabelName } from "@/features/label/utils/normalize-label.ts";
-import classes from "@/features/label/label.module.css";
 
 type LabelPickerProps = {
   applied: ILabel[];
@@ -44,7 +44,7 @@ export function LabelPicker({
 
   const appliedNames = useMemo(
     () => new Set(applied.map((l) => l.name.toLowerCase())),
-    [applied],
+    [applied]
   );
 
   const suggestions = useMemo(() => {
@@ -54,7 +54,7 @@ export function LabelPicker({
 
   const exact = suggestions.find((l) => l.name === normalized);
   const canCreate =
-    !exact && !appliedNames.has(normalized) && isValidLabelName(normalized);
+    !(exact || appliedNames.has(normalized)) && isValidLabelName(normalized);
 
   const total = suggestions.length + (canCreate ? 1 : 0);
 
@@ -78,7 +78,9 @@ export function LabelPicker({
       setHover((h) => Math.max(0, h - 1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (total === 0) return;
+      if (total === 0) {
+        return;
+      }
       select(hover);
     } else if (e.key === "Escape") {
       e.preventDefault();
@@ -90,17 +92,17 @@ export function LabelPicker({
     <div className={classes.popover}>
       <div className={classes.popoverSearch}>
         <input
-          ref={inputRef}
-          type="text"
           autoFocus
           maxLength={MAX_LABEL_NAME_LENGTH}
-          placeholder={t("Search or create…")}
-          value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             setHover(0);
           }}
           onKeyDown={onKey}
+          placeholder={t("Search or create…")}
+          ref={inputRef}
+          type="text"
+          value={query}
         />
       </div>
       <div className={classes.popoverList}>
@@ -110,23 +112,23 @@ export function LabelPicker({
               ? t("No labels yet")
               : appliedNames.has(normalized)
                 ? t("Already added")
-                : !isValidLabelName(normalized)
-                  ? t("Invalid label name")
-                  : t("No matches")}
+                : isValidLabelName(normalized)
+                  ? t("No matches")
+                  : t("Invalid label name")}
           </div>
         )}
         {suggestions.map((s, i) => {
           const c = getLabelColor(s.name, scheme);
           return (
             <button
-              key={s.id}
-              type="button"
               className={clsx(
                 classes.popoverItem,
-                hover === i && classes.popoverItemHover,
+                hover === i && classes.popoverItemHover
               )}
-              onMouseEnter={() => setHover(i)}
+              key={s.id}
               onClick={() => select(i)}
+              onMouseEnter={() => setHover(i)}
+              type="button"
             >
               <span
                 className={classes.popoverItemDot}
@@ -138,13 +140,13 @@ export function LabelPicker({
         })}
         {canCreate && (
           <button
-            type="button"
             className={clsx(
               classes.popoverItem,
-              hover === suggestions.length && classes.popoverItemHover,
+              hover === suggestions.length && classes.popoverItemHover
             )}
-            onMouseEnter={() => setHover(suggestions.length)}
             onClick={() => select(suggestions.length)}
+            onMouseEnter={() => setHover(suggestions.length)}
+            type="button"
           >
             <span className={classes.popoverCreatePlus}>
               <IconPlus size={12} stroke={2} />

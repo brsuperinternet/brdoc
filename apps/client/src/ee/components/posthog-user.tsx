@@ -1,6 +1,6 @@
+import { useAtom } from "jotai";
 import { usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
-import { useAtom } from "jotai";
 import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
 
 export function PosthogUser() {
@@ -11,28 +11,30 @@ export function PosthogUser() {
     if (currentUser) {
       const user = currentUser?.user;
       const workspace = currentUser?.workspace;
-      if (!user || !workspace) return;
+      if (!(user && workspace)) {
+        return;
+      }
 
       posthog?.identify(user.id, {
-        name: user.name,
-        email: user.email,
-        workspaceId: user.workspaceId,
-        workspaceHostname: workspace.hostname,
-        lastActiveAt: new Date().toISOString(),
         createdAt: user.createdAt,
+        email: user.email,
+        lastActiveAt: new Date().toISOString(),
+        name: user.name,
         source: "docmost-app",
+        workspaceHostname: workspace.hostname,
+        workspaceId: user.workspaceId,
       });
       posthog?.group("workspace", workspace.id, {
-        name: workspace.name,
-        hostname: workspace.hostname,
-        plan: workspace?.plan,
-        status: workspace.status,
-        isOnTrial: !!workspace.trialEndAt,
-        hasStripeCustomerId: !!workspace.stripeCustomerId,
-        memberCount: workspace.memberCount,
-        lastActiveAt: new Date().toISOString(),
         createdAt: workspace.createdAt,
+        hasStripeCustomerId: !!workspace.stripeCustomerId,
+        hostname: workspace.hostname,
+        isOnTrial: !!workspace.trialEndAt,
+        lastActiveAt: new Date().toISOString(),
+        memberCount: workspace.memberCount,
+        name: workspace.name,
+        plan: workspace?.plan,
         source: "docmost-app",
+        status: workspace.status,
       });
     }
   }, [posthog, currentUser]);

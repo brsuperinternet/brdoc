@@ -15,43 +15,55 @@ type PendingBatch = {
 let pending: PendingBatch | null = null;
 
 export function expandPagesBatched(
-  ids: readonly string[],
+  ids: readonly string[]
 ): Promise<Map<string, ResolvedPage>> {
-  if (ids.length === 0) return Promise.resolve(new Map());
+  if (ids.length === 0) {
+    return Promise.resolve(new Map());
+  }
 
   return new Promise((resolve, reject) => {
     if (!pending) {
       pending = { ids: new Set(), waiters: [] };
       queueMicrotask(flush);
     }
-    for (const id of ids) pending.ids.add(id);
-    pending.waiters.push({ requestedIds: ids, resolve, reject });
+    for (const id of ids) {
+      pending.ids.add(id);
+    }
+    pending.waiters.push({ reject, requestedIds: ids, resolve });
   });
 }
 
 async function flush(): Promise<void> {
   const batch = pending;
   pending = null;
-  if (!batch) return;
+  if (!batch) {
+    return;
+  }
 
   const unionIds = Array.from(batch.ids);
   try {
     const res = await api.post<{ items: ResolvedPage[] }>(
       "/bases/pages/expand",
-      { pageIds: unionIds },
+      { pageIds: unionIds }
     );
     const byId = new Map<string, ResolvedPage>();
-    for (const item of res.data.items) byId.set(item.id, item);
+    for (const item of res.data.items) {
+      byId.set(item.id, item);
+    }
 
     for (const w of batch.waiters) {
       const subset = new Map<string, ResolvedPage>();
       for (const id of w.requestedIds) {
         const page = byId.get(id);
-        if (page) subset.set(id, page);
+        if (page) {
+          subset.set(id, page);
+        }
       }
       w.resolve(subset);
     }
   } catch (err) {
-    for (const w of batch.waiters) w.reject(err);
+    for (const w of batch.waiters) {
+      w.reject(err);
+    }
   }
 }

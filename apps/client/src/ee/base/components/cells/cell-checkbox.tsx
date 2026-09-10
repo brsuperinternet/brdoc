@@ -1,7 +1,7 @@
-import { useCallback } from "react";
 import { Checkbox } from "@mantine/core";
-import { IBaseProperty } from "@/ee/base/types/base.types";
+import { useCallback } from "react";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 
 type CellCheckboxProps = {
   value: unknown;
@@ -17,7 +17,9 @@ export function CellCheckbox({ value, readOnly, onCommit }: CellCheckboxProps) {
   const checked = value === true;
 
   const handleChange = useCallback(() => {
-    if (readOnly) return;
+    if (readOnly) {
+      return;
+    }
     onCommit(!checked);
   }, [readOnly, checked, onCommit]);
 
@@ -31,13 +33,13 @@ export function CellCheckbox({ value, readOnly, onCommit }: CellCheckboxProps) {
         checked={checked}
         onChange={() => {}}
         size="xs"
-        tabIndex={-1}
         styles={{
           input: {
             cursor: readOnly ? "default" : "pointer",
             pointerEvents: "none",
           },
         }}
+        tabIndex={-1}
       />
     </div>
   );

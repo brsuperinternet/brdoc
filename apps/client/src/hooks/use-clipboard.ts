@@ -1,7 +1,8 @@
 // Source: https://github.com/mantinedev/mantine/blob/master/packages/@mantine/hooks/src/use-clipboard/use-clipboard.ts
 // polyfilled to support execCommand fallback
-import { useState } from "react";
+
 import { execCommandCopy } from "@docmost/editor-ext";
+import { useState } from "react";
 
 export type UseClipboardOptions = {
   timeout?: number;
@@ -15,7 +16,7 @@ export type UseClipboardReturnValue = {
 };
 
 export function useClipboard(
-  options: UseClipboardOptions = { timeout: 2000 },
+  options: UseClipboardOptions = { timeout: 2000 }
 ): UseClipboardReturnValue {
   const [error, setError] = useState<Error | null>(null);
   const [copied, setCopied] = useState(false);
@@ -56,5 +57,5 @@ export function useClipboard(
     window.clearTimeout(copyTimeout!);
   };
 
-  return { copy, reset, error, copied };
+  return { copied, copy, error, reset };
 }

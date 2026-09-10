@@ -1,12 +1,9 @@
-import {
-  IBaseProperty,
-  NumberTypeOptions,
-} from "@/ee/base/types/base.types";
-import { formatCurrency } from "@/ee/base/constants/currencies";
 import { snapNumber } from "@docmost/base-formula/client";
-import { useEditableTextCell } from "@/ee/base/hooks/use-editable-text-cell";
 import { AutoTooltipText } from "@/components/ui/auto-tooltip-text";
+import { formatCurrency } from "@/ee/base/constants/currencies";
+import { useEditableTextCell } from "@/ee/base/hooks/use-editable-text-cell";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty, NumberTypeOptions } from "@/ee/base/types/base.types";
 
 type CellNumberProps = {
   value: unknown;
@@ -18,30 +15,32 @@ type CellNumberProps = {
 };
 
 const SEPARATOR_CHARS: Record<string, { group: string; decimal: string }> = {
-  comma_period: { group: ",", decimal: "." },
-  period_comma: { group: ".", decimal: "," },
-  space_comma: { group: " ", decimal: "," },
-  space_period: { group: " ", decimal: "." },
+  comma_period: { decimal: ".", group: "," },
+  period_comma: { decimal: ",", group: "." },
+  space_comma: { decimal: ",", group: " " },
+  space_period: { decimal: ".", group: " " },
 };
 
 function separatorChars(style: string): { group: string; decimal: string } {
   if (style === "local") {
-    const parts = new Intl.NumberFormat().formatToParts(11111.1);
+    const parts = new Intl.NumberFormat().formatToParts(11_111.1);
     return {
-      group: parts.find((p) => p.type === "group")?.value ?? ",",
       decimal: parts.find((p) => p.type === "decimal")?.value ?? ".",
+      group: parts.find((p) => p.type === "group")?.value ?? ",",
     };
   }
-  return SEPARATOR_CHARS[style] ?? { group: ",", decimal: "." };
+  return SEPARATOR_CHARS[style] ?? { decimal: ".", group: "," };
 }
 
 function formatPlain(
   value: number,
   precision: number | undefined,
-  style: string,
+  style: string
 ): string {
   const fixed = precision == null ? String(value) : value.toFixed(precision);
-  if (style === "none") return fixed;
+  if (style === "none") {
+    return fixed;
+  }
   const { group, decimal } = separatorChars(style);
   const neg = fixed[0] === "-";
   const abs = neg ? fixed.slice(1) : fixed;
@@ -55,9 +54,11 @@ function formatPlain(
 
 export function formatNumber(
   val: number | null | undefined,
-  options: NumberTypeOptions | undefined,
+  options: NumberTypeOptions | undefined
 ): string {
-  if (val == null) return "";
+  if (val == null) {
+    return "";
+  }
   const precision = options?.precision;
   const format = options?.format ?? "plain";
   const style = options?.separators ?? "none";
@@ -84,7 +85,9 @@ export function sanitizeNumberInput(text: string): string {
 
 export function parseNumberDraft(draft: string): number | null {
   const cleaned = sanitizeNumberInput(draft);
-  if (cleaned === "" || cleaned === "-") return null;
+  if (cleaned === "" || cleaned === "-") {
+    return null;
+  }
   const parsed = Number(cleaned);
   return isNaN(parsed) ? null : parsed;
 }
@@ -100,30 +103,29 @@ export function CellNumber({
   const typeOptions = property.typeOptions as NumberTypeOptions | undefined;
   const { draft, setDraft, inputRef, handleKeyDown, handleBlur } =
     useEditableTextCell({
-      value,
       isEditing,
-      onCommit,
       onCancel,
-      toDraft,
+      onCommit,
       parse: parseNumberDraft,
-      rowId,
       propertyId: property.id,
+      rowId,
+      toDraft,
+      value,
     });
 
   if (isEditing) {
     return (
       <input
-        ref={inputRef}
-        type="text"
-        inputMode="decimal"
         className={`${cellClasses.cellInput} ${cellClasses.numberInput}`}
-        value={draft}
+        inputMode="decimal"
+        onBlur={handleBlur}
         onChange={(e) => {
           const v = e.target.value;
           if (v === "" || v === "-" || /^-?\d*\.?\d*$/.test(v)) {
             setDraft(v);
           }
         }}
+        onKeyDown={handleKeyDown}
         onPaste={(e) => {
           e.preventDefault();
           const el = e.currentTarget;
@@ -132,11 +134,12 @@ export function CellNumber({
           setDraft(
             draft.slice(0, start) +
               sanitizeNumberInput(e.clipboardData.getData("text")) +
-              draft.slice(end),
+              draft.slice(end)
           );
         }}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
+        ref={inputRef}
+        type="text"
+        value={draft}
       />
     );
   }

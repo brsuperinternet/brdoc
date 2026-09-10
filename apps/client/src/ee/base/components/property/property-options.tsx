@@ -1,31 +1,31 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Stack,
+  Button,
+  Divider,
+  Group,
   NumberInput,
   Select,
+  Stack,
   Switch,
   Text,
-  Button,
-  Group,
-  Divider,
-  TextInput,
   Textarea,
+  TextInput,
 } from "@mantine/core";
-import {
-  IBaseProperty,
-  SelectTypeOptions,
-  NumberTypeOptions,
-  DateTypeOptions,
-  PersonTypeOptions,
-  Choice,
-} from "@/ee/base/types/base.types";
-import { ChoiceEditor } from "./choice-editor";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FilterPersonInput } from "@/ee/base/components/views/filter-person-input";
 import {
   CURRENCIES,
   DEFAULT_CURRENCY_CODE,
 } from "@/ee/base/constants/currencies";
-import { useTranslation } from "react-i18next";
+import {
+  Choice,
+  DateTypeOptions,
+  IBaseProperty,
+  NumberTypeOptions,
+  PersonTypeOptions,
+  SelectTypeOptions,
+} from "@/ee/base/types/base.types";
+import { ChoiceEditor } from "./choice-editor";
 
 type PropertyOptionsProps = {
   property: IBaseProperty;
@@ -52,56 +52,56 @@ export function PropertyOptions({
     case "multiSelect":
       return (
         <SelectOptions
-          property={property}
-          onUpdate={onUpdate}
+          dropdownPortalTarget={dropdownPortalTarget}
+          hideButtons={hideButtons}
           onClose={onClose}
           onDirtyChange={onDirtyChange}
-          hideButtons={hideButtons}
-          dropdownPortalTarget={dropdownPortalTarget}
+          onUpdate={onUpdate}
+          property={property}
         />
       );
     case "status":
       return (
         <StatusOptions
-          property={property}
-          onUpdate={onUpdate}
+          dropdownPortalTarget={dropdownPortalTarget}
+          hideButtons={hideButtons}
           onClose={onClose}
           onDirtyChange={onDirtyChange}
-          hideButtons={hideButtons}
-          dropdownPortalTarget={dropdownPortalTarget}
+          onUpdate={onUpdate}
+          property={property}
         />
       );
     case "number":
       return (
         <NumberOptions
-          property={property}
-          onUpdate={onUpdate}
+          dropdownPortalTarget={dropdownPortalTarget}
+          hideButtons={hideButtons}
           onClose={onClose}
           onDirtyChange={onDirtyChange}
-          hideButtons={hideButtons}
-          dropdownPortalTarget={dropdownPortalTarget}
+          onUpdate={onUpdate}
+          property={property}
         />
       );
     case "date":
       return (
         <DateOptions
-          property={property}
-          onUpdate={onUpdate}
+          dropdownPortalTarget={dropdownPortalTarget}
+          hideButtons={hideButtons}
           onClose={onClose}
           onDirtyChange={onDirtyChange}
-          hideButtons={hideButtons}
-          dropdownPortalTarget={dropdownPortalTarget}
+          onUpdate={onUpdate}
+          property={property}
         />
       );
     case "person":
       return (
         <PersonOptions
-          property={property}
-          onUpdate={onUpdate}
+          dropdownPortalTarget={dropdownPortalTarget}
+          hideButtons={hideButtons}
           onClose={onClose}
           onDirtyChange={onDirtyChange}
-          hideButtons={hideButtons}
-          dropdownPortalTarget={dropdownPortalTarget}
+          onUpdate={onUpdate}
+          property={property}
         />
       );
     case "text":
@@ -110,26 +110,26 @@ export function PropertyOptions({
     case "email":
       return (
         <TextDefaultOptions
-          property={property}
-          onUpdate={onUpdate}
+          hideButtons={hideButtons}
           onClose={onClose}
           onDirtyChange={onDirtyChange}
-          hideButtons={hideButtons}
+          onUpdate={onUpdate}
+          property={property}
         />
       );
     case "checkbox":
       return (
         <CheckboxOptions
-          property={property}
-          onUpdate={onUpdate}
+          hideButtons={hideButtons}
           onClose={onClose}
           onDirtyChange={onDirtyChange}
-          hideButtons={hideButtons}
+          onUpdate={onUpdate}
+          property={property}
         />
       );
     default:
       return (
-        <Text size="xs" c="dimmed">
+        <Text c="dimmed" size="xs">
           {t("No options for this property type")}
         </Text>
       );
@@ -149,7 +149,7 @@ const EMPTY_OPTIONS: Record<string, unknown> = {};
 
 function optionsEqual(
   a: Record<string, unknown>,
-  b: Record<string, unknown>,
+  b: Record<string, unknown>
 ): boolean {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
   for (const key of keys) {
@@ -179,22 +179,29 @@ function useEditableTypeOptions(
     onClose: () => void;
     onDirtyChange?: (dirty: boolean) => void;
     hideButtons?: boolean;
-  },
+  }
 ) {
   const initial = initialRaw ?? EMPTY_OPTIONS;
   const [draft, setDraft] = useState<Record<string, unknown>>(initial);
 
   useEffect(() => {
-    if (!hideButtons) setDraft(initial);
+    if (!hideButtons) {
+      setDraft(initial);
+    }
   }, [initial, hideButtons]);
 
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
   useEffect(() => {
-    if (hideButtons) onUpdateRef.current(draft);
+    if (hideButtons) {
+      onUpdateRef.current(draft);
+    }
   }, [hideButtons, draft]);
 
-  const isDirty = useMemo(() => !optionsEqual(draft, initial), [draft, initial]);
+  const isDirty = useMemo(
+    () => !optionsEqual(draft, initial),
+    [draft, initial]
+  );
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
@@ -202,7 +209,7 @@ function useEditableTypeOptions(
   const update = useCallback(
     (patch: Record<string, unknown>) =>
       setDraft((prev) => ({ ...prev, ...patch })),
-    [],
+    []
   );
   const save = useCallback(() => {
     onUpdate(draft);
@@ -214,7 +221,7 @@ function useEditableTypeOptions(
     onClose();
   }, [initial, onClose, onDirtyChange]);
 
-  return { draft, update, isDirty, save, cancel };
+  return { cancel, draft, isDirty, save, update };
 }
 
 function OptionsFooter({
@@ -230,11 +237,11 @@ function OptionsFooter({
   return (
     <>
       <Divider />
-      <Group justify="flex-end" gap="xs">
-        <Button variant="default" size="xs" onClick={onCancel}>
+      <Group gap="xs" justify="flex-end">
+        <Button onClick={onCancel} size="xs" variant="default">
           {t("Cancel")}
         </Button>
-        <Button size="xs" onClick={onSave} disabled={!isDirty}>
+        <Button disabled={!isDirty} onClick={onSave} size="xs">
           {t("Save")}
         </Button>
       </Group>
@@ -257,25 +264,25 @@ function SelectOptions({
     (newChoices: Choice[], defaultValue: string | string[] | null) => {
       onUpdate({
         ...property.typeOptions,
-        choices: newChoices,
         choiceOrder: newChoices.map((c) => c.id),
+        choices: newChoices,
         defaultValue,
       });
     },
-    [property.typeOptions, onUpdate],
+    [property.typeOptions, onUpdate]
   );
 
   return (
     <ChoiceEditor
-      initialChoices={choices}
-      onSave={handleSave}
-      onClose={onClose}
-      onDirtyChange={onDirtyChange}
-      showCategories={false}
+      dropdownPortalTarget={dropdownPortalTarget}
       hideButtons={hideButtons}
+      initialChoices={choices}
       initialDefaultValue={options?.defaultValue ?? null}
       multiDefault={property.type === "multiSelect"}
-      dropdownPortalTarget={dropdownPortalTarget}
+      onClose={onClose}
+      onDirtyChange={onDirtyChange}
+      onSave={handleSave}
+      showCategories={false}
     />
   );
 }
@@ -295,24 +302,24 @@ function StatusOptions({
     (newChoices: Choice[], defaultValue: string | string[] | null) => {
       onUpdate({
         ...property.typeOptions,
-        choices: newChoices,
         choiceOrder: newChoices.map((c) => c.id),
+        choices: newChoices,
         defaultValue,
       });
     },
-    [property.typeOptions, onUpdate],
+    [property.typeOptions, onUpdate]
   );
 
   return (
     <ChoiceEditor
+      dropdownPortalTarget={dropdownPortalTarget}
+      hideButtons={hideButtons}
       initialChoices={choices}
-      onSave={handleSave}
+      initialDefaultValue={options?.defaultValue ?? null}
       onClose={onClose}
       onDirtyChange={onDirtyChange}
+      onSave={handleSave}
       showCategories
-      hideButtons={hideButtons}
-      initialDefaultValue={options?.defaultValue ?? null}
-      dropdownPortalTarget={dropdownPortalTarget}
     />
   );
 }
@@ -328,86 +335,101 @@ function NumberOptions({
   const { t } = useTranslation();
   const { draft, update, isDirty, save, cancel } = useEditableTypeOptions(
     property.typeOptions as Record<string, unknown> | undefined,
-    { onUpdate, onClose, onDirtyChange, hideButtons },
+    { hideButtons, onClose, onDirtyChange, onUpdate }
   );
   const options = draft as NumberTypeOptions;
 
   return (
     <Stack gap="xs">
       <Select
-        size="xs"
-        label={t("Format")}
         allowDeselect={false}
         checkIconPosition="right"
-        comboboxProps={{ portalProps: { target: dropdownPortalTarget ?? undefined } }}
+        comboboxProps={{
+          portalProps: { target: dropdownPortalTarget ?? undefined },
+        }}
         data={[
-          { value: "plain", label: t("Number") },
-          { value: "currency", label: t("Currency") },
-          { value: "percent", label: t("Percent") },
-          { value: "progress", label: t("Progress") },
+          { label: t("Number"), value: "plain" },
+          { label: t("Currency"), value: "currency" },
+          { label: t("Percent"), value: "percent" },
+          { label: t("Progress"), value: "progress" },
         ]}
-        value={options.format ?? "plain"}
+        label={t("Format")}
         onChange={(val) => update({ format: val ?? "plain" })}
+        size="xs"
+        value={options.format ?? "plain"}
       />
       {options.format === "currency" && (
         <Select
-          size="xs"
-          label={t("Currency")}
           allowDeselect={false}
           checkIconPosition="right"
-          comboboxProps={{ portalProps: { target: dropdownPortalTarget ?? undefined } }}
+          comboboxProps={{
+            portalProps: { target: dropdownPortalTarget ?? undefined },
+          }}
           data={CURRENCIES.map((c) => ({
-            value: c.code,
             label: `${c.name} (${c.code})`,
+            value: c.code,
           }))}
-          value={options.currencyCode ?? DEFAULT_CURRENCY_CODE}
+          label={t("Currency")}
           onChange={(val) =>
             update({ currencyCode: val ?? DEFAULT_CURRENCY_CODE })
           }
+          size="xs"
+          value={options.currencyCode ?? DEFAULT_CURRENCY_CODE}
         />
       )}
       <Select
-        size="xs"
-        label={t("Thousands and decimal separators")}
         allowDeselect={false}
         checkIconPosition="right"
-        comboboxProps={{ portalProps: { target: dropdownPortalTarget ?? undefined } }}
+        comboboxProps={{
+          portalProps: { target: dropdownPortalTarget ?? undefined },
+        }}
         data={[
-          { value: "none", label: t("None") },
-          { value: "local", label: t("Local") },
-          { value: "comma_period", label: t("Comma, period") },
-          { value: "period_comma", label: t("Period, comma") },
-          { value: "space_comma", label: t("Space, comma") },
-          { value: "space_period", label: t("Space, period") },
+          { label: t("None"), value: "none" },
+          { label: t("Local"), value: "local" },
+          { label: t("Comma, period"), value: "comma_period" },
+          { label: t("Period, comma"), value: "period_comma" },
+          { label: t("Space, comma"), value: "space_comma" },
+          { label: t("Space, period"), value: "space_period" },
         ]}
-        value={options.separators ?? "none"}
+        label={t("Thousands and decimal separators")}
         onChange={(val) => update({ separators: val ?? "none" })}
+        size="xs"
+        value={options.separators ?? "none"}
       />
       <Select
-        size="xs"
-        label={t("Decimal places")}
         allowDeselect={false}
         checkIconPosition="right"
-        comboboxProps={{ portalProps: { target: dropdownPortalTarget ?? undefined } }}
+        comboboxProps={{
+          portalProps: { target: dropdownPortalTarget ?? undefined },
+        }}
         data={[
-          { value: "default", label: t("Default") },
+          { label: t("Default"), value: "default" },
           ...Array.from({ length: 9 }, (_, i) => ({
-            value: String(i),
             label: String(i),
+            value: String(i),
           })),
         ]}
-        value={options.precision == null ? "default" : String(options.precision)}
+        label={t("Decimal places")}
         onChange={(val) =>
-          update({ precision: val == null || val === "default" ? undefined : Number(val) })
+          update({
+            precision:
+              val == null || val === "default" ? undefined : Number(val),
+          })
+        }
+        size="xs"
+        value={
+          options.precision == null ? "default" : String(options.precision)
         }
       />
       <NumberInput
-        size="xs"
         label={t("Default value")}
-        placeholder={t("None")}
-        value={typeof options.defaultValue === "number" ? options.defaultValue : ""}
         onChange={(val) =>
           update({ defaultValue: typeof val === "number" ? val : undefined })
+        }
+        placeholder={t("None")}
+        size="xs"
+        value={
+          typeof options.defaultValue === "number" ? options.defaultValue : ""
         }
       />
       {!hideButtons && (
@@ -428,31 +450,33 @@ function DateOptions({
   const { t } = useTranslation();
   const { draft, update, isDirty, save, cancel } = useEditableTypeOptions(
     property.typeOptions as Record<string, unknown> | undefined,
-    { onUpdate, onClose, onDirtyChange, hideButtons },
+    { hideButtons, onClose, onDirtyChange, onUpdate }
   );
   const options = draft as DateTypeOptions;
 
   return (
     <Stack gap="xs">
       <Switch
-        size="xs"
-        label={t("Include time")}
         checked={options.includeTime ?? false}
+        label={t("Include time")}
         onChange={(e) => update({ includeTime: e.currentTarget.checked })}
+        size="xs"
       />
       {options.includeTime && (
         <Select
-          size="xs"
-          label={t("Time format")}
           allowDeselect={false}
           checkIconPosition="right"
-          comboboxProps={{ portalProps: { target: dropdownPortalTarget ?? undefined } }}
+          comboboxProps={{
+            portalProps: { target: dropdownPortalTarget ?? undefined },
+          }}
           data={[
-            { value: "12h", label: "12-hour" },
-            { value: "24h", label: "24-hour" },
+            { label: "12-hour", value: "12h" },
+            { label: "24-hour", value: "24h" },
           ]}
-          value={options.timeFormat ?? "12h"}
+          label={t("Time format")}
           onChange={(val) => update({ timeFormat: val ?? "12h" })}
+          size="xs"
+          value={options.timeFormat ?? "12h"}
         />
       )}
       {!hideButtons && (
@@ -473,7 +497,7 @@ function PersonOptions({
   const { t } = useTranslation();
   const { draft, update, isDirty, save, cancel } = useEditableTypeOptions(
     property.typeOptions as Record<string, unknown> | undefined,
-    { onUpdate, onClose, onDirtyChange, hideButtons },
+    { hideButtons, onClose, onDirtyChange, onUpdate }
   );
   const options = draft as PersonTypeOptions;
   const allowMultiple = options.allowMultiple === true;
@@ -490,22 +514,22 @@ function PersonOptions({
   return (
     <Stack gap="xs">
       <Switch
-        size="xs"
-        label={t("Allow multiple people")}
         checked={allowMultiple}
+        label={t("Allow multiple people")}
         onChange={(e) => handleAllowMultipleChange(e.currentTarget.checked)}
+        size="xs"
       />
       <FilterPersonInput
-        pageId={property.pageId}
+        label={t("Default value")}
         multiple={allowMultiple}
-        value={options.defaultValue ?? null}
         onChange={(value) =>
           update({ defaultValue: value as string | string[] | undefined })
         }
+        pageId={property.pageId}
         placeholder={t("None")}
-        label={t("Default value")}
-        w="100%"
         portalTarget={dropdownPortalTarget}
+        value={options.defaultValue ?? null}
+        w="100%"
       />
       {!hideButtons && (
         <OptionsFooter isDirty={isDirty} onCancel={cancel} onSave={save} />
@@ -526,7 +550,7 @@ function TextDefaultOptions({
   const { t } = useTranslation();
   const { draft, update, isDirty, save, cancel } = useEditableTypeOptions(
     property.typeOptions as Record<string, unknown> | undefined,
-    { onUpdate, onClose, onDirtyChange, hideButtons },
+    { hideButtons, onClose, onDirtyChange, onUpdate }
   );
   const defaultValue =
     typeof draft.defaultValue === "string" ? draft.defaultValue : "";
@@ -543,13 +567,10 @@ function TextDefaultOptions({
     <Stack gap="xs">
       {property.type === "longText" ? (
         <Textarea
-          size="xs"
-          label={t("Default value")}
-          placeholder={t("None")}
           autosize
-          minRows={2}
+          label={t("Default value")}
           maxRows={6}
-          value={defaultValue}
+          minRows={2}
           onChange={(e) =>
             update({
               defaultValue: e.currentTarget.value.trim()
@@ -557,11 +578,21 @@ function TextDefaultOptions({
                 : undefined,
             })
           }
+          placeholder={t("None")}
+          size="xs"
+          value={defaultValue}
         />
       ) : (
         <TextInput
-          size="xs"
+          error={defaultValueError}
           label={t("Default value")}
+          onChange={(e) =>
+            update({
+              defaultValue: e.currentTarget.value.trim()
+                ? e.currentTarget.value
+                : undefined,
+            })
+          }
           placeholder={
             property.type === "url"
               ? "https://example.com"
@@ -569,15 +600,8 @@ function TextDefaultOptions({
                 ? "name@example.com"
                 : t("None")
           }
+          size="xs"
           value={defaultValue}
-          error={defaultValueError}
-          onChange={(e) =>
-            update({
-              defaultValue: e.currentTarget.value.trim()
-                ? e.currentTarget.value
-                : undefined,
-            })
-          }
         />
       )}
       {!hideButtons && (
@@ -601,18 +625,18 @@ function CheckboxOptions({
   const { t } = useTranslation();
   const { draft, update, isDirty, save, cancel } = useEditableTypeOptions(
     property.typeOptions as Record<string, unknown> | undefined,
-    { onUpdate, onClose, onDirtyChange, hideButtons },
+    { hideButtons, onClose, onDirtyChange, onUpdate }
   );
 
   return (
     <Stack gap="xs">
       <Switch
-        size="xs"
-        label={t("Checked by default")}
         checked={draft.defaultValue === true}
+        label={t("Checked by default")}
         onChange={(e) =>
           update({ defaultValue: e.currentTarget.checked ? true : undefined })
         }
+        size="xs"
       />
       {!hideButtons && (
         <OptionsFooter isDirty={isDirty} onCancel={cancel} onSave={save} />

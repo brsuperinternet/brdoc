@@ -1,19 +1,19 @@
-import { Modal, Button, Group, Text } from "@mantine/core";
-import { duplicatePage } from "@/features/page/services/page-service.ts";
-import { useState } from "react";
+import { Button, Group, Modal, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ISpace } from "@/features/space/types/space.types.ts";
-import { queryClient } from "@/main.tsx";
-import { SpaceSelect } from "@/features/space/components/sidebar/space-select.tsx";
 import { useNavigate } from "react-router-dom";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
+import { duplicatePage } from "@/features/page/services/page-service.ts";
+import { SpaceSelect } from "@/features/space/components/sidebar/space-select.tsx";
+import { ISpace } from "@/features/space/types/space.types.ts";
+import { queryClient } from "@/main.tsx";
 
 interface CopyPageModalProps {
-  pageId: string;
   currentSpaceSlug: string;
-  open: boolean;
   onClose: () => void;
+  open: boolean;
+  pageId: string;
 }
 
 export default function CopyPageModal({
@@ -27,7 +27,9 @@ export default function CopyPageModal({
   const navigate = useNavigate();
 
   const handleCopy = async () => {
-    if (!targetSpace) return;
+    if (!targetSpace) {
+      return;
+    }
 
     try {
       const copiedPage = await duplicatePage({
@@ -37,14 +39,14 @@ export default function CopyPageModal({
       queryClient.removeQueries({
         predicate: (item) =>
           ["pages", "sidebar-pages", "root-sidebar-pages"].includes(
-            item.queryKey[0] as string,
+            item.queryKey[0] as string
           ),
       });
 
       const pageUrl = buildPageUrl(
         copiedPage.space.slug,
         copiedPage.slugId,
-        copiedPage.title,
+        copiedPage.title
       );
       navigate(pageUrl);
       notifications.show({
@@ -54,8 +56,8 @@ export default function CopyPageModal({
       setTargetSpace(null);
     } catch (err) {
       notifications.show({
-        message: err.response?.data.message || "An error occurred",
         color: "red",
+        message: err.response?.data.message || "An error occurred",
       });
       console.log(err);
     }
@@ -67,14 +69,14 @@ export default function CopyPageModal({
 
   return (
     <Modal.Root
-      opened={open}
-      onClose={onClose}
-      size={500}
-      padding="xl"
-      yOffset="10vh"
-      xOffset={0}
       mah={400}
       onClick={(e) => e.stopPropagation()}
+      onClose={onClose}
+      opened={open}
+      padding="xl"
+      size={500}
+      xOffset={0}
+      yOffset="10vh"
     >
       <Modal.Overlay />
       <Modal.Content style={{ overflow: "hidden" }}>
@@ -83,14 +85,14 @@ export default function CopyPageModal({
           <Modal.CloseButton aria-label={t("Close")} />
         </Modal.Header>
         <Modal.Body>
-          <Text mb="xs" c="dimmed" size="sm">
+          <Text c="dimmed" mb="xs" size="sm">
             {t("Copy page to a different space.")}
           </Text>
 
           <SpaceSelect
-            value={currentSpaceSlug}
             clearable={false}
             onChange={handleChange}
+            value={currentSpaceSlug}
           />
           <Group justify="end" mt="md">
             <Button onClick={onClose} variant="default">

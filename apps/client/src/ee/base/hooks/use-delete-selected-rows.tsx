@@ -1,7 +1,7 @@
-import { useCallback } from "react";
-import { notifications } from "@mantine/notifications";
-import { modals } from "@mantine/modals";
 import { Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
 import { useDeleteRowsMutation } from "@/ee/base/queries/base-row-query";
@@ -31,23 +31,21 @@ export function useDeleteSelectedRows(pageId: string) {
         // mutation onError already shows notification
       }
     },
-    [pageId, mutation, clear, t],
+    [pageId, mutation, clear, t]
   );
 
   const deleteSelected = useCallback(() => {
     const ids = Array.from(selectedIds);
-    if (ids.length === 0) return;
+    if (ids.length === 0) {
+      return;
+    }
     modals.openConfirmModal({
-      title: t("Delete {{count}} rows?", { count: ids.length }),
       centered: true,
-      children: (
-        <Text size="sm">
-          {t("This action cannot be undone.")}
-        </Text>
-      ),
-      labels: { confirm: t("Delete"), cancel: t("Cancel") },
+      children: <Text size="sm">{t("This action cannot be undone.")}</Text>,
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Delete") },
       onConfirm: () => void runDelete(ids),
+      title: t("Delete {{count}} rows?", { count: ids.length }),
     });
   }, [selectedIds, runDelete, t]);
 

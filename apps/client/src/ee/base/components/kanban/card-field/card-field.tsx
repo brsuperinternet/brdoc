@@ -1,30 +1,33 @@
-import { Text, Badge, Tooltip, Group } from "@mantine/core";
-import { IconCheck, IconFileDescription } from "@tabler/icons-react";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { sanitizeUrl } from "@docmost/editor-ext";
-import {
-  IBaseProperty,
-  SelectTypeOptions,
-  NumberTypeOptions,
-  DateTypeOptions,
-  isFormulaErrorCell,
-} from "@/ee/base/types/base.types";
-import { choiceColor } from "@/ee/base/components/cells/choice-color";
-import { ChoiceBadge } from "@/ee/base/components/cells/choice-badge";
-import { BadgeOverflowList } from "@/ee/base/components/cells/badge-overflow";
-import { PersonReadList } from "@/ee/base/components/cells/person-read-list";
+import { Badge, Group, Text, Tooltip } from "@mantine/core";
+import { IconCheck, IconFileDescription } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { CustomAvatar } from "@/components/ui/custom-avatar";
-import { useReferenceStore, useResolvePage } from "@/ee/base/reference/reference-store";
-import {
-  formatNumber,
-  formatDateDisplay,
-  formatTimestamp,
-  formatLongTextPreview,
-} from "@/ee/base/formatters/cell-formatters";
-import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
+import { BadgeOverflowList } from "@/ee/base/components/cells/badge-overflow";
 import { FileValue } from "@/ee/base/components/cells/cell-file";
+import { ChoiceBadge } from "@/ee/base/components/cells/choice-badge";
+import { choiceColor } from "@/ee/base/components/cells/choice-color";
+import { PersonReadList } from "@/ee/base/components/cells/person-read-list";
+import {
+  formatDateDisplay,
+  formatLongTextPreview,
+  formatNumber,
+  formatTimestamp,
+} from "@/ee/base/formatters/cell-formatters";
+import {
+  useReferenceStore,
+  useResolvePage,
+} from "@/ee/base/reference/reference-store";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import {
+  DateTypeOptions,
+  IBaseProperty,
+  isFormulaErrorCell,
+  NumberTypeOptions,
+  SelectTypeOptions,
+} from "@/ee/base/types/base.types";
+import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
 
 type CardFieldProps = {
   property: IBaseProperty;
@@ -33,8 +36,12 @@ type CardFieldProps = {
 };
 
 export function CardField({ property, value, pageId }: CardFieldProps) {
-  if (value === null || value === undefined || value === "") return null;
-  if (Array.isArray(value) && value.length === 0) return null;
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+  if (Array.isArray(value) && value.length === 0) {
+    return null;
+  }
 
   switch (property.type) {
     case "text":
@@ -42,25 +49,31 @@ export function CardField({ property, value, pageId }: CardFieldProps) {
     case "longText":
       return <LongTextField value={value} />;
     case "number":
-      return <NumberField value={value} property={property} />;
+      return <NumberField property={property} value={value} />;
     case "select":
     case "status":
-      return <SelectField value={value} property={property} />;
+      return <SelectField property={property} value={value} />;
     case "multiSelect":
-      return <MultiSelectField value={value} property={property} />;
+      return <MultiSelectField property={property} value={value} />;
     case "date":
-      return <DateField value={value} property={property} />;
+      return <DateField property={property} value={value} />;
     case "createdAt":
     case "lastEditedAt":
       return <TimestampField value={value} />;
     case "person":
-      return <PersonField value={value} pageId={pageId} />;
+      return <PersonField pageId={pageId} value={value} />;
     case "lastEditedBy":
-      return <LastEditedByField value={value} pageId={pageId} />;
+      return <LastEditedByField pageId={pageId} value={value} />;
     case "file":
       return <FileField value={value} />;
     case "page":
-      return <PageField value={value} basePageId={pageId} propertyPageId={property.pageId} />;
+      return (
+        <PageField
+          basePageId={pageId}
+          propertyPageId={property.pageId}
+          value={value}
+        />
+      );
     case "checkbox":
       return <CheckboxField value={value} />;
     case "url":
@@ -68,10 +81,10 @@ export function CardField({ property, value, pageId }: CardFieldProps) {
     case "email":
       return <EmailField value={value} />;
     case "formula":
-      return <FormulaField value={value} property={property} />;
+      return <FormulaField property={property} value={value} />;
     default:
       return (
-        <Text size="xs" lineClamp={1}>
+        <Text lineClamp={1} size="xs">
           {String(value)}
         </Text>
       );
@@ -80,37 +93,65 @@ export function CardField({ property, value, pageId }: CardFieldProps) {
 
 function TextField({ value }: { value: unknown }) {
   const text = typeof value === "string" ? value : String(value);
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
   return (
-    <Text size="sm" lineClamp={2}>
+    <Text lineClamp={2} size="sm">
       {text}
     </Text>
   );
 }
 
 function LongTextField({ value }: { value: unknown }) {
-  const preview = formatLongTextPreview(typeof value === "string" ? value : undefined);
-  if (!preview) return null;
+  const preview = formatLongTextPreview(
+    typeof value === "string" ? value : undefined
+  );
+  if (!preview) {
+    return null;
+  }
   return (
-    <Text size="xs" c="dimmed" lineClamp={2}>
+    <Text c="dimmed" lineClamp={2} size="xs">
       {preview}
     </Text>
   );
 }
 
-function NumberField({ value, property }: { value: unknown; property: IBaseProperty }) {
+function NumberField({
+  value,
+  property,
+}: {
+  value: unknown;
+  property: IBaseProperty;
+}) {
   const num = typeof value === "number" ? value : null;
-  if (num === null) return null;
-  const formatted = formatNumber(num, property.typeOptions as NumberTypeOptions | undefined);
-  if (!formatted) return null;
+  if (num === null) {
+    return null;
+  }
+  const formatted = formatNumber(
+    num,
+    property.typeOptions as NumberTypeOptions | undefined
+  );
+  if (!formatted) {
+    return null;
+  }
   return <Text size="sm">{formatted}</Text>;
 }
 
-function SelectField({ value, property }: { value: unknown; property: IBaseProperty }) {
-  const choices = (property.typeOptions as SelectTypeOptions | undefined)?.choices ?? [];
+function SelectField({
+  value,
+  property,
+}: {
+  value: unknown;
+  property: IBaseProperty;
+}) {
+  const choices =
+    (property.typeOptions as SelectTypeOptions | undefined)?.choices ?? [];
   const selectedId = typeof value === "string" ? value : null;
   const choice = choices.find((c) => c.id === selectedId);
-  if (!choice) return null;
+  if (!choice) {
+    return null;
+  }
   return (
     <ChoiceBadge
       name={choice.name}
@@ -119,13 +160,26 @@ function SelectField({ value, property }: { value: unknown; property: IBasePrope
   );
 }
 
-function MultiSelectField({ value, property }: { value: unknown; property: IBaseProperty }) {
-  const choices = (property.typeOptions as SelectTypeOptions | undefined)?.choices ?? [];
+function MultiSelectField({
+  value,
+  property,
+}: {
+  value: unknown;
+  property: IBaseProperty;
+}) {
+  const choices =
+    (property.typeOptions as SelectTypeOptions | undefined)?.choices ?? [];
   const selectedIds = Array.isArray(value) ? (value as string[]) : [];
   const selectedChoices = choices.filter((c) => selectedIds.includes(c.id));
-  if (selectedChoices.length === 0) return null;
+  if (selectedChoices.length === 0) {
+    return null;
+  }
   const chips = selectedChoices.map((choice) => (
-    <span key={choice.id} className={cellClasses.badge} style={choiceColor(choice.color)}>
+    <span
+      className={cellClasses.badge}
+      key={choice.id}
+      style={choiceColor(choice.color)}
+    >
       {choice.name}
     </span>
   ));
@@ -138,12 +192,23 @@ function MultiSelectField({ value, property }: { value: unknown; property: IBase
   );
 }
 
-function DateField({ value, property }: { value: unknown; property: IBaseProperty }) {
+function DateField({
+  value,
+  property,
+}: {
+  value: unknown;
+  property: IBaseProperty;
+}) {
   const dateStr = typeof value === "string" ? value : null;
-  const formatted = formatDateDisplay(dateStr, property.typeOptions as DateTypeOptions | undefined);
-  if (!formatted) return null;
+  const formatted = formatDateDisplay(
+    dateStr,
+    property.typeOptions as DateTypeOptions | undefined
+  );
+  if (!formatted) {
+    return null;
+  }
   return (
-    <Text size="xs" c="dimmed">
+    <Text c="dimmed" size="xs">
       {formatted}
     </Text>
   );
@@ -151,9 +216,11 @@ function DateField({ value, property }: { value: unknown; property: IBasePropert
 
 function TimestampField({ value }: { value: unknown }) {
   const formatted = formatTimestamp(typeof value === "string" ? value : null);
-  if (!formatted) return null;
+  if (!formatted) {
+    return null;
+  }
   return (
-    <Text size="xs" c="dimmed">
+    <Text c="dimmed" size="xs">
       {formatted}
     </Text>
   );
@@ -166,20 +233,35 @@ function PersonField({ value, pageId }: { value: unknown; pageId: string }) {
     : typeof value === "string"
       ? [value]
       : [];
-  if (personIds.length === 0) return null;
+  if (personIds.length === 0) {
+    return null;
+  }
   return <PersonReadList personIds={personIds} users={store.users} />;
 }
 
-function LastEditedByField({ value, pageId }: { value: unknown; pageId: string }) {
+function LastEditedByField({
+  value,
+  pageId,
+}: {
+  value: unknown;
+  pageId: string;
+}) {
   const userId = typeof value === "string" ? value : null;
   const store = useReferenceStore(pageId);
-  if (!userId) return null;
+  if (!userId) {
+    return null;
+  }
   const user = store.users[userId] ?? null;
   const name = user?.name ?? userId.substring(0, 8);
   return (
-    <Group gap={6} wrap="nowrap" style={{ overflow: "hidden" }}>
-      <CustomAvatar avatarUrl={user?.avatarUrl ?? ""} name={name} size={20} radius="xl" />
-      <Tooltip label={name} withinPortal openDelay={400} disabled={!name}>
+    <Group gap={6} style={{ overflow: "hidden" }} wrap="nowrap">
+      <CustomAvatar
+        avatarUrl={user?.avatarUrl ?? ""}
+        name={name}
+        radius="xl"
+        size={20}
+      />
+      <Tooltip disabled={!name} label={name} openDelay={400} withinPortal>
         <Text size="xs" truncate>
           {name}
         </Text>
@@ -190,20 +272,26 @@ function LastEditedByField({ value, pageId }: { value: unknown; pageId: string }
 
 function FileField({ value }: { value: unknown }) {
   const files = Array.isArray(value)
-    ? (value as FileValue[]).filter((f) => f && typeof f === "object" && "id" in f && "fileName" in f)
+    ? (value as FileValue[]).filter(
+        (f) => f && typeof f === "object" && "id" in f && "fileName" in f
+      )
     : [];
-  if (files.length === 0) return null;
+  if (files.length === 0) {
+    return null;
+  }
   const maxVisible = 2;
   const visible = files.slice(0, maxVisible);
   const overflow = files.length - maxVisible;
   return (
     <div className={cellClasses.fileGroup}>
       {visible.map((file) => (
-        <span key={file.id} className={cellClasses.fileBadge}>
+        <span className={cellClasses.fileBadge} key={file.id}>
           {file.fileName}
         </span>
       ))}
-      {overflow > 0 && <span className={cellClasses.overflowCount}>+{overflow}</span>}
+      {overflow > 0 && (
+        <span className={cellClasses.overflowCount}>+{overflow}</span>
+      )}
     </div>
   );
 }
@@ -221,8 +309,12 @@ function PageField({
   const pageId = typeof value === "string" && value.length > 0 ? value : null;
   const resolvedPage = useResolvePage(propertyPageId, pageId);
 
-  if (!pageId) return null;
-  if (resolvedPage === undefined) return null;
+  if (!pageId) {
+    return null;
+  }
+  if (resolvedPage === undefined) {
+    return null;
+  }
 
   if (resolvedPage === null) {
     return (
@@ -238,17 +330,20 @@ function PageField({
   const url = buildPageUrl(spaceSlug, resolvedPage.slugId, title);
 
   return (
-    <Tooltip label={title} withinPortal openDelay={400} disabled={!title}>
+    <Tooltip disabled={!title} label={title} openDelay={400} withinPortal>
       <Link
-        to={url}
         className={cellClasses.pagePill}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
+        to={url}
       >
         {resolvedPage.icon ? (
           <span className={cellClasses.pagePillIcon}>{resolvedPage.icon}</span>
         ) : (
-          <IconFileDescription size={14} className={cellClasses.pagePillIconFallback} />
+          <IconFileDescription
+            className={cellClasses.pagePillIconFallback}
+            size={14}
+          />
         )}
         <span className={cellClasses.pagePillText}>{title}</span>
       </Link>
@@ -257,30 +352,40 @@ function PageField({
 }
 
 function CheckboxField({ value }: { value: unknown }) {
-  if (value !== true) return null;
+  if (value !== true) {
+    return null;
+  }
   return <IconCheck size={14} />;
 }
 
 function UrlField({ value }: { value: unknown }) {
   const displayValue = typeof value === "string" ? value : "";
-  if (!displayValue) return null;
+  if (!displayValue) {
+    return null;
+  }
   const safeHref = sanitizeUrl(displayValue);
   if (!safeHref) {
     return (
-      <Text size="xs" lineClamp={1}>
+      <Text lineClamp={1} size="xs">
         {displayValue}
       </Text>
     );
   }
   return (
-    <Tooltip label={displayValue} multiline withinPortal openDelay={400} maw={420}>
+    <Tooltip
+      label={displayValue}
+      maw={420}
+      multiline
+      openDelay={400}
+      withinPortal
+    >
       <a
         className={cellClasses.urlLink}
         href={safeHref}
-        target="_blank"
-        rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
+        rel="noopener noreferrer"
         style={{ fontSize: "var(--mantine-font-size-xs)" }}
+        target="_blank"
       >
         {displayValue}
       </a>
@@ -290,9 +395,17 @@ function UrlField({ value }: { value: unknown }) {
 
 function EmailField({ value }: { value: unknown }) {
   const displayValue = typeof value === "string" ? value : "";
-  if (!displayValue) return null;
+  if (!displayValue) {
+    return null;
+  }
   return (
-    <Tooltip label={displayValue} multiline withinPortal openDelay={400} maw={420}>
+    <Tooltip
+      label={displayValue}
+      maw={420}
+      multiline
+      openDelay={400}
+      withinPortal
+    >
       <a
         className={cellClasses.emailLink}
         href={`mailto:${displayValue}`}
@@ -305,11 +418,17 @@ function EmailField({ value }: { value: unknown }) {
   );
 }
 
-function FormulaField({ value, property }: { value: unknown; property: IBaseProperty }) {
+function FormulaField({
+  value,
+  property,
+}: {
+  value: unknown;
+  property: IBaseProperty;
+}) {
   if (isFormulaErrorCell(value)) {
     return (
       <Tooltip label={`${value.__err}: ${value.msg}`} withinPortal>
-        <Badge color="red" variant="light" size="sm">
+        <Badge color="red" size="sm" variant="light">
           #ERROR
         </Badge>
       </Tooltip>
@@ -320,19 +439,22 @@ function FormulaField({ value, property }: { value: unknown; property: IBaseProp
   const resultType = opts.resultType ?? "null";
 
   if (resultType === "number") {
-    return <NumberField value={value} property={property} />;
+    return <NumberField property={property} value={value} />;
   }
   if (resultType === "boolean") {
     return <CheckboxField value={value} />;
   }
   if (resultType === "date") {
-    return <DateField value={value} property={property} />;
+    return <DateField property={property} value={value} />;
   }
 
-  const text = typeof value === "string" ? value : value != null ? String(value) : null;
-  if (!text) return null;
+  const text =
+    typeof value === "string" ? value : value == null ? null : String(value);
+  if (!text) {
+    return null;
+  }
   return (
-    <Text size="sm" lineClamp={2}>
+    <Text lineClamp={2} size="sm">
       {text}
     </Text>
   );

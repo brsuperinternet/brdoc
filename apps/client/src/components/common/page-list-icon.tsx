@@ -11,7 +11,7 @@ export function PageListIcon({ icon, isBase }: Props) {
     return <>{icon}</>;
   }
   return (
-    <ThemeIcon variant="transparent" color="gray" size={18}>
+    <ThemeIcon color="gray" size={18} variant="transparent">
       {isBase ? <IconTable size={18} /> : <IconFileDescription size={18} />}
     </ThemeIcon>
   );

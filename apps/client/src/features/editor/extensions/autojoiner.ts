@@ -1,10 +1,9 @@
 // https://github.com/NiclasDev63/tiptap-extension-auto-joiner - MIT
 import { Extension } from "@tiptap/core";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { NodeType } from "@tiptap/pm/model";
+import { Plugin, PluginKey, Transaction } from "@tiptap/pm/state";
 import { canJoin } from "@tiptap/pm/transform";
 import { getNodeType } from "@tiptap/react";
-import { NodeType } from "@tiptap/pm/model";
-import { Transaction } from "@tiptap/pm/state";
 
 // https://discuss.prosemirror.net/t/how-to-autojoin-all-the-time/2957/4
 // Adapted from prosemirror-commands wrapDispatchForJoin
@@ -15,12 +14,16 @@ function autoJoin(
 ) {
   // Collect changed ranges across all transactions, mapping earlier ranges
   // forward through later mappings so every position lands in newTr.doc space.
-  let ranges: number[] = [];
+  const ranges: number[] = [];
   for (const tr of transactions) {
     for (let i = 0; i < tr.mapping.maps.length; i++) {
-      let map = tr.mapping.maps[i];
-      if (!map) continue;
-      for (let j = 0; j < ranges.length; j++) ranges[j] = map.map(ranges[j]!);
+      const map = tr.mapping.maps[i];
+      if (!map) {
+        continue;
+      }
+      for (let j = 0; j < ranges.length; j++) {
+        ranges[j] = map.map(ranges[j]!);
+      }
       map.forEach((_s, _e, from, to) => ranges.push(from, to));
     }
   }
@@ -28,11 +31,11 @@ function autoJoin(
   // Figure out which joinable points exist inside those ranges,
   // by checking all node boundaries in their parent nodes.
   // Resolve against newTr.doc — the same document we will join on.
-  let joinable: number[] = [];
+  const joinable: number[] = [];
   for (let i = 0; i < ranges.length; i += 2) {
-    let from = ranges[i]!,
+    const from = ranges[i]!,
       to = ranges[i + 1]!;
-    let $from = newTr.doc.resolve(from),
+    const $from = newTr.doc.resolve(from),
       depth = $from.sharedDepth(to),
       parent = $from.node(depth);
     for (
@@ -40,12 +43,15 @@ function autoJoin(
       pos <= to;
       ++index
     ) {
-      let after = parent.maybeChild(index);
-      if (!after) break;
+      const after = parent.maybeChild(index);
+      if (!after) {
+        break;
+      }
       if (index && joinable.indexOf(pos) == -1) {
-        let before = parent.child(index - 1);
-        if (before.type == after.type && nodeTypes.includes(before.type))
+        const before = parent.child(index - 1);
+        if (before.type == after.type && nodeTypes.includes(before.type)) {
           joinable.push(pos);
+        }
       }
       pos += after.nodeSize;
     }
@@ -69,8 +75,6 @@ export interface AutoJoinerOptions {
 }
 
 const AutoJoiner = Extension.create<AutoJoinerOptions>({
-  name: "autoJoiner",
-
   addOptions() {
     return {
       elementsToJoin: [],
@@ -90,16 +94,17 @@ const AutoJoiner = Extension.create<AutoJoinerOptions>({
 
     return [
       new Plugin({
-        key: plugin,
         appendTransaction(transactions, _, newState) {
-          let newTr = newState.tr;
+          const newTr = newState.tr;
           if (autoJoin(transactions, newTr, joinableNodes as NodeType[])) {
             return newTr;
           }
         },
+        key: plugin,
       }),
     ];
   },
+  name: "autoJoiner",
 });
 
 export default AutoJoiner;

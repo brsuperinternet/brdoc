@@ -1,16 +1,16 @@
 import { Center, Divider, Loader, Stack, Text } from "@mantine/core";
 import { IconBellOff } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { useEffect, useRef } from "react";
-import { NotificationItem } from "./notification-item";
+import { useTranslation } from "react-i18next";
+import classes from "../notification.module.css";
+import { groupNotificationsByTime } from "../notification.utils";
+import { useNotificationsQuery } from "../queries/notification-query";
 import {
   INotification,
   NotificationFilter,
   NotificationTab,
 } from "../types/notification.types";
-import { groupNotificationsByTime } from "../notification.utils";
-import { useNotificationsQuery } from "../queries/notification-query";
-import classes from "../notification.module.css";
+import { NotificationItem } from "./notification-item";
 
 type NotificationListProps = {
   tab: NotificationTab;
@@ -24,19 +24,16 @@ export function NotificationList({
   onNavigate,
 }: NotificationListProps) {
   const { t } = useTranslation();
-  const {
-    data,
-    isLoading,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useNotificationsQuery(tab as string);
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useNotificationsQuery(tab as string);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -44,7 +41,7 @@ export function NotificationList({
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
 
     observer.observe(sentinel);
@@ -59,8 +56,7 @@ export function NotificationList({
     );
   }
 
-  const allNotifications =
-    data?.pages.flatMap((page) => page.items) ?? [];
+  const allNotifications = data?.pages.flatMap((page) => page.items) ?? [];
 
   const filtered =
     filter === "unread"
@@ -71,8 +67,12 @@ export function NotificationList({
     return (
       <Center py="xl">
         <Stack align="center" gap="xs">
-          <IconBellOff size={32} stroke={1.5} color="var(--mantine-color-dimmed)" />
-          <Text size="sm" c="dimmed">
+          <IconBellOff
+            color="var(--mantine-color-dimmed)"
+            size={32}
+            stroke={1.5}
+          />
+          <Text c="dimmed" size="sm">
             {filter === "unread"
               ? t("No unread notifications")
               : t("No notifications")}
@@ -83,10 +83,10 @@ export function NotificationList({
   }
 
   const timeGroupLabels = {
+    older: t("Older"),
+    this_week: t("This week"),
     today: t("Today"),
     yesterday: t("Yesterday"),
-    this_week: t("This week"),
-    older: t("Older"),
   };
 
   const groups = groupNotificationsByTime(filtered, timeGroupLabels);
@@ -96,7 +96,7 @@ export function NotificationList({
       {groups.map((group, groupIndex) => (
         <div key={group.key}>
           {groupIndex > 0 && <Divider className={classes.divider} />}
-          <Text size="xs" fw={600} c="dimmed" px="md" pt="sm" pb={4}>
+          <Text c="dimmed" fw={600} pb={4} pt="sm" px="md" size="xs">
             {group.label}
           </Text>
           {group.notifications.map((notification: INotification) => (

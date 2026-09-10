@@ -1,7 +1,7 @@
 div[data-type="columns"] {
   display: flex;
-  margin: 0.75rem 0;
   padding: 0.5em 0;
+  margin: 0.75rem 0;
 }
 
 div[data-type="columns"] > div[data-type="column"] {
@@ -15,8 +15,8 @@ div[data-type="columns"] > div[data-type="column"]:last-child {
 }
 
 div[data-type="columns"] > div[data-type="column"] + div[data-type="column"] {
-  border-left: 1px solid transparent;
   padding-left: 1rem;
+  border-left: 1px solid transparent;
   transition: border 0.3s;
 }
 
@@ -32,7 +32,7 @@ div[data-type="columns"].has-focus
 
 /* Confluence layout types */
 div[data-type="columns"][data-layout="two_left_sidebar"]
-  > div[data-type="column"]:first-child {
+> div[data-type="column"]:first-child {
   flex: 1;
 }
 
@@ -80,8 +80,8 @@ div[data-type="columns"][data-layout="three_with_sidebars"]
   }
 
   div[data-type="columns"] > div[data-type="column"] + div[data-type="column"] {
-    border-left: none;
     padding-left: 0;
+    border-left: none;
   }
 
   div[data-type="columns"]:hover
@@ -93,16 +93,16 @@ div[data-type="columns"][data-layout="three_with_sidebars"]
 
 /* Wide width mode — extends columns to full container width */
 div[data-type="columns"][data-width-mode="wide"] {
-  margin-left: -3rem;
-  margin-right: -3rem;
   width: calc(100% + 6rem);
+  margin-right: -3rem;
+  margin-left: -3rem;
 }
 
 @media (max-width: $mantine-breakpoint-sm) {
   div[data-type="columns"][data-width-mode="wide"] {
-    margin-left: -1rem;
-    margin-right: -1rem;
     width: calc(100% + 2rem);
+    margin-right: -1rem;
+    margin-left: -1rem;
   }
 }
 
@@ -112,13 +112,13 @@ div[data-type="columns"][data-width-mode="wide"] {
   }
 
   div[data-type="columns"] > div[data-type="column"] + div[data-type="column"] {
-    border-left: none;
     padding-left: 1rem;
+    border-left: none;
   }
 
   div[data-type="columns"][data-width-mode="wide"] {
-    margin-left: 0;
-    margin-right: 0;
     width: 100%;
+    margin-right: 0;
+    margin-left: 0;
   }
 }

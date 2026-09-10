@@ -1,5 +1,3 @@
-import React, { FC } from "react";
-import { IconCheck, IconPalette } from "@tabler/icons-react";
 import {
   ActionIcon,
   ColorSwatch,
@@ -9,13 +7,15 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
+import { IconCheck, IconPalette } from "@tabler/icons-react";
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
+import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface TableColorItem {
-  name: string;
   color: string;
+  name: string;
 }
 
 interface TableBackgroundColorProps {
@@ -23,14 +23,14 @@ interface TableBackgroundColorProps {
 }
 
 export const TABLE_COLORS: TableColorItem[] = [
-  { name: "Default", color: "" },
-  { name: "Blue", color: "#b4d5ff" },
-  { name: "Green", color: "#acf5d2" },
-  { name: "Yellow", color: "#fef1b4" },
-  { name: "Red", color: "#ffbead" },
-  { name: "Pink", color: "#ffc7fe" },
-  { name: "Gray", color: "#eaecef" },
-  { name: "Purple", color: "#c1b7f2" },
+  { color: "", name: "Default" },
+  { color: "#b4d5ff", name: "Blue" },
+  { color: "#acf5d2", name: "Green" },
+  { color: "#fef1b4", name: "Yellow" },
+  { color: "#ffbead", name: "Red" },
+  { color: "#ffc7fe", name: "Pink" },
+  { color: "#eaecef", name: "Gray" },
+  { color: "#c1b7f2", name: "Purple" },
 ];
 
 export const TableBackgroundColor: FC<TableBackgroundColorProps> = ({
@@ -63,7 +63,7 @@ export const TableBackgroundColor: FC<TableBackgroundColorProps> = ({
     },
   });
 
-  if (!editor || !editorState) {
+  if (!(editor && editorState)) {
     return null;
   }
 
@@ -85,20 +85,20 @@ export const TableBackgroundColor: FC<TableBackgroundColorProps> = ({
 
   return (
     <Popover
-      width={200}
-      position="bottom"
-      opened={opened}
       onChange={setOpened}
-      withArrow
+      opened={opened}
+      position="bottom"
       transitionProps={{ transition: "pop" }}
+      width={200}
+      withArrow
     >
       <Popover.Target>
         <Tooltip label={t("Background color")} withArrow>
           <ActionIcon
-            variant="subtle"
-            size="lg"
             aria-label={t("Background color")}
             onClick={() => setOpened(!opened)}
+            size="lg"
+            variant="subtle"
           >
             <IconPalette size={18} />
           </ActionIcon>
@@ -107,15 +107,15 @@ export const TableBackgroundColor: FC<TableBackgroundColorProps> = ({
 
       <Popover.Dropdown>
         <Stack gap="xs">
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             {t("Background color")}
           </Text>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
               gap: "8px",
+              gridTemplateColumns: "repeat(4, 1fr)",
             }}
           >
             {TABLE_COLORS.map((item, index) => (
@@ -123,9 +123,9 @@ export const TableBackgroundColor: FC<TableBackgroundColorProps> = ({
                 key={index}
                 onClick={() => setTableCellBackground(item.color, item.name)}
                 style={{
+                  height: "24px",
                   position: "relative",
                   width: "24px",
-                  height: "24px",
                 }}
                 title={t(item.name)}
               >

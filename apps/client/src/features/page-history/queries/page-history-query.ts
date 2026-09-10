@@ -1,9 +1,9 @@
 import {
   InfiniteData,
-  useInfiniteQuery,
   UseInfiniteQueryResult,
-  useQuery,
   UseQueryResult,
+  useInfiniteQuery,
+  useQuery,
 } from "@tanstack/react-query";
 import {
   getPageHistoryById,
@@ -17,40 +17,40 @@ const HISTORY_STALE_TIME = 60 * 60 * 1000;
 
 export function prefetchPageHistory(historyId: string) {
   return queryClient.prefetchQuery({
-    queryKey: ["page-history", historyId],
     queryFn: () => getPageHistoryById(historyId),
+    queryKey: ["page-history", historyId],
     staleTime: HISTORY_STALE_TIME,
   });
 }
 
 export function fetchPageHistory(historyId: string): Promise<IPageHistory> {
   return queryClient.fetchQuery({
-    queryKey: ["page-history", historyId],
     queryFn: () => getPageHistoryById(historyId),
+    queryKey: ["page-history", historyId],
     staleTime: HISTORY_STALE_TIME,
   });
 }
 
 export function usePageHistoryListQuery(
-  pageId: string,
+  pageId: string
 ): UseInfiniteQueryResult<InfiniteData<IPagination<IPageHistory>, unknown>> {
   return useInfiniteQuery({
-    queryKey: ["page-history-list", pageId],
-    queryFn: ({ pageParam }) => getPageHistoryList(pageId, pageParam),
     enabled: !!pageId,
     gcTime: 0,
-    initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
+    initialPageParam: undefined,
+    queryFn: ({ pageParam }) => getPageHistoryList(pageId, pageParam),
+    queryKey: ["page-history-list", pageId],
   });
 }
 
 export function usePageHistoryQuery(
-  historyId: string,
+  historyId: string
 ): UseQueryResult<IPageHistory, Error> {
   return useQuery({
-    queryKey: ["page-history", historyId],
-    queryFn: () => getPageHistoryById(historyId),
     enabled: !!historyId,
+    queryFn: () => getPageHistoryById(historyId),
+    queryKey: ["page-history", historyId],
     staleTime: HISTORY_STALE_TIME,
   });
 }

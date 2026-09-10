@@ -1,12 +1,16 @@
-import { Text, MantineSize, SegmentedControl } from "@mantine/core";
+import { MantineSize, SegmentedControl, Text } from "@mantine/core";
 import { useAtom } from "jotai";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ResponsiveSettingsContent,
+  ResponsiveSettingsControl,
+  ResponsiveSettingsRow,
+} from "@/components/ui/responsive-settings-row";
+import { currentPageEditModeAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { updateUser } from "@/features/user/services/user-service.ts";
-import React, { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { PageEditMode } from "@/features/user/types/user.types.ts";
-import { ResponsiveSettingsRow, ResponsiveSettingsContent, ResponsiveSettingsControl } from "@/components/ui/responsive-settings-row";
-import { currentPageEditModeAtom } from "@/features/editor/atoms/editor-atoms.ts";
 
 export default function PageStatePref() {
   const { t } = useTranslation();
@@ -15,7 +19,7 @@ export default function PageStatePref() {
     <ResponsiveSettingsRow>
       <ResponsiveSettingsContent>
         <Text size="md">{t("Default page edit mode")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t("Choose your preferred page edit mode. Avoid accidental edits.")}
         </Text>
       </ResponsiveSettingsContent>
@@ -51,7 +55,7 @@ export function PageStateSegmentedControl({
         setValue(prevValue);
       }
     },
-    [value, setUser],
+    [value, setUser]
   );
 
   useEffect(() => {
@@ -62,13 +66,13 @@ export function PageStateSegmentedControl({
 
   return (
     <SegmentedControl
-      size={size}
-      value={value}
-      onChange={handleChange}
       data={[
         { label: t("Edit"), value: PageEditMode.Edit },
         { label: t("Read"), value: PageEditMode.Read },
       ]}
+      onChange={handleChange}
+      size={size}
+      value={value}
     />
   );
 }
@@ -78,18 +82,18 @@ export function PageStateSegmentedControl({
 export function PageEditModeToggle({ size }: { size?: MantineSize }) {
   const { t } = useTranslation();
   const [currentPageEditMode, setCurrentPageEditMode] = useAtom(
-    currentPageEditModeAtom,
+    currentPageEditModeAtom
   );
 
   return (
     <SegmentedControl
-      size={size}
-      value={currentPageEditMode}
-      onChange={(v) => setCurrentPageEditMode(v as PageEditMode)}
       data={[
         { label: t("Edit"), value: PageEditMode.Edit },
         { label: t("Read"), value: PageEditMode.Read },
       ]}
+      onChange={(v) => setCurrentPageEditMode(v as PageEditMode)}
+      size={size}
+      value={currentPageEditMode}
     />
   );
 }

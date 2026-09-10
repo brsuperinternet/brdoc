@@ -24,10 +24,14 @@ export function buildSsoLoginUrl(opts: {
   const domain = getAppUrl();
 
   const params = new URLSearchParams();
-  if (redirect) params.set("redirect", redirect);
+  if (redirect) {
+    params.set("redirect", redirect);
+  }
 
   if (type === SSO_PROVIDER.GOOGLE) {
-    if (workspaceId) params.set("workspaceId", workspaceId);
+    if (workspaceId) {
+      params.set("workspaceId", workspaceId);
+    }
     return `${getServerAppUrl()}/api/sso/${type}/login?${params.toString()}`;
   }
   const query = params.toString();

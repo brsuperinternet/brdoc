@@ -1,4 +1,5 @@
-import React, { Dispatch, FC, SetStateAction } from "react";
+import { isEditorReady } from "@docmost/editor-ext";
+import { Button, Popover, ScrollArea, Tooltip } from "@mantine/core";
 import {
   IconBlockquote,
   IconCaretRightFilled,
@@ -15,11 +16,10 @@ import {
   IconQuote,
   IconTypography,
 } from "@tabler/icons-react";
-import { Popover, Button, ScrollArea, Tooltip } from "@mantine/core";
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
+import React, { Dispatch, FC, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
-import { isEditorReady } from "@docmost/editor-ext";
 import classes from "./bubble-menu.module.css";
 
 interface NodeSelectorProps {
@@ -29,10 +29,10 @@ interface NodeSelectorProps {
 }
 
 export interface BubbleMenuItem {
-  name: string;
-  icon: React.ElementType;
   command: () => void;
+  icon: React.ElementType;
   isActive: () => boolean;
+  name: string;
 }
 
 export const NodeSelector: FC<NodeSelectorProps> = ({
@@ -50,17 +50,17 @@ export const NodeSelector: FC<NodeSelectorProps> = ({
       }
 
       return {
-        isParagraph: ctx.editor.isActive("paragraph"),
+        isBlockquote: ctx.editor.isActive("blockquote"),
         isBulletList: ctx.editor.isActive("bulletList"),
-        isOrderedList: ctx.editor.isActive("orderedList"),
+        isCallout: ctx.editor.isActive("callout"),
+        isCodeBlock: ctx.editor.isActive("codeBlock"),
+        isDetails: ctx.editor.isActive("details"),
         isHeading1: ctx.editor.isActive("heading", { level: 1 }),
         isHeading2: ctx.editor.isActive("heading", { level: 2 }),
         isHeading3: ctx.editor.isActive("heading", { level: 3 }),
+        isOrderedList: ctx.editor.isActive("orderedList"),
+        isParagraph: ctx.editor.isActive("paragraph"),
         isTaskItem: ctx.editor.isActive("taskItem"),
-        isBlockquote: ctx.editor.isActive("blockquote"),
-        isCodeBlock: ctx.editor.isActive("codeBlock"),
-        isCallout: ctx.editor.isActive("callout"),
-        isDetails: ctx.editor.isActive("details"),
         isTransclusionSource: ctx.editor.isActive("transclusionSource"),
       };
     },
@@ -68,54 +68,52 @@ export const NodeSelector: FC<NodeSelectorProps> = ({
 
   const items: BubbleMenuItem[] = [
     {
-      name: "Text",
-      icon: IconTypography,
       command: () =>
         editor.chain().focus().toggleNode("paragraph", "paragraph").run(),
+      icon: IconTypography,
       isActive: () =>
         editorState?.isParagraph &&
         !editorState?.isBulletList &&
         !editorState?.isOrderedList,
+      name: "Text",
     },
     {
-      name: "Heading 1",
-      icon: IconH1,
       command: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+      icon: IconH1,
       isActive: () => editorState?.isHeading1,
+      name: "Heading 1",
     },
     {
-      name: "Heading 2",
-      icon: IconH2,
       command: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      icon: IconH2,
       isActive: () => editorState?.isHeading2,
+      name: "Heading 2",
     },
     {
-      name: "Heading 3",
-      icon: IconH3,
       command: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+      icon: IconH3,
       isActive: () => editorState?.isHeading3,
+      name: "Heading 3",
     },
     {
-      name: "To-do List",
-      icon: IconCheckbox,
       command: () => editor.chain().focus().toggleTaskList().run(),
+      icon: IconCheckbox,
       isActive: () => editorState?.isTaskItem,
+      name: "To-do List",
     },
     {
-      name: "Bullet List",
-      icon: IconList,
       command: () => editor.chain().focus().toggleBulletList().run(),
+      icon: IconList,
       isActive: () => editorState?.isBulletList,
+      name: "Bullet List",
     },
     {
-      name: "Numbered List",
-      icon: IconListNumbers,
       command: () => editor.chain().focus().toggleOrderedList().run(),
+      icon: IconListNumbers,
       isActive: () => editorState?.isOrderedList,
+      name: "Numbered List",
     },
     {
-      name: "Blockquote",
-      icon: IconBlockquote,
       command: () =>
         editor
           .chain()
@@ -123,31 +121,33 @@ export const NodeSelector: FC<NodeSelectorProps> = ({
           .toggleNode("paragraph", "paragraph")
           .toggleBlockquote()
           .run(),
+      icon: IconBlockquote,
       isActive: () => editorState?.isBlockquote,
+      name: "Blockquote",
     },
     {
-      name: "Synced block",
-      icon: IconQuote,
       command: () => editor.chain().focus().toggleTransclusionSource().run(),
+      icon: IconQuote,
       isActive: () => editorState?.isTransclusionSource,
+      name: "Synced block",
     },
     {
-      name: "Code",
-      icon: IconCode,
       command: () => editor.chain().focus().toggleCodeBlock().run(),
+      icon: IconCode,
       isActive: () => editorState?.isCodeBlock,
+      name: "Code",
     },
     {
-      name: "Callout",
-      icon: IconInfoCircle,
       command: () => editor.chain().focus().toggleCallout().run(),
+      icon: IconInfoCircle,
       isActive: () => editorState?.isCallout,
+      name: "Callout",
     },
     {
-      name: "Toggle block",
-      icon: IconCaretRightFilled,
       command: () => editor.chain().focus().setDetails().run(),
+      icon: IconCaretRightFilled,
       isActive: () => editorState?.isDetails,
+      name: "Toggle block",
     },
   ];
 
@@ -156,24 +156,24 @@ export const NodeSelector: FC<NodeSelectorProps> = ({
   };
 
   return (
-    <Popover opened={isOpen} onChange={setIsOpen} withArrow>
+    <Popover onChange={setIsOpen} opened={isOpen} withArrow>
       <Popover.Target>
         <Tooltip
+          disabled={isOpen}
           label={t("Turn into")}
           withArrow
           withinPortal={false}
-          disabled={isOpen}
         >
           <Button
+            aria-expanded={isOpen}
+            aria-haspopup="menu"
+            aria-label={t("Turn into")}
             className={classes.buttonRoot}
-            variant="default"
-            style={{ border: "none", height: "34px" }}
+            onClick={() => setIsOpen(!isOpen)}
             radius="0"
             rightSection={<IconChevronDown size={16} />}
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label={t("Turn into")}
-            aria-haspopup="menu"
-            aria-expanded={isOpen}
+            style={{ border: "none", height: "34px" }}
+            variant="default"
           >
             {t(activeItem?.name)}
           </Button>
@@ -181,23 +181,25 @@ export const NodeSelector: FC<NodeSelectorProps> = ({
       </Popover.Target>
 
       <Popover.Dropdown>
-        <ScrollArea.Autosize type="scroll" mah={400}>
+        <ScrollArea.Autosize mah={400} type="scroll">
           <Button.Group orientation="vertical">
             {items.map((item, index) => (
               <Button
+                fullWidth
+                justify="left"
                 key={index}
-                variant="default"
                 leftSection={<item.icon size={16} />}
+                onClick={() => {
+                  if (isEditorReady(editor)) {
+                    item.command();
+                  }
+                  setIsOpen(false);
+                }}
                 rightSection={
                   activeItem.name === item.name && <IconCheck size={16} />
                 }
-                justify="left"
-                fullWidth
-                onClick={() => {
-                  if (isEditorReady(editor)) item.command();
-                  setIsOpen(false);
-                }}
                 style={{ border: "none" }}
+                variant="default"
               >
                 {t(item.name)}
               </Button>

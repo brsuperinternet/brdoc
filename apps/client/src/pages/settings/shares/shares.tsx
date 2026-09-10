@@ -1,14 +1,13 @@
-import SettingsTitle from "@/components/settings/settings-title.tsx";
-import { useTranslation } from "react-i18next";
-import { useAtom } from "jotai";
-import ShareList from "@/features/share/components/share-list.tsx";
-import PublishedSpacesList from "@/features/public-space/components/published-spaces-list.tsx";
-import { isPublicSpacesAllowed } from "@/features/public-space/utils/public-space-access.ts";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { Alert, Tabs } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
-import React from "react";
+import { useAtom } from "jotai";
+import { useTranslation } from "react-i18next";
+import SettingsTitle from "@/components/settings/settings-title.tsx";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import PublishedSpacesList from "@/features/public-space/components/published-spaces-list.tsx";
+import { isPublicSpacesAllowed } from "@/features/public-space/utils/public-space-access.ts";
+import ShareList from "@/features/share/components/share-list.tsx";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 
 export default function Shares() {
   const { t } = useTranslation();
@@ -18,9 +17,9 @@ export default function Shares() {
 
   const sharedPages = (
     <>
-      <Alert variant="light" color="blue" icon={<IconInfoCircle />}>
+      <Alert color="blue" icon={<IconInfoCircle />} variant="light">
         {t(
-          "Publicly shared pages from spaces you are a member of will appear here",
+          "Publicly shared pages from spaces you are a member of will appear here"
         )}
       </Alert>
 
@@ -44,12 +43,12 @@ export default function Shares() {
             </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value="pages" pt="md">
+          <Tabs.Panel pt="md" value="pages">
             {sharedPages}
           </Tabs.Panel>
 
-          <Tabs.Panel value="spaces" pt="md">
-            <Alert variant="light" color="blue" icon={<IconInfoCircle />}>
+          <Tabs.Panel pt="md" value="spaces">
+            <Alert color="blue" icon={<IconInfoCircle />} variant="light">
               {t("Spaces published to the web will appear here")}
             </Alert>
 

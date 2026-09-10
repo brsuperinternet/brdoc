@@ -1,23 +1,23 @@
 import "@/features/editor/styles/index.css";
-import { useEffect } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
-import { mainExtensions } from "@/features/editor/extensions/extensions";
-import { Title } from "@mantine/core";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
-import historyClasses from "./css/history.module.css";
 import { recreateTransform } from "@docmost/editor-ext";
-import { DOMSerializer, Node } from "@tiptap/pm/model";
+import { Title } from "@mantine/core";
 import { ChangeSet, simplifyChanges } from "@tiptap/pm/changeset";
+import { DOMSerializer, Node } from "@tiptap/pm/model";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { EditorContent, useEditor } from "@tiptap/react";
 import { useAtom } from "jotai";
+import { useEffect } from "react";
+import { mainExtensions } from "@/features/editor/extensions/extensions";
 import {
   diffCountsAtom,
   highlightChangesAtom,
 } from "@/features/page-history/atoms/history-atoms";
+import historyClasses from "./css/history.module.css";
 
 export interface HistoryEditorProps {
-  title: string;
   content: any;
   previousContent?: any;
+  title: string;
 }
 
 export function HistoryEditor({
@@ -29,13 +29,15 @@ export function HistoryEditor({
   const [, setDiffCounts] = useAtom(diffCountsAtom);
 
   const editor = useEditor({
-    extensions: mainExtensions,
     editable: false,
+    extensions: mainExtensions,
     textDirection: "auto",
   });
 
   useEffect(() => {
-    if (!editor || editor.isDestroyed || !content) return;
+    if (!editor || editor.isDestroyed || !content) {
+      return;
+    }
 
     let decorationSet = DecorationSet.empty;
     let addedCount = 0;
@@ -49,14 +51,14 @@ export function HistoryEditor({
 
         const tr = recreateTransform(oldContent, newContent, {
           complexSteps: false,
-          wordDiffs: true,
           simplifyDiff: true,
+          wordDiffs: true,
         });
 
         const changeSet = ChangeSet.create(oldContent).addSteps(
           tr.doc,
           tr.mapping.maps,
-          [],
+          []
         );
         const changes = simplifyChanges(changeSet.changes, newContent);
 
@@ -101,14 +103,14 @@ export function HistoryEditor({
                 Decoration.node(foundSpecialNode.pos, nodeEnd, {
                   class: "history-diff-node-added",
                   "data-diff-index": String(currentIndex),
-                }),
+                })
               );
             } else {
               decorations.push(
                 Decoration.inline(change.fromB, change.toB, {
                   class: "history-diff-added",
                   "data-diff-index": String(currentIndex),
-                }),
+                })
               );
             }
             addedCount += 1;
@@ -137,13 +139,13 @@ export function HistoryEditor({
                   const dom = serializer.serializeNode(foundDeletedNode!.node);
                   wrapper.appendChild(dom);
                   return wrapper;
-                }),
+                })
               );
             } else {
               const deletedText = oldContent.textBetween(
                 change.fromA,
                 change.toA,
-                "",
+                ""
               );
               if (deletedText) {
                 decorations.push(
@@ -153,7 +155,7 @@ export function HistoryEditor({
                     span.setAttribute("data-diff-index", String(currentIndex));
                     span.textContent = deletedText;
                     return span;
-                  }),
+                  })
                 );
               }
             }
@@ -194,8 +196,8 @@ export function HistoryEditor({
       <Title order={1}>{title}</Title>
       {editor && (
         <EditorContent
-          editor={editor}
           className={historyClasses.historyEditor}
+          editor={editor}
         />
       )}
     </div>

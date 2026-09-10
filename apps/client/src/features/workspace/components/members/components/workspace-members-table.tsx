@@ -1,27 +1,27 @@
-import { Group, Table, Text, Badge } from "@mantine/core";
+import { Badge, Group, Table, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import NoTableResults from "@/components/common/no-table-results.tsx";
+import Paginate from "@/components/common/paginate.tsx";
+import { SearchInput } from "@/components/common/search-input.tsx";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import RoleSelectMenu from "@/components/ui/role-select-menu.tsx";
+import MemberActionMenu from "@/features/workspace/components/members/components/members-action-menu.tsx";
 import {
   useChangeMemberRoleMutation,
   useWorkspaceMembersQuery,
 } from "@/features/workspace/queries/workspace-query.ts";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import React from "react";
-import RoleSelectMenu from "@/components/ui/role-select-menu.tsx";
 import {
   getUserRoleLabel,
   userRoleData,
 } from "@/features/workspace/types/user-role-data.ts";
+import { usePaginateAndSearch } from "@/hooks/use-paginate-and-search.tsx";
 import useUserRole from "@/hooks/use-user-role.tsx";
 import { UserRole } from "@/lib/types.ts";
-import { useTranslation } from "react-i18next";
-import Paginate from "@/components/common/paginate.tsx";
-import { SearchInput } from "@/components/common/search-input.tsx";
-import NoTableResults from "@/components/common/no-table-results.tsx";
-import { usePaginateAndSearch } from "@/hooks/use-paginate-and-search.tsx";
-import MemberActionMenu from "@/features/workspace/components/members/components/members-action-menu.tsx";
 
 export default function WorkspaceMembersTable() {
   const { t } = useTranslation();
-  const { search, cursor, goNext, goPrev, handleSearch } = usePaginateAndSearch();
+  const { search, cursor, goNext, goPrev, handleSearch } =
+    usePaginateAndSearch();
   const { data, isLoading } = useWorkspaceMembersQuery({
     cursor,
     limit: 100,
@@ -37,15 +37,15 @@ export default function WorkspaceMembersTable() {
   const handleRoleChange = async (
     userId: string,
     currentRole: string,
-    newRole: string,
+    newRole: string
   ) => {
     if (newRole === currentRole) {
       return;
     }
 
     const memberRoleUpdate = {
-      userId: userId,
       role: newRole,
+      userId,
     };
 
     await changeMemberRoleMutation.mutateAsync(memberRoleUpdate);
@@ -76,10 +76,10 @@ export default function WorkspaceMembersTable() {
                         name={user.name}
                       />
                       <div>
-                        <Text fz="sm" fw={500} lineClamp={1}>
+                        <Text fw={500} fz="sm" lineClamp={1}>
                           {user.name}
                         </Text>
-                        <Text fz="xs" c="dimmed">
+                        <Text c="dimmed" fz="xs">
                           {user.email}
                         </Text>
                       </div>
@@ -87,7 +87,7 @@ export default function WorkspaceMembersTable() {
                   </Table.Td>
                   <Table.Td>
                     {user.deactivatedAt ? (
-                      <Badge variant="light" color="orange">
+                      <Badge color="orange" variant="light">
                         {t("Deactivated")}
                       </Badge>
                     ) : (
@@ -97,11 +97,11 @@ export default function WorkspaceMembersTable() {
                   <Table.Td>
                     {isAdmin ? (
                       <RoleSelectMenu
-                        roles={assignableUserRoles}
-                        roleName={getUserRoleLabel(user.role)}
                         onChange={(newRole) =>
                           handleRoleChange(user.id, user.role, newRole)
                         }
+                        roleName={getUserRoleLabel(user.role)}
+                        roles={assignableUserRoles}
                       />
                     ) : (
                       <Text fz="sm">{t(getUserRoleLabel(user.role))}</Text>
@@ -110,9 +110,9 @@ export default function WorkspaceMembersTable() {
                   <Table.Td>
                     {isAdmin && (
                       <MemberActionMenu
-                        userId={user.id}
-                        name={user.name}
                         deactivatedAt={user.deactivatedAt}
+                        name={user.name}
+                        userId={user.id}
                       />
                     )}
                   </Table.Td>
@@ -127,8 +127,8 @@ export default function WorkspaceMembersTable() {
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
           hasNextPage={data?.meta?.hasNextPage}
+          hasPrevPage={data?.meta?.hasPrevPage}
           onNext={() => goNext(data?.meta?.nextCursor)}
           onPrev={goPrev}
         />

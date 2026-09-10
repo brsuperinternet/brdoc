@@ -1,16 +1,15 @@
-import React from "react";
 import { Modal } from "@mantine/core";
-import { IAuthProvider } from "@/ee/security/types/security.types.ts";
-import { SsoSamlForm } from "@/ee/security/components/sso-saml-form.tsx";
-import { SSO_PROVIDER } from "@/ee/security/contants.ts";
-import { SsoOIDCForm } from "@/ee/security/components/sso-oidc-form.tsx";
+import { useTranslation } from "react-i18next";
 import { SsoGoogleForm } from "@/ee/security/components/sso-google-form.tsx";
 import { SsoLDAPForm } from "@/ee/security/components/sso-ldap-form.tsx";
-import { useTranslation } from "react-i18next";
+import { SsoOIDCForm } from "@/ee/security/components/sso-oidc-form.tsx";
+import { SsoSamlForm } from "@/ee/security/components/sso-saml-form.tsx";
+import { SSO_PROVIDER } from "@/ee/security/contants.ts";
+import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 
 interface SsoModalProps {
-  opened: boolean;
   onClose: () => void;
+  opened: boolean;
   provider: IAuthProvider | null;
 }
 
@@ -27,27 +26,27 @@ export default function SsoProviderModal({
 
   return (
     <Modal
+      closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
       opened={opened}
       title={t("{{ssoProviderType}} configuration", {
         ssoProviderType: provider.type.toUpperCase(),
       })}
-      onClose={onClose}
-      closeButtonProps={{ "aria-label": t("Close") }}
     >
       {provider.type === SSO_PROVIDER.SAML && (
-        <SsoSamlForm provider={provider} onClose={onClose} />
+        <SsoSamlForm onClose={onClose} provider={provider} />
       )}
 
       {provider.type === SSO_PROVIDER.OIDC && (
-        <SsoOIDCForm provider={provider} onClose={onClose} />
+        <SsoOIDCForm onClose={onClose} provider={provider} />
       )}
 
       {provider.type === SSO_PROVIDER.GOOGLE && (
-        <SsoGoogleForm provider={provider} onClose={onClose} />
+        <SsoGoogleForm onClose={onClose} provider={provider} />
       )}
 
       {provider.type === SSO_PROVIDER.LDAP && (
-        <SsoLDAPForm provider={provider} onClose={onClose} />
+        <SsoLDAPForm onClose={onClose} provider={provider} />
       )}
     </Modal>
   );

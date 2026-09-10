@@ -1,9 +1,9 @@
-.search-result{
-  background: #ffff65;
+.search-result {
   color: #212529;
+  background: #ffff65;
 }
 
-.search-result-current{
-  background: #ffc266 !important;
+.search-result-current {
   color: #212529;
+  background: #ffc266 !important;
 }

@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { Select } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
 import {
@@ -27,21 +27,25 @@ export function VerifierPicker({
   const [debouncedQuery] = useDebouncedValue(searchValue, 300);
 
   const { data: suggestion } = useSearchSuggestionsQuery({
-    query: debouncedQuery,
-    includeUsers: true,
     includeGroups: false,
+    includeUsers: true,
     preload: true,
+    query: debouncedQuery,
   });
 
   const excludeSet = new Set(excludeIds);
   const options = toUserOptions(suggestion?.users).filter(
-    (u) => !excludeSet.has(u.value),
+    (u) => !excludeSet.has(u.value)
   );
 
   const handleChange = (userId: string | null) => {
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
     const picked = options.find((u) => u.value === userId);
-    if (!picked) return;
+    if (!picked) {
+      return;
+    }
     onSelect(picked);
     setSearchValue("");
   };
@@ -49,17 +53,17 @@ export function VerifierPicker({
   return (
     <Select
       data={options}
-      value={null}
+      disabled={disabled}
+      filter={({ options }) => options}
+      nothingFoundMessage={t("No user found")}
       onChange={handleChange}
-      renderOption={renderUserSelectOption}
+      onSearchChange={setSearchValue}
       placeholder={placeholder ?? t("Add verifier")}
+      renderOption={renderUserSelectOption}
       searchable
       searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      filter={({ options }) => options}
+      value={null}
       variant="filled"
-      disabled={disabled}
-      nothingFoundMessage={t("No user found")}
     />
   );
 }

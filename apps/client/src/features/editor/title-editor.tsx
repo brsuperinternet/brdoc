@@ -1,41 +1,40 @@
 import "@/features/editor/styles/index.css";
-import React, { useCallback, useEffect, useState } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { getHotkeyHandler, useDebouncedCallback } from "@mantine/hooks";
 import { Document } from "@tiptap/extension-document";
 import { Heading } from "@tiptap/extension-heading";
-import { Text } from "@tiptap/extension-text";
+import { History } from "@tiptap/extension-history";
 import { Placeholder } from "@tiptap/extension-placeholder";
-import { useAtomValue } from "jotai";
+import { Text } from "@tiptap/extension-text";
+import { EditorContent, useEditor } from "@tiptap/react";
+import { useAtom, useAtomValue } from "jotai";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   currentPageEditModeAtom,
   pageEditorAtom,
   titleEditorAtom,
 } from "@/features/editor/atoms/editor-atoms";
+import EmojiCommand from "@/features/editor/extensions/emoji-command.ts";
+import { buildPageUrl } from "@/features/page/page.utils.ts";
 import {
   updatePageData,
   useUpdateTitlePageMutation,
 } from "@/features/page/queries/page-query";
-import { useDebouncedCallback, getHotkeyHandler } from "@mantine/hooks";
-import { useAtom } from "jotai";
-import { useQueryEmit } from "@/features/websocket/use-query-emit.ts";
-import { History } from "@tiptap/extension-history";
-import { buildPageUrl } from "@/features/page/page.utils.ts";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import EmojiCommand from "@/features/editor/extensions/emoji-command.ts";
-import { UpdateEvent } from "@/features/websocket/types";
-import localEmitter from "@/lib/local-emitter.ts";
-import { PageEditMode } from "@/features/user/types/user.types.ts";
 import { searchSpotlight } from "@/features/search/constants.ts";
+import { PageEditMode } from "@/features/user/types/user.types.ts";
+import { UpdateEvent } from "@/features/websocket/types";
+import { useQueryEmit } from "@/features/websocket/use-query-emit.ts";
 import { platformModifierKey } from "@/lib";
+import localEmitter from "@/lib/local-emitter.ts";
 
 export interface TitleEditorProps {
-  pageId: string;
-  slugId: string;
-  title: string;
-  spaceSlug: string;
   editable: boolean;
   isBase?: boolean;
+  pageId: string;
+  slugId: string;
+  spaceSlug: string;
+  title: string;
 }
 
 export function TitleEditor({
@@ -57,38 +56,8 @@ export function TitleEditor({
   const currentPageEditMode = useAtomValue(currentPageEditModeAtom);
 
   const titleEditor = useEditor({
-    extensions: [
-      Document.extend({
-        content: "heading",
-      }),
-      Heading.configure({
-        levels: [1],
-      }),
-      Text,
-      Placeholder.configure({
-        placeholder: isBase ? t("Untitled base") : t("Untitled"),
-        showOnlyWhenEditable: false,
-      }),
-      History.configure({
-        depth: 20,
-      }),
-      EmojiCommand,
-    ],
-    onCreate({ editor }) {
-      if (editor) {
-        // @ts-ignore
-        setTitleEditor(editor);
-        setActivePageId(pageId);
-      }
-    },
-    onUpdate({ editor }) {
-      debounceUpdate();
-    },
-    editable: editable,
     content: title,
-    textDirection: "auto",
-    immediatelyRender: true,
-    shouldRerenderOnTransaction: false,
+    editable,
     editorProps: {
       attributes: {
         "aria-label": t("Page title"),
@@ -106,6 +75,36 @@ export function TitleEditor({
         },
       },
     },
+    extensions: [
+      Document.extend({
+        content: "heading",
+      }),
+      Heading.configure({
+        levels: [1],
+      }),
+      Text,
+      Placeholder.configure({
+        placeholder: isBase ? t("Untitled base") : t("Untitled"),
+        showOnlyWhenEditable: false,
+      }),
+      History.configure({
+        depth: 20,
+      }),
+      EmojiCommand,
+    ],
+    immediatelyRender: true,
+    onCreate({ editor }) {
+      if (editor) {
+        // @ts-expect-error
+        setTitleEditor(editor);
+        setActivePageId(pageId);
+      }
+    },
+    onUpdate({ editor }) {
+      debounceUpdate();
+    },
+    shouldRerenderOnTransaction: false,
+    textDirection: "auto",
   });
 
   useEffect(() => {
@@ -114,16 +113,18 @@ export function TitleEditor({
     const pageSlug = buildPageUrl(spaceSlug, slugId, title);
     navigate(
       {
+        hash: window.location.hash,
         pathname: pageSlug,
         search: window.location.search,
-        hash: window.location.hash,
       },
-      { replace: true },
+      { replace: true }
     );
   }, [title]);
 
   const saveTitle = useCallback(() => {
-    if (!titleEditor || activePageId !== pageId) return;
+    if (!titleEditor || activePageId !== pageId) {
+      return;
+    }
 
     if (
       titleEditor.getText() === title ||
@@ -133,23 +134,25 @@ export function TitleEditor({
     }
 
     updateTitlePageMutationAsync({
-      pageId: pageId,
+      pageId,
       title: titleEditor.getText(),
     }).then((page) => {
       const event: UpdateEvent = {
-        operation: "updateOne",
-        spaceId: page.spaceId,
         entity: ["pages"],
         id: page.id,
+        operation: "updateOne",
         payload: {
-          title: page.title,
-          slugId: page.slugId,
-          parentPageId: page.parentPageId,
           icon: page.icon,
+          parentPageId: page.parentPageId,
+          slugId: page.slugId,
+          title: page.title,
         },
+        spaceId: page.spaceId,
       };
 
-      if (page.title !== titleEditor.getText()) return;
+      if (page.title !== titleEditor.getText()) {
+        return;
+      }
 
       updatePageData(page);
 
@@ -173,7 +176,9 @@ export function TitleEditor({
   useEffect(() => {
     setTimeout(() => {
       // guard against Cannot access view['hasFocus'] error
-      if (!titleEditor?.isInitialized) return;
+      if (!titleEditor?.isInitialized) {
+        return;
+      }
       titleEditor?.commands?.focus("end");
     }, 300);
   }, [titleEditor]);
@@ -186,8 +191,12 @@ export function TitleEditor({
   }, [pageId]);
 
   useEffect(() => {
-    if (!titleEditor) return;
-    titleEditor.setEditable(editable && currentPageEditMode === PageEditMode.Edit);
+    if (!titleEditor) {
+      return;
+    }
+    titleEditor.setEditable(
+      editable && currentPageEditMode === PageEditMode.Edit
+    );
   }, [currentPageEditMode, titleEditor, editable]);
 
   const openSearchDialog = () => {
@@ -196,12 +205,15 @@ export function TitleEditor({
   };
 
   function handleTitleKeyDown(event: any) {
-    if (!titleEditor || !pageEditor || event.shiftKey) return;
+    if (!(titleEditor && pageEditor) || event.shiftKey) {
+      return;
+    }
 
     // Prevent focus shift when IME composition is active
     // `keyCode === 229` is added to support Safari where `isComposing` may not be reliable
-    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
+    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
       return;
+    }
 
     const { key } = event;
     const { $head } = titleEditor.state.selection;
@@ -231,10 +243,10 @@ export function TitleEditor({
           return true;
         })
         .insertContentAt(0, {
-          type: "paragraph",
           content: textAfterCursor
-            ? [{ type: "text", text: textAfterCursor }]
+            ? [{ text: textAfterCursor, type: "text" }]
             : undefined,
+          type: "paragraph",
         })
         .focus("start")
         .run();

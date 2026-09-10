@@ -3,35 +3,35 @@ import { QueryParams } from "@/lib/types.ts";
 export type LabelType = "page" | "space";
 
 export interface ILabel {
+  createdAt: string;
   id: string;
   name: string;
   type: LabelType;
-  workspaceId: string;
-  createdAt: string;
   updatedAt: string;
+  workspaceId: string;
 }
 
 export interface IAddLabels {
-  pageId: string;
   names: string[];
+  pageId: string;
 }
 
 export interface IRemoveLabel {
-  pageId: string;
   labelId: string;
+  pageId: string;
 }
 
 export interface IPageLabelsParams {
-  pageId: string;
   cursor?: string;
   limit?: number;
+  pageId: string;
 }
 
 export interface IListLabelsParams {
-  type: LabelType;
-  query?: string;
   cursor?: string;
   limit?: number;
+  query?: string;
+  type: LabelType;
 }
 
 export interface ILabelInfo {
@@ -40,21 +40,21 @@ export interface ILabelInfo {
 }
 
 export interface ILabelPageItem {
-  id: string;
-  slugId: string;
-  title: string | null;
-  icon: string | null;
-  spaceId: string;
   createdAt: string;
-  updatedAt: string;
+  creator: { id: string; name: string; avatarUrl: string | null } | null;
+  icon: string | null;
+  id: string;
+  labels: { id: string; name: string }[];
+  slugId: string;
   space: {
     id: string;
     name: string;
     slug: string;
     logo: string | null;
   } | null;
-  creator: { id: string; name: string; avatarUrl: string | null } | null;
-  labels: { id: string; name: string }[];
+  spaceId: string;
+  title: string | null;
+  updatedAt: string;
 }
 
 export interface IFindPagesByLabelParams extends QueryParams {
@@ -65,6 +65,6 @@ export interface IFindPagesByLabelParams extends QueryParams {
 
 export interface ILabelInfoParams {
   name: string;
-  type: LabelType;
   spaceId?: string;
+  type: LabelType;
 }

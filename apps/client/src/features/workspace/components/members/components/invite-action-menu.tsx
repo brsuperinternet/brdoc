@@ -1,15 +1,14 @@
-import { Menu, ActionIcon, Text } from "@mantine/core";
-import React from "react";
-import { IconCopy, IconDots, IconSend, IconTrash } from "@tabler/icons-react";
+import { ActionIcon, Menu, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import { IconCopy, IconDots, IconSend, IconTrash } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import {
   useResendInvitationMutation,
   useRevokeInvitationMutation,
 } from "@/features/workspace/queries/workspace-query.ts";
-import { useTranslation } from "react-i18next";
-import { notifications } from "@mantine/notifications";
-import { useClipboard } from "@/hooks/use-clipboard";
 import { getInviteLink } from "@/features/workspace/services/workspace-service.ts";
+import { useClipboard } from "@/hooks/use-clipboard";
 import useUserRole from "@/hooks/use-user-role.tsx";
 import { isCloud } from "@/lib/config.ts";
 
@@ -32,8 +31,8 @@ export default function InviteActionMenu({ invitationId }: Props) {
       notifications.show({ message: t("Link copied") });
     } catch (err) {
       notifications.show({
-        message: err["response"]?.data?.message,
         color: "red",
+        message: err["response"]?.data?.message,
       });
     }
   };
@@ -48,35 +47,35 @@ export default function InviteActionMenu({ invitationId }: Props) {
 
   const openRevokeModal = () =>
     modals.openConfirmModal({
-      title: t("Revoke invitation"),
+      centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Are you sure you want to revoke this invitation? The user will not be able to join the workspace.",
+            "Are you sure you want to revoke this invitation? The user will not be able to join the workspace."
           )}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Revoke"), cancel: t("Don't") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Don't"), confirm: t("Revoke") },
       onConfirm: onRevoke,
+      title: t("Revoke invitation"),
     });
 
   return (
     <>
       <Menu
-        shadow="xl"
-        position="bottom-end"
+        arrowPosition="center"
         offset={20}
+        position="bottom-end"
+        shadow="xl"
         width={200}
         withArrow
-        arrowPosition="center"
       >
         <Menu.Target>
           <ActionIcon
-            variant="subtle"
-            c="gray"
             aria-label={t("Invite actions")}
+            c="gray"
+            variant="subtle"
           >
             <IconDots size={20} stroke={2} />
           </ActionIcon>
@@ -85,27 +84,27 @@ export default function InviteActionMenu({ invitationId }: Props) {
         <Menu.Dropdown>
           {!isCloud() && (
             <Menu.Item
-              onClick={() => handleCopyLink(invitationId)}
-              leftSection={<IconCopy size={16} />}
               disabled={!isAdmin}
+              leftSection={<IconCopy size={16} />}
+              onClick={() => handleCopyLink(invitationId)}
             >
               {t("Copy link")}
             </Menu.Item>
           )}
 
           <Menu.Item
-            onClick={onResend}
-            leftSection={<IconSend size={16} />}
             disabled={!isAdmin}
+            leftSection={<IconSend size={16} />}
+            onClick={onResend}
           >
             {t("Resend invitation")}
           </Menu.Item>
           <Menu.Divider />
           <Menu.Item
             c="red"
-            onClick={openRevokeModal}
-            leftSection={<IconTrash size={16} />}
             disabled={!isAdmin}
+            leftSection={<IconTrash size={16} />}
+            onClick={openRevokeModal}
           >
             {t("Revoke invitation")}
           </Menu.Item>

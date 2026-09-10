@@ -1,10 +1,10 @@
-import api from "@/lib/api-client.ts";
 import {
   IBilling,
   IBillingPlan,
   IBillingPortal,
   ICheckoutLink,
 } from "@/ee/billing/types/billing.types.ts";
+import api from "@/lib/api-client.ts";
 
 export async function getBilling(): Promise<IBilling> {
   const req = await api.post<IBilling>("/billing/info");

@@ -1,23 +1,23 @@
-import React, { useState } from "react";
-import { Modal, TextInput, PasswordInput, Button, Stack } from "@mantine/core";
+import { Button, Modal, PasswordInput, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
-import { z } from "zod/v4";
 import { notifications } from "@mantine/notifications";
-import { useNavigate } from "react-router-dom";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod/v4";
+import { ldapLogin } from "@/ee/security/services/ldap-auth-service";
 import { IAuthProvider } from "@/ee/security/types/security.types";
 import APP_ROUTE, { getPostLoginRedirect } from "@/lib/app-route";
-import { ldapLogin } from "@/ee/security/services/ldap-auth-service";
 
 const formSchema = z.object({
-  username: z.string().min(1, { message: "Username is required" }),
   password: z.string().min(1, { message: "Password is required" }),
+  username: z.string().min(1, { message: "Username is required" }),
 });
 
 interface LdapLoginModalProps {
-  opened: boolean;
   onClose: () => void;
+  opened: boolean;
   provider: IAuthProvider;
   workspaceId: string;
 }
@@ -34,11 +34,11 @@ export function LdapLoginModal({
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
-    validate: zod4Resolver(formSchema),
     initialValues: {
-      username: "",
       password: "",
+      username: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   const handleSubmit = async (values: {
@@ -50,9 +50,9 @@ export function LdapLoginModal({
 
     try {
       const response = await ldapLogin({
-        username: values.username,
         password: values.password,
         providerId: provider.id,
+        username: values.username,
         workspaceId,
       });
 
@@ -74,8 +74,8 @@ export function LdapLoginModal({
       setError(errorMessage);
 
       notifications.show({
-        message: errorMessage,
         color: "red",
+        message: errorMessage,
       });
     }
   };
@@ -88,38 +88,38 @@ export function LdapLoginModal({
 
   return (
     <Modal
-      opened={opened}
       onClose={handleClose}
-      title={`LDAP Login - ${provider.name}`}
+      opened={opened}
       size="md"
+      title={`LDAP Login - ${provider.name}`}
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack>
           <TextInput
+            data-autofocus
+            disabled={isLoading}
             id="ldap-username"
-            type="text"
             label={t("LDAP username")}
             placeholder="Enter your LDAP username"
+            type="text"
             variant="filled"
-            disabled={isLoading}
-            data-autofocus
             {...form.getInputProps("username")}
           />
 
           <PasswordInput
+            disabled={isLoading}
             label={t("LDAP password")}
             placeholder={t("Enter your LDAP password")}
             variant="filled"
-            disabled={isLoading}
             visibilityToggleButtonProps={{
-              "aria-label": t("Toggle password visibility"),
               "aria-hidden": false,
+              "aria-label": t("Toggle password visibility"),
               tabIndex: 0,
             }}
             {...form.getInputProps("password")}
           />
 
-          <Button type="submit" fullWidth mt="md" loading={isLoading}>
+          <Button fullWidth loading={isLoading} mt="md" type="submit">
             {t("Sign in with LDAP")}
           </Button>
         </Stack>

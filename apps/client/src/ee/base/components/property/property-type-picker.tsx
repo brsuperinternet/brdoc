@@ -1,10 +1,10 @@
-import { UnstyledButton, Group, Text, TextInput } from "@mantine/core";
+import { Group, Text, TextInput, UnstyledButton } from "@mantine/core";
 import { IconCheck, IconSearch } from "@tabler/icons-react";
-import { BasePropertyType } from "@/ee/base/types/base.types";
-import { propertyTypes } from "@/ee/base/property-types/property-type.registry";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useState, useRef, useEffect } from "react";
+import { propertyTypes } from "@/ee/base/property-types/property-type.registry";
 import classes from "@/ee/base/styles/cells.module.css";
+import { BasePropertyType } from "@/ee/base/types/base.types";
 
 type PropertyTypePickerProps = {
   onSelect: (type: BasePropertyType) => void;
@@ -31,35 +31,36 @@ export function PropertyTypePicker({
 
   const types = propertyTypes
     .filter(({ type }) => !excludeTypes?.has(type))
-    .filter(({ labelKey }) =>
-      !search || t(labelKey).toLowerCase().includes(search.toLowerCase())
+    .filter(
+      ({ labelKey }) =>
+        !search || t(labelKey).toLowerCase().includes(search.toLowerCase())
     );
 
   return (
     <>
       {showSearch && (
         <TextInput
+          leftSection={<IconSearch size={14} />}
+          mb={4}
+          mt="sm"
+          mx="sm"
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          placeholder={t("Find a property type")}
           ref={searchRef}
           size="xs"
-          placeholder={t("Find a property type")}
-          leftSection={<IconSearch size={14} />}
           value={search}
-          onChange={(e) => setSearch(e.currentTarget.value)}
-          mx="sm"
-          mt="sm"
-          mb={4}
         />
       )}
       {types.map(({ type, icon: Icon, labelKey }) => (
         <UnstyledButton
-          key={type}
           className={classes.menuItem}
+          key={type}
           onClick={() => onSelect(type)}
           style={{
             fontWeight: type === currentType ? 600 : 400,
           }}
         >
-          <Group gap={8} wrap="nowrap" style={{ flex: 1 }}>
+          <Group gap={8} style={{ flex: 1 }} wrap="nowrap">
             <Icon size={14} />
             <Text size="sm">{t(labelKey)}</Text>
           </Group>

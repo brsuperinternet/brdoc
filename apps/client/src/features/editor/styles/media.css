@@ -8,7 +8,11 @@
     }
   }
 
-  .node-image, .node-video, .node-pdf, .node-excalidraw, .node-drawio {
+  .node-image,
+  .node-video,
+  .node-pdf,
+  .node-excalidraw,
+  .node-drawio {
     &.ProseMirror-selectednode {
       outline: none;
     }
@@ -18,11 +22,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 25px;
+    padding: 15px;
+    cursor: pointer;
     background-color: var(--mantine-color-body);
     border-radius: var(--mantine-radius-default);
-    cursor: pointer;
-    padding: 15px;
-    height: 25px;
 
     @mixin light {
       border: 1px solid var(--mantine-color-gray-3);
@@ -44,22 +48,22 @@
     bottom: 8px;
     z-index: 1;
     padding: 2px 8px;
-    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.03em;
     cursor: default;
     user-select: none;
     background-color: var(--mantine-color-body);
+    border-radius: 6px;
 
     @mixin light {
-      border: 1px solid var(--mantine-color-gray-3);
       color: var(--mantine-color-gray-7);
+      border: 1px solid var(--mantine-color-gray-3);
     }
 
     @mixin dark {
-      border: 1px solid var(--mantine-color-dark-4);
       color: var(--mantine-color-dark-1);
+      border: 1px solid var(--mantine-color-dark-4);
     }
 
     @media print {
@@ -67,24 +71,24 @@
     }
 
     &::after {
-      content: attr(data-alt);
-      display: none;
       position: absolute;
       right: 0;
       bottom: calc(100% + 6px);
+      display: none;
       width: max-content;
       max-width: 320px;
       padding: 6px 10px;
-      border-radius: var(--mantine-radius-default);
       font-size: var(--mantine-font-size-sm);
       font-weight: 400;
-      letter-spacing: normal;
       line-height: var(--mantine-line-height-sm);
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-      text-align: start;
-      background-color: var(--mantine-color-gray-9);
       color: var(--mantine-color-white);
+      text-align: start;
+      letter-spacing: normal;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      content: attr(data-alt);
+      background-color: var(--mantine-color-gray-9);
+      border-radius: var(--mantine-radius-default);
     }
 
     &:hover::after {
@@ -96,12 +100,22 @@
     animation: media-pulse 1.2s ease-in-out infinite;
 
     @mixin light {
-      background: linear-gradient(-90deg, var(--mantine-color-gray-3) 0%, var(--mantine-color-gray-1) 50%, var(--mantine-color-gray-3) 100%);
+      background: linear-gradient(
+        -90deg,
+        var(--mantine-color-gray-3) 0%,
+        var(--mantine-color-gray-1) 50%,
+        var(--mantine-color-gray-3) 100%
+      );
       background-size: 400% 400%;
     }
 
     @mixin dark {
-      background: linear-gradient(-90deg, var(--mantine-color-dark-6) 0%, var(--mantine-color-dark-5) 50%, var(--mantine-color-dark-6) 100%);
+      background: linear-gradient(
+        -90deg,
+        var(--mantine-color-dark-6) 0%,
+        var(--mantine-color-dark-5) 50%,
+        var(--mantine-color-dark-6) 100%
+      );
       background-size: 400% 400%;
     }
 
@@ -115,4 +129,3 @@
     }
   }
 }
-

@@ -1,5 +1,5 @@
-import { useRef, useState, ReactNode } from "react";
 import { Text, TextProps, Tooltip } from "@mantine/core";
+import { ReactNode, useRef, useState } from "react";
 
 type AutoTooltipTextProps = TextProps & {
   children: ReactNode;
@@ -30,17 +30,17 @@ export function AutoTooltipText({
 
   return (
     <Tooltip
+      disabled={!(isTruncated && label)}
       label={label}
-      disabled={!isTruncated || !label}
       multiline
       withArrow
       withinPortal={false}
       {...tooltipProps}
     >
       <Text
+        onMouseEnter={handleMouseEnter}
         ref={textRef}
         truncate
-        onMouseEnter={handleMouseEnter}
         {...textProps}
       >
         {children}

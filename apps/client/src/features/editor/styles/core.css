@@ -7,25 +7,25 @@
 }
 
 .ProseMirror {
-  background-color: light-dark(
-    var(--mantine-color-white),
-    var(--mantine-color-dark-7)
-  );
+  width: 100%;
+  padding-right: 3rem;
+
+  padding-left: 3rem;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 400;
+  line-height: var(--mantine-line-height-xl);
   color: light-dark(
     var(--mantine-color-default-color),
     var(--mantine-color-white)
   );
-  font-size: var(--mantine-font-size-md);
-  line-height: var(--mantine-line-height-xl);
-  font-weight: 400;
-  width: 100%;
-
-  padding-left: 3rem;
-  padding-right: 3rem;
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-7)
+  );
 
   @media (max-width: $mantine-breakpoint-sm) {
-    padding-left: 1rem;
     padding-right: 1rem;
+    padding-left: 1rem;
   }
 
   @media print {
@@ -61,10 +61,10 @@
   h1,
   h2,
   h3 {
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-    font-weight: 600;
     margin-bottom: 0;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
 
   h1 strong,
@@ -74,53 +74,53 @@
   }
 
   h1 {
-    font-size: 1.875rem;
     margin-top: 1.875rem;
+    font-size: 1.875rem;
   }
 
   h2 {
-    font-size: 1.5rem;
     margin-top: 1.5rem;
+    font-size: 1.5rem;
   }
 
   h3 {
-    font-size: 1.25rem;
     margin-top: 1.25rem;
+    font-size: 1.25rem;
   }
 
   h4,
   h5,
   h6 {
-    line-height: 1.1;
     margin-bottom: 10px;
+    line-height: 1.1;
   }
 
   code {
+    color: #616161;
     background-color: light-dark(
       var(--mantine-color-gray-0),
       var(--mantine-color-dark-8)
     );
-    color: #616161;
   }
 
   a {
+    font-weight: 500;
     color: light-dark(var(--mantine-color-dark-4), var(--mantine-color-dark-1));
+    text-decoration: none;
+    cursor: pointer;
     @mixin light {
       border-bottom: 0.07em solid var(--mantine-color-dark-0);
     }
     @mixin dark {
       border-bottom: 0.07em solid var(--mantine-color-dark-2);
     }
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
   }
 
   blockquote {
     padding-left: 1rem;
+    margin: 0;
     border-left: 3px solid
       light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4));
-    margin: 0;
   }
 
   hr {
@@ -164,14 +164,17 @@
     &:last-child {
       margin-bottom: 0;
     }
-
   }
 
-  .react-renderer.node-callout div[style*="white-space: inherit;"] > :first-child {
+  .react-renderer.node-callout
+    div[style*="white-space: inherit;"]
+    > :first-child {
     margin-top: 0;
   }
 
-  .react-renderer.node-callout div[style*="white-space: inherit;"] > :last-child {
+  .react-renderer.node-callout
+    div[style*="white-space: inherit;"]
+    > :last-child {
     margin-bottom: 0;
   }
 
@@ -218,8 +221,8 @@
   }
 
   .alignLeft {
-    margin-left: 0;
     margin-right: auto;
+    margin-left: 0;
   }
 
   .alignRight {
@@ -228,10 +231,9 @@
   }
 
   .alignCenter {
-    margin-left: auto;
     margin-right: auto;
+    margin-left: auto;
   }
-
 }
 
 .ProseMirror > h1,
@@ -240,40 +242,38 @@
 .ProseMirror > h4,
 .ProseMirror > h5,
 .ProseMirror > h6 {
+  scroll-margin-top: 80px; /* match your header height */
 
   > .link-btn {
-    cursor: pointer;
     position: relative;
-
+    cursor: pointer;
   }
 
   > .link-btn > .link-btn-content {
-    opacity: 0;
     position: absolute;
-    left: 5px;
     top: 0;
-    height: 100%;
-    transition: opacity 0.15s ease;
+    left: 5px;
     display: inline-flex;
-    justify-content: center;
     flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.15s ease;
   }
 
   &:hover > .link-btn > .link-btn-content {
     opacity: 1;
-  }
-
-  scroll-margin-top: 80px; /* match your header height */
+  } /* match your header height */
 }
 
 .ProseMirror-icon {
   display: inline-block;
   width: 1em;
   height: 1em;
+  background-color: currentColor;
   mask-image: var(--svg);
   mask-repeat: no-repeat;
   mask-size: 100% 100%;
-  background-color: currentColor;
 
   &-open {
     --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M10 3v2H5v14h14v-5h2v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm7.586 2H13V3h8v8h-2V6.414l-7 7L10.586 12z'/%3E%3C/svg%3E");
@@ -289,10 +289,10 @@
 }
 
 .page-title .ProseMirror h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
   margin-top: 0;
   margin-bottom: 0.75em;
+  font-size: 2.5rem;
+  font-weight: 700;
 }
 
 /* The full-page base view positions its title with its own outer
@@ -300,8 +300,8 @@
  * 3rem .ProseMirror padding-x would push the title further in than
  * the table — drop it inside the base title wrapper only. */
 .base-page-title .ProseMirror {
-  padding-left: 0;
   padding-right: 0;
+  padding-left: 0;
 }
 
 /* Definite height so the inner .tableScrollport scrolls and the sticky table

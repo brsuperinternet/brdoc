@@ -1,11 +1,11 @@
 import api from "@/lib/api-client.ts";
+import { IPagination } from "@/lib/types.ts";
 import type {
   AiChat,
   AiChatMessage,
   AiChatStreamEvent,
   ChatAttachment,
 } from "../types/ai-chat.types";
-import { IPagination } from "@/lib/types.ts";
 
 export async function createChat(): Promise<AiChat> {
   const req = await api.post<AiChat>("/ai/chats/create");
@@ -21,7 +21,7 @@ export async function listChats(params?: {
 }
 
 export async function getChatInfo(
-  chatId: string,
+  chatId: string
 ): Promise<{ chat: AiChat; messages: AiChatMessage[] }> {
   const req = await api.post("/ai/chats/info", { chatId });
   return req.data;
@@ -33,7 +33,7 @@ export async function deleteChat(chatId: string): Promise<void> {
 
 export async function updateChatTitle(
   chatId: string,
-  title: string,
+  title: string
 ): Promise<void> {
   await api.post("/ai/chats/update", { chatId, title });
 }
@@ -45,7 +45,7 @@ export async function searchChats(query: string): Promise<AiChat[]> {
 
 export async function uploadChatFile(
   file: File,
-  chatId?: string,
+  chatId?: string
 ): Promise<ChatAttachment> {
   const formData = new FormData();
   formData.append("file", file);
@@ -67,18 +67,18 @@ export function sendChatMessage(
   },
   onEvent: (event: AiChatStreamEvent) => void,
   onError?: (error: string) => void,
-  onComplete?: () => void,
+  onComplete?: () => void
 ): AbortController {
   const abortController = new AbortController();
 
   (async () => {
     try {
       const response = await fetch("/api/ai/chats/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),
-        signal: abortController.signal,
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
@@ -106,7 +106,9 @@ export function sendChatMessage(
       try {
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            break;
+          }
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n");

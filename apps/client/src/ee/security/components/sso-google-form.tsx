@@ -1,24 +1,23 @@
-import React from "react";
-import { z } from "zod/v4";
+import { Box, Button, Group, Stack, Switch, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { Box, Button, Group, Stack, Switch, TextInput } from "@mantine/core";
-import classes from "@/ee/security/components/sso.module.css";
-import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import classes from "@/ee/security/components/sso.module.css";
 import { useUpdateSsoProviderMutation } from "@/ee/security/queries/security-query.ts";
+import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 
 const ssoSchema = z.object({
-  name: z.string().min(1, "Provider name is required"),
-  isEnabled: z.boolean(),
   allowSignup: z.boolean(),
+  isEnabled: z.boolean(),
+  name: z.string().min(1, "Provider name is required"),
 });
 
 type SSOFormValues = z.infer<typeof ssoSchema>;
 
 interface SsoFormProps {
-  provider: IAuthProvider;
   onClose?: () => void;
+  provider: IAuthProvider;
 }
 export function SsoGoogleForm({ provider, onClose }: SsoFormProps) {
   const { t } = useTranslation();
@@ -26,9 +25,9 @@ export function SsoGoogleForm({ provider, onClose }: SsoFormProps) {
 
   const form = useForm<SSOFormValues>({
     initialValues: {
-      name: provider.name || "",
-      isEnabled: provider.isEnabled,
       allowSignup: provider.allowSignup,
+      isEnabled: provider.isEnabled,
+      name: provider.name || "",
     },
     validate: zod4Resolver(ssoSchema),
   });
@@ -65,8 +64,8 @@ export function SsoGoogleForm({ provider, onClose }: SsoFormProps) {
           <Group justify="space-between">
             <div>{t("Allow signup")}</div>
             <Switch
-              className={classes.switch}
               checked={form.values.allowSignup}
+              className={classes.switch}
               {...form.getInputProps("allowSignup")}
             />
           </Group>
@@ -74,14 +73,14 @@ export function SsoGoogleForm({ provider, onClose }: SsoFormProps) {
           <Group justify="space-between">
             <div>{t("Enabled")}</div>
             <Switch
-              className={classes.switch}
               checked={form.values.isEnabled}
+              className={classes.switch}
               {...form.getInputProps("isEnabled")}
             />
           </Group>
 
-          <Group mt="md" justify="flex-end">
-            <Button type="submit" disabled={!form.isDirty()}>
+          <Group justify="flex-end" mt="md">
+            <Button disabled={!form.isDirty()} type="submit">
               {t("Save")}
             </Button>
           </Group>

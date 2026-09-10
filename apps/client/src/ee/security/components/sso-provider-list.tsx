@@ -1,8 +1,3 @@
-import React, { useState } from "react";
-import {
-  useDeleteSsoProviderMutation,
-  useGetSsoProviders,
-} from "@/ee/security/queries/security-query.ts";
 import {
   ActionIcon,
   Badge,
@@ -13,6 +8,8 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import {
   IconCheck,
   IconDots,
@@ -21,16 +18,16 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
-import { IAuthProvider } from "@/ee/security/types/security.types.ts";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { GoogleIcon } from "@/components/icons/google-icon.tsx";
 import SsoProviderModal from "@/ee/security/components/sso-provider-modal.tsx";
 import { SSO_PROVIDER } from "@/ee/security/contants.ts";
-import { GoogleIcon } from "@/components/icons/google-icon.tsx";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import RoleSelectMenu from "@/components/ui/role-select-menu.tsx";
-import { getUserRoleLabel } from "@/features/workspace/types/user-role-data.ts";
+import {
+  useDeleteSsoProviderMutation,
+  useGetSsoProviders,
+} from "@/ee/security/queries/security-query.ts";
+import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 
 export default function SsoProviderList() {
   const { t } = useTranslation();
@@ -54,23 +51,23 @@ export default function SsoProviderList() {
 
   const openDeleteModal = (providerId: string) =>
     modals.openConfirmModal({
-      title: t("Delete SSO provider"),
       centered: true,
       children: (
         <Text size="sm">
           {t("Are you sure you want to delete this SSO provider?")}
         </Text>
       ),
-      labels: { confirm: t("Delete"), cancel: t("Don't") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Don't"), confirm: t("Delete") },
       onConfirm: () => deleteSsoProviderMutation.mutateAsync(providerId),
+      title: t("Delete SSO provider"),
     });
 
   return (
     <>
-      <Card shadow="sm" radius="sm">
-        <Table.ScrollContainer minWidth={600} maxHeight={400}>
-          <Table verticalSpacing="sm" stickyHeader>
+      <Card radius="sm" shadow="sm">
+        <Table.ScrollContainer maxHeight={400} minWidth={600}>
+          <Table stickyHeader verticalSpacing="sm">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>{t("Name")}</Table.Th>
@@ -84,7 +81,9 @@ export default function SsoProviderList() {
               {data?.items
                 .sort((a, b) => {
                   const enabledDiff = Number(b.isEnabled) - Number(a.isEnabled);
-                  if (enabledDiff !== 0) return enabledDiff;
+                  if (enabledDiff !== 0) {
+                    return enabledDiff;
+                  }
                   return a.name.localeCompare(b.name);
                 })
                 .map((provider: IAuthProvider, index) => (
@@ -97,7 +96,7 @@ export default function SsoProviderList() {
                           <IconLock size={16} />
                         )}
                         <div>
-                          <Text fz="sm" fw={500}>
+                          <Text fw={500} fz="sm">
                             {provider.name}
                           </Text>
                         </div>
@@ -106,8 +105,8 @@ export default function SsoProviderList() {
                     <Table.Td>
                       <Badge
                         color={"gray"}
-                        variant="light"
                         style={{ whiteSpace: "nowrap" }}
+                        variant="light"
                       >
                         {provider.type.toUpperCase()}
                       </Badge>
@@ -122,15 +121,15 @@ export default function SsoProviderList() {
                     </Table.Td>
                     <Table.Td>
                       {provider.allowSignup ? (
-                        <ThemeIcon variant="light" size={24} radius="xl">
+                        <ThemeIcon radius="xl" size={24} variant="light">
                           <IconCheck size={16} />
                         </ThemeIcon>
                       ) : (
                         <ThemeIcon
-                          variant="light"
                           color="red"
-                          size={24}
                           radius="xl"
+                          size={24}
+                          variant="light"
                         >
                           <IconX size={16} />
                         </ThemeIcon>
@@ -139,42 +138,44 @@ export default function SsoProviderList() {
                     <Table.Td>
                       <Group gap="xs" wrap="nowrap">
                         <ActionIcon
-                          variant="subtle"
+                          aria-label={t("Edit {{name}}", {
+                            name: provider.name,
+                          })}
                           color="gray"
-                          aria-label={t("Edit {{name}}", { name: provider.name })}
                           onClick={() => handleEdit(provider)}
+                          variant="subtle"
                         >
                           <IconPencil size={16} />
                         </ActionIcon>
                         <Menu
+                          position="bottom-end"
                           transitionProps={{ transition: "pop" }}
                           withArrow
-                          position="bottom-end"
                           withinPortal
                         >
                           <Menu.Target>
                             <ActionIcon
-                              variant="subtle"
-                              color="gray"
                               aria-label={t("More actions for {{name}}", {
                                 name: provider.name,
                               })}
+                              color="gray"
+                              variant="subtle"
                             >
                               <IconDots size={16} />
                             </ActionIcon>
                           </Menu.Target>
                           <Menu.Dropdown>
                             <Menu.Item
-                              onClick={() => handleEdit(provider)}
                               leftSection={<IconPencil size={16} />}
+                              onClick={() => handleEdit(provider)}
                             >
                               {t("Edit")}
                             </Menu.Item>
                             <Menu.Item
-                              onClick={() => openDeleteModal(provider.id)}
-                              leftSection={<IconTrash size={16} />}
                               color="red"
                               disabled={provider.type === SSO_PROVIDER.GOOGLE}
+                              leftSection={<IconTrash size={16} />}
+                              onClick={() => openDeleteModal(provider.id)}
                             >
                               {t("Delete")}
                             </Menu.Item>
@@ -190,8 +191,8 @@ export default function SsoProviderList() {
       </Card>
 
       <SsoProviderModal
-        opened={opened}
         onClose={close}
+        opened={opened}
         provider={editProvider}
       />
     </>

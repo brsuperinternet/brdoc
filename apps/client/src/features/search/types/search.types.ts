@@ -1,66 +1,66 @@
-import { IUser } from "@/features/user/types/user.types.ts";
 import { IGroup } from "@/features/group/types/group.types.ts";
-import { ISpace } from "@/features/space/types/space.types.ts";
 import { IPage } from "@/features/page/types/page.types.ts";
+import { ISpace } from "@/features/space/types/space.types.ts";
+import { IUser } from "@/features/user/types/user.types.ts";
 
 export interface IPageSearch {
-  id: string;
-  title: string;
-  icon: string;
-  parentPageId: string;
-  slugId: string;
-  creatorId: string;
   createdAt: Date;
-  updatedAt: Date;
-  rank: string;
+  creatorId: string;
   highlight: string;
+  icon: string;
+  id: string;
   matchedText: string[];
-  wholeWord: boolean;
+  parentPageId: string;
+  rank: string;
+  slugId: string;
   space: Partial<ISpace>;
+  title: string;
+  updatedAt: Date;
+  wholeWord: boolean;
 }
 
 export interface SearchSuggestionParams {
-  query: string;
-  includeUsers?: boolean;
   includeGroups?: boolean;
   includePages?: boolean;
-  spaceId?: string;
+  includeUsers?: boolean;
   limit?: number;
+  query: string;
+  spaceId?: string;
 }
 
 export interface ISuggestionResult {
-  users?: Partial<IUser[]>;
   groups?: Partial<IGroup[]>;
   pages?: Partial<IPage[]>;
+  users?: Partial<IUser[]>;
 }
 
 export interface IPageSearchParams {
-  query: string;
-  spaceId?: string;
-  shareId?: string;
   creatorId?: string;
   labelIds?: string[];
+  query: string;
+  shareId?: string;
+  spaceId?: string;
   titleOnly?: boolean;
 }
 
 export interface IAttachmentSearch {
-  id: string;
-  fileName: string;
-  pageId: string;
-  creatorId: string;
   createdAt: Date;
-  updatedAt: Date;
-  rank: string;
+  creatorId: string;
+  fileName: string;
   highlight: string;
+  id: string;
+  page: {
+    id: string;
+    title: string;
+    slugId: string;
+  };
+  pageId: string;
+  rank: string;
   space: {
     id: string;
     name: string;
     slug: string;
     icon: string;
   };
-  page: {
-    id: string;
-    title: string;
-    slugId: string;
-  };
+  updatedAt: Date;
 }

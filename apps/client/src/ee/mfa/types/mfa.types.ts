@@ -1,37 +1,37 @@
 export interface MfaMethod {
-  type: 'totp' | 'email';
   isEnabled: boolean;
+  type: "totp" | "email";
 }
 
 export interface MfaSettings {
-  isEnabled: boolean;
-  methods: MfaMethod[];
   backupCodesCount: number;
+  isEnabled: boolean;
   lastUpdated?: string;
+  methods: MfaMethod[];
 }
 
 export interface MfaSetupState {
-  method: 'totp' | 'email';
-  secret?: string;
-  qrCode?: string;
-  manualEntry?: string;
   backupCodes?: string[];
+  manualEntry?: string;
+  method: "totp" | "email";
+  qrCode?: string;
+  secret?: string;
 }
 
 export interface MfaStatusResponse {
+  backupCodesCount?: number;
   isEnabled?: boolean;
   method?: string | null;
-  backupCodesCount?: number;
 }
 
 export interface MfaSetupRequest {
-  method: 'totp';
+  method: "totp";
 }
 
 export interface MfaSetupResponse {
+  manualKey: string;
   method: string;
   qrCode: string;
-  manualKey: string;
 }
 
 export interface MfaEnableRequest {
@@ -39,8 +39,8 @@ export interface MfaEnableRequest {
 }
 
 export interface MfaEnableResponse {
-  success: boolean;
   backupCodes: string[];
+  success: boolean;
 }
 
 export interface MfaDisableRequest {
@@ -52,9 +52,9 @@ export interface MfaBackupCodesResponse {
 }
 
 export interface MfaAccessValidationResponse {
-  valid: boolean;
+  isMfaEnforced?: boolean;
   isTransferToken?: boolean;
   requiresMfaSetup?: boolean;
   userHasMfa?: boolean;
-  isMfaEnforced?: boolean;
+  valid: boolean;
 }

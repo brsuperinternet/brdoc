@@ -9,7 +9,7 @@ import type { TFunction } from "i18next";
 export function getPageTitle(
   title: string | null | undefined,
   isBase: boolean | undefined,
-  t: TFunction,
+  t: TFunction
 ): string {
   return title || (isBase ? t("Untitled base") : t("Untitled"));
 }
@@ -28,9 +28,9 @@ const buildPageSlug = (pageSlugId: string, pageTitle?: string): string => {
 function appendSearchParams(
   url: string,
   search?: string[],
-  wholeWord?: boolean,
+  wholeWord?: boolean
 ): string {
-  if(search?.length === 0){
+  if (search?.length === 0) {
     return url;
   }
 
@@ -55,7 +55,7 @@ export const buildPageUrl = (
   pageTitle?: string,
   anchorId?: string,
   search?: string[],
-  wholeWord?: boolean,
+  wholeWord?: boolean
 ): string => {
   let url: string;
   if (spaceName === undefined) {
@@ -79,10 +79,10 @@ export const buildSharedPageUrl = (opts: {
 }): string => {
   const { shareId, pageSlugId, pageTitle, anchorId, search, wholeWord } = opts;
   let url: string;
-  if (!shareId) {
-    url = `/share/p/${buildPageSlug(pageSlugId, pageTitle)}`;
-  } else {
+  if (shareId) {
     url = `/share/${shareId}/p/${buildPageSlug(pageSlugId, pageTitle)}`;
+  } else {
+    url = `/share/p/${buildPageSlug(pageSlugId, pageTitle)}`;
   }
 
   url = appendSearchParams(url, search, wholeWord);

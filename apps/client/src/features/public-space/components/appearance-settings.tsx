@@ -8,6 +8,10 @@ import {
 import { IconColorPicker } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Feature } from "@/ee/features.ts";
+import { useHasFeature } from "@/ee/hooks/use-feature.ts";
+import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label.ts";
+import { usePublishSpaceMutation } from "@/features/public-space/queries/public-space-query.ts";
 import {
   DEFAULT_DOCS_PRESET,
   DOCS_THEME_PRESETS,
@@ -15,10 +19,6 @@ import {
   matchDocsPreset,
 } from "@/features/public-space/theme/docs-theme.ts";
 import { IPublicSpaceAppearance } from "@/features/public-space/types/public-space.types.ts";
-import { usePublishSpaceMutation } from "@/features/public-space/queries/public-space-query.ts";
-import { useHasFeature } from "@/ee/hooks/use-feature.ts";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label.ts";
-import { Feature } from "@/ee/features.ts";
 import classes from "./appearance-settings.module.css";
 
 type AppearanceSettingsProps = {
@@ -38,10 +38,10 @@ export default function AppearanceSettings({
   const matchedPreset = matchDocsPreset(appearance);
   const [customOpen, setCustomOpen] = useState(matchedPreset === null);
   const [customLight, setCustomLight] = useState(
-    appearance?.primaryColorLight ?? DEFAULT_DOCS_PRESET.light,
+    appearance?.primaryColorLight ?? DEFAULT_DOCS_PRESET.light
   );
   const [customDark, setCustomDark] = useState(
-    appearance?.primaryColorDark ?? DEFAULT_DOCS_PRESET.dark,
+    appearance?.primaryColorDark ?? DEFAULT_DOCS_PRESET.dark
   );
 
   useEffect(() => {
@@ -54,27 +54,33 @@ export default function AppearanceSettings({
     primaryColorLight: string | null;
     primaryColorDark: string | null;
   }) => {
-    if (!hasAppearance) return;
-    publishMutation.mutate({ spaceId, enabled: true, appearance: payload });
+    if (!hasAppearance) {
+      return;
+    }
+    publishMutation.mutate({ appearance: payload, enabled: true, spaceId });
   };
 
   const selectPreset = (presetId: string) => {
     setCustomOpen(false);
     const preset = DOCS_THEME_PRESETS.find((item) => item.id === presetId);
-    if (!preset) return;
+    if (!preset) {
+      return;
+    }
     if (preset.id === DEFAULT_DOCS_PRESET.id) {
-      saveAppearance({ primaryColorLight: null, primaryColorDark: null });
+      saveAppearance({ primaryColorDark: null, primaryColorLight: null });
       return;
     }
     saveAppearance({
-      primaryColorLight: preset.light,
       primaryColorDark: preset.dark,
+      primaryColorLight: preset.light,
     });
   };
 
   const commitCustom = (light: string, dark: string) => {
-    if (!isValidDocsColor(light) || !isValidDocsColor(dark)) return;
-    saveAppearance({ primaryColorLight: light, primaryColorDark: dark });
+    if (!(isValidDocsColor(light) && isValidDocsColor(dark))) {
+      return;
+    }
+    saveAppearance({ primaryColorDark: dark, primaryColorLight: light });
   };
 
   const swatches = DOCS_THEME_PRESETS.flatMap((preset) => [
@@ -84,16 +90,16 @@ export default function AppearanceSettings({
 
   return (
     <div>
-      <Text size="md" mt="md">
+      <Text mt="md" size="md">
         {t("Appearance")}
       </Text>
-      <Text size="sm" c="dimmed">
+      <Text c="dimmed" size="sm">
         {t("Choose the primary color of the public docs site.")}
       </Text>
 
       <Tooltip
-        label={upgradeLabel}
         disabled={hasAppearance}
+        label={upgradeLabel}
         position="top-start"
       >
         <div className={classes.presetRow} style={{ marginTop: 10 }}>
@@ -101,11 +107,11 @@ export default function AppearanceSettings({
             const selected = !customOpen && matchedPreset?.id === preset.id;
             return (
               <UnstyledButton
-                key={preset.id}
+                aria-pressed={selected}
                 className={classes.presetCard}
                 data-selected={selected || undefined}
-                aria-pressed={selected}
                 disabled={!hasAppearance}
+                key={preset.id}
                 onClick={() => selectPreset(preset.id)}
               >
                 <span
@@ -120,14 +126,14 @@ export default function AppearanceSettings({
           })}
 
           <UnstyledButton
+            aria-pressed={customOpen}
             className={classes.presetCard}
             data-selected={customOpen || undefined}
-            aria-pressed={customOpen}
             disabled={!hasAppearance}
             onClick={() => setCustomOpen(true)}
           >
             <span className={classes.customSwatch}>
-              <IconColorPicker size={13} stroke={2} aria-hidden />
+              <IconColorPicker aria-hidden size={13} stroke={2} />
             </span>
             <Text size="xs">{t("Custom")}</Text>
           </UnstyledButton>
@@ -135,28 +141,28 @@ export default function AppearanceSettings({
       </Tooltip>
 
       {customOpen && hasAppearance && (
-        <Group grow mt="sm" align="flex-start">
+        <Group align="flex-start" grow mt="sm">
           <ColorInput
-            label={t("Light mode color")}
             format="hex"
-            value={customLight}
-            swatches={swatches}
+            label={t("Light mode color")}
             onChange={setCustomLight}
             onChangeEnd={(value) => {
               setCustomLight(value);
               commitCustom(value, customDark);
             }}
+            swatches={swatches}
+            value={customLight}
           />
           <ColorInput
-            label={t("Dark mode color")}
             format="hex"
-            value={customDark}
-            swatches={swatches}
+            label={t("Dark mode color")}
             onChange={setCustomDark}
             onChangeEnd={(value) => {
               setCustomDark(value);
               commitCustom(customLight, value);
             }}
+            swatches={swatches}
+            value={customDark}
           />
         </Group>
       )}

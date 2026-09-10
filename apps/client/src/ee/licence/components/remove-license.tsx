@@ -1,8 +1,7 @@
-import { useTranslation } from "react-i18next";
-import { useRemoveLicenseMutation } from "@/ee/licence/queries/license-query.ts";
 import { Button, Group, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import React from "react";
+import { useTranslation } from "react-i18next";
+import { useRemoveLicenseMutation } from "@/ee/licence/queries/license-query.ts";
 
 export default function RemoveLicense() {
   const { t } = useTranslation();
@@ -10,24 +9,25 @@ export default function RemoveLicense() {
 
   const openDeleteModal = () =>
     modals.openConfirmModal({
-      title: t("Remove license key"),
       centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Are you sure you want to remove your license key? Your workspace will be downgraded to the non-enterprise version.",
+            "Are you sure you want to remove your license key? Your workspace will be downgraded to the non-enterprise version."
           )}
         </Text>
       ),
-      labels: { confirm: t("Remove"), cancel: t("Don't") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Don't"), confirm: t("Remove") },
       onConfirm: () => removeLicenseMutation.mutate(),
+      title: t("Remove license key"),
     });
 
   return (
     <Group>
-      <Button variant="light" color="red" onClick={openDeleteModal}>Remove license</Button>
+      <Button color="red" onClick={openDeleteModal} variant="light">
+        Remove license
+      </Button>
     </Group>
   );
 }
-

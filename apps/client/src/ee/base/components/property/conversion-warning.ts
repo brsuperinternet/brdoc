@@ -19,101 +19,113 @@ type ConversionInfo = {
 // Buckets ordered most-specific first; default covers safe reinterpretations.
 function describeConversion(
   from: BasePropertyType,
-  to: BasePropertyType,
+  to: BasePropertyType
 ): ConversionInfo {
   if (to === "text" || to === "longText") {
     if (from === "longText" && to === "text") {
       return {
+        lossy: true,
         message:
           "Cells longer than the Text limit will be truncated and the extra content permanently lost.",
-        lossy: true,
       };
     }
     if (from === "select" || from === "status") {
-      return { message: "Cells will be replaced with the option name.", lossy: true };
+      return {
+        lossy: true,
+        message: "Cells will be replaced with the option name.",
+      };
     }
     if (from === "multiSelect") {
       return {
+        lossy: true,
         message:
           "Cells will be replaced with a comma-separated list of option names.",
-        lossy: true,
       };
     }
     if (from === "person") {
-      return { message: "Cells will be replaced with the person's name.", lossy: true };
+      return {
+        lossy: true,
+        message: "Cells will be replaced with the person's name.",
+      };
     }
     if (from === "file") {
       return {
+        lossy: true,
         message:
           "Cells will be replaced with a comma-separated list of file names.",
-        lossy: true,
       };
     }
     if (from === "page") {
-      return { message: "Cells will be replaced with the page title.", lossy: true };
+      return {
+        lossy: true,
+        message: "Cells will be replaced with the page title.",
+      };
     }
   }
 
   if (to === "select" && from === "multiSelect") {
     return {
+      lossy: true,
       message:
         "Only the first selected item per row will be kept; the rest will be discarded.",
-      lossy: true,
     };
   }
 
   if (to === "multiSelect" && from === "select") {
     return {
-      message: "Existing values become single-item lists. No data is lost.",
       lossy: false,
+      message: "Existing values become single-item lists. No data is lost.",
     };
   }
 
   if (to === "page") {
     return {
-      message: "Cells that aren't already a page reference will be cleared.",
       lossy: true,
+      message: "Cells that aren't already a page reference will be cleared.",
     };
   }
 
   if (to === "number" && from !== "number") {
     return {
-      message: "Cells that can't be parsed as a number will be cleared.",
       lossy: true,
+      message: "Cells that can't be parsed as a number will be cleared.",
     };
   }
 
   if (to === "date" && from !== "date") {
     return {
-      message: "Cells that can't be parsed as a date will be cleared.",
       lossy: true,
+      message: "Cells that can't be parsed as a date will be cleared.",
     };
   }
 
   if (to === "checkbox" && from !== "checkbox") {
     return {
+      lossy: true,
       message:
         "Cells will be coerced (yes/true/1 become checked; everything else becomes unchecked or cleared).",
-      lossy: true,
     };
   }
 
   if ((to === "url" || to === "email") && from !== to) {
     return {
+      lossy: true,
       message:
         to === "url"
           ? "Cells that aren't a valid URL will be cleared."
           : "Cells that aren't a valid email address will be cleared.",
-      lossy: true,
     };
   }
 
-  return { message: "Cells will be reinterpreted under the new type.", lossy: false };
+  return {
+    lossy: false,
+    message: "Cells will be reinterpreted under the new type.",
+  };
 }
 
 export function conversionWarning(
   from: BasePropertyType,
-  to: BasePropertyType,
+  to: BasePropertyType
 ): string {
   return describeConversion(from, to).message;
 }
@@ -121,7 +133,7 @@ export function conversionWarning(
 // Whether the type change can lose data, used to make "Apply" destructive.
 export function isLossyConversion(
   from: BasePropertyType,
-  to: BasePropertyType,
+  to: BasePropertyType
 ): boolean {
   return describeConversion(from, to).lossy;
 }

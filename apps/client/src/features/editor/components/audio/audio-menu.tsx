@@ -1,18 +1,15 @@
-import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
-import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
-import { useCallback } from "react";
-import { Node as PMNode } from "@tiptap/pm/model";
 import { isEditorReady } from "@docmost/editor-ext";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconDownload, IconTrash } from "@tabler/icons-react";
+import { Node as PMNode } from "@tiptap/pm/model";
+import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
+import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
+import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   EditorMenuProps,
   ShouldShowProps,
 } from "@/features/editor/components/table/types/types.ts";
-import { ActionIcon, Tooltip } from "@mantine/core";
-import {
-  IconDownload,
-  IconTrash,
-} from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { getFileUrl } from "@/lib/config.ts";
 import classes from "../common/toolbar-menu.module.css";
 
@@ -43,11 +40,13 @@ export function AudioMenu({ editor }: EditorMenuProps) {
 
       return editor.isActive("audio") && editor.getAttributes("audio").src;
     },
-    [editor],
+    [editor]
   );
 
   const getReferencedVirtualElement = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const { selection } = editor.state;
     const predicate = (node: PMNode) => node.type.name === "audio";
     const parent = findParentNode(predicate)(selection);
@@ -69,7 +68,9 @@ export function AudioMenu({ editor }: EditorMenuProps) {
   }, [editor]);
 
   const handleDownload = useCallback(() => {
-    if (!editorState?.src) return;
+    if (!editorState?.src) {
+      return;
+    }
     const url = getFileUrl(editorState.src);
     const a = document.createElement("a");
     a.href = url;
@@ -84,36 +85,38 @@ export function AudioMenu({ editor }: EditorMenuProps) {
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey={`audio-menu`}
-      ref={(element) => {
-        if (element) element.style.zIndex = "99";
-      }}
-      updateDelay={0}
       getReferencedVirtualElement={getReferencedVirtualElement}
       options={{
-        placement: "top",
-        offset: 8,
         flip: false,
+        offset: 8,
+        placement: "top",
+      }}
+      pluginKey={"audio-menu"}
+      ref={(element) => {
+        if (element) {
+          element.style.zIndex = "99";
+        }
       }}
       shouldShow={shouldShow}
+      updateDelay={0}
     >
       <div className={classes.toolbar}>
-        <Tooltip position="top" label={t("Download")} withinPortal={false}>
+        <Tooltip label={t("Download")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Download")}
             onClick={handleDownload}
             size="lg"
-            aria-label={t("Download")}
             variant="subtle"
           >
             <IconDownload size={18} />
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip position="top" label={t("Delete")} withinPortal={false}>
+        <Tooltip label={t("Delete")} position="top" withinPortal={false}>
           <ActionIcon
+            aria-label={t("Delete")}
             onClick={handleDelete}
             size="lg"
-            aria-label={t("Delete")}
             variant="subtle"
           >
             <IconTrash size={18} />

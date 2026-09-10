@@ -1,6 +1,6 @@
+import { IComment } from "@/features/comment/types/comment.types";
 import { SpaceTreeNode } from "@/features/page/tree/types.ts";
 import { IPage } from "@/features/page/types/page.types";
-import { IComment } from "@/features/comment/types/comment.types";
 
 export type InvalidateEvent = {
   operation: "invalidate";

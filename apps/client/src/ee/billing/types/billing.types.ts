@@ -4,32 +4,32 @@ export enum BillingPlan {
 }
 
 export interface IBilling {
-  id: string;
-  stripeSubscriptionId: string;
-  stripeCustomerId: string;
-  status: string;
-  quantity: number;
   amount: number;
-  interval: string;
-  currency: string;
-  metadata: Record<string, any>;
-  stripePriceId: string;
-  stripeItemId: string;
-  stripeProductId: string;
-  periodStartAt: Date;
-  periodEndAt: Date;
-  cancelAtPeriodEnd: boolean;
-  cancelAt: Date;
-  canceledAt: Date;
-  workspaceId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
   billingScheme: string | null;
-  tieredUpTo: string | null;
+  cancelAt: Date;
+  cancelAtPeriodEnd: boolean;
+  canceledAt: Date;
+  createdAt: Date;
+  currency: string;
+  deletedAt: Date;
+  id: string;
+  interval: string;
+  metadata: Record<string, any>;
+  periodEndAt: Date;
+  periodStartAt: Date;
+  planName: string | null;
+  quantity: number;
+  status: string;
+  stripeCustomerId: string;
+  stripeItemId: string;
+  stripePriceId: string;
+  stripeProductId: string;
+  stripeSubscriptionId: string;
   tieredFlatAmount: number | null;
   tieredUnitAmount: number | null;
-  planName: string | null;
+  tieredUpTo: string | null;
+  updatedAt: Date;
+  workspaceId: string;
 }
 
 export interface ICheckoutLink {
@@ -41,24 +41,24 @@ export interface IBillingPortal {
 }
 
 export interface IBillingPlan {
-  name: string;
-  description: string;
-  productId: string;
-  monthlyId: string;
-  yearlyId: string;
+  billingScheme: string | null;
   currency: string;
+  description: string;
+  features: string[];
+  monthlyId: string;
+  name: string;
   price?: {
     monthly: string;
     yearly: string;
   };
-  features: string[];
-  billingScheme: string | null;
   pricingTiers?: PricingTier[];
+  productId: string;
+  yearlyId: string;
 }
 
 interface PricingTier {
-  upTo: number;
-  monthly?: number;
-  yearly?: number;
   custom?: boolean;
+  monthly?: number;
+  upTo: number;
+  yearly?: number;
 }

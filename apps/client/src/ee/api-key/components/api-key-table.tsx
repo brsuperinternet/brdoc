@@ -1,18 +1,17 @@
 import { ActionIcon, Group, Menu, Table, Text } from "@mantine/core";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { IApiKey } from "@/ee/api-key";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import React from "react";
 import NoTableResults from "@/components/common/no-table-results";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import { IApiKey } from "@/ee/api-key";
 import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
 
 interface ApiKeyTableProps {
   apiKeys: IApiKey[];
   isLoading?: boolean;
-  showUserColumn?: boolean;
-  onUpdate?: (apiKey: IApiKey) => void;
   onRevoke?: (apiKey: IApiKey) => void;
+  onUpdate?: (apiKey: IApiKey) => void;
+  showUserColumn?: boolean;
 }
 
 export function ApiKeyTable({
@@ -26,12 +25,16 @@ export function ApiKeyTable({
   const locale = useDateFnsLocale();
 
   const formatDate = (date: Date | string | null) => {
-    if (!date) return t("Never");
+    if (!date) {
+      return t("Never");
+    }
     return formatLocalized(date, "MMM dd, yyyy", "PP", locale);
   };
 
   const isExpired = (expiresAt: string | null) => {
-    if (!expiresAt) return false;
+    if (!expiresAt) {
+      return false;
+    }
     return new Date(expiresAt) < new Date();
   };
 
@@ -54,7 +57,7 @@ export function ApiKeyTable({
             apiKeys.map((apiKey: IApiKey, index: number) => (
               <Table.Tr key={index}>
                 <Table.Td>
-                  <Text fz="sm" fw={500}>
+                  <Text fw={500} fz="sm">
                     {apiKey.name}
                   </Text>
                 </Table.Td>
@@ -108,9 +111,9 @@ export function ApiKeyTable({
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
                       <ActionIcon
-                        variant="subtle"
-                        color="gray"
                         aria-label={t("API key menu")}
+                        color="gray"
+                        variant="subtle"
                       >
                         <IconDots size={16} />
                       </ActionIcon>
@@ -126,8 +129,8 @@ export function ApiKeyTable({
                       )}
                       {onRevoke && (
                         <Menu.Item
-                          leftSection={<IconTrash size={16} />}
                           color="red"
+                          leftSection={<IconTrash size={16} />}
                           onClick={() => onRevoke(apiKey)}
                         >
                           {t("Revoke")}

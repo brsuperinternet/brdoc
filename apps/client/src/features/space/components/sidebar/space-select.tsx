@@ -1,34 +1,34 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useDebouncedValue } from "@mantine/hooks";
 import { Group, Select, SelectProps, Text } from "@mantine/core";
-import { useGetSpacesQuery } from "@/features/space/queries/space-query.ts";
-import { ISpace } from "../../types/space.types";
+import { useDebouncedValue } from "@mantine/hooks";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
+import { useGetSpacesQuery } from "@/features/space/queries/space-query.ts";
+import { ISpace } from "../../types/space.types";
 
 interface SpaceSelectProps {
-  onChange: (value: ISpace) => void;
-  value?: string;
-  label?: string;
-  width?: number;
-  opened?: boolean;
   clearable?: boolean;
+  label?: string;
+  onChange: (value: ISpace) => void;
+  opened?: boolean;
+  value?: string;
+  width?: number;
   withinPortal?: boolean;
 }
 
 const renderSelectOption: SelectProps["renderOption"] = ({ option }) => (
   <Group gap="sm" wrap="nowrap">
     <CustomAvatar
-      name={option.label}
       avatarUrl={option?.["icon"]}
-      type={AvatarIconType.SPACE_ICON}
       color="initials"
-      variant="filled"
+      name={option.label}
       size={20}
+      type={AvatarIconType.SPACE_ICON}
+      variant="filled"
     />
     <div>
-      <Text size="sm" lineClamp={1}>
+      <Text lineClamp={1} size="sm">
         {option.label}
       </Text>
     </div>
@@ -48,8 +48,8 @@ export function SpaceSelect({
   const [searchValue, setSearchValue] = useState("");
   const [debouncedQuery] = useDebouncedValue(searchValue, 500);
   const { data: spaces, isLoading } = useGetSpacesQuery({
-    query: debouncedQuery,
     limit: 50,
+    query: debouncedQuery,
   });
   const [data, setData] = useState([]);
   const fetchedSpaces = useRef(new Map<string, ISpace>());
@@ -57,21 +57,19 @@ export function SpaceSelect({
   useEffect(() => {
     if (spaces) {
       spaces.items.forEach((space: ISpace) =>
-        fetchedSpaces.current.set(space.slug, space),
+        fetchedSpaces.current.set(space.slug, space)
       );
       const spaceData = spaces?.items
         .filter((space: ISpace) => space.slug !== value)
-        .map((space: ISpace) => {
-          return {
-            label: space.name,
-            value: space.slug,
-            icon: space.logo,
-          };
-        });
+        .map((space: ISpace) => ({
+          icon: space.logo,
+          label: space.name,
+          value: space.slug,
+        }));
 
       const filteredSpaceData = spaceData.filter(
         (space) =>
-          !data.find((existingSpace) => existingSpace.value === space.value),
+          !data.find((existingSpace) => existingSpace.value === space.value)
       );
       setData((prevData) => [...prevData, ...filteredSpaceData]);
     }
@@ -79,16 +77,20 @@ export function SpaceSelect({
 
   return (
     <Select
-      data={data}
-      renderOption={renderSelectOption}
-      maxDropdownHeight={300}
-      //label={label || 'Select space'}
-      placeholder={t("Search for spaces")}
-      searchable
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
+      checkIconPosition="right"
       clearable={clearable}
-      variant="filled"
+      comboboxProps={{
+        dropdownPadding: 0,
+        keepMounted: false,
+        position: "bottom",
+        width,
+        withinPortal,
+      }}
+      data={data}
+      dropdownOpened={opened}
+      limit={50}
+      maxDropdownHeight={300}
+      nothingFoundMessage={t("No space found")}
       onChange={(slug) => {
         // options accumulate across fetches; resolve against everything
         // fetched, not just the latest query result
@@ -98,11 +100,13 @@ export function SpaceSelect({
         }
       }}
       onClick={(e) => e.stopPropagation()}
-      nothingFoundMessage={t("No space found")}
-      limit={50}
-      checkIconPosition="right"
-      comboboxProps={{ width, withinPortal, position: "bottom", keepMounted: false, dropdownPadding: 0 }}
-      dropdownOpened={opened}
+      onSearchChange={setSearchValue}
+      //label={label || 'Select space'}
+      placeholder={t("Search for spaces")}
+      renderOption={renderSelectOption}
+      searchable
+      searchValue={searchValue}
+      variant="filled"
     />
   );
 }

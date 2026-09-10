@@ -1,68 +1,72 @@
-import { keepPreviousData, useQuery, UseQueryResult } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import {
   searchAttachments,
   searchPage,
   searchPublicSpace,
   searchShare,
   searchSuggestions,
-} from '@/features/search/services/search-service';
+} from "@/features/search/services/search-service";
 import {
   IAttachmentSearch,
   IPageSearch,
   IPageSearchParams,
   ISuggestionResult,
   SearchSuggestionParams,
-} from '@/features/search/types/search.types';
+} from "@/features/search/types/search.types";
 
 export function usePageSearchQuery(
-  params: IPageSearchParams,
+  params: IPageSearchParams
 ): UseQueryResult<IPageSearch[], Error> {
   return useQuery({
-    queryKey: ["page-search", params],
-    queryFn: () => searchPage(params),
     enabled: !!params.query,
+    queryFn: () => searchPage(params),
+    queryKey: ["page-search", params],
   });
 }
 
 export function useSearchSuggestionsQuery(
-  params: SearchSuggestionParams & { preload?: boolean },
+  params: SearchSuggestionParams & { preload?: boolean }
 ): UseQueryResult<ISuggestionResult, Error> {
   const { preload, ...queryParams } = params;
   return useQuery({
-    queryKey: ["search-suggestion", params.query],
-    staleTime: 60 * 1000, // 1min
-    queryFn: () => searchSuggestions(queryParams),
     enabled: preload || !!params.query,
     placeholderData: keepPreviousData,
+    queryFn: () => searchSuggestions(queryParams),
+    queryKey: ["search-suggestion", params.query],
+    staleTime: 60 * 1000, // 1min
   });
 }
 
 export function useShareSearchQuery(
-  params: IPageSearchParams,
+  params: IPageSearchParams
 ): UseQueryResult<IPageSearch[], Error> {
   return useQuery({
-    queryKey: ["share-search", params],
-    queryFn: () => searchShare(params),
     enabled: !!params.query,
+    queryFn: () => searchShare(params),
+    queryKey: ["share-search", params],
   });
 }
 
 export function useAttachmentSearchQuery(
-  params: IPageSearchParams,
+  params: IPageSearchParams
 ): UseQueryResult<IAttachmentSearch[], Error> {
   return useQuery({
-    queryKey: ["attachment-search", params],
-    queryFn: () => searchAttachments(params),
     enabled: !!params.query,
+    queryFn: () => searchAttachments(params),
+    queryKey: ["attachment-search", params],
   });
 }
 
 export function usePublicSpaceSearchQuery(
-  params: IPageSearchParams & { spaceSlug: string },
+  params: IPageSearchParams & { spaceSlug: string }
 ): UseQueryResult<IPageSearch[], Error> {
   return useQuery({
-    queryKey: ["public-space-search", params],
-    queryFn: () => searchPublicSpace(params),
     enabled: !!params.query && !!params.spaceSlug,
+    queryFn: () => searchPublicSpace(params),
+    queryKey: ["public-space-search", params],
   });
 }

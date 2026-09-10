@@ -1,20 +1,20 @@
-import { ActionIcon, Group, Text, Switch, TextInput } from "@mantine/core";
+import { ActionIcon, Group, Switch, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { IconExternalLink, IconWorld } from "@tabler/icons-react";
 import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { IconExternalLink, IconWorld } from "@tabler/icons-react";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { ISpace } from "@/features/space/types/space.types.ts";
-import { IPublicSpace } from "@/features/public-space/types/public-space.types.ts";
+import CopyTextButton from "@/components/common/copy.tsx";
+import AppearanceSettings from "@/features/public-space/components/appearance-settings.tsx";
 import {
   usePublicSpaceForSpaceQuery,
   usePublishSpaceMutation,
 } from "@/features/public-space/queries/public-space-query.ts";
-import { getAppUrl } from "@/lib/config.ts";
-import CopyTextButton from "@/components/common/copy.tsx";
-import AppearanceSettings from "@/features/public-space/components/appearance-settings.tsx";
+import { IPublicSpace } from "@/features/public-space/types/public-space.types.ts";
 import { isPublicSpacesAllowed } from "@/features/public-space/utils/public-space-access.ts";
+import { ISpace } from "@/features/space/types/space.types.ts";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { getAppUrl } from "@/lib/config.ts";
 
 type PublishSpaceSettingsProps = {
   space: ISpace;
@@ -29,7 +29,7 @@ export default function PublishSpaceSettings({
   const allowPublicSpaces = isPublicSpacesAllowed(workspace);
 
   const { data: publicSpace } = usePublicSpaceForSpaceQuery(
-    allowPublicSpaces ? space?.id : undefined,
+    allowPublicSpaces ? space?.id : undefined
   );
   const publishMutation = usePublishSpaceMutation();
 
@@ -55,7 +55,7 @@ export default function PublishSpaceSettings({
     syncFromPublicSpace(publicSpace);
   }, [publicSpace]);
 
-  if (!allowPublicSpaces || !space) {
+  if (!(allowPublicSpaces && space)) {
     return null;
   }
 
@@ -64,8 +64,8 @@ export default function PublishSpaceSettings({
   const applyPublish = async (enabled: boolean) => {
     try {
       const result = await publishMutation.mutateAsync({
-        spaceId: space.id,
         enabled,
+        spaceId: space.id,
       });
       syncFromPublicSpace(result);
     } catch {
@@ -81,29 +81,29 @@ export default function PublishSpaceSettings({
     }
 
     modals.openConfirmModal({
-      title: t("Publish space to the web"),
+      centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Anyone on the internet will be able to read every page in this space, except restricted pages. Are you sure?",
+            "Anyone on the internet will be able to read every page in this space, except restricted pages. Are you sure?"
           )}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Publish"), cancel: t("Cancel") },
+      labels: { cancel: t("Cancel"), confirm: t("Publish") },
       onConfirm: () => applyPublish(true),
+      title: t("Publish space to the web"),
     });
   };
 
   const handleIndexingChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = event.currentTarget.checked;
     try {
       await publishMutation.mutateAsync({
-        spaceId: space.id,
         enabled: true,
         searchIndexing: value,
+        spaceId: space.id,
       });
       setSearchIndexing(value);
     } catch {
@@ -112,14 +112,14 @@ export default function PublishSpaceSettings({
   };
 
   const handleBylineAuthorChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = event.currentTarget.checked;
     try {
       await publishMutation.mutateAsync({
-        spaceId: space.id,
-        enabled: true,
         bylineAuthor: value,
+        enabled: true,
+        spaceId: space.id,
       });
       setBylineAuthor(value);
     } catch {
@@ -128,14 +128,14 @@ export default function PublishSpaceSettings({
   };
 
   const handleBylineUpdatedAtChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = event.currentTarget.checked;
     try {
       await publishMutation.mutateAsync({
-        spaceId: space.id,
-        enabled: true,
         bylineUpdatedAt: value,
+        enabled: true,
+        spaceId: space.id,
       });
       setBylineUpdatedAt(value);
     } catch {
@@ -144,14 +144,14 @@ export default function PublishSpaceSettings({
   };
 
   const handleDirectoryChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = event.currentTarget.checked;
     try {
       await publishMutation.mutateAsync({
-        spaceId: space.id,
-        enabled: true,
         directory: value,
+        enabled: true,
+        spaceId: space.id,
       });
       setDirectoryListed(value);
     } catch {
@@ -161,120 +161,120 @@ export default function PublishSpaceSettings({
 
   return (
     <div>
-      <Group justify="space-between" wrap="nowrap" gap="xl" mt="md">
+      <Group gap="xl" justify="space-between" mt="md" wrap="nowrap">
         <div>
           <Text size="md">{t("Publish space to the web")}</Text>
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             {t("Make this space publicly readable by anyone on the internet.")}
           </Text>
         </div>
         <Switch
+          aria-label={t("Toggle publish space to the web")}
           checked={published}
           onChange={handlePublishChange}
           size={"xs"}
-          aria-label={t("Toggle publish space to the web")}
         />
       </Group>
 
       {published && (
         <>
-          <Group justify="space-between" wrap="nowrap" gap="xl" mt="md">
+          <Group gap="xl" justify="space-between" mt="md" wrap="nowrap">
             <div>
               <Text size="md">{t("Allow search engines to index")}</Text>
-              <Text size="sm" c="dimmed">
+              <Text c="dimmed" size="sm">
                 {t(
-                  "Let public pages in this space appear in search engine results.",
+                  "Let public pages in this space appear in search engine results."
                 )}
               </Text>
             </div>
             <Switch
+              aria-label={t("Toggle search engine indexing")}
               checked={searchIndexing}
               onChange={handleIndexingChange}
               size={"xs"}
-              aria-label={t("Toggle search engine indexing")}
             />
           </Group>
 
-          <Group justify="space-between" wrap="nowrap" gap="xl" mt="md">
+          <Group gap="xl" justify="space-between" mt="md" wrap="nowrap">
             <div>
               <Text size="md">{t("Show page author")}</Text>
-              <Text size="sm" c="dimmed">
+              <Text c="dimmed" size="sm">
                 {t("Display the page creator's name on public pages.")}
               </Text>
             </div>
             <Switch
+              aria-label={t("Toggle show page author")}
               checked={bylineAuthor}
               onChange={handleBylineAuthorChange}
               size={"xs"}
-              aria-label={t("Toggle show page author")}
             />
           </Group>
 
-          <Group justify="space-between" wrap="nowrap" gap="xl" mt="md">
+          <Group gap="xl" justify="space-between" mt="md" wrap="nowrap">
             <div>
               <Text size="md">{t("Show last updated")}</Text>
-              <Text size="sm" c="dimmed">
+              <Text c="dimmed" size="sm">
                 {t("Display when each page was last updated.")}
               </Text>
             </div>
             <Switch
+              aria-label={t("Toggle show last updated")}
               checked={bylineUpdatedAt}
               onChange={handleBylineUpdatedAtChange}
               size={"xs"}
-              aria-label={t("Toggle show last updated")}
             />
           </Group>
 
           {workspaceDirectoryEnabled && (
-            <Group justify="space-between" wrap="nowrap" gap="xl" mt="md">
+            <Group gap="xl" justify="space-between" mt="md" wrap="nowrap">
               <div>
                 <Text size="md">{t("Show in public directory")}</Text>
-                <Text size="sm" c="dimmed">
+                <Text c="dimmed" size="sm">
                   {t("List this space in the public directory at /docs.")}
                 </Text>
               </div>
               <Switch
+                aria-label={t("Toggle show in public directory")}
                 checked={directoryListed}
                 onChange={handleDirectoryChange}
                 size={"xs"}
-                aria-label={t("Toggle show in public directory")}
               />
             </Group>
           )}
 
-          <Group mt="md" gap={4} wrap="nowrap">
+          <Group gap={4} mt="md" wrap="nowrap">
             <TextInput
-              value={publicUrl}
-              readOnly
-              style={{ width: "100%" }}
-              leftSection={<IconWorld size={16} />}
               aria-label={t("Public space link")}
+              leftSection={<IconWorld size={16} />}
+              readOnly
               rightSection={
                 <CopyTextButton
-                  text={publicUrl}
                   label={t("Copy public space link")}
+                  text={publicUrl}
                 />
               }
+              style={{ width: "100%" }}
+              value={publicUrl}
             />
             <ActionIcon
+              aria-label={t("Open public space link")}
               component="a"
-              variant="default"
+              href={publicUrl}
               size="input-sm"
               target="_blank"
-              href={publicUrl}
-              aria-label={t("Open public space link")}
+              variant="default"
             >
               <IconExternalLink size={16} />
             </ActionIcon>
           </Group>
 
-          <Text size="sm" c="dimmed" mt="xs">
+          <Text c="dimmed" mt="xs" size="sm">
             {t("Renaming the space slug will break public links.")}
           </Text>
 
           <AppearanceSettings
-            spaceId={space.id}
             appearance={publicSpace?.settings?.appearance}
+            spaceId={space.id}
           />
         </>
       )}

@@ -19,7 +19,7 @@ export function useIdle(
   options?: Partial<{
     events: (keyof DocumentEventMap)[];
     initialState: boolean;
-  }>,
+  }>
 ) {
   const { events, initialState } = { ...DEFAULT_OPTIONS, ...options };
   const [idle, setIdle] = useState<boolean>(initialState);
@@ -49,7 +49,7 @@ export function useIdle(
 
     return () => {
       events.forEach((event) =>
-        document.removeEventListener(event, handleEvents),
+        document.removeEventListener(event, handleEvents)
       );
     };
   }, [timeout, events]);

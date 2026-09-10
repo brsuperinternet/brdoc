@@ -5,24 +5,28 @@ import { memo } from "react";
 import classes from "./ai-menu.module.css";
 
 interface ResultPreviewProps {
-  output: string;
   isLoading: boolean;
+  output: string;
 }
 const ResultPreview = memo(({ output, isLoading }: ResultPreviewProps) => {
-  if (!output && !isLoading) return;
+  if (!(output || isLoading)) {
+    return;
+  }
 
   const parsedOutput = `${marked.parse(output)}`;
 
   return (
-    <Paper mb={4} shadow="lg" radius="md" className={classes.resultPreview}>
-      <ScrollArea.Autosize mah={300} type="scroll" scrollbarSize={5}>
+    <Paper className={classes.resultPreview} mb={4} radius="md" shadow="lg">
+      <ScrollArea.Autosize mah={300} scrollbarSize={5} type="scroll">
         <div className={classes.resultPreviewWrapper}>
           {parsedOutput && (
             <div
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parsedOutput) }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(parsedOutput),
+              }}
             />
           )}
-          {isLoading && <Loader size={12} ml="xs" display="inline-block" />}
+          {isLoading && <Loader display="inline-block" ml="xs" size={12} />}
         </div>
       </ScrollArea.Autosize>
     </Paper>

@@ -1,4 +1,7 @@
-import api from "@/lib/api-client";
+import { InfiniteData } from "@tanstack/react-query";
+import { saveAs } from "file-saver";
+import { IAttachment } from "@/features/attachments/types/attachment.types.ts";
+import { IFileTask } from "@/features/file-task/types/file-task.types.ts";
 import {
   ICopyPageToSpace,
   IExportPageParams,
@@ -7,13 +10,10 @@ import {
   IPage,
   IPageInput,
   SidebarPagesParams,
-} from '@/features/page/types/page.types';
+} from "@/features/page/types/page.types";
+import api from "@/lib/api-client";
 import { QueryParams } from "@/lib/types";
 import { IPagination } from "@/lib/types.ts";
-import { saveAs } from "file-saver";
-import { InfiniteData } from "@tanstack/react-query";
-import { IFileTask } from '@/features/file-task/types/file-task.types.ts';
-import { IAttachment } from '@/features/attachments/types/attachment.types.ts';
 
 export async function createPage(data: Partial<IPage>): Promise<IPage> {
   const req = await api.post<IPage>("/pages/create", data);
@@ -21,7 +21,7 @@ export async function createPage(data: Partial<IPage>): Promise<IPage> {
 }
 
 export async function getPageById(
-  pageInput: Partial<IPageInput>,
+  pageInput: Partial<IPageInput>
 ): Promise<IPage> {
   const req = await api.post<IPage>("/pages/info", pageInput);
   return req.data;
@@ -32,13 +32,16 @@ export async function updatePage(data: Partial<IPageInput>): Promise<IPage> {
   return req.data;
 }
 
-export async function deletePage(pageId: string, permanentlyDelete = false): Promise<void> {
+export async function deletePage(
+  pageId: string,
+  permanentlyDelete = false
+): Promise<void> {
   await api.post("/pages/delete", { pageId, permanentlyDelete });
 }
 
 export async function getDeletedPages(
   spaceId: string,
-  params?: QueryParams,
+  params?: QueryParams
 ): Promise<IPagination<IPage>> {
   const req = await api.post("/pages/trash", { spaceId, ...params });
   return req.data;
@@ -63,21 +66,25 @@ export async function duplicatePage(data: ICopyPageToSpace): Promise<IPage> {
 }
 
 export async function getSidebarPages(
-  params: SidebarPagesParams,
+  params: SidebarPagesParams
 ): Promise<IPagination<IPage>> {
   const req = await api.post("/pages/sidebar-pages", params);
   return req.data;
 }
 
 export async function getAllSidebarPages(
-  params: SidebarPagesParams,
+  params: SidebarPagesParams
 ): Promise<InfiniteData<IPagination<IPage>, unknown>> {
-  let cursor: string | undefined = undefined;
+  let cursor: string | undefined;
   const pages: IPagination<IPage>[] = [];
   const pageParams: (string | undefined)[] = [];
 
   do {
-    const req = await api.post("/pages/sidebar-pages", { ...params, cursor, limit: 100 });
+    const req = await api.post("/pages/sidebar-pages", {
+      ...params,
+      cursor,
+      limit: 100,
+    });
 
     const data: IPagination<IPage> = req.data;
     pages.push(data);
@@ -93,21 +100,21 @@ export async function getAllSidebarPages(
 }
 
 export async function getPageBreadcrumbs(
-  pageId: string,
+  pageId: string
 ): Promise<Partial<IPage[]>> {
   const req = await api.post("/pages/breadcrumbs", { pageId });
   return req.data;
 }
 
 export async function getRecentChanges(
-  params?: QueryParams & { spaceId?: string },
+  params?: QueryParams & { spaceId?: string }
 ): Promise<IPagination<IPage>> {
   const req = await api.post("/pages/recent", params);
   return req.data;
 }
 
 export async function getCreatedByPages(
-  params?: QueryParams & { userId?: string; spaceId?: string },
+  params?: QueryParams & { userId?: string; spaceId?: string }
 ): Promise<IPagination<IPage>> {
   const req = await api.post("/pages/created-by-user", params);
   return req.data;
@@ -132,7 +139,9 @@ export async function exportPage(data: IExportPageParams): Promise<void> {
   saveAs(req.data, decodedFileName);
 }
 
-export async function exportPageToDocx(data: { pageId: string }): Promise<void> {
+export async function exportPageToDocx(data: {
+  pageId: string;
+}): Promise<void> {
   const req = await api.post("/docx-export", data, {
     responseType: "blob",
   });
@@ -168,7 +177,7 @@ export async function importPage(file: File, spaceId: string) {
 export async function importZip(
   file: File,
   spaceId: string,
-  source?: string,
+  source?: string
 ): Promise<IFileTask> {
   const formData = new FormData();
   formData.append("spaceId", spaceId);
@@ -185,7 +194,7 @@ export async function importZip(
 }
 
 export async function getAttachmentInfo(
-  attachmentId: string,
+  attachmentId: string
 ): Promise<IAttachment> {
   const req = await api.post<IAttachment>("/files/info", {
     attachmentId,
@@ -196,7 +205,7 @@ export async function getAttachmentInfo(
 export async function uploadFile(
   file: File,
   pageId: string,
-  attachmentId?: string,
+  attachmentId?: string
 ): Promise<IAttachment> {
   const formData = new FormData();
   if (attachmentId) {

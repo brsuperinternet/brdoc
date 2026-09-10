@@ -1,7 +1,4 @@
-import { Table, Group, Text, Anchor, Menu, ActionIcon } from "@mantine/core";
-import React from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { ActionIcon, Anchor, Group, Menu, Table, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
@@ -11,21 +8,23 @@ import {
   IconWorld,
   IconWorldOff,
 } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import Paginate from "@/components/common/paginate.tsx";
-import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import { EmptyState } from "@/components/ui/empty-state.tsx";
+import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
+import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
 import {
   usePublishedSpacesQuery,
   usePublishSpaceMutation,
 } from "@/features/public-space/queries/public-space-query.ts";
 import { IPublishedSpaceItem } from "@/features/public-space/types/public-space.types.ts";
-import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
-import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { useClipboard } from "@/hooks/use-clipboard";
+import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
-import { EmptyState } from "@/components/ui/empty-state.tsx";
-import rowClasses from "@/components/ui/clickable-table-row.module.css";
 
 export default function PublishedSpacesList() {
   const { t } = useTranslation();
@@ -51,30 +50,30 @@ export default function PublishedSpacesList() {
 
           <Table.Tbody>
             {data?.items.map((item: IPublishedSpaceItem) => (
-              <Table.Tr key={item.id} className={rowClasses.row}>
+              <Table.Tr className={rowClasses.row} key={item.id}>
                 <Table.Td>
                   <Anchor
-                    size="sm"
-                    underline="never"
-                    style={{
-                      cursor: "pointer",
-                      color: "var(--mantine-color-text)",
-                    }}
                     className={rowClasses.link}
                     href={buildPublicSpaceUrl({ spaceSlug: item.space.slug })}
+                    size="sm"
+                    style={{
+                      color: "var(--mantine-color-text)",
+                      cursor: "pointer",
+                    }}
                     target="_blank"
+                    underline="never"
                   >
                     <Group gap="8" wrap="nowrap">
                       <CustomAvatar
-                        name={item.space.name}
                         avatarUrl={item.space.logo}
-                        type={AvatarIconType.SPACE_ICON}
                         color="initials"
-                        variant="filled"
-                        size={20}
+                        name={item.space.name}
                         radius="sm"
+                        size={20}
+                        type={AvatarIconType.SPACE_ICON}
+                        variant="filled"
                       />
-                      <Text fz="sm" fw={500} lineClamp={1}>
+                      <Text fw={500} fz="sm" lineClamp={1}>
                         {item.space.name}
                       </Text>
                     </Group>
@@ -98,7 +97,7 @@ export default function PublishedSpacesList() {
                       item.createdAt,
                       "MMM dd, yyyy",
                       "PP",
-                      locale,
+                      locale
                     )}
                   </Text>
                 </Table.Td>
@@ -113,8 +112,8 @@ export default function PublishedSpacesList() {
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
           hasNextPage={data?.meta?.hasNextPage}
+          hasPrevPage={data?.meta?.hasPrevPage}
           onNext={() => goNext(data?.meta?.nextCursor)}
           onPrev={goPrev}
         />
@@ -139,8 +138,8 @@ function PublishedSpaceActionMenu({ item }: { item: IPublishedSpaceItem }) {
   const onUnpublish = async () => {
     try {
       await publishMutation.mutateAsync({
-        spaceId: item.spaceId,
         enabled: false,
+        spaceId: item.spaceId,
       });
     } catch {
       // error handled by mutation
@@ -149,58 +148,56 @@ function PublishedSpaceActionMenu({ item }: { item: IPublishedSpaceItem }) {
 
   const openUnpublishModal = () =>
     modals.openConfirmModal({
-      title: t("Unpublish space"),
+      centered: true,
       children: (
         <Text size="sm">
-          {t(
-            "This space will no longer be publicly accessible. Are you sure?",
-          )}
+          {t("This space will no longer be publicly accessible. Are you sure?")}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Unpublish"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Unpublish") },
       onConfirm: onUnpublish,
+      title: t("Unpublish space"),
     });
 
   return (
     <Menu
-      shadow="xl"
-      position="bottom-end"
+      arrowPosition="center"
       offset={20}
+      position="bottom-end"
+      shadow="xl"
       width={200}
       withArrow
-      arrowPosition="center"
     >
       <Menu.Target>
         <ActionIcon
-          variant="subtle"
-          c="gray"
           aria-label={t("More options for {{name}}", {
             name: item.space.name,
           })}
+          c="gray"
+          variant="subtle"
         >
           <IconDots size={20} stroke={2} />
         </ActionIcon>
       </Menu.Target>
 
       <Menu.Dropdown>
-        <Menu.Item onClick={copyLink} leftSection={<IconCopy size={16} />}>
+        <Menu.Item leftSection={<IconCopy size={16} />} onClick={copyLink}>
           {t("Copy link")}
         </Menu.Item>
 
         <Menu.Item
-          onClick={() => navigate(getSpaceUrl(item.space.slug))}
           leftSection={<IconExternalLink size={16} />}
+          onClick={() => navigate(getSpaceUrl(item.space.slug))}
         >
           {t("Open space")}
         </Menu.Item>
 
         <Menu.Item
           c="red"
-          onClick={openUnpublishModal}
-          leftSection={<IconWorldOff size={16} />}
           disabled={item.space?.userRole !== "admin"}
+          leftSection={<IconWorldOff size={16} />}
+          onClick={openUnpublishModal}
         >
           {t("Unpublish")}
         </Menu.Item>

@@ -1,12 +1,12 @@
 import { Button, Divider, Group, Modal, Text, TextInput } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { useDeleteSpaceMutation } from "../queries/space-query";
 import { useField } from "@mantine/form";
-import { ISpace } from "../types/space.types";
+import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import APP_ROUTE from "@/lib/app-route";
-import { Trans, useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useDeleteSpaceMutation } from "../queries/space-query";
+import { ISpace } from "../types/space.types";
 
 interface DeleteSpaceModalProps {
   space: ISpace;
@@ -21,11 +21,11 @@ export default function DeleteSpaceModal({ space }: DeleteSpaceModalProps) {
 
   const confirmNameField = useField({
     initialValue: "",
-    validateOnChange: true,
     validate: (value) =>
       value.trim().toLowerCase() === space.name.trim().toLocaleLowerCase()
         ? null
         : t("Names do not match"),
+    validateOnChange: true,
   });
 
   const handleDelete = async () => {
@@ -51,40 +51,40 @@ export default function DeleteSpaceModal({ space }: DeleteSpaceModalProps) {
 
   return (
     <>
-      <Button onClick={open} variant="light" color="red">
+      <Button color="red" onClick={open} variant="light">
         {t("Delete")}
       </Button>
 
       <Modal
-        opened={opened}
         onClose={close}
+        opened={opened}
         title={t("Are you sure you want to delete this space?")}
       >
-        <Divider size="xs" mb="xs" />
+        <Divider mb="xs" size="xs" />
         <Text>
           {t(
-            "All pages, comments, attachments and permissions in this space will be deleted irreversibly.",
+            "All pages, comments, attachments and permissions in this space will be deleted irreversibly."
           )}
         </Text>
         <Text mt="sm">
           <Trans
+            components={{ b: <Text fw={500} span /> }}
             defaults="Type the space name <b>{{spaceName}}</b> to confirm your action."
             values={{ spaceName: space.name }}
-            components={{ b: <Text span fw={500} /> }}
           />
         </Text>
         <TextInput
           {...confirmNameField.getInputProps()}
-          variant="filled"
+          data-autofocus
           placeholder={t("Confirm space name")}
           py="sm"
-          data-autofocus
+          variant="filled"
         />
         <Group justify="flex-end" mt="md">
           <Button onClick={close} variant="default">
             {t("Cancel")}
           </Button>
-          <Button onClick={handleDelete} color="red" loading={isDeleting}>
+          <Button color="red" loading={isDeleting} onClick={handleDelete}>
             {t("Confirm")}
           </Button>
         </Group>

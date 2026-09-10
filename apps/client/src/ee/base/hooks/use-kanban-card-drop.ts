@@ -1,5 +1,5 @@
 import { generateJitteredKeyBetween } from "fractional-indexing-jittered";
-import { NO_VALUE_CHOICE_ID, type IBaseRow } from "@/ee/base/types/base.types";
+import { type IBaseRow, NO_VALUE_CHOICE_ID } from "@/ee/base/types/base.types";
 
 export function resolveCardDrop(args: {
   draggedRowId: string;
@@ -8,11 +8,25 @@ export function resolveCardDrop(args: {
   targetColumnKey: string;
   sourceColumnKey: string;
   targetColumnRows: IBaseRow[];
-}): { columnChanged: boolean; destChoiceValue: string | null; position: string } | null {
-  const { draggedRowId, targetRowId, edge, targetColumnKey, sourceColumnKey, targetColumnRows } = args;
+}): {
+  columnChanged: boolean;
+  destChoiceValue: string | null;
+  position: string;
+} | null {
+  const {
+    draggedRowId,
+    targetRowId,
+    edge,
+    targetColumnKey,
+    sourceColumnKey,
+    targetColumnRows,
+  } = args;
   const columnChanged = sourceColumnKey !== targetColumnKey;
-  if (!columnChanged && draggedRowId === targetRowId) return null;
-  const destChoiceValue = targetColumnKey === NO_VALUE_CHOICE_ID ? null : targetColumnKey;
+  if (!columnChanged && draggedRowId === targetRowId) {
+    return null;
+  }
+  const destChoiceValue =
+    targetColumnKey === NO_VALUE_CHOICE_ID ? null : targetColumnKey;
   const rows = targetColumnRows.filter((r) => r.id !== draggedRowId);
   let position: string;
   if (!targetRowId || edge === null) {
@@ -25,8 +39,14 @@ export function resolveCardDrop(args: {
       position = generateJitteredKeyBetween(last?.position ?? null, null);
     } else {
       const neighbor = edge === "top" ? idx - 1 : idx + 1;
-      const lower = edge === "top" ? rows[neighbor]?.position ?? null : rows[idx].position;
-      const upper = edge === "top" ? rows[idx].position : rows[neighbor]?.position ?? null;
+      const lower =
+        edge === "top"
+          ? (rows[neighbor]?.position ?? null)
+          : rows[idx].position;
+      const upper =
+        edge === "top"
+          ? rows[idx].position
+          : (rows[neighbor]?.position ?? null);
       position = generateJitteredKeyBetween(lower, upper);
     }
   }

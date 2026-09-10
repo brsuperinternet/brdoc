@@ -1,27 +1,27 @@
-import { z } from "zod/v4";
+import {
+  Anchor,
+  Box,
+  Button,
+  Container,
+  Divider,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import {
-  Container,
-  Title,
-  TextInput,
-  Button,
-  Box,
-  Text,
-  Anchor,
-  Divider,
-} from "@mantine/core";
-import classes from "../../features/auth/components/auth.module.css";
-import { getCheckHostname } from "@/features/workspace/services/workspace-service.ts";
 import { useState } from "react";
-import { getSubdomainHost } from "@/lib/config.ts";
-import { Link } from "react-router-dom";
-import APP_ROUTE from "@/lib/app-route.ts";
 import { useTranslation } from "react-i18next";
-import JoinedWorkspaces from "@/ee/components/joined-workspaces.tsx";
+import { Link } from "react-router-dom";
+import { z } from "zod/v4";
 import { useJoinedWorkspacesQuery } from "@/ee/cloud/query/cloud-query.ts";
 import { findWorkspacesByEmail } from "@/ee/cloud/service/cloud-service.ts";
+import JoinedWorkspaces from "@/ee/components/joined-workspaces.tsx";
 import { AuthLayout } from "@/features/auth/components/auth-layout.tsx";
+import { getCheckHostname } from "@/features/workspace/services/workspace-service.ts";
+import APP_ROUTE from "@/lib/app-route.ts";
+import { getSubdomainHost } from "@/lib/config.ts";
+import classes from "../../features/auth/components/auth.module.css";
 
 const formSchema = z.object({
   hostname: z.string().min(1, { message: "subdomain is required" }),
@@ -39,17 +39,17 @@ export function CloudLoginForm() {
   const { data: joinedWorkspaces } = useJoinedWorkspacesQuery();
 
   const form = useForm<any>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       hostname: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   const findForm = useForm<any>({
-    validate: zod4Resolver(findWorkspaceSchema),
     initialValues: {
       email: "",
     },
+    validate: zod4Resolver(findWorkspaceSchema),
   });
 
   async function onSubmit(data: { hostname: string }) {
@@ -84,38 +84,38 @@ export function CloudLoginForm() {
 
   return (
     <AuthLayout>
-      <Container size={420} className={classes.container}>
-        <Box p="xl" className={classes.containerBox}>
-          <Title order={2} ta="center" fw={500} mb="md">
+      <Container className={classes.container} size={420}>
+        <Box className={classes.containerBox} p="xl">
+          <Title fw={500} mb="md" order={2} ta="center">
             {t("Login")}
           </Title>
 
           <JoinedWorkspaces />
 
           {joinedWorkspaces?.length > 0 && (
-            <Divider my="xs" label="OR" labelPosition="center" />
+            <Divider label="OR" labelPosition="center" my="xs" />
           )}
 
           <form onSubmit={form.onSubmit(onSubmit)}>
             <TextInput
-              type="text"
-              placeholder="my-team"
               description="Enter your workspace hostname"
               label="Workspace hostname"
+              placeholder="my-team"
               rightSection={<Text fw={500}>.{getSubdomainHost()}</Text>}
               rightSectionWidth={150}
+              type="text"
               withErrorStyles={false}
               {...form.getInputProps("hostname")}
             />
-            <Button type="submit" fullWidth mt="xl" loading={isLoading}>
+            <Button fullWidth loading={isLoading} mt="xl" type="submit">
               {t("Continue")}
             </Button>
           </form>
 
-          <Divider my="lg" label="or" labelPosition="center" />
+          <Divider label="or" labelPosition="center" my="lg" />
 
           {findEmailSent ? (
-            <Text ta="center" size="sm" c="dimmed">
+            <Text c="dimmed" size="sm" ta="center">
               {t("We've sent you an email with your associated workspaces.")}
             </Text>
           ) : (
@@ -124,20 +124,20 @@ export function CloudLoginForm() {
                 {t("Find your workspaces")}
               </Text>
               <TextInput
-                type="email"
-                placeholder="name@company.com"
                 description={t(
-                  "We'll send a list of your workspaces to this email.",
+                  "We'll send a list of your workspaces to this email."
                 )}
+                placeholder="name@company.com"
+                type="email"
                 withErrorStyles={false}
                 {...findForm.getInputProps("email")}
               />
               <Button
-                type="submit"
                 fullWidth
-                mt="md"
-                variant="light"
                 loading={isFindLoading}
+                mt="md"
+                type="submit"
+                variant="light"
               >
                 {t("Send")}
               </Button>
@@ -146,9 +146,9 @@ export function CloudLoginForm() {
         </Box>
       </Container>
 
-      <Text ta="center" mb="xl">
+      <Text mb="xl" ta="center">
         {t("Don't have a workspace?")}{" "}
-        <Anchor component={Link} to={APP_ROUTE.AUTH.CREATE_WORKSPACE} fw={500}>
+        <Anchor component={Link} fw={500} to={APP_ROUTE.AUTH.CREATE_WORKSPACE}>
           {t("Create new workspace")}
         </Anchor>
       </Text>

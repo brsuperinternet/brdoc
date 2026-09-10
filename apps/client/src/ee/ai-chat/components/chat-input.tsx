@@ -1,27 +1,37 @@
+import { LinkExtension, Mention } from "@docmost/editor-ext";
+import { Popover } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import {
+  IconArrowUp,
+  IconAt,
+  IconFile,
+  IconFileText,
+  IconPaperclip,
+  IconPhoto,
+  IconPlayerStopFilled,
+  IconPlus,
+  IconX,
+} from "@tabler/icons-react";
+import { Placeholder } from "@tiptap/extension-placeholder";
+import { CharacterCount } from "@tiptap/extensions";
+import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
+import { StarterKit } from "@tiptap/starter-kit";
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useId,
   useImperativeHandle,
   useRef,
-  useEffect,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { IconArrowUp, IconPaperclip, IconPlayerStopFilled, IconX, IconFile, IconPhoto, IconPlus, IconAt, IconFileText } from "@tabler/icons-react";
-import { Popover } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
-import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
-import { Placeholder } from "@tiptap/extension-placeholder";
-import { CharacterCount } from "@tiptap/extensions";
-import { StarterKit } from "@tiptap/starter-kit";
-import { Mention, LinkExtension } from "@docmost/editor-ext";
-import EmojiCommand from "@/features/editor/extensions/emoji-command";
 import mentionRenderItems from "@/features/editor/components/mention/mention-suggestion";
 import MentionView from "@/features/editor/components/mention/mention-view";
+import EmojiCommand from "@/features/editor/extensions/emoji-command";
 import { uploadChatFile } from "../services/ai-chat-service";
-import type { ChatAttachment, PageMention } from "../types/ai-chat.types";
 import classes from "../styles/chat-input.module.css";
+import type { ChatAttachment, PageMention } from "../types/ai-chat.types";
 
 type PendingAttachment = ChatAttachment & { uploading: boolean };
 
@@ -32,7 +42,11 @@ const MAX_ATTACHMENTS_PER_MESSAGE = 5;
 
 type Props = {
   isStreaming: boolean;
-  onSend: (content: string, mentions: PageMention[], attachments: ChatAttachment[]) => void;
+  onSend: (
+    content: string,
+    mentions: PageMention[],
+    attachments: ChatAttachment[]
+  ) => void;
   onStop: () => void;
   placeholder?: string;
   autofocus?: boolean;
@@ -52,15 +66,18 @@ function extractMentions(json: any): PageMention[] {
   const seen = new Set<string>();
 
   function walk(node: any) {
-    if (node.type === "mention" && node.attrs?.entityType === "page" && node.attrs?.entityId) {
-      if (!seen.has(node.attrs.entityId)) {
-        seen.add(node.attrs.entityId);
-        mentions.push({
-          id: node.attrs.entityId,
-          title: node.attrs.label || "",
-          slugId: node.attrs.slugId || "",
-        });
-      }
+    if (
+      node.type === "mention" &&
+      node.attrs?.entityType === "page" &&
+      node.attrs?.entityId &&
+      !seen.has(node.attrs.entityId)
+    ) {
+      seen.add(node.attrs.entityId);
+      mentions.push({
+        id: node.attrs.entityId,
+        slugId: node.attrs.slugId || "",
+        title: node.attrs.label || "",
+      });
     }
     if (node.content) {
       for (const child of node.content) {
@@ -82,7 +99,9 @@ function editorJsonToText(json: any): string {
     } else if (node.type === "mention") {
       text += `@${node.attrs?.label || ""}`;
     } else if (node.type === "paragraph") {
-      if (text.length > 0) text += "\n";
+      if (text.length > 0) {
+        text += "\n";
+      }
       if (node.content) {
         for (const child of node.content) {
           walk(child);
@@ -101,99 +120,115 @@ function editorJsonToText(json: any): string {
   return text;
 }
 
-const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
-  isStreaming,
-  onSend,
-  onStop,
-  placeholder,
-  autofocus = true,
-  contextPages,
-  onRemoveContextPage,
-  variant = "card",
-  showDisclaimer = true,
-  chatId,
-}: Props, ref) {
+const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
+  {
+    isStreaming,
+    onSend,
+    onStop,
+    placeholder,
+    autofocus = true,
+    contextPages,
+    onRemoveContextPage,
+    variant = "card",
+    showDisclaimer = true,
+    chatId,
+  }: Props,
+  ref
+) {
   const chatIdRef = useRef(chatId);
   chatIdRef.current = chatId;
   const { t } = useTranslation();
   const [isEmpty, setIsEmpty] = useState(true);
-  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const [pendingAttachments, setPendingAttachments] = useState<
+    PendingAttachment[]
+  >([]);
   const [plusMenuOpen, setPlusMenuOpen] = useState(false);
   const plusMenuId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const onSendRef = useRef(onSend);
   onSendRef.current = onSend;
 
-  const handleFileSelect = useCallback(async (files: FileList | null) => {
-    if (!files?.length) return;
-
-    const room = MAX_ATTACHMENTS_PER_MESSAGE - pendingAttachments.length;
-    if (room <= 0) {
-      notifications.show({
-        color: "yellow",
-        message: t("You can attach up to {{max}} files per message.", {
-          max: MAX_ATTACHMENTS_PER_MESSAGE,
-        }),
-      });
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-
-    const incoming = Array.from(files);
-    const accepted = incoming.slice(0, room);
-
-    if (incoming.length > accepted.length) {
-      notifications.show({
-        color: "yellow",
-        message: t(
-          "Only the first {{n}} file(s) were added (max {{max}} per message).",
-          { n: accepted.length, max: MAX_ATTACHMENTS_PER_MESSAGE },
-        ),
-      });
-    }
-
-    for (const file of accepted) {
-      const tempId = `uploading-${Date.now()}-${Math.random()}`;
-      const ext = file.name.split(".").pop()?.toLowerCase() || "";
-
-      const placeholder: PendingAttachment = {
-        id: tempId,
-        fileName: file.name,
-        fileExt: ext,
-        fileSize: file.size,
-        mimeType: file.type,
-        uploading: true,
-      };
-
-      setPendingAttachments((prev) => [...prev, placeholder]);
-
-      try {
-        const uploaded = await uploadChatFile(file, chatIdRef.current);
-        setPendingAttachments((prev) =>
-          prev.map((a) =>
-            a.id === tempId ? { ...uploaded, uploading: false } : a,
-          ),
-        );
-      } catch {
-        setPendingAttachments((prev) => prev.filter((a) => a.id !== tempId));
+  const handleFileSelect = useCallback(
+    async (files: FileList | null) => {
+      if (!files?.length) {
+        return;
       }
-    }
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }, [pendingAttachments.length, t]);
+      const room = MAX_ATTACHMENTS_PER_MESSAGE - pendingAttachments.length;
+      if (room <= 0) {
+        notifications.show({
+          color: "yellow",
+          message: t("You can attach up to {{max}} files per message.", {
+            max: MAX_ATTACHMENTS_PER_MESSAGE,
+          }),
+        });
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      const incoming = Array.from(files);
+      const accepted = incoming.slice(0, room);
+
+      if (incoming.length > accepted.length) {
+        notifications.show({
+          color: "yellow",
+          message: t(
+            "Only the first {{n}} file(s) were added (max {{max}} per message).",
+            { max: MAX_ATTACHMENTS_PER_MESSAGE, n: accepted.length }
+          ),
+        });
+      }
+
+      for (const file of accepted) {
+        const tempId = `uploading-${Date.now()}-${Math.random()}`;
+        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+
+        const placeholder: PendingAttachment = {
+          fileExt: ext,
+          fileName: file.name,
+          fileSize: file.size,
+          id: tempId,
+          mimeType: file.type,
+          uploading: true,
+        };
+
+        setPendingAttachments((prev) => [...prev, placeholder]);
+
+        try {
+          const uploaded = await uploadChatFile(file, chatIdRef.current);
+          setPendingAttachments((prev) =>
+            prev.map((a) =>
+              a.id === tempId ? { ...uploaded, uploading: false } : a
+            )
+          );
+        } catch {
+          setPendingAttachments((prev) => prev.filter((a) => a.id !== tempId));
+        }
+      }
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    [pendingAttachments.length, t]
+  );
 
   const removeAttachment = useCallback((id: string) => {
     setPendingAttachments((prev) => prev.filter((a) => a.id !== id));
   }, []);
 
   const handleSubmit = useCallback(() => {
-    if (!editor || editor.isDestroyed || isStreaming) return;
+    if (!editor || editor.isDestroyed || isStreaming) {
+      return;
+    }
     const json = editor.getJSON();
     const text = editorJsonToText(json).trim();
     const readyAttachments = pendingAttachments.filter((a) => !a.uploading);
-    if (!text && readyAttachments.length === 0) return;
+    if (!text && readyAttachments.length === 0) {
+      return;
+    }
 
     const mentions = extractMentions(json);
     onSendRef.current(text, mentions, readyAttachments);
@@ -206,49 +241,26 @@ const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
   handleSubmitRef.current = handleSubmit;
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        gapcursor: false,
-        dropcursor: false,
-        link: false,
-      }),
-      Placeholder.configure({
-        placeholder: placeholder || t("Ask anything... Use @ to mention pages"),
-      }),
-      CharacterCount.configure({
-        limit: 50000,
-      }),
-      LinkExtension,
-      EmojiCommand,
-      Mention.configure({
-        suggestion: {
-          allowSpaces: true,
-          items: () => [],
-          // @ts-ignore
-          render: mentionRenderItems,
-        },
-        HTMLAttributes: {
-          class: "mention",
-        },
-      }).extend({
-        addNodeView() {
-          this.editor.isInitialized = true;
-          return ReactNodeViewRenderer(MentionView);
-        },
-      }),
-    ],
+    autofocus: autofocus ? "end" : false,
+    content: "",
+    editable: true,
     editorProps: {
       attributes: {
-        role: "textbox",
-        "aria-label": placeholder || t("Ask anything... Use @ to mention pages"),
+        "aria-label":
+          placeholder || t("Ask anything... Use @ to mention pages"),
         "aria-multiline": "true",
+        role: "textbox",
       },
       handleDOMEvents: {
         keydown: (_view, event) => {
           if (
-            ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(
-              event.key,
-            )
+            [
+              "ArrowUp",
+              "ArrowDown",
+              "ArrowLeft",
+              "ArrowRight",
+              "Enter",
+            ].includes(event.key)
           ) {
             const emojiCommand = document.querySelector("#emoji-command");
             const mentionPopup = document.querySelector("#mention");
@@ -265,15 +277,43 @@ const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
         },
       },
     },
-    content: "",
-    editable: true,
-    textDirection: "auto",
+    extensions: [
+      StarterKit.configure({
+        dropcursor: false,
+        gapcursor: false,
+        link: false,
+      }),
+      Placeholder.configure({
+        placeholder: placeholder || t("Ask anything... Use @ to mention pages"),
+      }),
+      CharacterCount.configure({
+        limit: 50_000,
+      }),
+      LinkExtension,
+      EmojiCommand,
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: {
+          allowSpaces: true,
+          items: () => [],
+          // @ts-expect-error
+          render: mentionRenderItems,
+        },
+      }).extend({
+        addNodeView() {
+          this.editor.isInitialized = true;
+          return ReactNodeViewRenderer(MentionView);
+        },
+      }),
+    ],
     immediatelyRender: true,
-    shouldRerenderOnTransaction: false,
-    autofocus: autofocus ? "end" : false,
     onUpdate: ({ editor: e }) => {
       setIsEmpty(!e.getText().trim());
     },
+    shouldRerenderOnTransaction: false,
+    textDirection: "auto",
   });
 
   useEffect(() => {
@@ -286,172 +326,180 @@ const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
     ref,
     () => ({
       prefill: (text: string) => {
-        if (!editor || editor.isDestroyed) return;
+        if (!editor || editor.isDestroyed) {
+          return;
+        }
         editor.commands.clearContent();
         editor.commands.insertContent(text);
         editor.commands.focus();
       },
     }),
-    [editor],
+    [editor]
   );
 
-  const hasContent = !isEmpty || pendingAttachments.some((a) => !a.uploading) || (contextPages?.length ?? 0) > 0;
+  const hasContent =
+    !isEmpty ||
+    pendingAttachments.some((a) => !a.uploading) ||
+    (contextPages?.length ?? 0) > 0;
 
-  const wrapperClass = variant === "flat" ? classes.inputWrapperFlat : classes.inputWrapper;
+  const wrapperClass =
+    variant === "flat" ? classes.inputWrapperFlat : classes.inputWrapper;
 
   return (
     <>
-    <div className={wrapperClass} data-chat-input>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPTED_FILE_TYPES}
-        multiple
-        aria-label={t("Add files")}
-        tabIndex={-1}
-        style={{ display: "none" }}
-        onChange={(e) => handleFileSelect(e.target.files)}
-      />
+      <div className={wrapperClass} data-chat-input>
+        <input
+          accept={ACCEPTED_FILE_TYPES}
+          aria-label={t("Add files")}
+          multiple
+          onChange={(e) => handleFileSelect(e.target.files)}
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          tabIndex={-1}
+          type="file"
+        />
 
-      {((contextPages?.length ?? 0) > 0 || pendingAttachments.length > 0) && (
-        <div className={classes.attachmentChips}>
-          {contextPages?.map((page) => (
-            <div key={page.id} className={classes.attachmentChip}>
-              <IconFileText size={14} />
-              <span className={classes.attachmentChipName}>
-                {page.title || "Untitled"}
-              </span>
-              {onRemoveContextPage && (
-                <button
-                  type="button"
-                  className={classes.attachmentChipRemove}
-                  onClick={() => onRemoveContextPage(page.id)}
-                  aria-label={`Remove ${page.title}`}
-                >
-                  <IconX size={12} />
-                </button>
-              )}
-            </div>
-          ))}
-          {pendingAttachments.map((attachment) => (
-            <div
-              key={attachment.id}
-              className={`${classes.attachmentChip} ${attachment.uploading ? classes.attachmentChipUploading : ""}`}
+        {((contextPages?.length ?? 0) > 0 || pendingAttachments.length > 0) && (
+          <div className={classes.attachmentChips}>
+            {contextPages?.map((page) => (
+              <div className={classes.attachmentChip} key={page.id}>
+                <IconFileText size={14} />
+                <span className={classes.attachmentChipName}>
+                  {page.title || "Untitled"}
+                </span>
+                {onRemoveContextPage && (
+                  <button
+                    aria-label={`Remove ${page.title}`}
+                    className={classes.attachmentChipRemove}
+                    onClick={() => onRemoveContextPage(page.id)}
+                    type="button"
+                  >
+                    <IconX size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {pendingAttachments.map((attachment) => (
+              <div
+                className={`${classes.attachmentChip} ${attachment.uploading ? classes.attachmentChipUploading : ""}`}
+                key={attachment.id}
+              >
+                {IMAGE_EXTENSIONS.includes(attachment.fileExt) ? (
+                  <IconPhoto size={14} />
+                ) : (
+                  <IconFile size={14} />
+                )}
+                <span className={classes.attachmentChipName}>
+                  {attachment.fileName}
+                </span>
+                {!attachment.uploading && (
+                  <button
+                    aria-label={`Remove ${attachment.fileName}`}
+                    className={classes.attachmentChipRemove}
+                    onClick={() => removeAttachment(attachment.id)}
+                    type="button"
+                  >
+                    <IconX size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <EditorContent className={classes.editorContent} editor={editor} />
+        <div className={classes.actions}>
+          <Popover
+            onChange={setPlusMenuOpen}
+            opened={plusMenuOpen}
+            position="top-start"
+            returnFocus
+            shadow="md"
+            trapFocus
+            width={220}
+            withRoles={false}
+          >
+            <Popover.Target>
+              <button
+                aria-controls={plusMenuOpen ? plusMenuId : undefined}
+                aria-expanded={plusMenuOpen}
+                aria-haspopup="menu"
+                aria-label="Add content"
+                className={classes.plusButton}
+                onClick={() => setPlusMenuOpen((o) => !o)}
+                type="button"
+              >
+                <IconPlus size={14} />
+              </button>
+            </Popover.Target>
+            <Popover.Dropdown id={plusMenuId} p={4} role="menu">
+              <button
+                className={classes.plusMenuItem}
+                disabled={
+                  pendingAttachments.length >= MAX_ATTACHMENTS_PER_MESSAGE
+                }
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setPlusMenuOpen(false);
+                }}
+                role="menuitem"
+                title={
+                  pendingAttachments.length >= MAX_ATTACHMENTS_PER_MESSAGE
+                    ? t("Max {{max}} files per message", {
+                        max: MAX_ATTACHMENTS_PER_MESSAGE,
+                      })
+                    : undefined
+                }
+                type="button"
+              >
+                <IconPaperclip className={classes.plusMenuIcon} size={16} />
+                {t("Add files")}
+              </button>
+              <button
+                className={classes.plusMenuItem}
+                onClick={() => {
+                  editor?.commands.insertContent("@");
+                  editor?.commands.focus();
+                  setPlusMenuOpen(false);
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <IconAt className={classes.plusMenuIcon} size={16} />
+                {t("Mention a page")}
+              </button>
+            </Popover.Dropdown>
+          </Popover>
+
+          <div style={{ flex: 1 }} />
+
+          {isStreaming ? (
+            <button
+              aria-label="Stop generation"
+              className={classes.stopButton}
+              onClick={onStop}
+              type="button"
             >
-              {IMAGE_EXTENSIONS.includes(attachment.fileExt) ? (
-                <IconPhoto size={14} />
-              ) : (
-                <IconFile size={14} />
-              )}
-              <span className={classes.attachmentChipName}>
-                {attachment.fileName}
-              </span>
-              {!attachment.uploading && (
-                <button
-                  type="button"
-                  className={classes.attachmentChipRemove}
-                  onClick={() => removeAttachment(attachment.id)}
-                  aria-label={`Remove ${attachment.fileName}`}
-                >
-                  <IconX size={12} />
-                </button>
-              )}
-            </div>
-          ))}
+              <IconPlayerStopFilled size={14} />
+            </button>
+          ) : (
+            <button
+              aria-label="Send message"
+              className={classes.sendButton}
+              disabled={!hasContent}
+              onClick={handleSubmit}
+              type="button"
+            >
+              <IconArrowUp size={16} stroke={2.5} />
+            </button>
+          )}
+        </div>
+      </div>
+      {showDisclaimer && (
+        <div className={classes.disclaimer}>
+          {t("AI-generated content may not be accurate.")}
         </div>
       )}
-
-      <EditorContent editor={editor} className={classes.editorContent} />
-      <div className={classes.actions}>
-        <Popover
-          opened={plusMenuOpen}
-          onChange={setPlusMenuOpen}
-          position="top-start"
-          width={220}
-          shadow="md"
-          withRoles={false}
-          trapFocus
-          returnFocus
-        >
-          <Popover.Target>
-            <button
-              type="button"
-              className={classes.plusButton}
-              onClick={() => setPlusMenuOpen((o) => !o)}
-              aria-label="Add content"
-              aria-haspopup="menu"
-              aria-expanded={plusMenuOpen}
-              aria-controls={plusMenuOpen ? plusMenuId : undefined}
-            >
-              <IconPlus size={14} />
-            </button>
-          </Popover.Target>
-          <Popover.Dropdown id={plusMenuId} role="menu" p={4}>
-            <button
-              type="button"
-              role="menuitem"
-              className={classes.plusMenuItem}
-              onClick={() => {
-                fileInputRef.current?.click();
-                setPlusMenuOpen(false);
-              }}
-              disabled={pendingAttachments.length >= MAX_ATTACHMENTS_PER_MESSAGE}
-              title={
-                pendingAttachments.length >= MAX_ATTACHMENTS_PER_MESSAGE
-                  ? t("Max {{max}} files per message", {
-                      max: MAX_ATTACHMENTS_PER_MESSAGE,
-                    })
-                  : undefined
-              }
-            >
-              <IconPaperclip size={16} className={classes.plusMenuIcon} />
-              {t("Add files")}
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              className={classes.plusMenuItem}
-              onClick={() => {
-                editor?.commands.insertContent("@");
-                editor?.commands.focus();
-                setPlusMenuOpen(false);
-              }}
-            >
-              <IconAt size={16} className={classes.plusMenuIcon} />
-              {t("Mention a page")}
-            </button>
-          </Popover.Dropdown>
-        </Popover>
-
-        <div style={{ flex: 1 }} />
-
-        {isStreaming ? (
-          <button
-            type="button"
-            className={classes.stopButton}
-            onClick={onStop}
-            aria-label="Stop generation"
-          >
-            <IconPlayerStopFilled size={14} />
-          </button>
-        ) : (
-          <button
-            type="button"
-            className={classes.sendButton}
-            onClick={handleSubmit}
-            disabled={!hasContent}
-            aria-label="Send message"
-          >
-            <IconArrowUp size={16} stroke={2.5} />
-          </button>
-        )}
-      </div>
-    </div>
-    {showDisclaimer && (
-      <div className={classes.disclaimer}>
-        {t("AI-generated content may not be accurate.")}
-      </div>
-    )}
     </>
   );
 });

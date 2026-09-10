@@ -1,8 +1,4 @@
-import React from "react";
-import type { Editor } from "@tiptap/react";
-import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { ColorSwatch, Menu } from "@mantine/core";
-import { TABLE_COLORS } from "../../table-background-color";
 import {
   IconArrowDown,
   IconArrowUp,
@@ -12,9 +8,13 @@ import {
   IconRowInsertTop,
   IconRowRemove,
 } from "@tabler/icons-react";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Editor } from "@tiptap/react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useTableMoveRowColumn } from "../hooks/use-table-move-row-column";
+import { TABLE_COLORS } from "../../table-background-color";
 import { useTableClear } from "../hooks/use-table-clear";
+import { useTableMoveRowColumn } from "../hooks/use-table-move-row-column";
 import { AlignmentSubmenu } from "./alignment-submenu";
 
 interface RowHandleMenuProps {
@@ -47,11 +47,25 @@ export const RowHandleMenu = React.memo(function RowHandleMenu({
       .run();
   };
 
-  const moveUp = useTableMoveRowColumn(editor, "row", index, "up", tableNode, tablePos);
-  const moveDown = useTableMoveRowColumn(editor, "row", index, "down", tableNode, tablePos);
-  const clearRow = useTableClear(editor, tableNode, tablePos, {
-    kind: "row",
+  const moveUp = useTableMoveRowColumn(
+    editor,
+    "row",
     index,
+    "up",
+    tableNode,
+    tablePos
+  );
+  const moveDown = useTableMoveRowColumn(
+    editor,
+    "row",
+    index,
+    "down",
+    tableNode,
+    tablePos
+  );
+  const clearRow = useTableClear(editor, tableNode, tablePos, {
+    index,
+    kind: "row",
   });
 
   return (
@@ -63,24 +77,33 @@ export const RowHandleMenu = React.memo(function RowHandleMenu({
           </Menu.Sub.Item>
         </Menu.Sub.Target>
         <Menu.Sub.Dropdown>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: 8 }}>
+          <div
+            style={{
+              display: "grid",
+              gap: 8,
+              gridTemplateColumns: "repeat(4, 1fr)",
+              padding: 8,
+            }}
+          >
             {TABLE_COLORS.map((c) => (
               <button
-                key={c.name}
-                type="button"
-                onClick={() => setBackground(c.color, c.name)}
                 aria-label={t(c.name)}
+                key={c.name}
+                onClick={() => setBackground(c.color, c.name)}
                 style={{
-                  border: "none",
                   background: "transparent",
-                  padding: 0,
+                  border: "none",
                   cursor: "pointer",
+                  padding: 0,
                 }}
+                type="button"
               >
                 <ColorSwatch
                   color={c.color || "#ffffff"}
                   size={22}
-                  style={{ border: c.color === "" ? "1px solid #e5e7eb" : undefined }}
+                  style={{
+                    border: c.color === "" ? "1px solid #e5e7eb" : undefined,
+                  }}
                 />
               </button>
             ))}
@@ -120,16 +143,16 @@ export const RowHandleMenu = React.memo(function RowHandleMenu({
       <Menu.Divider />
 
       <Menu.Item
+        disabled={!moveUp.canMove}
         leftSection={<IconArrowUp size={16} />}
         onClick={moveUp.handleMove}
-        disabled={!moveUp.canMove}
       >
         {t("Move row up")}
       </Menu.Item>
       <Menu.Item
+        disabled={!moveDown.canMove}
         leftSection={<IconArrowDown size={16} />}
         onClick={moveDown.handleMove}
-        disabled={!moveDown.canMove}
       >
         {t("Move row down")}
       </Menu.Item>

@@ -1,15 +1,15 @@
-import api from "@/lib/api-client";
 import loadImage from "blueimp-load-image";
 import {
   AvatarIconType,
   IAttachment,
   IPageAttachment,
 } from "@/features/attachments/types/attachment.types.ts";
+import api from "@/lib/api-client";
 import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export async function getPageAttachments(
   pageId: string,
-  params?: QueryParams,
+  params?: QueryParams
 ): Promise<IPagination<IPageAttachment>> {
   const req = await api.post("/pages/attachments", { pageId, ...params });
   return req.data;
@@ -17,16 +17,16 @@ export async function getPageAttachments(
 
 async function compressAndResizeIcon(
   file: File,
-  type: AvatarIconType,
+  type: AvatarIconType
 ): Promise<File> {
   const isPng = file.type === "image/png";
 
   const { image: canvas } = await loadImage(file, {
-    maxWidth: 300,
-    maxHeight: 300,
     canvas: true,
-    orientation: true,
     imageSmoothingQuality: "high",
+    maxHeight: 300,
+    maxWidth: 300,
+    orientation: true,
   });
 
   if (type === AvatarIconType.AVATAR || !isPng) {
@@ -49,7 +49,7 @@ async function compressAndResizeIcon(
         resolve(new File([blob], file.name, { type: outputType }));
       },
       outputType,
-      isPng ? undefined : 0.85,
+      isPng ? undefined : 0.85
     );
   });
 }
@@ -57,7 +57,7 @@ async function compressAndResizeIcon(
 export async function uploadIcon(
   file: File,
   type: AvatarIconType,
-  spaceId?: string,
+  spaceId?: string
 ): Promise<IAttachment> {
   const processed = await compressAndResizeIcon(file, type);
 
@@ -81,7 +81,7 @@ export async function uploadUserAvatar(file: File): Promise<IAttachment> {
 
 export async function uploadSpaceIcon(
   file: File,
-  spaceId: string,
+  spaceId: string
 ): Promise<IAttachment> {
   return uploadIcon(file, AvatarIconType.SPACE_ICON, spaceId);
 }
@@ -92,7 +92,7 @@ export async function uploadWorkspaceIcon(file: File): Promise<IAttachment> {
 
 async function removeIcon(
   type: AvatarIconType,
-  spaceId?: string,
+  spaceId?: string
 ): Promise<void> {
   const payload: { spaceId?: string; type: string } = { type };
 

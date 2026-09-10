@@ -1,27 +1,28 @@
+import { notifications } from "@mantine/notifications";
 import {
   keepPreviousData,
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { IUser } from "@/features/user/types/user.types.ts";
 import {
+  activateWorkspaceMember,
   changeMemberRole,
+  createInvitation,
+  deactivateWorkspaceMember,
+  deleteWorkspaceMember,
+  getAppVersion,
   getInvitationById,
   getPendingInvitations,
+  getWorkspace,
   getWorkspaceMembers,
-  createInvitation,
+  getWorkspacePublicData,
   resendInvitation,
   revokeInvitation,
-  getWorkspace,
-  getWorkspacePublicData,
-  getAppVersion,
-  deleteWorkspaceMember,
-  deactivateWorkspaceMember,
-  activateWorkspaceMember,
 } from "@/features/workspace/services/workspace-service";
-import { IPagination, QueryParams } from "@/lib/types.ts";
-import { notifications } from "@mantine/notifications";
 import {
   ICreateInvite,
   IInvitation,
@@ -29,13 +30,12 @@ import {
   IVersion,
   IWorkspace,
 } from "@/features/workspace/types/workspace.types.ts";
-import { IUser } from "@/features/user/types/user.types.ts";
-import { useTranslation } from "react-i18next";
+import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export function useWorkspaceQuery(): UseQueryResult<IWorkspace, Error> {
   return useQuery({
-    queryKey: ["workspace"],
     queryFn: () => getWorkspace(),
+    queryKey: ["workspace"],
   });
 }
 
@@ -44,18 +44,18 @@ export function useWorkspacePublicDataQuery(): UseQueryResult<
   Error
 > {
   return useQuery({
-    queryKey: ["workspace-public"],
     queryFn: () => getWorkspacePublicData(),
+    queryKey: ["workspace-public"],
   });
 }
 
 export function useWorkspaceMembersQuery(
-  params?: QueryParams,
+  params?: QueryParams
 ): UseQueryResult<IPagination<IUser>, Error> {
   return useQuery({
-    queryKey: ["workspaceMembers", params],
-    queryFn: () => getWorkspaceMembers(params),
     placeholderData: keepPreviousData,
+    queryFn: () => getWorkspaceMembers(params),
+    queryKey: ["workspaceMembers", params],
   });
 }
 
@@ -70,15 +70,15 @@ export function useDeleteWorkspaceMemberMutation() {
     }
   >({
     mutationFn: (data) => deleteWorkspaceMember(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: "Member deleted successfully" });
       queryClient.invalidateQueries({
         queryKey: ["workspaceMembers"],
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -94,14 +94,14 @@ export function useDeactivateWorkspaceMemberMutation() {
     }
   >({
     mutationFn: (data) => deactivateWorkspaceMember(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["workspaceMembers"],
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -117,14 +117,14 @@ export function useActivateWorkspaceMemberMutation() {
     }
   >({
     mutationFn: (data) => activateWorkspaceMember(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["workspaceMembers"],
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -134,26 +134,26 @@ export function useChangeMemberRoleMutation() {
 
   return useMutation<any, Error, any>({
     mutationFn: (data) => changeMemberRole(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: "Member role updated successfully" });
       queryClient.refetchQueries({
         queryKey: ["workspaceMembers"],
       });
     },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
-    },
   });
 }
 
 export function useWorkspaceInvitationsQuery(
-  params?: QueryParams,
+  params?: QueryParams
 ): UseQueryResult<IPagination<IInvitation>, Error> {
   return useQuery({
-    queryKey: ["invitations", params],
-    queryFn: () => getPendingInvitations(params),
     placeholderData: keepPreviousData,
+    queryFn: () => getPendingInvitations(params),
+    queryKey: ["invitations", params],
   });
 }
 
@@ -163,15 +163,15 @@ export function useCreateInvitationMutation() {
 
   return useMutation<void, Error, ICreateInvite>({
     mutationFn: (data) => createInvitation(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: t("Invitation sent") });
       queryClient.refetchQueries({
         queryKey: ["invitations"],
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -185,12 +185,12 @@ export function useResendInvitationMutation() {
     }
   >({
     mutationFn: (data) => resendInvitation(data),
-    onSuccess: (data, variables) => {
-      notifications.show({ message: "Invitation resent" });
-    },
     onError: (error) => {
       const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
+      notifications.show({ color: "red", message: errorMessage });
+    },
+    onSuccess: (data, variables) => {
+      notifications.show({ message: "Invitation resent" });
     },
   });
 }
@@ -206,37 +206,37 @@ export function useRevokeInvitationMutation() {
     }
   >({
     mutationFn: (data) => revokeInvitation(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: "Invitation revoked" });
       queryClient.invalidateQueries({
         queryKey: ["invitations"],
       });
     },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
-    },
   });
 }
 
 export function useGetInvitationQuery(
-  invitationId: string,
+  invitationId: string
 ): UseQueryResult<IInvitation, Error> {
   return useQuery({
-    queryKey: ["invitations", invitationId],
-    queryFn: () => getInvitationById({ invitationId }),
     enabled: !!invitationId,
+    queryFn: () => getInvitationById({ invitationId }),
+    queryKey: ["invitations", invitationId],
   });
 }
 
 export function useAppVersion(
-  isEnabled: boolean,
+  isEnabled: boolean
 ): UseQueryResult<IVersion, Error> {
   return useQuery({
-    queryKey: ["version"],
-    queryFn: () => getAppVersion(),
-    staleTime: 60 * 60 * 1000, // 1 hr
     enabled: isEnabled,
+    queryFn: () => getAppVersion(),
+    queryKey: ["version"],
     refetchOnMount: true,
+    staleTime: 60 * 60 * 1000, // 1 hr
   });
 }

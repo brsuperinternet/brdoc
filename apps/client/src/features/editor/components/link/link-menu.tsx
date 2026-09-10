@@ -1,13 +1,13 @@
-import { FC, useCallback, useEffect, useRef } from "react";
-import { BubbleMenu } from "@tiptap/react/menus";
-import type { Editor } from "@tiptap/react";
-import { useAtom } from "jotai";
 import { isTextSelected } from "@docmost/editor-ext";
+import { Paper } from "@mantine/core";
+import { TextSelection } from "@tiptap/pm/state";
+import type { Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
+import { useAtom } from "jotai";
+import { FC, useCallback, useEffect, useRef } from "react";
 import { showLinkMenuAtom } from "@/features/editor/atoms/editor-atoms";
 import { LinkEditorPanel } from "@/features/editor/components/link/link-editor-panel";
 import { normalizeUrl } from "@/lib/utils";
-import { TextSelection } from "@tiptap/pm/state";
-import { Paper } from "@mantine/core";
 
 type EditorLinkMenuProps = {
   editor: Editor;
@@ -50,11 +50,13 @@ export const EditorLinkMenu: FC<EditorLinkMenuProps> = ({ editor }) => {
         .run();
       setShowLinkMenu(false);
     },
-    [editor, setShowLinkMenu],
+    [editor, setShowLinkMenu]
   );
 
   useEffect(() => {
-    if (!showLinkMenu) return;
+    if (!showLinkMenu) {
+      return;
+    }
 
     const dismiss = () => {
       setShowLinkMenu(false);
@@ -69,7 +71,10 @@ export const EditorLinkMenu: FC<EditorLinkMenuProps> = ({ editor }) => {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         dismiss();
       }
     };
@@ -82,11 +87,21 @@ export const EditorLinkMenu: FC<EditorLinkMenuProps> = ({ editor }) => {
     };
   }, [showLinkMenu, setShowLinkMenu]);
 
-  if (!showLinkMenu) return null;
+  if (!showLinkMenu) {
+    return null;
+  }
 
   return (
     <BubbleMenu
       editor={editor}
+      options={{
+        offset: 8,
+        onHide: () => {
+          setShowLinkMenu(false);
+        },
+        onShow: focusInput,
+        placement: "bottom",
+      }}
       shouldShow={({ editor, state }) => {
         const { empty } = state.selection;
         return (
@@ -96,17 +111,16 @@ export const EditorLinkMenu: FC<EditorLinkMenuProps> = ({ editor }) => {
           isTextSelected(editor)
         );
       }}
-      options={{
-        placement: "bottom",
-        offset: 8,
-        onShow: focusInput,
-        onHide: () => {
-          setShowLinkMenu(false);
-        },
-      }}
-      style={{ zIndex: 198, position: "relative" }}
+      style={{ position: "relative", zIndex: 198 }}
     >
-      <Paper ref={containerRef} w={320} p="sm" shadow="md" radius={6} withBorder>
+      <Paper
+        p="sm"
+        radius={6}
+        ref={containerRef}
+        shadow="md"
+        w={320}
+        withBorder
+      >
         <LinkEditorPanel onSetLink={onSetLink} />
       </Paper>
     </BubbleMenu>

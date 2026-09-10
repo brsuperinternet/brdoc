@@ -1,11 +1,19 @@
-import { ActionIcon, Badge, Group, Skeleton, Table, Text, Tooltip } from "@mantine/core";
-import { IconTrash } from "@tabler/icons-react";
+import {
+  ActionIcon,
+  Badge,
+  Group,
+  Skeleton,
+  Table,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import NoTableResults from "@/components/common/no-table-results";
-import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
-import { IOAuthGrant } from "@/ee/oauth/types/oauth.types";
 import { useRevokeOAuthGrantMutation } from "@/ee/oauth/queries/oauth-query";
+import { IOAuthGrant } from "@/ee/oauth/types/oauth.types";
+import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
 
 // Callback hosts identify the app; the full URL belongs on the consent screen.
 function callbackHosts(redirectUris: string[] = []): string[] {
@@ -48,7 +56,7 @@ function TableSkeleton() {
             <Skeleton height={14} width={90} />
           </Table.Td>
           <Table.Td>
-            <Skeleton height={28} width={28} circle />
+            <Skeleton circle height={28} width={28} />
           </Table.Td>
         </Table.Tr>
       ))}
@@ -67,25 +75,27 @@ export function OAuthGrantsTable({ grants, isLoading }: OAuthGrantsTableProps) {
   };
 
   const formatDate = (date: string | null) => {
-    if (!date) return t("Never");
+    if (!date) {
+      return t("Never");
+    }
     return formatLocalized(date, "MMM dd, yyyy", "PP", locale);
   };
 
   const openRevokeModal = (grant: IOAuthGrant) =>
     modals.openConfirmModal({
-      title: t("Revoke access"),
       centered: true,
       children: (
         <Text size="sm">
           {t(
             "Are you sure you want to revoke access for {{name}}? The application will no longer be able to access your account.",
-            { name: grant.clientName },
+            { name: grant.clientName }
           )}
         </Text>
       ),
-      labels: { confirm: t("Revoke access"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Revoke access") },
       onConfirm: () => revokeMutation.mutate(grant.id),
+      title: t("Revoke access"),
     });
 
   return (
@@ -108,14 +118,14 @@ export function OAuthGrantsTable({ grants, isLoading }: OAuthGrantsTableProps) {
             grants.map((grant) => (
               <Table.Tr key={grant.id}>
                 <Table.Td>
-                  <Text fz="sm" fw={500}>
+                  <Text fw={500} fz="sm">
                     {grant.clientName}
                   </Text>
                   <Text
-                    fz="xs"
                     c="dimmed"
-                    title={grant.redirectUris?.join("\n")}
+                    fz="xs"
                     style={{ overflowWrap: "anywhere" }}
+                    title={grant.redirectUris?.join("\n")}
                   >
                     {callbackHosts(grant.redirectUris).join(", ")}
                   </Text>
@@ -125,13 +135,15 @@ export function OAuthGrantsTable({ grants, isLoading }: OAuthGrantsTableProps) {
                   <Group gap={4}>
                     {grant.scopes.map((scope) => {
                       const meta = scopeMeta[scope];
-                      if (!meta) return null;
+                      if (!meta) {
+                        return null;
+                      }
                       return (
                         <Badge
-                          key={scope}
-                          variant="light"
                           color={meta.color}
+                          key={scope}
                           size="sm"
+                          variant="light"
                         >
                           {meta.label}
                         </Badge>
@@ -155,12 +167,12 @@ export function OAuthGrantsTable({ grants, isLoading }: OAuthGrantsTableProps) {
                 <Table.Td>
                   <Tooltip label={t("Revoke access")}>
                     <ActionIcon
-                      variant="subtle"
-                      color="red"
                       aria-label={t("Revoke access for {{name}}", {
                         name: grant.clientName,
                       })}
+                      color="red"
                       onClick={() => openRevokeModal(grant)}
+                      variant="subtle"
                     >
                       <IconTrash size={16} />
                     </ActionIcon>

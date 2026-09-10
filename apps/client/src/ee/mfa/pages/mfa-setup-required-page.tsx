@@ -1,23 +1,22 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  Container,
-  Title,
-  Text,
-  Button,
-  Stack,
-  Paper,
   Alert,
+  Button,
   Center,
+  Container,
+  Paper,
+  Stack,
+  Text,
   ThemeIcon,
+  Title,
 } from "@mantine/core";
-import { IconShieldCheck, IconAlertCircle } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-import APP_ROUTE from "@/lib/app-route";
-import { MfaSetupModal } from "@/ee/mfa";
-import classes from "@/features/auth/components/auth.module.css";
 import { notifications } from "@mantine/notifications";
-import { useMfaPageProtection } from "@/ee/mfa";
+import { IconAlertCircle, IconShieldCheck } from "@tabler/icons-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { MfaSetupModal, useMfaPageProtection } from "@/ee/mfa";
+import classes from "@/features/auth/components/auth.module.css";
+import APP_ROUTE from "@/lib/app-route";
 
 export function MfaSetupRequiredPage() {
   const { t } = useTranslation();
@@ -29,10 +28,10 @@ export function MfaSetupRequiredPage() {
     setSetupModalOpen(false);
 
     notifications.show({
-      title: t("Success"),
       message: t(
-        "Two-factor authentication has been set up. Please log in again.",
+        "Two-factor authentication has been set up. Please log in again."
       ),
+      title: t("Success"),
     });
 
     navigate(APP_ROUTE.AUTH.LOGIN);
@@ -47,54 +46,54 @@ export function MfaSetupRequiredPage() {
   }
 
   return (
-    <Container size={480} className={classes.container}>
-      <Paper radius="lg" p={40}>
+    <Container className={classes.container} size={480}>
+      <Paper p={40} radius="lg">
         <Stack align="center" gap="xl">
           <Center>
-            <ThemeIcon size={80} radius="xl" variant="light" color="blue">
+            <ThemeIcon color="blue" radius="xl" size={80} variant="light">
               <IconShieldCheck size={40} stroke={1.5} />
             </ThemeIcon>
           </Center>
 
           <Stack align="center" gap="xs">
-            <Title order={2} ta="center" fw={600}>
+            <Title fw={600} order={2} ta="center">
               {t("Two-factor authentication required")}
             </Title>
-            <Text size="md" c="dimmed" ta="center">
+            <Text c="dimmed" size="md" ta="center">
               {t(
-                "Your workspace requires two-factor authentication for all users",
+                "Your workspace requires two-factor authentication for all users"
               )}
             </Text>
           </Stack>
 
           <Alert
-            icon={<IconAlertCircle size={20} />}
             color="blue"
+            icon={<IconAlertCircle size={20} />}
             variant="light"
             w="100%"
           >
             <Text size="sm">
               {t(
-                "To continue accessing your workspace, you must set up two-factor authentication. This adds an extra layer of security to your account.",
+                "To continue accessing your workspace, you must set up two-factor authentication. This adds an extra layer of security to your account."
               )}
             </Text>
           </Alert>
 
-          <Stack w="100%" gap="sm">
+          <Stack gap="sm" w="100%">
             <Button
               fullWidth
-              size="md"
-              onClick={() => setSetupModalOpen(true)}
               leftSection={<IconShieldCheck size={18} />}
+              onClick={() => setSetupModalOpen(true)}
+              size="md"
             >
               {t("Set up two-factor authentication")}
             </Button>
 
             <Button
-              fullWidth
-              variant="subtle"
               color="gray"
+              fullWidth
               onClick={handleLogout}
+              variant="subtle"
             >
               {t("Cancel and logout")}
             </Button>
@@ -103,10 +102,10 @@ export function MfaSetupRequiredPage() {
       </Paper>
 
       <MfaSetupModal
-        opened={setupModalOpen}
+        isRequired={true}
         onClose={() => setSetupModalOpen(false)}
         onComplete={handleSetupComplete}
-        isRequired={true}
+        opened={setupModalOpen}
       />
     </Container>
   );

@@ -1,12 +1,6 @@
-import { useState } from "react";
-import {
-  Accordion,
-  Group,
-  Text,
-  Tooltip,
-  UnstyledButton,
-} from "@mantine/core";
 import type { FormulaFn } from "@docmost/base-formula/client";
+import { Accordion, Group, Text, Tooltip, UnstyledButton } from "@mantine/core";
+import { useState } from "react";
 import classes from "@/ee/base/styles/formula.module.css";
 
 const CATEGORIES = ["logic", "math", "string", "date", "coercion"] as const;
@@ -22,29 +16,31 @@ export function FunctionPalette({
 
   const byCat = new Map<string, FormulaFn[]>();
   for (const fn of registry.values()) {
-    if (!byCat.has(fn.category)) byCat.set(fn.category, []);
+    if (!byCat.has(fn.category)) {
+      byCat.set(fn.category, []);
+    }
     byCat.get(fn.category)!.push(fn);
   }
 
   return (
     <Accordion
-      value={open}
-      onChange={setOpen}
-      variant="contained"
-      radius="md"
       chevronSize={14}
+      onChange={setOpen}
+      radius="md"
       styles={{
+        content: { padding: "6px 10px 10px" },
+        control: { minHeight: 0, padding: "7px 12px" },
         item: { borderColor: "var(--mantine-color-gray-2)" },
-        control: { padding: "7px 12px", minHeight: 0 },
         label: {
-          padding: 0,
           fontSize: 13,
           fontWeight: 600,
+          padding: 0,
           textTransform: "capitalize",
         },
-        content: { padding: "6px 10px 10px" },
         panel: { background: "var(--mantine-color-gray-0)" },
       }}
+      value={open}
+      variant="contained"
     >
       {CATEGORIES.map((cat) => {
         const fns = byCat.get(cat) ?? [];
@@ -53,7 +49,7 @@ export function FunctionPalette({
             <Accordion.Control>
               <Group gap={8}>
                 <span>{cat}</span>
-                <Text size="xs" c="dimmed" ff="monospace">
+                <Text c="dimmed" ff="monospace" size="xs">
                   {fns.length}
                 </Text>
               </Group>
@@ -63,13 +59,11 @@ export function FunctionPalette({
                 {fns.map((fn) => (
                   <Tooltip key={fn.name} label={fn.doc} withArrow>
                     <UnstyledButton
-                      onClick={() => onInsert(fn.name)}
                       className={classes.fnChip}
+                      onClick={() => onInsert(fn.name)}
                     >
                       {fn.name}
-                      <span className={classes.fnChipParens}>
-                        ()
-                      </span>
+                      <span className={classes.fnChipParens}>()</span>
                     </UnstyledButton>
                   </Tooltip>
                 ))}

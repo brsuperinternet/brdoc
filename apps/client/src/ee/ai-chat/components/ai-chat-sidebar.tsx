@@ -1,26 +1,26 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ActionIcon,
   Center,
+  Loader,
   Text,
   TextInput,
-  Loader,
   Tooltip,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { useDebouncedValue } from "@mantine/hooks";
-import { IconPlus, IconSearch, IconMessageCircle2 } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { IconMessageCircle2, IconPlus, IconSearch } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   useChatsQuery,
   useDeleteChatMutation,
-  useUpdateChatTitleMutation,
   useSearchChatsQuery,
+  useUpdateChatTitleMutation,
 } from "../queries/ai-chat-query";
-import AiChatSidebarItem from "./ai-chat-sidebar-item";
-import { groupChatsByAge } from "../utils/group-chats-by-age";
 import classes from "../styles/chat-sidebar.module.css";
+import { groupChatsByAge } from "../utils/group-chats-by-age";
+import AiChatSidebarItem from "./ai-chat-sidebar-item";
 
 export default function AiChatSidebar() {
   const { t } = useTranslation();
@@ -47,9 +47,13 @@ export default function AiChatSidebar() {
   const isSearching = Boolean(debouncedSearch);
 
   useEffect(() => {
-    if (isSearching) return;
+    if (isSearching) {
+      return;
+    }
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -57,7 +61,7 @@ export default function AiChatSidebar() {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
 
     observer.observe(sentinel);
@@ -77,23 +81,25 @@ export default function AiChatSidebar() {
       event.preventDefault();
       navigate("/ai");
     },
-    [navigate],
+    [navigate]
   );
 
   const handleDelete = useCallback(
     (id: string, title: string | null) => {
       modals.openConfirmModal({
-        title: t("Delete chat"),
         centered: true,
         children: (
           <Text size="sm">
-            {t("Are you sure you want to delete '{{title}}'? This action cannot be undone.", {
-              title: title || t("Untitled"),
-            })}
+            {t(
+              "Are you sure you want to delete '{{title}}'? This action cannot be undone.",
+              {
+                title: title || t("Untitled"),
+              }
+            )}
           </Text>
         ),
-        labels: { confirm: t("Delete"), cancel: t("Cancel") },
         confirmProps: { color: "red" },
+        labels: { cancel: t("Cancel"), confirm: t("Delete") },
         onConfirm: () => {
           deleteMutation.mutate(id, {
             onSuccess: () => {
@@ -103,16 +109,17 @@ export default function AiChatSidebar() {
             },
           });
         },
+        title: t("Delete chat"),
       });
     },
-    [deleteMutation, chatId, navigate, t],
+    [deleteMutation, chatId, navigate, t]
   );
 
   const handleRename = useCallback(
     (chatId: string, title: string) => {
       renameMutation.mutate({ chatId, title });
     },
-    [renameMutation],
+    [renameMutation]
   );
 
   const isLoading = chatsQuery.isLoading || searchQuery.isLoading;
@@ -123,12 +130,12 @@ export default function AiChatSidebar() {
         <h2 className={classes.title}>{t("AI Chat")}</h2>
         <Tooltip label={t("New chat")} openDelay={250} withArrow>
           <ActionIcon
+            aria-label={t("New chat")}
+            color="gray"
             component={Link}
+            onClick={handleNewChat}
             to="/ai"
             variant="subtle"
-            color="gray"
-            onClick={handleNewChat}
-            aria-label={t("New chat")}
           >
             <IconPlus size={18} />
           </ActionIcon>
@@ -136,23 +143,23 @@ export default function AiChatSidebar() {
       </div>
 
       <TextInput
-        className={classes.searchInput}
-        placeholder={t("Search chats...")}
         aria-label={t("Search chats")}
+        className={classes.searchInput}
         leftSection={<IconSearch size={14} />}
+        onChange={(e) => setSearch(e.currentTarget.value)}
+        placeholder={t("Search chats...")}
         size="xs"
         value={search}
-        onChange={(e) => setSearch(e.currentTarget.value)}
       />
 
       <div className={classes.chatList}>
-        {isLoading && <Loader size="xs" mx="auto" mt="md" />}
+        {isLoading && <Loader mt="md" mx="auto" size="xs" />}
         {!isLoading && chats.length === 0 && (
           <div className={classes.chatListEmpty}>
             <IconMessageCircle2
+              className={classes.chatListEmptyIcon}
               size={28}
               stroke={1.5}
-              className={classes.chatListEmptyIcon}
             />
             <div className={classes.chatListEmptyTitle}>
               {isSearching ? t("No chats found") : t("No conversations yet")}
@@ -167,21 +174,21 @@ export default function AiChatSidebar() {
         {isSearching
           ? chats.map((chat) => (
               <AiChatSidebarItem
-                key={chat.id}
                 chat={chat}
                 isActive={chat.id === chatId}
+                key={chat.id}
                 onDelete={handleDelete}
                 onRename={handleRename}
               />
             ))
           : groupedChats.map((group) => (
-              <div key={group.key} className={classes.chatGroup}>
+              <div className={classes.chatGroup} key={group.key}>
                 <h3 className={classes.chatGroupLabel}>{group.label}</h3>
                 {group.chats.map((chat) => (
                   <AiChatSidebarItem
-                    key={chat.id}
                     chat={chat}
                     isActive={chat.id === chatId}
+                    key={chat.id}
                     onDelete={handleDelete}
                     onRename={handleRename}
                   />

@@ -1,15 +1,15 @@
-import { Modal, Text, ScrollArea } from "@mantine/core";
+import { Modal, ScrollArea, Text } from "@mantine/core";
 import { IconTable } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import ReadonlyPageEditor from "@/features/editor/readonly-page-editor.tsx";
 import { EmptyState } from "@/components/ui/empty-state.tsx";
+import ReadonlyPageEditor from "@/features/editor/readonly-page-editor.tsx";
 
 interface Props {
-  opened: boolean;
-  onClose: () => void;
-  pageTitle: string;
-  pageContent: any;
   isBase?: boolean;
+  onClose: () => void;
+  opened: boolean;
+  pageContent: any;
+  pageTitle: string;
 }
 
 export default function TrashPageContentModal({
@@ -23,27 +23,32 @@ export default function TrashPageContentModal({
   const title = pageTitle || t("Untitled");
 
   return (
-    <Modal.Root size={1200} opened={opened} onClose={onClose} aria-label={t("Preview")}>
+    <Modal.Root
+      aria-label={t("Preview")}
+      onClose={onClose}
+      opened={opened}
+      size={1200}
+    >
       <Modal.Overlay />
       <Modal.Content style={{ overflow: "hidden" }}>
         <Modal.Header>
           <Modal.Title>
-            <Text size="md" fw={500}>
+            <Text fw={500} size="md">
               {t("Preview")}
             </Text>
           </Modal.Title>
           <Modal.CloseButton aria-label={t("Close")} />
         </Modal.Header>
         <Modal.Body p={0}>
-          <ScrollArea h="650" w="100%" scrollbarSize={5}>
+          <ScrollArea h="650" scrollbarSize={5} w="100%">
             {isBase ? (
               <EmptyState
+                description={t("Restore this base to view its contents.")}
                 icon={IconTable}
                 title={t("Base preview unavailable")}
-                description={t("Restore this base to view its contents.")}
               />
             ) : (
-              <ReadonlyPageEditor title={title} content={pageContent} />
+              <ReadonlyPageEditor content={pageContent} title={title} />
             )}
           </ScrollArea>
         </Modal.Body>

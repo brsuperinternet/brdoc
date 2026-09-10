@@ -1,15 +1,9 @@
-import {
-  useMutation,
-  UseMutationResult,
-  useQuery,
-  UseQueryResult,
-} from "@tanstack/react-query";
+import { UseMutationResult, useMutation } from "@tanstack/react-query";
 import {
   generateAiContent,
   generateAiContentStream,
 } from "@/ee/ai/services/ai-service.ts";
 import {
-  AiConfigResponse,
   AiContentResponse,
   AiGenerateDto,
   AiStreamChunk,
@@ -28,8 +22,8 @@ export function useAiGenerateMutation(): UseMutationResult<
 
 interface StreamCallbacks {
   onChunk: (chunk: AiStreamChunk) => void;
-  onError?: (error: AiStreamError) => void;
   onComplete?: () => void;
+  onError?: (error: AiStreamError) => void;
 }
 
 export function useAiGenerateStreamMutation(): UseMutationResult<

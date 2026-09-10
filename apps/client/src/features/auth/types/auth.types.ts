@@ -4,21 +4,21 @@ export interface ILogin {
 }
 
 export interface IRegister {
-  name?: string;
   email: string;
+  name?: string;
   password: string;
 }
 
 export interface ISetupWorkspace {
-  workspaceName?: string;
-  name: string;
   email: string;
+  name: string;
   password: string;
+  workspaceName?: string;
 }
 
 export interface IChangePassword {
-  oldPassword: string;
   newPassword: string;
+  oldPassword: string;
 }
 
 export interface IForgotPassword {
@@ -26,8 +26,8 @@ export interface IForgotPassword {
 }
 
 export interface IPasswordReset {
-  token?: string;
   newPassword: string;
+  token?: string;
 }
 
 export interface IVerifyUserToken {
@@ -40,8 +40,8 @@ export interface ICollabToken {
 }
 
 export interface ILoginResponse {
-  userHasMfa?: boolean;
-  requiresMfaSetup?: boolean;
-  mfaToken?: string;
   isMfaEnforced?: boolean;
+  mfaToken?: string;
+  requiresMfaSetup?: boolean;
+  userHasMfa?: boolean;
 }

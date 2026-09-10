@@ -1,13 +1,13 @@
-import { Group, Text, Switch, Tooltip } from "@mantine/core";
+import { Group, Switch, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
-import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature.ts";
 import { Feature } from "@/ee/features.ts";
+import { useHasFeature } from "@/ee/hooks/use-feature.ts";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label.ts";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 
 export default function EnableScim() {
   const { t } = useTranslation();
@@ -24,30 +24,30 @@ export default function EnableScim() {
       setWorkspace(updatedWorkspace);
     } catch (err) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
   };
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
         <Text size="md">{t("Enable SCIM")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "Automatically provision users and groups from your identity provider via SCIM.",
+            "Automatically provision users and groups from your identity provider via SCIM."
           )}
         </Text>
       </div>
 
-      <Tooltip label={upgradeLabel} disabled={hasAccess} refProp="rootRef">
+      <Tooltip disabled={hasAccess} label={upgradeLabel} refProp="rootRef">
         <Switch
-          labelPosition="left"
-          defaultChecked={checked}
-          onChange={handleChange}
-          disabled={!hasAccess}
           aria-label={t("Toggle SCIM provisioning")}
+          defaultChecked={checked}
+          disabled={!hasAccess}
+          labelPosition="left"
+          onChange={handleChange}
         />
       </Tooltip>
     </Group>

@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
+import { beforeEach, describe, expect, it } from "vitest";
 import { DocumentTitle } from "./document-title.tsx";
 
 const renderTitle = (ui: React.ReactNode) =>
@@ -35,11 +35,13 @@ describe("DocumentTitle", () => {
   it("renders extra head children", () => {
     renderTitle(
       <DocumentTitle title="Shared">
-        <meta name="robots" content="noindex" />
-      </DocumentTitle>,
+        <meta content="noindex" name="robots" />
+      </DocumentTitle>
     );
     expect(
-      document.querySelector('head > meta[name="robots"]')?.getAttribute("content"),
+      document
+        .querySelector('head > meta[name="robots"]')
+        ?.getAttribute("content")
     ).toBe("noindex");
   });
 });

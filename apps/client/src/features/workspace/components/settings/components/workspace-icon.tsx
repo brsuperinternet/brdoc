@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { useAtom } from "jotai";
 import { Text } from "@mantine/core";
+import { useAtom } from "jotai";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/common/avatar-uploader.tsx";
 import {
-  uploadWorkspaceIcon,
   removeWorkspaceIcon,
+  uploadWorkspaceIcon,
 } from "@/features/attachments/services/attachment-service.ts";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
@@ -47,20 +47,20 @@ export default function WorkspaceIcon() {
 
   return (
     <div style={{ marginBottom: "24px" }}>
-      <Text size="sm" fw={500} mb="xs">
+      <Text fw={500} mb="xs" size="sm">
         {t("Icon")}
       </Text>
       <AvatarUploader
         currentImageUrl={workspace?.logo}
-        fallbackName={workspace?.name}
-        type={AvatarIconType.WORKSPACE_ICON}
-        size="60px"
-        radius="sm"
-        variant="filled"
-        onUpload={handleIconUpload}
-        onRemove={handleIconRemove}
-        isLoading={isLoading}
         disabled={!isAdmin}
+        fallbackName={workspace?.name}
+        isLoading={isLoading}
+        onRemove={handleIconRemove}
+        onUpload={handleIconUpload}
+        radius="sm"
+        size="60px"
+        type={AvatarIconType.WORKSPACE_ICON}
+        variant="filled"
       />
     </div>
   );

@@ -1,8 +1,8 @@
-import classes from "./node-resize.module.css";
 import { ResizableNodeViewDirection } from "@docmost/editor-ext";
+import classes from "./node-resize.module.css";
 
 export function createResizeHandle(
-  direction: ResizableNodeViewDirection,
+  direction: ResizableNodeViewDirection
 ): HTMLElement {
   const handle = document.createElement("div");
   handle.dataset.resizeHandle = direction;
@@ -29,7 +29,7 @@ export function createResizeHandle(
 export function buildResizeClasses(nodeClass: string) {
   return {
     container: `${classes.container} ${nodeClass}`,
-    wrapper: classes.wrapper,
     resizing: classes.resizing,
+    wrapper: classes.wrapper,
   };
 }

@@ -1,4 +1,3 @@
-import { ReactRenderer, useEditor } from "@tiptap/react";
 import {
   autoUpdate,
   computePosition,
@@ -6,6 +5,7 @@ import {
   offset,
   shift,
 } from "@floating-ui/dom";
+import { ReactRenderer, useEditor } from "@tiptap/react";
 import MentionList from "@/features/editor/components/mention/mention-list.tsx";
 
 function getWhitespaceCount(query: string) {
@@ -34,6 +34,22 @@ const mentionRenderItems = () => {
   };
 
   return {
+    onExit: () => {
+      destroy();
+    },
+    onKeyDown: (props: { event: KeyboardEvent }) => {
+      if (props.event.key === "Escape") {
+        destroy();
+        return true;
+      }
+
+      if (props.event.key === "Enter" && !component) {
+        destroy();
+        return false;
+      }
+
+      return (component?.ref as any)?.onKeyDown(props);
+    },
     onStart: (props: {
       editor: ReturnType<typeof useEditor>;
       clientRect: () => DOMRect;
@@ -57,8 +73,8 @@ const mentionRenderItems = () => {
       const isInCommentContext = !!(asideEl || dialogEl || chatInput);
 
       component = new ReactRenderer(MentionList, {
-        props: { ...props, isInCommentContext },
         editor: props.editor,
+        props: { ...props, isInCommentContext },
       });
 
       if (!props.clientRect) {
@@ -89,27 +105,28 @@ const mentionRenderItems = () => {
         },
         element,
         () => {
-          if (!component?.element) return;
+          if (!component?.element) {
+            return;
+          }
           computePosition(
             {
-              getBoundingClientRect: () => {
-                return activeClientRect ? activeClientRect() : new DOMRect();
-              },
+              getBoundingClientRect: () =>
+                activeClientRect ? activeClientRect() : new DOMRect(),
             },
             element,
             {
-              placement: "bottom-start",
               middleware: [offset(4), flip(), shiftMiddleware],
-            },
+              placement: "bottom-start",
+            }
           ).then(({ x, y }) => {
             Object.assign(element.style, {
               left: `${x}px`,
-              top: `${y}px`,
               position: "absolute",
+              top: `${y}px`,
               zIndex: "190",
             });
           });
-        },
+        }
       );
     },
     onUpdate: (props: {
@@ -128,7 +145,7 @@ const mentionRenderItems = () => {
         component.updateProps(props);
       }
 
-      if (!props || !props.clientRect) {
+      if (!(props && props.clientRect)) {
         return;
       }
 
@@ -139,7 +156,7 @@ const mentionRenderItems = () => {
       // destroy component if space is greater 3 without a match
       if (
         whitespaceCount > 4 &&
-        //@ts-ignore
+        //@ts-expect-error
         props.editor.storage.mentionItems.length === 1
       ) {
         destroy();
@@ -148,24 +165,7 @@ const mentionRenderItems = () => {
       // fallback exit
       if (whitespaceCount > 7) {
         destroy();
-        return;
       }
-    },
-    onKeyDown: (props: { event: KeyboardEvent }) => {
-      if (props.event.key === "Escape") {
-        destroy();
-        return true;
-      }
-
-      if (props.event.key === "Enter" && !component) {
-        destroy();
-        return false;
-      }
-
-      return (component?.ref as any)?.onKeyDown(props);
-    },
-    onExit: () => {
-      destroy();
     },
   };
 };

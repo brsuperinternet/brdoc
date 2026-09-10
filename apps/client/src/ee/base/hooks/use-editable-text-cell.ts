@@ -1,6 +1,9 @@
+import { type PrimitiveAtom, useStore } from "jotai";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { useStore, type PrimitiveAtom } from "jotai";
-import { pendingTypeInsertAtom, type PendingTypeInsert } from "@/ee/base/atoms/base-atoms";
+import {
+  type PendingTypeInsert,
+  pendingTypeInsertAtom,
+} from "@/ee/base/atoms/base-atoms";
 
 export type UseEditableTextCellParams = {
   value: unknown;
@@ -51,7 +54,10 @@ export function useEditableTextCell({
         pending.propertyId === propertyId;
       const nextDraft = seeded ? pending.char : toDraftRef.current(value);
       if (seeded) {
-        store.set(pendingTypeInsertAtom as PrimitiveAtom<PendingTypeInsert>, null);
+        store.set(
+          pendingTypeInsertAtom as PrimitiveAtom<PendingTypeInsert>,
+          null
+        );
       }
       setDraft(nextDraft);
       const el = inputRef.current;
@@ -71,11 +77,13 @@ export function useEditableTextCell({
 
   const commitOnce = useCallback(
     (val: unknown) => {
-      if (committedRef.current) return;
+      if (committedRef.current) {
+        return;
+      }
       committedRef.current = true;
       onCommit(val);
     },
-    [onCommit],
+    [onCommit]
   );
 
   const handleKeyDown = useCallback(
@@ -89,12 +97,12 @@ export function useEditableTextCell({
         onCancel();
       }
     },
-    [draft, parse, commitOnce, onCancel],
+    [draft, parse, commitOnce, onCancel]
   );
 
   const handleBlur = useCallback(() => {
     commitOnce(parse(draft));
   }, [draft, parse, commitOnce]);
 
-  return { draft, setDraft, inputRef, handleKeyDown, handleBlur };
+  return { draft, handleBlur, handleKeyDown, inputRef, setDraft };
 }

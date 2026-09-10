@@ -1,13 +1,13 @@
-import { useState, useRef, useCallback } from "react";
-import { Popover, ActionIcon, Text, UnstyledButton } from "@mantine/core";
+import { ActionIcon, Popover, Text, UnstyledButton } from "@mantine/core";
 import {
+  IconFile,
   IconPaperclip,
   IconUpload,
-  IconFile,
   IconX,
 } from "@tabler/icons-react";
-import { IBaseProperty } from "@/ee/base/types/base.types";
+import { useCallback, useRef, useState } from "react";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 import { uploadFile } from "@/features/page/services/page-service";
 import { getFileUrl } from "@/lib/config";
 
@@ -19,8 +19,12 @@ export type FileValue = {
   url?: string;
 };
 
-function buildFileUrl(file: Pick<FileValue, "id" | "fileName" | "url">): string {
-  return file.url ?? `/api/files/${file.id}/${encodeURIComponent(file.fileName)}`;
+function buildFileUrl(
+  file: Pick<FileValue, "id" | "fileName" | "url">
+): string {
+  return (
+    file.url ?? `/api/files/${file.id}/${encodeURIComponent(file.fileName)}`
+  );
 }
 
 type CellFileProps = {
@@ -34,17 +38,25 @@ type CellFileProps = {
 };
 
 function formatFileSize(bytes?: number): string {
-  if (!bytes) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (!bytes) {
+    return "";
+  }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function parseFiles(value: unknown): FileValue[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
   return value.filter(
     (f): f is FileValue =>
-      f && typeof f === "object" && "id" in f && "fileName" in f,
+      f && typeof f === "object" && "id" in f && "fileName" in f
   );
 }
 
@@ -62,16 +74,20 @@ export function CellFile({
 
   const handleRemove = useCallback(
     (fileId: string) => {
-      if (readOnly) return;
+      if (readOnly) {
+        return;
+      }
       const updated = files.filter((f) => f.id !== fileId);
       onCommit(updated.length > 0 ? updated : null);
     },
-    [readOnly, files, onCommit],
+    [readOnly, files, onCommit]
   );
 
   const handleUpload = useCallback(
     async (fileList: FileList | null) => {
-      if (!fileList || fileList.length === 0) return;
+      if (!fileList || fileList.length === 0) {
+        return;
+      }
       setUploading(true);
 
       const newFiles: FileValue[] = [...files];
@@ -83,10 +99,10 @@ export function CellFile({
         try {
           const attachment = await uploadFile(file, property.pageId);
           newFiles.push({
-            id: attachment.id,
             fileName: attachment.fileName,
-            mimeType: attachment.mimeType,
             fileSize: attachment.fileSize,
+            id: attachment.id,
+            mimeType: attachment.mimeType,
             url: `/api/files/${attachment.id}/${encodeURIComponent(attachment.fileName)}`,
           });
         } catch (err) {
@@ -97,7 +113,7 @@ export function CellFile({
       setUploading(false);
       onCommit(newFiles.length > 0 ? newFiles : null);
     },
-    [files, property.pageId, onCommit],
+    [files, property.pageId, onCommit]
   );
 
   const handleKeyDown = useCallback(
@@ -107,7 +123,7 @@ export function CellFile({
         onCancel();
       }
     },
-    [onCancel],
+    [onCancel]
   );
 
   const MAX_VISIBLE = 2;
@@ -115,54 +131,56 @@ export function CellFile({
   if (isEditing) {
     return (
       <Popover
-        opened
-        onChange={(o) => {
-          if (!o) onCancel();
-        }}
-        onClose={onCancel}
-        position="bottom-start"
-        width={280}
-        trapFocus
         closeOnClickOutside
         closeOnEscape
         hideDetached={false}
+        onChange={(o) => {
+          if (!o) {
+            onCancel();
+          }
+        }}
+        onClose={onCancel}
+        opened
+        position="bottom-start"
+        trapFocus
+        width={280}
       >
         <Popover.Target>
           <div className={cellClasses.popoverTarget}>
             <FileList files={files} maxVisible={MAX_VISIBLE} />
           </div>
         </Popover.Target>
-        <Popover.Dropdown p={8} onKeyDown={handleKeyDown}>
+        <Popover.Dropdown onKeyDown={handleKeyDown} p={8}>
           {!readOnly && files.length === 0 && !uploading && (
-            <Text size="xs" c="dimmed" mb={8}>
+            <Text c="dimmed" mb={8} size="xs">
               No files attached
             </Text>
           )}
 
           {files.map((file) => (
-            <div key={file.id} className={cellClasses.fileItemRow}>
-              <IconFile size={14} className={cellClasses.fileItemIcon} />
+            <div className={cellClasses.fileItemRow} key={file.id}>
+              <IconFile className={cellClasses.fileItemIcon} size={14} />
               <a
-                href={getFileUrl(buildFileUrl(file))}
-                target="_blank"
-                rel="noreferrer"
                 className={cellClasses.fileItemLink}
+                href={getFileUrl(buildFileUrl(file))}
+                rel="noreferrer"
+                target="_blank"
               >
-                <Text size="xs" truncate="end" fw={500}>
+                <Text fw={500} size="xs" truncate="end">
                   {file.fileName}
                 </Text>
                 {file.fileSize != null && (
-                  <Text size="xs" c="dimmed">
+                  <Text c="dimmed" size="xs">
                     {formatFileSize(file.fileSize)}
                   </Text>
                 )}
               </a>
               {!readOnly && (
                 <ActionIcon
-                  variant="subtle"
                   color="gray"
-                  size="xs"
                   onClick={() => handleRemove(file.id)}
+                  size="xs"
+                  variant="subtle"
                 >
                   <IconX size={12} />
                 </ActionIcon>
@@ -173,20 +191,20 @@ export function CellFile({
           {!readOnly && (
             <>
               <input
-                ref={fileInputRef}
-                type="file"
                 multiple
-                style={{ display: "none" }}
                 onChange={(e) => {
                   handleUpload(e.target.files);
                   e.target.value = "";
                 }}
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                type="file"
               />
 
               <UnstyledButton
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
                 className={cellClasses.fileUploadBtn}
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
                 style={{
                   color: uploading
                     ? "var(--mantine-color-gray-5)"
@@ -223,7 +241,7 @@ function FileList({
   return (
     <div className={cellClasses.fileGroup}>
       {visible.map((file) => (
-        <span key={file.id} className={cellClasses.fileBadge}>
+        <span className={cellClasses.fileBadge} key={file.id}>
           <IconPaperclip size={12} />
           {file.fileName}
         </span>

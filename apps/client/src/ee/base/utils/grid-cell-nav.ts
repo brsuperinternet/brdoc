@@ -6,11 +6,13 @@ export function computeNextCell(
   current: CellCoord,
   rowDelta: number,
   colDelta: number,
-  wrap: boolean,
+  wrap: boolean
 ): CellCoord | null {
   const colIndex = colIds.indexOf(current.propertyId);
   const rowIndex = rowIds.indexOf(current.rowId);
-  if (colIndex === -1 || rowIndex === -1) return null;
+  if (colIndex === -1 || rowIndex === -1) {
+    return null;
+  }
 
   let nextCol = colIndex + colDelta;
   let nextRow = rowIndex + rowDelta;
@@ -27,7 +29,9 @@ export function computeNextCell(
     return null;
   }
 
-  if (nextRow < 0 || nextRow >= rowIds.length) return null;
+  if (nextRow < 0 || nextRow >= rowIds.length) {
+    return null;
+  }
 
-  return { rowId: rowIds[nextRow], propertyId: colIds[nextCol] };
+  return { propertyId: colIds[nextCol], rowId: rowIds[nextRow] };
 }

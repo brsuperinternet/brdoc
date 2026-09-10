@@ -1,5 +1,5 @@
-import api from "@/lib/api-client";
 import { ICurrentUser, IUser } from "@/features/user/types/user.types";
+import api from "@/lib/api-client";
 
 export async function getMyInfo(): Promise<ICurrentUser> {
   const req = await api.post<ICurrentUser>("/users/me");

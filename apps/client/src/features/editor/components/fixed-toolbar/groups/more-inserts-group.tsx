@@ -1,5 +1,3 @@
-import { FC } from "react";
-import type { Editor } from "@tiptap/react";
 import { ActionIcon, Badge, Menu, Tooltip } from "@mantine/core";
 import {
   IconAppWindow,
@@ -16,9 +14,9 @@ import {
   IconTable,
   IconTag,
 } from "@tabler/icons-react";
-import IconExcalidraw from "@/components/icons/icon-excalidraw";
-import IconMermaid from "@/components/icons/icon-mermaid";
-import IconDrawio from "@/components/icons/icon-drawio";
+import type { Editor } from "@tiptap/react";
+import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AirtableIcon,
   FigmaIcon,
@@ -31,11 +29,13 @@ import {
   VimeoIcon,
   YoutubeIcon,
 } from "@/components/icons";
-import { useTranslation } from "react-i18next";
-import { insertBaseEmbedBlock } from "@/features/editor/components/base-embed/insert-base-embed";
-import { useHasFeature } from "@/ee/hooks/use-feature";
+import IconDrawio from "@/components/icons/icon-drawio";
+import IconExcalidraw from "@/components/icons/icon-excalidraw";
+import IconMermaid from "@/components/icons/icon-mermaid";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import { insertBaseEmbedBlock } from "@/features/editor/components/base-embed/insert-base-embed";
 
 interface Props {
   editor: Editor;
@@ -52,22 +52,22 @@ export const MoreInsertsGroup: FC<Props> = ({ editor, templateMode }) => {
 
   const insertDate = () => {
     const currentDate = new Date().toLocaleDateString(i18n.language, {
-      year: "numeric",
-      month: "long",
       day: "numeric",
+      month: "long",
+      year: "numeric",
     });
     editor.chain().focus().insertContent(currentDate).run();
   };
 
   return (
-    <Menu shadow="md" position="bottom-start" withArrow={false} width={240}>
+    <Menu position="bottom-start" shadow="md" width={240} withArrow={false}>
       <Menu.Target>
         <Tooltip label={t("More inserts")} withArrow>
           <ActionIcon
-            variant="subtle"
+            aria-label={t("More inserts")}
             color="dark"
             size="md"
-            aria-label={t("More inserts")}
+            variant="subtle"
           >
             <IconChevronDown size={16} />
           </ActionIcon>
@@ -90,7 +90,7 @@ export const MoreInsertsGroup: FC<Props> = ({ editor, templateMode }) => {
         <Menu.Item
           leftSection={<IconTag size={16} />}
           onClick={() =>
-            editor.chain().focus().setStatus({ text: "", color: "gray" }).run()
+            editor.chain().focus().setStatus({ color: "gray", text: "" }).run()
           }
         >
           {t("Status")}
@@ -112,44 +112,48 @@ export const MoreInsertsGroup: FC<Props> = ({ editor, templateMode }) => {
           </Menu.Item>
         )}
         {!templateMode && (
-          <Tooltip label={upgradeLabel} disabled={hasBases} position="right">
+          <Tooltip disabled={hasBases} label={upgradeLabel} position="right">
             <Menu.Item
-              leftSection={<IconTable size={16} />}
               aria-disabled={!hasBases}
               closeMenuOnClick={hasBases}
-              style={{ opacity: hasBases ? undefined : 0.7 }}
+              leftSection={<IconTable size={16} />}
+              onClick={() => {
+                if (hasBases) {
+                  insertBaseEmbedBlock(editor);
+                }
+              }}
               rightSection={
                 !hasBases && (
-                  <Badge size="xs" variant="light" color="gray">
+                  <Badge color="gray" size="xs" variant="light">
                     {t("Upgrade")}
                   </Badge>
                 )
               }
-              onClick={() => {
-                if (hasBases) insertBaseEmbedBlock(editor);
-              }}
+              style={{ opacity: hasBases ? undefined : 0.7 }}
             >
               {t("Base (Inline)")}
             </Menu.Item>
           </Tooltip>
         )}
         {!templateMode && (
-          <Tooltip label={upgradeLabel} disabled={hasBases} position="right">
+          <Tooltip disabled={hasBases} label={upgradeLabel} position="right">
             <Menu.Item
-              leftSection={<IconLayoutKanban size={16} />}
               aria-disabled={!hasBases}
               closeMenuOnClick={hasBases}
-              style={{ opacity: hasBases ? undefined : 0.7 }}
+              leftSection={<IconLayoutKanban size={16} />}
+              onClick={() => {
+                if (hasBases) {
+                  insertBaseEmbedBlock(editor, { template: "kanban" });
+                }
+              }}
               rightSection={
                 !hasBases && (
-                  <Badge size="xs" variant="light" color="gray">
+                  <Badge color="gray" size="xs" variant="light">
                     {t("Upgrade")}
                   </Badge>
                 )
               }
-              onClick={() => {
-                if (hasBases) insertBaseEmbedBlock(editor, { template: "kanban" });
-              }}
+              style={{ opacity: hasBases ? undefined : 0.7 }}
             >
               {t("Kanban")}
             </Menu.Item>
@@ -208,7 +212,10 @@ export const MoreInsertsGroup: FC<Props> = ({ editor, templateMode }) => {
         >
           Vimeo
         </Menu.Item>
-        <Menu.Item leftSection={<LoomIcon size={16} />} onClick={() => setEmbed("loom")}>
+        <Menu.Item
+          leftSection={<LoomIcon size={16} />}
+          onClick={() => setEmbed("loom")}
+        >
           Loom
         </Menu.Item>
         <Menu.Item
@@ -229,7 +236,10 @@ export const MoreInsertsGroup: FC<Props> = ({ editor, templateMode }) => {
         >
           Typeform
         </Menu.Item>
-        <Menu.Item leftSection={<MiroIcon size={16} />} onClick={() => setEmbed("miro")}>
+        <Menu.Item
+          leftSection={<MiroIcon size={16} />}
+          onClick={() => setEmbed("miro")}
+        >
           Miro
         </Menu.Item>
         <Menu.Item

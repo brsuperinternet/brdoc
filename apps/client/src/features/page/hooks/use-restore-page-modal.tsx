@@ -1,5 +1,5 @@
-import { modals } from "@mantine/modals";
 import { Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { useTranslation } from "react-i18next";
 
 type UseRestoreModalProps = {
@@ -11,7 +11,7 @@ export function useRestorePageModal() {
   const { t } = useTranslation();
   const openRestoreModal = ({ title, onConfirm }: UseRestoreModalProps) => {
     modals.openConfirmModal({
-      title: t("Restore page"),
+      centered: true,
       children: (
         <Text size="sm">
           {t("Restore '{{title}}' and its sub-pages?", {
@@ -19,10 +19,10 @@ export function useRestorePageModal() {
           })}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Restore"), cancel: t("Cancel") },
       confirmProps: { color: "blue" },
+      labels: { cancel: t("Cancel"), confirm: t("Restore") },
       onConfirm,
+      title: t("Restore page"),
     });
   };
 

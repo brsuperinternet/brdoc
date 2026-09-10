@@ -1,16 +1,16 @@
-import { useState } from "react";
-import clsx from "clsx";
 import { Divider, Popover, Stack, Text } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
+import clsx from "clsx";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LabelChip } from "@/features/label/components/label-chip.tsx";
 import { LabelPicker } from "@/features/label/components/label-picker.tsx";
+import classes from "@/features/label/label.module.css";
 import {
   useAddLabelsMutation,
   usePageLabelsQuery,
   useRemoveLabelMutation,
 } from "@/features/label/queries/label-query.ts";
-import classes from "@/features/label/label.module.css";
 
 type LabelsSectionProps = {
   pageId: string;
@@ -32,51 +32,49 @@ export function LabelsSection({ pageId, canEdit }: LabelsSectionProps) {
   }
 
   const handleAdd = (name: string) => {
-    addMutation.mutate({ pageId, names: [name] });
+    addMutation.mutate({ names: [name], pageId });
   };
 
   const handleRemove = (labelId: string) => {
-    removeMutation.mutate({ pageId, labelId });
+    removeMutation.mutate({ labelId, pageId });
   };
 
   return (
     <>
       <Divider />
       <Stack gap="xs">
-        <Text size="xs" fw={500} c="dimmed">
+        <Text c="dimmed" fw={500} size="xs">
           {t("Labels")}
         </Text>
         <div className={classes.labelsWrap}>
           {labels.map((label) => (
             <LabelChip
+              asLink
               key={label.id}
               label={label}
-              asLink
               onRemove={canEdit ? () => handleRemove(label.id) : undefined}
             />
           ))}
           {canEdit && (
             <Popover
-              opened={open}
+              offset={6}
               onChange={setOpen}
+              opened={open}
               position="bottom-end"
               shadow="lg"
               withinPortal
-              offset={6}
             >
               <Popover.Target>
                 <button
-                  type="button"
                   className={clsx(classes.addBtn, open && classes.addBtnOpen)}
                   onClick={() => setOpen((v) => !v)}
+                  type="button"
                 >
                   <IconPlus size={12} stroke={2} />
-                  <span>
-                    {labels.length === 0 ? t("Add label") : t("Add")}
-                  </span>
+                  <span>{labels.length === 0 ? t("Add label") : t("Add")}</span>
                 </button>
               </Popover.Target>
-              <Popover.Dropdown p={0} className={classes.popover}>
+              <Popover.Dropdown className={classes.popover} p={0}>
                 <LabelPicker
                   applied={labels}
                   enabled={open}

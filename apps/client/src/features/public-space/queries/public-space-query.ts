@@ -1,11 +1,11 @@
+import { notifications } from "@mantine/notifications";
 import {
   keepPreviousData,
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import { useTranslation } from "react-i18next";
 import {
   getPublicSpaceDirectory,
@@ -26,13 +26,13 @@ import {
 import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export function usePublicSpaceTreeQuery(
-  spaceSlug: string,
+  spaceSlug: string
 ): UseQueryResult<IPublicSpaceTree, Error> {
   return useQuery({
-    queryKey: ["public-space-tree", spaceSlug],
-    queryFn: () => getPublicSpaceTree(spaceSlug),
     enabled: !!spaceSlug,
     placeholderData: keepPreviousData,
+    queryFn: () => getPublicSpaceTree(spaceSlug),
+    queryKey: ["public-space-tree", spaceSlug],
     staleTime: 60 * 60 * 1000,
   });
 }
@@ -43,9 +43,9 @@ export function usePublicSpacePageQuery(params: {
   contentless?: boolean;
 }): UseQueryResult<IPublicSpacePage, Error> {
   return useQuery({
-    queryKey: ["public-space-page", params],
-    queryFn: () => getPublicSpacePage(params),
     enabled: !!params.spaceSlug,
+    queryFn: () => getPublicSpacePage(params),
+    queryKey: ["public-space-page", params],
   });
 }
 
@@ -54,30 +54,30 @@ export function usePublicSpaceDirectoryQuery(): UseQueryResult<
   Error
 > {
   return useQuery({
-    queryKey: ["public-space-directory"],
     queryFn: () => getPublicSpaceDirectory(),
+    queryKey: ["public-space-directory"],
   });
 }
 
 export function usePublicSpaceForSpaceQuery(
-  spaceId: string,
+  spaceId: string
 ): UseQueryResult<IPublicSpace | null, Error> {
   return useQuery({
-    queryKey: ["public-space-for-space", spaceId],
-    queryFn: () => getPublicSpaceForSpace(spaceId),
     enabled: !!spaceId,
-    staleTime: 60 * 1000,
+    queryFn: () => getPublicSpaceForSpace(spaceId),
+    queryKey: ["public-space-for-space", spaceId],
     retry: false,
+    staleTime: 60 * 1000,
   });
 }
 
 export function usePublishedSpacesQuery(
-  params?: QueryParams,
+  params?: QueryParams
 ): UseQueryResult<IPagination<IPublishedSpaceItem>, Error> {
   return useQuery({
-    queryKey: ["published-spaces", params],
-    queryFn: () => getPublishedSpaces(params),
     placeholderData: keepPreviousData,
+    queryFn: () => getPublishedSpaces(params),
+    queryKey: ["published-spaces", params],
   });
 }
 
@@ -87,6 +87,13 @@ export function usePublishSpaceMutation() {
 
   return useMutation<IPublicSpace, Error, IPublishSpace>({
     mutationFn: (data) => publishSpace(data),
+    onError: (error) => {
+      notifications.show({
+        color: "red",
+        message:
+          error?.["response"]?.data?.message || t("Failed to update space"),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         predicate: (item) =>
@@ -96,13 +103,6 @@ export function usePublishSpaceMutation() {
             "space",
             "spaces",
           ].includes(item.queryKey[0] as string),
-      });
-    },
-    onError: (error) => {
-      notifications.show({
-        message:
-          error?.["response"]?.data?.message || t("Failed to update space"),
-        color: "red",
       });
     },
   });

@@ -1,6 +1,3 @@
-import api from "@/lib/api-client";
-import { IPage } from "@/features/page/types/page.types";
-
 import {
   ICreateShare,
   IShare,
@@ -11,10 +8,11 @@ import {
   IShareInfoInput,
   IUpdateShare,
 } from "@/features/share/types/share.types.ts";
+import api from "@/lib/api-client";
 import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export async function getShares(
-  params?: QueryParams,
+  params?: QueryParams
 ): Promise<IPagination<ISharedItem>> {
   const req = await api.post("/shares", params);
   return req.data;
@@ -41,7 +39,7 @@ export async function getShareForPage(pageId: string): Promise<IShareForPage> {
 }
 
 export async function getSharePageInfo(
-  shareInput: Partial<IShareInfoInput>,
+  shareInput: Partial<IShareInfoInput>
 ): Promise<ISharedPage> {
   const req = await api.post<ISharedPage>("/shares/page-info", shareInput);
   return req.data;
@@ -52,7 +50,7 @@ export async function deleteShare(shareId: string): Promise<void> {
 }
 
 export async function getSharedPageTree(
-  shareId: string,
+  shareId: string
 ): Promise<ISharedPageTree> {
   const req = await api.post<ISharedPageTree>("/shares/tree", { shareId });
   return req.data;

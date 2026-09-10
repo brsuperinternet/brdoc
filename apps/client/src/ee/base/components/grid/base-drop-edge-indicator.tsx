@@ -6,5 +6,5 @@ type Props = {
 };
 
 export function BaseDropEdgeIndicator({ edge }: Props) {
-  return <div className={classes.dropEdgeLine} data-edge={edge} aria-hidden />;
+  return <div aria-hidden className={classes.dropEdgeLine} data-edge={edge} />;
 }

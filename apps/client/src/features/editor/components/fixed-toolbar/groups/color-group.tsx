@@ -1,5 +1,5 @@
-import { FC, useEffect, useState } from "react";
 import type { Editor } from "@tiptap/react";
+import { FC, useEffect, useState } from "react";
 import { ColorSelector } from "@/features/editor/components/bubble-menu/color-selector";
 
 interface Props {
@@ -10,9 +10,13 @@ export const ColorGroup: FC<Props> = ({ editor }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);

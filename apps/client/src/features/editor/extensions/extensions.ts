@@ -1,125 +1,125 @@
-import { markInputRule } from "@tiptap/core";
-import { StarterKit } from "@tiptap/starter-kit";
-import { TiptapDocument } from "@/features/editor/extensions/document";
-import { Code } from "@tiptap/extension-code";
-import { TextAlign } from "@tiptap/extension-text-align";
-import { TaskList, TaskItem } from "@tiptap/extension-list";
-import { CharacterCount, UndoRedo } from "@tiptap/extensions";
-import { Placeholder } from "@/features/editor/extensions/placeholder";
-import { Superscript } from "@tiptap/extension-superscript";
-import SubScript from "@tiptap/extension-subscript";
-import { Typography } from "@tiptap/extension-typography";
-import { TextStyle } from "@tiptap/extension-text-style";
-import { Color } from "@tiptap/extension-color";
-import { Youtube } from "@tiptap/extension-youtube";
-import SlashCommand, {
-  SlashCommandExtension as Command,
-} from "@/features/editor/extensions/slash-command";
-import renderItems from "@/features/editor/components/slash-menu/render-items";
-import getSuggestionItems from "@/features/editor/components/slash-menu/menu-items";
-import { Collaboration, isChangeOrigin } from "@tiptap/extension-collaboration";
-import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
-import { HocuspocusProvider } from "@hocuspocus/provider";
 import {
+  Attachment,
+  BaseEmbed as BaseEmbedNode,
+  Callout,
+  Column,
+  Columns,
   Comment,
+  CustomCodeBlock,
+  CustomTable,
   Details,
   DetailsContent,
   DetailsSummary,
-  MathBlock,
-  MathInline,
-  TableCell,
-  TableRow,
-  TableHeader,
-  CustomTable,
-  TrailingNode,
-  TiptapImage,
-  Callout,
-  TiptapVideo,
-  TiptapAudio,
-  LinkExtension,
-  Selection,
-  Attachment,
-  CustomCodeBlock,
   Drawio,
-  Excalidraw,
   Embed,
-  TiptapPdf,
-  PageBreak,
-  SearchAndReplace,
-  Mention,
-  TableDndExtension,
-  TableHandleCommandsExtension,
-  TableHeaderPin,
-  TableReadonlySort,
-  Subpages,
+  Excalidraw,
+  Footnote,
+  FootnoteReference,
+  Footnotes,
   Heading,
   Highlight,
   Indent,
-  UniqueID,
+  LinkExtension,
+  MathBlock,
+  MathInline,
+  Mention,
+  PageBreak,
+  SearchAndReplace,
+  Selection,
   SharedStorage,
-  Columns,
-  Column,
   Status,
-  TransclusionSource,
-  TransclusionReference,
+  Subpages,
+  TableCell,
+  TableDndExtension,
+  TableHandleCommandsExtension,
+  TableHeader,
+  TableHeaderPin,
+  TableReadonlySort,
+  TableRow,
   TableView,
-  BaseEmbed as BaseEmbedNode,
-  Footnotes,
-  Footnote,
-  FootnoteReference,
+  TiptapAudio,
+  TiptapImage,
+  TiptapPdf,
+  TiptapVideo,
+  TrailingNode,
+  TransclusionReference,
+  TransclusionSource,
+  UniqueID,
 } from "@docmost/editor-ext";
+import { HocuspocusProvider } from "@hocuspocus/provider";
+import { markInputRule } from "@tiptap/core";
+import { Code } from "@tiptap/extension-code";
+import { Collaboration, isChangeOrigin } from "@tiptap/extension-collaboration";
+import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+import { Color } from "@tiptap/extension-color";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
+import SubScript from "@tiptap/extension-subscript";
+import { Superscript } from "@tiptap/extension-superscript";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { Typography } from "@tiptap/extension-typography";
+import { Youtube } from "@tiptap/extension-youtube";
+import { CharacterCount, UndoRedo } from "@tiptap/extensions";
+import { ReactMarkViewRenderer, ReactNodeViewRenderer } from "@tiptap/react";
+import { StarterKit } from "@tiptap/starter-kit";
+import { countWords } from "alfaaz";
+import clojure from "highlight.js/lib/languages/clojure";
+import dockerfile from "highlight.js/lib/languages/dockerfile";
+import elixir from "highlight.js/lib/languages/elixir";
+import erlang from "highlight.js/lib/languages/erlang";
+import fortran from "highlight.js/lib/languages/fortran";
+import haskell from "highlight.js/lib/languages/haskell";
+import plaintext from "highlight.js/lib/languages/plaintext";
+import powershell from "highlight.js/lib/languages/powershell";
+import scala from "highlight.js/lib/languages/scala";
+import abap from "highlightjs-sap-abap";
+import { common, createLowlight } from "lowlight";
+import AttachmentView from "@/features/editor/components/attachment/attachment-view.tsx";
+import AudioView from "@/features/editor/components/audio/audio-view.tsx";
+import { BaseEmbedView } from "@/features/editor/components/base-embed/base-embed-view.tsx";
+import CalloutView from "@/features/editor/components/callout/callout-view.tsx";
+import CodeBlockView from "@/features/editor/components/code-block/code-block-view.tsx";
+import {
+  buildResizeClasses,
+  createResizeHandle,
+} from "@/features/editor/components/common/node-resize-handles.ts";
+import EmbedView from "@/features/editor/components/embed/embed-view.tsx";
+import ExcalidrawView from "@/features/editor/components/excalidraw/excalidraw-view-lazy.tsx";
+import {
+  createImageHandle,
+  imageResizeClasses,
+} from "@/features/editor/components/image/image-resize-handles.ts";
+import ImageView from "@/features/editor/components/image/image-view.tsx";
+import LinkView from "@/features/editor/components/link/link-view.tsx";
+import MathBlockView from "@/features/editor/components/math/math-block.tsx";
+import MathInlineView from "@/features/editor/components/math/math-inline.tsx";
+import mentionRenderItems from "@/features/editor/components/mention/mention-suggestion.ts";
+import MentionView from "@/features/editor/components/mention/mention-view.tsx";
+import PdfView from "@/features/editor/components/pdf/pdf-view.tsx";
+import getSuggestionItems from "@/features/editor/components/slash-menu/menu-items";
+import renderItems from "@/features/editor/components/slash-menu/render-items";
+import StatusView from "@/features/editor/components/status/status-view.tsx";
+import SubpagesView from "@/features/editor/components/subpages/subpages-view.tsx";
+import TransclusionReferenceView from "@/features/editor/components/transclusion/transclusion-reference-view.tsx";
+import TransclusionView from "@/features/editor/components/transclusion/transclusion-view.tsx";
+import VideoView from "@/features/editor/components/video/video-view.tsx";
+import AutoJoiner from "@/features/editor/extensions/autojoiner.ts";
+import { CleanStyles } from "@/features/editor/extensions/clean-styles.ts";
+import { TiptapDocument } from "@/features/editor/extensions/document";
+import GlobalDragHandle from "@/features/editor/extensions/drag-handle.ts";
+import { MarkdownClipboard } from "@/features/editor/extensions/markdown-clipboard.ts";
+import { Placeholder } from "@/features/editor/extensions/placeholder";
+import SlashCommand, {
+  SlashCommandExtension as Command,
+} from "@/features/editor/extensions/slash-command";
 import {
   randomElement,
   userColors,
 } from "@/features/editor/extensions/utils.ts";
 import { IUser } from "@/features/user/types/user.types.ts";
-import {
-  createImageHandle,
-  imageResizeClasses,
-} from "@/features/editor/components/image/image-resize-handles.ts";
-import {
-  createResizeHandle,
-  buildResizeClasses,
-} from "@/features/editor/components/common/node-resize-handles.ts";
-import MathInlineView from "@/features/editor/components/math/math-inline.tsx";
-import MathBlockView from "@/features/editor/components/math/math-block.tsx";
-import ImageView from "@/features/editor/components/image/image-view.tsx";
-import CalloutView from "@/features/editor/components/callout/callout-view.tsx";
-import StatusView from "@/features/editor/components/status/status-view.tsx";
-import VideoView from "@/features/editor/components/video/video-view.tsx";
-import AudioView from "@/features/editor/components/audio/audio-view.tsx";
-import AttachmentView from "@/features/editor/components/attachment/attachment-view.tsx";
-import CodeBlockView from "@/features/editor/components/code-block/code-block-view.tsx";
-import DrawioView from "../components/drawio/drawio-view";
-import ExcalidrawView from "@/features/editor/components/excalidraw/excalidraw-view-lazy.tsx";
-import EmbedView from "@/features/editor/components/embed/embed-view.tsx";
-import PdfView from "@/features/editor/components/pdf/pdf-view.tsx";
-import SubpagesView from "@/features/editor/components/subpages/subpages-view.tsx";
-import TransclusionView from "@/features/editor/components/transclusion/transclusion-view.tsx";
-import TransclusionReferenceView from "@/features/editor/components/transclusion/transclusion-reference-view.tsx";
-import { BaseEmbedView } from "@/features/editor/components/base-embed/base-embed-view.tsx";
-import { common, createLowlight } from "lowlight";
-import plaintext from "highlight.js/lib/languages/plaintext";
-import powershell from "highlight.js/lib/languages/powershell";
-import abap from "highlightjs-sap-abap";
-import elixir from "highlight.js/lib/languages/elixir";
-import erlang from "highlight.js/lib/languages/erlang";
-import dockerfile from "highlight.js/lib/languages/dockerfile";
-import clojure from "highlight.js/lib/languages/clojure";
-import fortran from "highlight.js/lib/languages/fortran";
-import haskell from "highlight.js/lib/languages/haskell";
-import scala from "highlight.js/lib/languages/scala";
-import mentionRenderItems from "@/features/editor/components/mention/mention-suggestion.ts";
-import { ReactNodeViewRenderer, ReactMarkViewRenderer } from "@tiptap/react";
-import MentionView from "@/features/editor/components/mention/mention-view.tsx";
-import LinkView from "@/features/editor/components/link/link-view.tsx";
 import i18n from "@/i18n.ts";
-import { MarkdownClipboard } from "@/features/editor/extensions/markdown-clipboard.ts";
+import DrawioView from "../components/drawio/drawio-view";
 import EmojiCommand from "./emoji-command";
-import { countWords } from "alfaaz";
-import AutoJoiner from "@/features/editor/extensions/autojoiner.ts";
-import GlobalDragHandle from "@/features/editor/extensions/drag-handle.ts";
-import { CleanStyles } from "@/features/editor/extensions/clean-styles.ts";
 
 const lowlight = createLowlight(common);
 lowlight.register("mermaid", plaintext);
@@ -133,20 +133,20 @@ lowlight.register("fortran", fortran);
 lowlight.register("haskell", haskell);
 lowlight.register("scala", scala);
 
-// @ts-ignore
+// @ts-expect-error
 export const mainExtensions = [
   StarterKit.configure({
+    code: false,
+    codeBlock: false,
     document: false,
+    dropcursor: {
+      color: "#70CFF8",
+      width: 3,
+    },
     heading: false,
-    undoRedo: false,
     link: false,
     trailingNode: false,
-    dropcursor: {
-      width: 3,
-      color: "#70CFF8",
-    },
-    codeBlock: false,
-    code: false,
+    undoRedo: false,
   }),
   TiptapDocument,
   // Override TipTap's Code extension to fix the inline code input rule.
@@ -170,8 +170,12 @@ export const mainExtensions = [
       return {
         Enter: ({ editor }) => {
           const { from, to } = editor.state.selection;
-          if (from !== to) return false;
-          if (!editor.isActive("code")) return false;
+          if (from !== to) {
+            return false;
+          }
+          if (!editor.isActive("code")) {
+            return false;
+          }
 
           const $from = editor.state.doc.resolve(from);
           const codeType = editor.state.schema.marks.code;
@@ -189,10 +193,11 @@ export const mainExtensions = [
   SharedStorage,
   Heading,
   UniqueID.configure({
-    types: ["heading", "paragraph", "transclusionSource"],
     filterTransaction: (transaction) => !isChangeOrigin(transaction),
+    types: ["heading", "paragraph", "transclusionSource"],
   }),
   Placeholder.configure({
+    includeChildren: true,
     placeholder: ({ editor, node, pos }) => {
       if (node.type.name === "heading") {
         return i18n.t("Heading {{level}}", { level: node.attrs.level });
@@ -218,7 +223,6 @@ export const mainExtensions = [
         return i18n.t('Write anything. Enter "/" for commands');
       }
     },
-    includeChildren: true,
     showOnlyWhenEditable: true,
   }),
   TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -242,8 +246,8 @@ export const mainExtensions = [
   Typography,
   TrailingNode,
   GlobalDragHandle.configure({
-    customNodes: ["transclusionSource", "transclusionReference"],
     atomNodes: ["base"],
+    customNodes: ["transclusionSource", "transclusionReference"],
   }),
   TextStyle,
   Color,
@@ -255,16 +259,14 @@ export const mainExtensions = [
     },
   }),
   Mention.configure({
-    suggestion: {
-      allowSpaces: true,
-      items: () => {
-        return [];
-      },
-      // @ts-ignore
-      render: mentionRenderItems,
-    },
     HTMLAttributes: {
       class: "mention",
+    },
+    suggestion: {
+      allowSpaces: true,
+      items: () => [],
+      // @ts-expect-error
+      render: mentionRenderItems,
     },
   }).extend({
     addNodeView() {
@@ -275,10 +277,10 @@ export const mainExtensions = [
     },
   }),
   CustomTable.configure({
-    resizable: true,
-    lastColumnResizable: true,
     allowTableNodeSelection: true,
     cellMinWidth: 49,
+    lastColumnResizable: true,
+    resizable: true,
     View: TableView,
   }),
   TableRow,
@@ -303,31 +305,31 @@ export const mainExtensions = [
     nocookie: true,
   }),
   TiptapImage.configure({
-    view: ImageView,
     allowBase64: false,
     resize: {
-      enabled: true,
-      directions: ["left", "right"],
-      minWidth: 24,
-      minHeight: 16,
       alwaysPreserveAspectRatio: true,
-      //@ts-ignore
-      createCustomHandle: createImageHandle,
       className: imageResizeClasses,
+      //@ts-expect-error
+      createCustomHandle: createImageHandle,
+      directions: ["left", "right"],
+      enabled: true,
+      minHeight: 16,
+      minWidth: 24,
     },
+    view: ImageView,
   }),
   TiptapVideo.configure({
-    view: VideoView,
     resize: {
-      enabled: true,
-      directions: ["left", "right"],
-      minWidth: 24,
-      minHeight: 16,
       alwaysPreserveAspectRatio: true,
-      //@ts-ignore
-      createCustomHandle: createResizeHandle,
       className: buildResizeClasses("node-video"),
+      //@ts-expect-error
+      createCustomHandle: createResizeHandle,
+      directions: ["left", "right"],
+      enabled: true,
+      minHeight: 16,
+      minWidth: 24,
     },
+    view: VideoView,
   }),
   TiptapAudio.configure({
     view: AudioView,
@@ -336,44 +338,44 @@ export const mainExtensions = [
     view: CalloutView,
   }),
   CustomCodeBlock.configure({
-    view: CodeBlockView,
-    //@ts-ignore
-    lowlight,
     enableTabIndentation: true,
-    tabSize: 2,
     HTMLAttributes: {
       spellcheck: false,
     },
+    //@ts-expect-error
+    lowlight,
+    tabSize: 2,
+    view: CodeBlockView,
   }),
   Selection,
   Attachment.configure({
     view: AttachmentView,
   }),
   Drawio.configure({
-    view: DrawioView,
     resize: {
-      enabled: true,
-      directions: ["left", "right"],
-      minWidth: 24,
-      minHeight: 16,
       alwaysPreserveAspectRatio: true,
-      //@ts-ignore
-      createCustomHandle: createResizeHandle,
       className: buildResizeClasses("node-drawio"),
+      //@ts-expect-error
+      createCustomHandle: createResizeHandle,
+      directions: ["left", "right"],
+      enabled: true,
+      minHeight: 16,
+      minWidth: 24,
     },
+    view: DrawioView,
   }),
   Excalidraw.configure({
-    view: ExcalidrawView,
     resize: {
-      enabled: true,
-      directions: ["left", "right"],
-      minWidth: 24,
-      minHeight: 16,
       alwaysPreserveAspectRatio: true,
-      //@ts-ignore
-      createCustomHandle: createResizeHandle,
       className: buildResizeClasses("node-excalidraw"),
+      //@ts-expect-error
+      createCustomHandle: createResizeHandle,
+      directions: ["left", "right"],
+      enabled: true,
+      minHeight: 16,
+      minWidth: 24,
     },
+    view: ExcalidrawView,
   }),
   Embed.configure({
     view: EmbedView,
@@ -409,15 +411,15 @@ export const mainExtensions = [
   SearchAndReplace.extend({
     addKeyboardShortcuts() {
       return {
-        "Mod-f": () => {
-          const event = new CustomEvent("openFindDialogFromEditor", {});
-          document.dispatchEvent(event);
-          return true;
-        },
         Escape: () => {
           const event = new CustomEvent("closeFindDialogFromEditor", {});
           document.dispatchEvent(event);
           return false;
+        },
+        "Mod-f": () => {
+          const event = new CustomEvent("openFindDialogFromEditor", {});
+          document.dispatchEvent(event);
+          return true;
         },
       };
     },
@@ -443,15 +445,15 @@ const TEMPLATE_EXCLUDED_SLASH_ITEMS = new Set([
   "Audio",
   "Synced block",
   "Base (Inline)",
-  "Kanban"
+  "Kanban",
 ]);
 
 const TemplateSlashCommand = Command.configure({
   suggestion: {
     items: ({ query }: { query: string }) =>
       getSuggestionItems({
-        query,
         excludeItems: TEMPLATE_EXCLUDED_SLASH_ITEMS,
+        query,
       }),
     render: renderItems,
   },
@@ -471,8 +473,8 @@ export const collabExtensions: CollabExtensions = (provider, user) => [
   CollaborationCaret.configure({
     provider,
     user: {
-      name: user.name,
       color: randomElement(userColors),
+      name: user.name,
     },
   }),
 ];

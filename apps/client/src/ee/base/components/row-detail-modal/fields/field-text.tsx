@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
 import { IconExternalLink, IconMail } from "@tabler/icons-react";
-import { FieldProps, FieldShell } from "./detail-field";
+import { useEffect, useRef, useState } from "react";
 import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { FieldProps, FieldShell } from "./detail-field";
 
 const toText = (value: unknown) => (typeof value === "string" ? value : "");
 
@@ -21,7 +21,9 @@ export function FieldText({
 
   // Track remote/navigation updates while not typing.
   useEffect(() => {
-    if (!focused) setDraft(text);
+    if (!focused) {
+      setDraft(text);
+    }
   }, [text, focused]);
 
   const commit = () => {
@@ -32,7 +34,9 @@ export function FieldText({
       setDraft(text);
       return;
     }
-    if (draft !== text) onChange(draft);
+    if (draft !== text) {
+      onChange(draft);
+    }
   };
 
   if (readOnly) {
@@ -57,16 +61,15 @@ export function FieldText({
   return (
     <FieldShell cursor="text">
       <input
-        type="text"
+        aria-label={property.name}
         className={classes.fieldInput}
-        value={draft}
         maxLength={1000}
+        onBlur={commit}
+        onChange={(e) => setDraft(e.currentTarget.value)}
         onFocus={() => {
           setFocused(true);
           onEditingChange?.(true);
         }}
-        onChange={(e) => setDraft(e.currentTarget.value)}
-        onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -76,16 +79,19 @@ export function FieldText({
             e.currentTarget.blur();
           }
         }}
-        aria-label={property.name}
+        type="text"
+        value={draft}
       />
       {linkHref && (
         <a
-          href={linkHref}
-          target={property.type === "url" ? "_blank" : undefined}
-          rel="noopener noreferrer"
+          aria-label={
+            property.type === "email" ? `Email ${text}` : `Open ${text}`
+          }
           className={classes.fieldTrailing}
+          href={linkHref}
           onMouseDown={(e) => e.stopPropagation()}
-          aria-label={property.type === "email" ? `Email ${text}` : `Open ${text}`}
+          rel="noopener noreferrer"
+          target={property.type === "url" ? "_blank" : undefined}
         >
           {property.type === "email" ? (
             <IconMail size={14} />

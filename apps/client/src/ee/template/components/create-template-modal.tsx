@@ -1,17 +1,10 @@
+import { Button, Group, Modal, Select, Stack, TextInput } from "@mantine/core";
 import { useState } from "react";
-import {
-  Modal,
-  TextInput,
-  Select,
-  Button,
-  Stack,
-  Group,
-} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useCreateTemplateMutation } from "../queries/template-query";
 import { useGetSpacesQuery } from "@/features/space/queries/space-query";
 import useUserRole from "@/hooks/use-user-role";
+import { useCreateTemplateMutation } from "../queries/template-query";
 
 type CreateTemplateModalProps = {
   opened: boolean;
@@ -33,27 +26,27 @@ export default function CreateTemplateModal({
 
   const scopeOptions = [
     ...(isWorkspaceAdmin
-      ? [
-          { group: t("Workspace"), items: [{ value: "", label: t("Global") }] },
-        ]
+      ? [{ group: t("Workspace"), items: [{ label: t("Global"), value: "" }] }]
       : []),
     ...(spaces?.items?.length
       ? [
           {
             group: t("Spaces"),
-            items: spaces.items.map((s) => ({ value: s.id, label: s.name })),
+            items: spaces.items.map((s) => ({ label: s.name, value: s.id })),
           },
         ]
       : []),
   ];
 
   const handleCreate = async () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      return;
+    }
 
     try {
       const result = await createMutation.mutateAsync({
-        title: title.trim(),
         spaceId: spaceId || undefined,
+        title: title.trim(),
       });
 
       handleClose();
@@ -71,43 +64,47 @@ export default function CreateTemplateModal({
 
   return (
     <Modal
-      opened={opened}
-      onClose={handleClose}
-      title={t("New template")}
       centered
+      onClose={handleClose}
+      opened={opened}
+      title={t("New template")}
     >
       <Stack gap="md">
         <TextInput
-          label={t("Title")}
-          placeholder={t("Untitled")}
-          value={title}
-          onChange={(e) => setTitle(e.currentTarget.value)}
           data-autofocus
+          label={t("Title")}
+          onChange={(e) => setTitle(e.currentTarget.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && title.trim() && !createMutation.isPending) {
+            if (
+              e.key === "Enter" &&
+              title.trim() &&
+              !createMutation.isPending
+            ) {
               handleCreate();
             }
           }}
+          placeholder={t("Untitled")}
+          value={title}
         />
 
         <Select
-          label={t("Scope")}
-          description={t("Choose which space this template belongs to")}
           data={scopeOptions}
-          value={spaceId || ""}
+          description={t("Choose which space this template belongs to")}
+          label={t("Scope")}
           onChange={(val) => setSpaceId(val || null)}
-          searchable
           placeholder={t("Select scope")}
+          searchable
+          value={spaceId || ""}
         />
 
         <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={handleClose}>
+          <Button onClick={handleClose} variant="default">
             {t("Cancel")}
           </Button>
           <Button
-            onClick={handleCreate}
-            loading={createMutation.isPending}
             disabled={!title.trim()}
+            loading={createMutation.isPending}
+            onClick={handleCreate}
           >
             {t("Create")}
           </Button>

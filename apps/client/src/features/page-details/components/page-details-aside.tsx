@@ -6,20 +6,20 @@ import {
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import { IconChevronRight } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
+import { IconChevronRight } from "@tabler/icons-react";
 import { useAtomValue } from "jotai";
-import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { extractPageSlugId } from "@/lib";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
-import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
-import { useBacklinksCountQuery } from "@/features/page-details/queries/backlinks-query.ts";
-import { BacklinksModal } from "./backlinks-modal";
-import { formattedDate } from "@/lib/time.ts";
-import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
+import { useParams } from "react-router-dom";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import { LabelsSection } from "@/features/label/components/labels-section.tsx";
+import { usePageQuery } from "@/features/page/queries/page-query.ts";
+import { useBacklinksCountQuery } from "@/features/page-details/queries/backlinks-query.ts";
+import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
+import { extractPageSlugId } from "@/lib";
+import { formattedDate } from "@/lib/time.ts";
+import { BacklinksModal } from "./backlinks-modal";
 
 export function PageDetailsAside() {
   const { pageSlug } = useParams();
@@ -27,14 +27,17 @@ export function PageDetailsAside() {
     pageId: extractPageSlugId(pageSlug),
   });
   const pageEditor = useAtomValue(pageEditorAtom);
-  const { data: counts, isLoading: countsLoading } = useBacklinksCountQuery(page?.id);
+  const { data: counts, isLoading: countsLoading } = useBacklinksCountQuery(
+    page?.id
+  );
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
 
-  if (!page) return null;
+  if (!page) {
+    return null;
+  }
 
-  const wordCount: number =
-    pageEditor?.storage?.characterCount?.words?.() ?? 0;
+  const wordCount: number = pageEditor?.storage?.characterCount?.words?.() ?? 0;
   const characterCount: number =
     pageEditor?.storage?.characterCount?.characters?.() ?? 0;
 
@@ -49,31 +52,31 @@ export function PageDetailsAside() {
         <Divider />
 
         <StatsSection
-          wordCount={wordCount}
           characterCount={characterCount}
           createdAt={page.createdAt}
           updatedAt={page.updatedAt}
+          wordCount={wordCount}
         />
 
         <Divider />
 
         <BacklinksSection
           incomingCount={counts?.incoming ?? 0}
-          outgoingCount={counts?.outgoing ?? 0}
           isLoading={countsLoading}
           onClick={openModal}
+          outgoingCount={counts?.outgoing ?? 0}
         />
 
         <LabelsSection
-          pageId={page.id}
           canEdit={page.permissions?.canEdit ?? false}
+          pageId={page.id}
         />
       </Stack>
 
       <BacklinksModal
-        pageId={page.id}
-        opened={modalOpened}
         onClose={closeModal}
+        opened={modalOpened}
+        pageId={page.id}
       />
     </>
   );
@@ -104,7 +107,7 @@ function PersonRow({
 }) {
   return (
     <Group justify="space-between" wrap="nowrap">
-      <Text size="sm" c="dimmed">
+      <Text c="dimmed" size="sm">
         {label}
       </Text>
       {person ? (
@@ -112,15 +115,15 @@ function PersonRow({
           <CustomAvatar
             avatarUrl={person.avatarUrl}
             name={person.name}
-            size={20}
             radius="xl"
+            size={20}
           />
-          <Text size="sm" lineClamp={1}>
+          <Text lineClamp={1} size="sm">
             {person.name}
           </Text>
         </Group>
       ) : (
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           —
         </Text>
       )}
@@ -143,7 +146,7 @@ function StatsSection({
   const lastUpdated = useTimeAgo(updatedAt);
   return (
     <Stack gap="xs">
-      <Text size="xs" fw={500} c="dimmed">
+      <Text c="dimmed" fw={500} size="xs">
         {t("Stats")}
       </Text>
       <StatRow label={t("Word count")} value={String(wordCount)} />
@@ -160,7 +163,7 @@ function StatsSection({
 function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <Group justify="space-between" wrap="nowrap">
-      <Text size="sm" c="dimmed">
+      <Text c="dimmed" size="sm">
         {label}
       </Text>
       <Text size="sm">{value}</Text>
@@ -182,19 +185,19 @@ function BacklinksSection({
   const { t } = useTranslation();
   return (
     <Stack gap="xs">
-      <Text size="xs" fw={500} c="dimmed">
+      <Text c="dimmed" fw={500} size="xs">
         {t("Backlinks")}
       </Text>
       <BacklinksRow
-        label={t("Incoming links")}
         count={incomingCount}
         isLoading={isLoading}
+        label={t("Incoming links")}
         onClick={onClick}
       />
       <BacklinksRow
-        label={t("Outgoing links")}
         count={outgoingCount}
         isLoading={isLoading}
+        label={t("Outgoing links")}
         onClick={onClick}
       />
     </Stack>
@@ -216,12 +219,12 @@ function BacklinksRow({
     <UnstyledButton
       onClick={onClick}
       style={{
-        padding: "4px 4px",
         borderRadius: 4,
+        padding: "4px 4px",
       }}
     >
       <Group justify="space-between" wrap="nowrap">
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {label}
         </Text>
         <Group gap={6} wrap="nowrap">
@@ -230,7 +233,11 @@ function BacklinksRow({
           ) : (
             <Text size="sm">{count}</Text>
           )}
-          <IconChevronRight size={16} stroke={2} color="var(--mantine-color-dimmed)" />
+          <IconChevronRight
+            color="var(--mantine-color-dimmed)"
+            size={16}
+            stroke={2}
+          />
         </Group>
       </Group>
     </UnstyledButton>

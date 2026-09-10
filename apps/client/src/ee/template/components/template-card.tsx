@@ -1,12 +1,12 @@
-import { Button, Card, Text, ActionIcon, Menu, Group } from "@mantine/core";
+import { ActionIcon, Button, Card, Group, Menu, Text } from "@mantine/core";
 import {
   IconDots,
   IconEdit,
-  IconTrash,
   IconFileText,
+  IconTrash,
 } from "@tabler/icons-react";
-import { ITemplate } from "@/ee/template/types/template.types";
 import { useTranslation } from "react-i18next";
+import { ITemplate } from "@/ee/template/types/template.types";
 import classes from "./template-card.module.css";
 
 type TemplateCardProps = {
@@ -32,24 +32,26 @@ export default function TemplateCard({
 
   return (
     <Card
-      radius="md"
-      padding="lg"
-      className={classes.card}
-      style={{ cursor: "pointer" }}
-      role="button"
-      tabIndex={0}
       aria-label={t("Preview template: {{title}}", { title: template.title })}
+      className={classes.card}
       onClick={() => onPreview(template)}
       onKeyDown={(e) => {
-        if (e.target !== e.currentTarget) return;
+        if (e.target !== e.currentTarget) {
+          return;
+        }
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onPreview(template);
         }
       }}
+      padding="lg"
+      radius="md"
+      role="button"
+      style={{ cursor: "pointer" }}
+      tabIndex={0}
     >
       <div className={classes.cardBody}>
-        <Group justify="space-between" align="flex-start" wrap="nowrap" mb="md">
+        <Group align="flex-start" justify="space-between" mb="md" wrap="nowrap">
           {template.icon ? (
             <div className={classes.icon}>{template.icon}</div>
           ) : (
@@ -60,26 +62,26 @@ export default function TemplateCard({
 
           <Group gap={6} wrap="nowrap">
             <Button
-              size="compact-xs"
-              variant="filled"
               className={classes.menuTarget}
               onClick={(e) => {
                 e.stopPropagation();
                 onUse(template);
               }}
+              size="compact-xs"
+              variant="filled"
             >
               {t("Use")}
             </Button>
             {canManage && (
-              <Menu width={150} shadow="md" withArrow>
+              <Menu shadow="md" width={150} withArrow>
                 <Menu.Target>
                   <ActionIcon
-                    variant="subtle"
-                    size="sm"
-                    color="gray"
-                    className={classes.menuTarget}
-                    onClick={(e) => e.stopPropagation()}
                     aria-label={t("Template menu")}
+                    className={classes.menuTarget}
+                    color="gray"
+                    onClick={(e) => e.stopPropagation()}
+                    size="sm"
+                    variant="subtle"
                   >
                     <IconDots size={16} />
                   </ActionIcon>
@@ -114,9 +116,9 @@ export default function TemplateCard({
         <div className={classes.title}>{template.title}</div>
 
         <div className={classes.footer}>
-          <span className={classes.scopeDot} aria-hidden="true" />
-          <Text size="sm" fw={500} c="dimmed">
-            {template.spaceId ? (spaceName || t("Space")) : t("Global")}
+          <span aria-hidden="true" className={classes.scopeDot} />
+          <Text c="dimmed" fw={500} size="sm">
+            {template.spaceId ? spaceName || t("Space") : t("Global")}
           </Text>
         </div>
       </div>

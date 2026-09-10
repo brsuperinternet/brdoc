@@ -1,6 +1,8 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import React, { useMemo, useCallback } from "react";
-import clsx from "clsx";
+import {
+  getEmbedProviderById,
+  getEmbedUrlAndProvider,
+  sanitizeUrl,
+} from "@docmost/editor-ext";
 import {
   ActionIcon,
   Button,
@@ -11,18 +13,16 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconEdit } from "@tabler/icons-react";
-import { z } from "zod/v4";
 import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
+import { IconEdit } from "@tabler/icons-react";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import clsx from "clsx";
 import i18n from "i18next";
-import {
-  getEmbedProviderById,
-  getEmbedUrlAndProvider,
-  sanitizeUrl,
-} from "@docmost/editor-ext";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
 import { ResizableWrapper } from "../common/resizable-wrapper";
 import classes from "./embed-view.module.css";
 
@@ -51,9 +51,9 @@ export default function EmbedView(props: NodeViewProps) {
 
   const handleResize = useCallback(
     (newWidth: number, newHeight: number) => {
-      updateAttributes({ width: newWidth, height: newHeight });
+      updateAttributes({ height: newHeight, width: newWidth });
     },
-    [updateAttributes],
+    [updateAttributes]
   );
 
   async function onSubmit(data: { url: string }) {
@@ -71,75 +71,75 @@ export default function EmbedView(props: NodeViewProps) {
         updateAttributes({ src: sanitizeUrl(data.url) });
       } else {
         notifications.show({
+          color: "red",
           message: t("Invalid {{provider}} embed link", {
             provider: embedProvider.name,
           }),
           position: "top-right",
-          color: "red",
         });
       }
     }
   }
 
   return (
-    <NodeViewWrapper data-drag-handle className={classes.embedNodeView}>
+    <NodeViewWrapper className={classes.embedNodeView} data-drag-handle>
       {embedUrl ? (
         <div className={classes.embedContainer}>
           <ResizableWrapper
-            initialWidth={nodeWidth || 800}
-            initialHeight={nodeHeight || 600}
-            minWidth={200}
-            maxWidth={1200}
-            minHeight={200}
-            maxHeight={1200}
-            onResize={handleResize}
-            isEditable={editor.isEditable}
-            selected={selected}
             className={clsx(classes.embedWrapper, {
               "ProseMirror-selectednode": selected,
             })}
+            initialHeight={nodeHeight || 600}
+            initialWidth={nodeWidth || 800}
+            isEditable={editor.isEditable}
+            maxHeight={1200}
+            maxWidth={1200}
+            minHeight={200}
+            minWidth={200}
+            onResize={handleResize}
+            selected={selected}
           >
             <iframe
-              className={classes.embedIframe}
-              src={sanitizeUrl(embedUrl)}
               allow="encrypted-media; clipboard-read; clipboard-write; picture-in-picture;"
+              allowFullScreen
+              className={classes.embedIframe}
+              frameBorder="0"
               loading="lazy"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
-              allowFullScreen
-              frameBorder="0"
+              src={sanitizeUrl(embedUrl)}
             />
           </ResizableWrapper>
         </div>
       ) : (
         <Popover
-          width={300}
-          position="bottom"
-          withArrow
-          shadow="md"
           disabled={!editor.isEditable}
+          position="bottom"
+          shadow="md"
+          width={300}
+          withArrow
         >
           <Popover.Target>
             <Card
-              radius="md"
+              className={clsx(selected ? "ProseMirror-selectednode" : "")}
               p="xs"
+              radius="md"
               style={{
+                alignItems: "center",
                 display: "flex",
                 justifyContent: "center",
-                alignItems: "center",
               }}
               withBorder
-              className={clsx(selected ? "ProseMirror-selectednode" : "")}
             >
-              <div style={{ display: "flex", alignItems: "center" }}>
+              <div style={{ alignItems: "center", display: "flex" }}>
                 <ActionIcon
-                  variant="transparent"
-                  color="gray"
                   aria-label={t("Edit embed")}
+                  color="gray"
+                  variant="transparent"
                 >
                   <IconEdit size={18} />
                 </ActionIcon>
 
-                <Text component="span" size="lg" c="dimmed">
+                <Text c="dimmed" component="span" size="lg">
                   {t("Embed {{provider}}", {
                     provider: getEmbedProviderById(provider)?.name,
                   })}
@@ -151,10 +151,10 @@ export default function EmbedView(props: NodeViewProps) {
             <form onSubmit={embedForm.onSubmit(onSubmit)}>
               <FocusTrap active={true}>
                 <TextInput
+                  key={embedForm.key("url")}
                   placeholder={t("Enter {{provider}} link to embed", {
                     provider: getEmbedProviderById(provider).name,
                   })}
-                  key={embedForm.key("url")}
                   {...embedForm.getInputProps("url")}
                   data-autofocus
                 />

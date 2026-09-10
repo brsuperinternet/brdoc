@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getAppUrl, getServerAppUrl, isCloud } from "@/lib/config.ts";
 import APP_ROUTE from "@/lib/app-route.ts";
+import { getAppUrl, getServerAppUrl, isCloud } from "@/lib/config.ts";
 
 export const useRedirectToCloudSelect = () => {
   const navigate = useNavigate();

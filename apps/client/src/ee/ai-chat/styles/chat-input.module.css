@@ -1,10 +1,13 @@
 .inputWrapper {
   position: relative;
   overflow: hidden;
+  background: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-7)
+  );
   border: 1px solid
     light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
   border-radius: 16px;
-  background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
   box-shadow: light-dark(
     0 2px 40px 4px rgba(0, 0, 0, 0.07),
     0 2px 40px 4px rgba(0, 0, 0, 0.5)
@@ -28,22 +31,29 @@
 .inputWrapperFlat {
   position: relative;
   overflow: hidden;
-  border: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+  background: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-7)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
   border-radius: 12px;
-  background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
   box-shadow: none;
   transition: border-color 150ms;
 
   &:focus-within {
-    border-color: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+    border-color: light-dark(
+      var(--mantine-color-gray-3),
+      var(--mantine-color-dark-4)
+    );
   }
 }
 
 .disclaimer {
   margin-top: 6px;
-  text-align: center;
   font-size: var(--mantine-font-size-xs);
   color: var(--mantine-color-dimmed);
+  text-align: center;
 }
 
 .attachmentChips {
@@ -55,14 +65,17 @@
 
 .attachmentChip {
   display: inline-flex;
-  align-items: center;
   gap: 5px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  font-size: var(--mantine-font-size-xs);
+  align-items: center;
   max-width: 200px;
+  padding: 4px 8px;
+  font-size: var(--mantine-font-size-xs);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  background: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-6)
+  );
+  border-radius: 8px;
 }
 
 .attachmentChipUploading {
@@ -79,12 +92,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: none;
-  cursor: pointer;
   padding: 0;
   margin-left: 2px;
   color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
+  cursor: pointer;
+  background: none;
+  border: none;
   border-radius: 50%;
 
   @mixin hover {
@@ -96,16 +109,16 @@
   overflow: hidden;
 
   :global(.ProseMirror) {
-    outline: none;
-    border: none;
-    background-color: transparent;
+    min-height: 24px;
+    max-height: 200px;
     padding: 14px 18px 8px;
+    overflow-y: auto;
     font-size: 15px;
     line-height: 1.6;
-    max-height: 200px;
-    overflow-y: auto;
-    min-height: 24px;
     color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+    outline: none;
+    background-color: transparent;
+    border: none;
   }
 
   :global(.ProseMirror p) {
@@ -114,40 +127,45 @@
   }
 
   :global(.ProseMirror p.is-editor-empty:first-child::before) {
-    color: var(--mantine-color-placeholder);
-    content: attr(data-placeholder);
     float: left;
     height: 0;
+    color: var(--mantine-color-placeholder);
     pointer-events: none;
+    content: attr(data-placeholder);
   }
 }
 
 .actions {
   display: flex;
+  gap: var(--mantine-spacing-xs);
   align-items: center;
   justify-content: flex-end;
   padding: 4px 12px 10px;
-  gap: var(--mantine-spacing-xs);
 }
 
 .sendButton {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  cursor: pointer;
-  transition: background-color 150ms, opacity 150ms;
-  background: light-dark(var(--mantine-color-dark-9), var(--mantine-color-gray-0));
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
   color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-9));
+  cursor: pointer;
+  background: light-dark(
+    var(--mantine-color-dark-9),
+    var(--mantine-color-gray-0)
+  );
+  border: none;
+  border-radius: 50%;
+  transition:
+    background-color 150ms,
+    opacity 150ms;
 
   &:disabled {
-    opacity: 0.25;
     cursor: default;
+    opacity: 0.25;
   }
 
   @mixin hover {
@@ -161,11 +179,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: none;
-  cursor: pointer;
   padding: 2px;
   color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
+  cursor: pointer;
+  background: none;
+  border: none;
   transition: color 150ms;
 
   @mixin hover {
@@ -179,41 +197,50 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: 50%;
-  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-  background: none;
-  cursor: pointer;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-3));
-  transition: color 150ms, background-color 150ms;
+  cursor: pointer;
+  background: none;
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border-radius: 50%;
+  transition:
+    color 150ms,
+    background-color 150ms;
 
   @mixin hover {
     color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-    background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+    background: light-dark(
+      var(--mantine-color-gray-0),
+      var(--mantine-color-dark-6)
+    );
   }
 }
 
 .plusMenuItem {
   display: flex;
-  align-items: center;
   gap: var(--mantine-spacing-sm);
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
-  border: none;
-  background: none;
-  cursor: pointer;
+  align-items: center;
   width: 100%;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
   font-size: var(--mantine-font-size-sm);
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  cursor: pointer;
+  background: none;
+  border: none;
   border-radius: var(--mantine-radius-sm);
   transition: background-color 150ms;
 
   @mixin hover {
-    background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+    background: light-dark(
+      var(--mantine-color-gray-0),
+      var(--mantine-color-dark-6)
+    );
   }
 
   &:disabled {
-    opacity: 0.45;
     cursor: not-allowed;
     background: none;
+    opacity: 0.45;
   }
 }
 
@@ -222,21 +249,28 @@
 }
 
 .stopButton {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-  cursor: pointer;
-  transition: background-color 150ms;
-  background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  cursor: pointer;
+  background: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-6)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border-radius: 50%;
+  transition: background-color 150ms;
 
   @mixin hover {
-    background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+    background: light-dark(
+      var(--mantine-color-gray-1),
+      var(--mantine-color-dark-5)
+    );
   }
 }

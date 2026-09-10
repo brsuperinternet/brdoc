@@ -1,8 +1,14 @@
 import {
+  IconAppWindow,
   IconBlockquote,
+  IconCalendar,
   IconCaretRightFilled,
   IconCheckbox,
+  IconClock,
   IconCode,
+  IconColumns2,
+  IconColumns3,
+  IconFileTypePdf,
   IconH1,
   IconH2,
   IconH3,
@@ -12,41 +18,20 @@ import {
   IconListNumbers,
   IconMath,
   IconMathFunction,
+  IconMenu4,
+  IconMoodSmile,
   IconMovie,
   IconMusic,
-  IconPaperclip,
-  IconFileTypePdf,
-  IconPhoto,
-  IconTable,
-  IconTypography,
-  IconMenu4,
   IconPageBreak,
-  IconCalendar,
-  IconClock,
-  IconAppWindow,
-  IconSitemap,
-  IconColumns3,
-  IconColumns2,
-  IconTag,
-  IconMoodSmile,
+  IconPaperclip,
+  IconPhoto,
   IconRotate2,
+  IconSitemap,
   IconSuperscript,
+  IconTable,
+  IconTag,
+  IconTypography,
 } from "@tabler/icons-react";
-import {
-  CommandProps,
-  SlashMenuGroupedItemsType,
-} from "@/features/editor/components/slash-menu/types";
-import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
-import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action.tsx";
-import { uploadAudioAction } from "@/features/editor/components/audio/upload-audio-action.tsx";
-import { uploadAttachmentAction } from "@/features/editor/components/attachment/upload-attachment-action.tsx";
-import { uploadPdfAction } from "@/features/editor/components/pdf/upload-pdf-action.tsx";
-import IconExcalidraw from "@/components/icons/icon-excalidraw";
-import IconMermaid from "@/components/icons/icon-mermaid";
-import IconDrawio from "@/components/icons/icon-drawio";
-import { IconColumns4 } from "@/components/icons/icon-columns-4";
-import { IconColumns5 } from "@/components/icons/icon-columns-5";
-import i18n from "@/i18n.ts";
 import {
   AirtableIcon,
   FigmaIcon,
@@ -59,15 +44,26 @@ import {
   VimeoIcon,
   YoutubeIcon,
 } from "@/components/icons";
+import { IconColumns4 } from "@/components/icons/icon-columns-4";
+import { IconColumns5 } from "@/components/icons/icon-columns-5";
+import IconDrawio from "@/components/icons/icon-drawio";
+import IconExcalidraw from "@/components/icons/icon-excalidraw";
+import IconMermaid from "@/components/icons/icon-mermaid";
+import { uploadAttachmentAction } from "@/features/editor/components/attachment/upload-attachment-action.tsx";
+import { uploadAudioAction } from "@/features/editor/components/audio/upload-audio-action.tsx";
 import { insertBaseEmbedBlock } from "@/features/editor/components/base-embed/insert-base-embed";
+import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
+import { uploadPdfAction } from "@/features/editor/components/pdf/upload-pdf-action.tsx";
+import {
+  CommandProps,
+  SlashMenuGroupedItemsType,
+} from "@/features/editor/components/slash-menu/types";
+import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action.tsx";
+import i18n from "@/i18n.ts";
 
 const CommandGroups: SlashMenuGroupedItemsType = {
   basic: [
     {
-      title: "Text",
-      description: "Just start typing with plain text.",
-      searchTerms: ["p", "paragraph"],
-      icon: IconTypography,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -76,21 +72,21 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .toggleNode("paragraph", "paragraph")
           .run();
       },
+      description: "Just start typing with plain text.",
+      icon: IconTypography,
+      searchTerms: ["p", "paragraph"],
+      title: "Text",
     },
     {
-      title: "To-do list",
-      description: "Track tasks with a to-do list.",
-      searchTerms: ["todo", "task", "list", "check", "checkbox"],
-      icon: IconCheckbox,
       command: ({ editor, range }: CommandProps) => {
         editor.chain().focus().deleteRange(range).toggleTaskList().run();
       },
+      description: "Track tasks with a to-do list.",
+      icon: IconCheckbox,
+      searchTerms: ["todo", "task", "list", "check", "checkbox"],
+      title: "To-do list",
     },
     {
-      title: "Heading 1",
-      description: "Big section heading.",
-      searchTerms: ["title", "big", "large"],
-      icon: IconH1,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -99,12 +95,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setNode("heading", { level: 1 })
           .run();
       },
+      description: "Big section heading.",
+      icon: IconH1,
+      searchTerms: ["title", "big", "large"],
+      title: "Heading 1",
     },
     {
-      title: "Heading 2",
-      description: "Medium section heading.",
-      searchTerms: ["subtitle", "medium"],
-      icon: IconH2,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -113,12 +109,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setNode("heading", { level: 2 })
           .run();
       },
+      description: "Medium section heading.",
+      icon: IconH2,
+      searchTerms: ["subtitle", "medium"],
+      title: "Heading 2",
     },
     {
-      title: "Heading 3",
-      description: "Small section heading.",
-      searchTerms: ["subtitle", "small"],
-      icon: IconH3,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -127,78 +123,80 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setNode("heading", { level: 3 })
           .run();
       },
+      description: "Small section heading.",
+      icon: IconH3,
+      searchTerms: ["subtitle", "small"],
+      title: "Heading 3",
     },
     {
-      title: "Bullet list",
-      description: "Create a simple bullet list.",
-      searchTerms: ["unordered", "point", "list"],
-      icon: IconList,
       command: ({ editor, range }: CommandProps) => {
         editor.chain().focus().deleteRange(range).toggleBulletList().run();
       },
+      description: "Create a simple bullet list.",
+      icon: IconList,
+      searchTerms: ["unordered", "point", "list"],
+      title: "Bullet list",
     },
     {
-      title: "Numbered list",
-      description: "Create a list with numbering.",
-      searchTerms: ["numbered", "ordered", "list", "ol"],
-      icon: IconListNumbers,
       command: ({ editor, range }: CommandProps) => {
         editor.chain().focus().deleteRange(range).toggleOrderedList().run();
       },
+      description: "Create a list with numbering.",
+      icon: IconListNumbers,
+      searchTerms: ["numbered", "ordered", "list", "ol"],
+      title: "Numbered list",
     },
     {
-      title: "Quote",
-      description: "Create block quote.",
-      searchTerms: ["blockquote", "quotes"],
-      icon: IconBlockquote,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
+      description: "Create block quote.",
+      icon: IconBlockquote,
+      searchTerms: ["blockquote", "quotes"],
+      title: "Quote",
     },
     {
-      title: "Code",
-      description: "Insert code snippet.",
-      searchTerms: ["codeblock"],
-      icon: IconCode,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+      description: "Insert code snippet.",
+      icon: IconCode,
+      searchTerms: ["codeblock"],
+      title: "Code",
     },
     {
-      title: "Divider",
-      description: "Insert horizontal rule divider",
-      searchTerms: ["horizontal rule", "hr"],
-      icon: IconMenu4,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
+      description: "Insert horizontal rule divider",
+      icon: IconMenu4,
+      searchTerms: ["horizontal rule", "hr"],
+      title: "Divider",
     },
     {
-      title: "Page break",
-      description: "Insert a page break for printing.",
-      searchTerms: ["page", "break", "pagebreak", "print"],
-      icon: IconPageBreak,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).setPageBreak().run(),
+      description: "Insert a page break for printing.",
+      icon: IconPageBreak,
+      searchTerms: ["page", "break", "pagebreak", "print"],
+      title: "Page break",
     },
     {
-      title: "Footnote",
-      description: "Insert a footnote reference.",
-      searchTerms: ["footnote", "reference", "citation", "note"],
-      icon: IconSuperscript,
       command: ({ editor, range }: CommandProps) => {
         editor.chain().focus().deleteRange(range).run();
         editor.commands.addFootnote();
       },
+      description: "Insert a footnote reference.",
+      icon: IconSuperscript,
+      searchTerms: ["footnote", "reference", "citation", "note"],
+      title: "Footnote",
     },
     {
-      title: "Image",
-      description: "Upload any image from your device.",
-      searchTerms: ["photo", "picture", "media", "file", "attachment"],
-      icon: IconPhoto,
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
 
-        // @ts-ignore
+        // @ts-expect-error
         const pageId = editor.storage?.pageId;
-        if (!pageId) return;
+        if (!pageId) {
+          return;
+        }
 
         // upload image
         const input = document.createElement("input");
@@ -220,18 +218,20 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         };
         input.click();
       },
+      description: "Upload any image from your device.",
+      icon: IconPhoto,
+      searchTerms: ["photo", "picture", "media", "file", "attachment"],
+      title: "Image",
     },
     {
-      title: "Video",
-      description: "Upload any video from your device.",
-      searchTerms: ["video", "mp4", "media", "file", "attachment"],
-      icon: IconMovie,
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
 
-        // @ts-ignore
+        // @ts-expect-error
         const pageId = editor.storage?.pageId;
-        if (!pageId) return;
+        if (!pageId) {
+          return;
+        }
 
         // upload video
         const input = document.createElement("input");
@@ -253,26 +253,20 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         };
         input.click();
       },
+      description: "Upload any video from your device.",
+      icon: IconMovie,
+      searchTerms: ["video", "mp4", "media", "file", "attachment"],
+      title: "Video",
     },
     {
-      title: "Audio",
-      description: "Upload any audio from your device.",
-      searchTerms: [
-        "audio",
-        "music",
-        "sound",
-        "mp3",
-        "media",
-        "file",
-        "attachment",
-      ],
-      icon: IconMusic,
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
 
-        // @ts-ignore
+        // @ts-expect-error
         const pageId = editor.storage?.pageId;
-        if (!pageId) return;
+        if (!pageId) {
+          return;
+        }
 
         // upload audio
         const input = document.createElement("input");
@@ -294,18 +288,28 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         };
         input.click();
       },
+      description: "Upload any audio from your device.",
+      icon: IconMusic,
+      searchTerms: [
+        "audio",
+        "music",
+        "sound",
+        "mp3",
+        "media",
+        "file",
+        "attachment",
+      ],
+      title: "Audio",
     },
     {
-      title: "Embed PDF",
-      description: "Upload and embed a PDF file.",
-      searchTerms: ["pdf", "document", "embed"],
-      icon: IconFileTypePdf,
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
 
-        // @ts-ignore
+        // @ts-expect-error
         const pageId = editor.storage?.pageId;
-        if (!pageId) return;
+        if (!pageId) {
+          return;
+        }
 
         const input = document.createElement("input");
         input.type = "file";
@@ -325,18 +329,20 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         };
         input.click();
       },
+      description: "Upload and embed a PDF file.",
+      icon: IconFileTypePdf,
+      searchTerms: ["pdf", "document", "embed"],
+      title: "Embed PDF",
     },
     {
-      title: "File attachment",
-      description: "Upload any file from your device.",
-      searchTerms: ["file", "attachment", "upload", "csv", "zip"],
-      icon: IconPaperclip,
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
 
-        // @ts-ignore
+        // @ts-expect-error
         const pageId = editor.storage?.pageId;
-        if (!pageId) return;
+        if (!pageId) {
+          return;
+        }
 
         // upload file
         const input = document.createElement("input");
@@ -358,51 +364,57 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         };
         input.click();
       },
+      description: "Upload any file from your device.",
+      icon: IconPaperclip,
+      searchTerms: ["file", "attachment", "upload", "csv", "zip"],
+      title: "File attachment",
     },
     {
-      title: "Table",
-      description: "Insert a table.",
-      searchTerms: ["table", "rows", "columns"],
-      icon: IconTable,
       command: ({ editor, range }: CommandProps) =>
         editor
           .chain()
           .focus()
           .deleteRange(range)
-          .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+          .insertTable({ cols: 3, rows: 3, withHeaderRow: true })
           .run(),
+      description: "Insert a table.",
+      icon: IconTable,
+      searchTerms: ["table", "rows", "columns"],
+      title: "Table",
     },
     {
-      title: "Base (Inline)",
-      description: "Insert an inline base on this page",
-      searchTerms: ["base", "database", "table", "grid", "spreadsheet"],
-      icon: IconTable,
-      requiresBases: true,
       command: ({ editor, range }: CommandProps) => {
         insertBaseEmbedBlock(editor, { range });
       },
+      description: "Insert an inline base on this page",
+      icon: IconTable,
+      requiresBases: true,
+      searchTerms: ["base", "database", "table", "grid", "spreadsheet"],
+      title: "Base (Inline)",
     },
     {
-      title: "Kanban",
-      description: "Insert a kanban board on this page",
-      searchTerms: ["kanban", "board", "cards", "status", "task", "database"],
-      icon: IconLayoutKanban,
-      requiresBases: true,
       command: ({ editor, range }: CommandProps) => {
         insertBaseEmbedBlock(editor, { range, template: "kanban" });
       },
+      description: "Insert a kanban board on this page",
+      icon: IconLayoutKanban,
+      requiresBases: true,
+      searchTerms: ["kanban", "board", "cards", "status", "task", "database"],
+      title: "Kanban",
     },
     {
-      title: "Toggle block",
-      description: "Insert collapsible block.",
-      searchTerms: ["collapsible", "block", "toggle", "details", "expand"],
-      icon: IconCaretRightFilled,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).setDetails().run(),
+      description: "Insert collapsible block.",
+      icon: IconCaretRightFilled,
+      searchTerms: ["collapsible", "block", "toggle", "details", "expand"],
+      title: "Toggle block",
     },
     {
-      title: "Callout",
+      command: ({ editor, range }: CommandProps) =>
+        editor.chain().focus().deleteRange(range).toggleCallout().run(),
       description: "Insert callout notice.",
+      icon: IconInfoCircle,
       searchTerms: [
         "callout",
         "notice",
@@ -413,13 +425,19 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         "error",
         "danger",
       ],
-      icon: IconInfoCircle,
-      command: ({ editor, range }: CommandProps) =>
-        editor.chain().focus().deleteRange(range).toggleCallout().run(),
+      title: "Callout",
     },
     {
-      title: "Math inline",
+      command: ({ editor, range }: CommandProps) =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setMathInline()
+          .setNodeSelection(range.from)
+          .run(),
       description: "Insert inline math equation.",
+      icon: IconMathFunction,
       searchTerms: [
         "math",
         "inline",
@@ -431,19 +449,13 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         "latex",
         "tex",
       ],
-      icon: IconMathFunction,
-      command: ({ editor, range }: CommandProps) =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .setMathInline()
-          .setNodeSelection(range.from)
-          .run(),
+      title: "Math inline",
     },
     {
-      title: "Math block",
+      command: ({ editor, range }: CommandProps) =>
+        editor.chain().focus().deleteRange(range).setMathBlock().run(),
       description: "Insert math equation",
+      icon: IconMath,
       searchTerms: [
         "math",
         "block",
@@ -454,50 +466,44 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         "latex",
         "tex",
       ],
-      icon: IconMath,
-      command: ({ editor, range }: CommandProps) =>
-        editor.chain().focus().deleteRange(range).setMathBlock().run(),
+      title: "Math block",
     },
     {
-      title: "Mermaid diagram",
-      description: "Insert mermaid diagram",
-      searchTerms: ["mermaid", "diagrams", "chart", "uml"],
-      icon: IconMermaid,
       command: ({ editor, range }: CommandProps) =>
         editor
           .chain()
           .focus()
           .deleteRange(range)
           .setCodeBlock({ language: "mermaid" })
-          .insertContent("flowchart LR\n" + "    A --> B")
+          .insertContent("flowchart LR\n    A --> B")
           .run(),
+      description: "Insert mermaid diagram",
+      icon: IconMermaid,
+      searchTerms: ["mermaid", "diagrams", "chart", "uml"],
+      title: "Mermaid diagram",
     },
     {
-      title: "Draw.io (diagrams.net)",
-      description: "Insert and design Drawio diagrams",
-      searchTerms: ["drawio", "diagrams", "charts", "uml", "whiteboard"],
-      icon: IconDrawio,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).setDrawio().run(),
+      description: "Insert and design Drawio diagrams",
+      icon: IconDrawio,
+      searchTerms: ["drawio", "diagrams", "charts", "uml", "whiteboard"],
+      title: "Draw.io (diagrams.net)",
     },
     {
-      title: "Excalidraw (Whiteboard)",
-      description: "Draw and sketch excalidraw diagrams",
-      searchTerms: ["diagrams", "draw", "sketch", "whiteboard"],
-      icon: IconExcalidraw,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).setExcalidraw().run(),
+      description: "Draw and sketch excalidraw diagrams",
+      icon: IconExcalidraw,
+      searchTerms: ["diagrams", "draw", "sketch", "whiteboard"],
+      title: "Excalidraw (Whiteboard)",
     },
     {
-      title: "Date",
-      description: "Insert current date",
-      searchTerms: ["date", "today"],
-      icon: IconCalendar,
       command: ({ editor, range }: CommandProps) => {
         const currentDate = new Date().toLocaleDateString(i18n.language, {
-          year: "numeric",
-          month: "long",
           day: "numeric",
+          month: "long",
+          year: "numeric",
         });
 
         editor
@@ -507,12 +513,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .insertContent(currentDate)
           .run();
       },
+      description: "Insert current date",
+      icon: IconCalendar,
+      searchTerms: ["date", "today"],
+      title: "Date",
     },
     {
-      title: "Time",
-      description: "Insert current time",
-      searchTerms: ["time", "now", "clock"],
-      icon: IconClock,
       command: ({ editor, range }: CommandProps) => {
         const currentTime = new Date().toLocaleTimeString(i18n.language, {
           hour: "numeric",
@@ -526,33 +532,47 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .insertContent(currentTime)
           .run();
       },
+      description: "Insert current time",
+      icon: IconClock,
+      searchTerms: ["time", "now", "clock"],
+      title: "Time",
     },
     {
-      title: "Status",
-      description: "Insert inline status badge.",
-      searchTerms: ["status", "badge", "label", "lozenge"],
-      icon: IconTag,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
           .focus()
           .deleteRange(range)
-          .setStatus({ text: "", color: "gray" })
+          .setStatus({ color: "gray", text: "" })
           .run();
       },
+      description: "Insert inline status badge.",
+      icon: IconTag,
+      searchTerms: ["status", "badge", "label", "lozenge"],
+      title: "Status",
     },
     {
-      title: "Emoji",
-      description: "Insert emoji.",
-      searchTerms: ["emoji", "icon", "smiley", "emoticon", "symbol", "reaction"],
-      icon: IconMoodSmile,
       command: ({ editor, range }: CommandProps) => {
         editor.chain().focus().deleteRange(range).insertContent(":").run();
       },
+      description: "Insert emoji.",
+      icon: IconMoodSmile,
+      searchTerms: [
+        "emoji",
+        "icon",
+        "smiley",
+        "emoticon",
+        "symbol",
+        "reaction",
+      ],
+      title: "Emoji",
     },
     {
-      title: "Subpages (Child pages)",
+      command: ({ editor, range }: CommandProps) => {
+        editor.chain().focus().deleteRange(range).insertSubpages().run();
+      },
       description: "List all subpages of the current page",
+      icon: IconSitemap,
       searchTerms: [
         "subpages",
         "child",
@@ -561,14 +581,19 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         "hierarchy",
         "toc",
       ],
-      icon: IconSitemap,
-      command: ({ editor, range }: CommandProps) => {
-        editor.chain().focus().deleteRange(range).insertSubpages().run();
-      },
+      title: "Subpages (Child pages)",
     },
     {
-      title: "Synced block",
+      command: ({ editor, range }: CommandProps) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertTransclusionSource()
+          .run();
+      },
       description: "Create a block that stays in sync across pages.",
+      icon: IconRotate2,
       searchTerms: [
         "sync",
         "synced",
@@ -578,21 +603,9 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         "reusable",
         "snippet",
       ],
-      icon: IconRotate2,
-      command: ({ editor, range }: CommandProps) => {
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .insertTransclusionSource()
-          .run();
-      },
+      title: "Synced block",
     },
     {
-      title: "2 Columns",
-      description: "Split content into two columns.",
-      searchTerms: ["columns", "layout", "split", "side"],
-      icon: IconColumns2,
       command: ({ editor, range }: CommandProps) =>
         editor
           .chain()
@@ -600,12 +613,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .deleteRange(range)
           .insertColumns({ layout: "two_equal" })
           .run(),
+      description: "Split content into two columns.",
+      icon: IconColumns2,
+      searchTerms: ["columns", "layout", "split", "side"],
+      title: "2 Columns",
     },
     {
-      title: "3 Columns",
-      description: "Split content into three columns.",
-      searchTerms: ["columns", "layout", "split", "triple"],
-      icon: IconColumns3,
       command: ({ editor, range }: CommandProps) =>
         editor
           .chain()
@@ -613,12 +626,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .deleteRange(range)
           .insertColumns({ layout: "three_equal" })
           .run(),
+      description: "Split content into three columns.",
+      icon: IconColumns3,
+      searchTerms: ["columns", "layout", "split", "triple"],
+      title: "3 Columns",
     },
     {
-      title: "4 Columns",
-      description: "Split content into four columns.",
-      searchTerms: ["columns", "layout", "split"],
-      icon: IconColumns4,
       command: ({ editor, range }: CommandProps) =>
         editor
           .chain()
@@ -626,12 +639,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .deleteRange(range)
           .insertColumns({ layout: "four_equal" })
           .run(),
+      description: "Split content into four columns.",
+      icon: IconColumns4,
+      searchTerms: ["columns", "layout", "split"],
+      title: "4 Columns",
     },
     {
-      title: "5 Columns",
-      description: "Split content into five columns.",
-      searchTerms: ["columns", "layout", "split"],
-      icon: IconColumns5,
       command: ({ editor, range }: CommandProps) =>
         editor
           .chain()
@@ -639,12 +652,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .deleteRange(range)
           .insertColumns({ layout: "five_equal" })
           .run(),
+      description: "Split content into five columns.",
+      icon: IconColumns5,
+      searchTerms: ["columns", "layout", "split"],
+      title: "5 Columns",
     },
     {
-      title: "Iframe embed",
-      description: "Embed any Iframe",
-      searchTerms: ["iframe"],
-      icon: IconAppWindow,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -653,12 +666,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "iframe" })
           .run();
       },
+      description: "Embed any Iframe",
+      icon: IconAppWindow,
+      searchTerms: ["iframe"],
+      title: "Iframe embed",
     },
     {
-      title: "Airtable",
-      description: "Embed Airtable",
-      searchTerms: ["airtable"],
-      icon: AirtableIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -667,12 +680,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "airtable" })
           .run();
       },
+      description: "Embed Airtable",
+      icon: AirtableIcon,
+      searchTerms: ["airtable"],
+      title: "Airtable",
     },
     {
-      title: "Loom",
-      description: "Embed Loom video",
-      searchTerms: ["loom"],
-      icon: LoomIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -681,12 +694,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "loom" })
           .run();
       },
+      description: "Embed Loom video",
+      icon: LoomIcon,
+      searchTerms: ["loom"],
+      title: "Loom",
     },
     {
-      title: "Figma",
-      description: "Embed Figma files",
-      searchTerms: ["figma"],
-      icon: FigmaIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -695,12 +708,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "figma" })
           .run();
       },
+      description: "Embed Figma files",
+      icon: FigmaIcon,
+      searchTerms: ["figma"],
+      title: "Figma",
     },
     {
-      title: "Typeform",
-      description: "Embed Typeform",
-      searchTerms: ["typeform"],
-      icon: TypeformIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -709,12 +722,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "typeform" })
           .run();
       },
+      description: "Embed Typeform",
+      icon: TypeformIcon,
+      searchTerms: ["typeform"],
+      title: "Typeform",
     },
     {
-      title: "Miro",
-      description: "Embed Miro board",
-      searchTerms: ["miro"],
-      icon: MiroIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -723,12 +736,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "miro" })
           .run();
       },
+      description: "Embed Miro board",
+      icon: MiroIcon,
+      searchTerms: ["miro"],
+      title: "Miro",
     },
     {
-      title: "YouTube",
-      description: "Embed YouTube video",
-      searchTerms: ["youtube", "yt", "media", "video"],
-      icon: YoutubeIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -737,12 +750,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "youtube" })
           .run();
       },
+      description: "Embed YouTube video",
+      icon: YoutubeIcon,
+      searchTerms: ["youtube", "yt", "media", "video"],
+      title: "YouTube",
     },
     {
-      title: "Vimeo",
-      description: "Embed Vimeo video",
-      searchTerms: ["vimeo"],
-      icon: VimeoIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -751,12 +764,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "vimeo" })
           .run();
       },
+      description: "Embed Vimeo video",
+      icon: VimeoIcon,
+      searchTerms: ["vimeo"],
+      title: "Vimeo",
     },
     {
-      title: "Framer",
-      description: "Embed Framer prototype",
-      searchTerms: ["framer"],
-      icon: FramerIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -765,12 +778,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "framer" })
           .run();
       },
+      description: "Embed Framer prototype",
+      icon: FramerIcon,
+      searchTerms: ["framer"],
+      title: "Framer",
     },
     {
-      title: "Google Drive",
-      description: "Embed Google Drive content",
-      searchTerms: ["google drive", "gdrive"],
-      icon: GoogleDriveIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -779,12 +792,12 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "gdrive" })
           .run();
       },
+      description: "Embed Google Drive content",
+      icon: GoogleDriveIcon,
+      searchTerms: ["google drive", "gdrive"],
+      title: "Google Drive",
     },
     {
-      title: "Google Sheets",
-      description: "Embed Google Sheets content",
-      searchTerms: ["google sheets", "gsheets"],
-      icon: GoogleSheetsIcon,
       command: ({ editor, range }: CommandProps) => {
         editor
           .chain()
@@ -793,6 +806,10 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "gsheets" })
           .run();
       },
+      description: "Embed Google Sheets content",
+      icon: GoogleSheetsIcon,
+      searchTerms: ["google sheets", "gsheets"],
+      title: "Google Sheets",
     },
   ],
 };
@@ -811,15 +828,21 @@ export const getSuggestionItems = ({
     let queryIndex = 0;
     target = target.toLowerCase();
     for (const char of target) {
-      if (query[queryIndex] === char) queryIndex++;
-      if (queryIndex === query.length) return true;
+      if (query[queryIndex] === char) {
+        queryIndex++;
+      }
+      if (queryIndex === query.length) {
+        return true;
+      }
     }
     return false;
   };
 
   for (const [group, items] of Object.entries(CommandGroups)) {
     const filteredItems = items.filter((item) => {
-      if (excludeItems?.has(item.title)) return false;
+      if (excludeItems?.has(item.title)) {
+        return false;
+      }
       const translatedTitle = i18n.t(item.title);
       const translatedDescription = i18n.t(item.description);
       return (
@@ -831,7 +854,7 @@ export const getSuggestionItems = ({
           item.searchTerms.some(
             (term: string) =>
               term.includes(search) ||
-              i18n.t(term).toLowerCase().includes(search),
+              i18n.t(term).toLowerCase().includes(search)
           ))
       );
     });

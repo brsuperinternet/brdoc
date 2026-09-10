@@ -1,32 +1,28 @@
-import { useMemo, useState } from "react";
 import {
   Button,
-  Modal,
-  TextInput,
-  ScrollArea,
-  Loader,
-  Text,
-  UnstyledButton,
   Group,
+  Loader,
+  Modal,
+  ScrollArea,
   SegmentedControl,
+  Text,
+  TextInput,
+  UnstyledButton,
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import {
-  IconArrowRight,
-  IconSearch,
-  IconFileText,
-} from "@tabler/icons-react";
-import { Link, useNavigate } from "react-router-dom";
+import { IconArrowRight, IconFileText, IconSearch } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router-dom";
+import TemplatePreviewModal from "@/ee/template/components/template-preview-modal";
+import UseTemplateModal from "@/ee/template/components/use-template-modal";
 import {
   useGetTemplatesQuery,
   useUseTemplateMutation,
 } from "@/ee/template/queries/template-query";
-import { useGetSpacesQuery } from "@/features/space/queries/space-query";
 import { ITemplate } from "@/ee/template/types/template.types";
-import UseTemplateModal from "@/ee/template/components/use-template-modal";
-import TemplatePreviewModal from "@/ee/template/components/template-preview-modal";
 import { buildPageUrl } from "@/features/page/page.utils";
+import { useGetSpacesQuery } from "@/features/space/queries/space-query";
 import classes from "./template-picker-modal.module.css";
 
 type TemplatePickerModalProps = {
@@ -49,13 +45,13 @@ export default function TemplatePickerModal({
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebouncedValue(query, 200);
   const [scope, setScope] = useState<ScopeFilter>(
-    initialSpaceId ? "current" : "all",
+    initialSpaceId ? "current" : "all"
   );
   // Two-stage selection: previewing first, then destination-picker.
   // `previewTemplate` is set when the user clicks a row in the picker.
   // `destinationTemplate` is set when they click "Use template" in the preview.
   const [previewTemplate, setPreviewTemplate] = useState<ITemplate | null>(
-    null,
+    null
   );
   const [destinationTemplate, setDestinationTemplate] =
     useState<ITemplate | null>(null);
@@ -74,16 +70,20 @@ export default function TemplatePickerModal({
   const filtered = useMemo(() => {
     const all = data?.pages.flatMap((p) => p.items) ?? [];
     const term = debouncedQuery.trim().toLowerCase();
-    if (!term) return all;
+    if (!term) {
+      return all;
+    }
     return all.filter((tpl) => tpl.title.toLowerCase().includes(term));
   }, [data, debouncedQuery]);
 
   const createInInitialSpace = async (tpl: ITemplate) => {
-    if (!initialSpaceId) return;
+    if (!initialSpaceId) {
+      return;
+    }
     try {
       const page = await useTemplateMutation.mutateAsync({
-        templateId: tpl.id,
         spaceId: initialSpaceId,
+        templateId: tpl.id,
       });
       setPreviewTemplate(null);
       onClose();
@@ -139,34 +139,34 @@ export default function TemplatePickerModal({
   return (
     <>
       <Modal
-        opened={opened && !previewTemplate && !destinationTemplate}
         onClose={handleClose}
-        size={550}
+        opened={opened && !previewTemplate && !destinationTemplate}
         padding="lg"
-        yOffset="10vh"
+        size={550}
         title={<Text fw={500}>{t("Use a template")}</Text>}
+        yOffset="10vh"
       >
         <TextInput
-          leftSection={<IconSearch size={16} />}
-          placeholder={t("Search templates...")}
-          variant="filled"
-          value={query}
-          onChange={(e) => setQuery(e.currentTarget.value)}
-          mb="xs"
           autoFocus
+          leftSection={<IconSearch size={16} />}
+          mb="xs"
+          onChange={(e) => setQuery(e.currentTarget.value)}
+          placeholder={t("Search templates...")}
+          value={query}
+          variant="filled"
         />
 
         {initialSpaceId && (
           <SegmentedControl
-            fullWidth
-            size="xs"
-            mb="sm"
-            value={scope}
-            onChange={(v) => setScope(v as ScopeFilter)}
             data={[
               { label: t("This space"), value: "current" },
               { label: t("All templates"), value: "all" },
             ]}
+            fullWidth
+            mb="sm"
+            onChange={(v) => setScope(v as ScopeFilter)}
+            size="xs"
+            value={scope}
           />
         )}
 
@@ -177,15 +177,15 @@ export default function TemplatePickerModal({
             </div>
           ) : filtered.length === 0 ? (
             <div className={classes.empty}>
-              <Text size="sm" c="dimmed">
+              <Text c="dimmed" size="sm">
                 {t("No templates found")}
               </Text>
             </div>
           ) : (
             filtered.map((tpl) => (
               <UnstyledButton
-                key={tpl.id}
                 className={classes.row}
+                key={tpl.id}
                 onClick={() => handlePick(tpl)}
               >
                 <div className={classes.icon}>
@@ -193,27 +193,27 @@ export default function TemplatePickerModal({
                     <span>{tpl.icon}</span>
                   ) : (
                     <IconFileText
-                      size={16}
                       color="var(--mantine-color-gray-6)"
+                      size={16}
                     />
                   )}
                 </div>
                 <div className={classes.title}>{tpl.title}</div>
                 <div className={classes.scope}>
                   {tpl.spaceId
-                    ? spaceNamesById.get(tpl.spaceId) ?? t("Space")
+                    ? (spaceNamesById.get(tpl.spaceId) ?? t("Space"))
                     : t("Global")}
                 </div>
                 <Button
-                  size="compact-xs"
-                  variant="filled"
                   className={classes.useButton}
-                  loading={useTemplateMutation.isPending}
                   disabled={useTemplateMutation.isPending}
+                  loading={useTemplateMutation.isPending}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleQuickUse(tpl);
                   }}
+                  size="compact-xs"
+                  variant="filled"
                 >
                   {t("Use")}
                 </Button>
@@ -225,11 +225,11 @@ export default function TemplatePickerModal({
         <Group justify="flex-end" mt="md">
           <Button
             component={Link}
+            onClick={handleClose}
+            rightSection={<IconArrowRight size={16} />}
+            size="sm"
             to="/templates"
             variant="subtle"
-            size="sm"
-            rightSection={<IconArrowRight size={16} />}
-            onClick={handleClose}
           >
             {t("Browse all templates")}
           </Button>
@@ -238,20 +238,20 @@ export default function TemplatePickerModal({
 
       {previewTemplate && (
         <TemplatePreviewModal
-          templateId={previewTemplate.id}
-          opened={true}
           onClose={handlePreviewClose}
           onUse={handlePreviewUse}
+          opened={true}
+          templateId={previewTemplate.id}
           useLoading={useTemplateMutation.isPending}
         />
       )}
 
       {destinationTemplate && (
         <UseTemplateModal
-          template={destinationTemplate}
-          opened={true}
-          onClose={handleDestinationClose}
           initialSpaceId={initialSpaceId}
+          onClose={handleDestinationClose}
+          opened={true}
+          template={destinationTemplate}
         />
       )}
     </>

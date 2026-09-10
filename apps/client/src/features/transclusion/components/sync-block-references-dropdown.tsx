@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Loader, Popover } from "@mantine/core";
 import {
   IconChevronDown,
@@ -6,11 +5,12 @@ import {
   IconFile,
   IconInfoCircle,
 } from "@tabler/icons-react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { buildPageUrl } from "@/features/page/page.utils";
 import { useReferencesQuery } from "@/features/transclusion/queries/transclusion-query";
 import type { ReferencingPage } from "@/features/transclusion/types/transclusion.types";
-import { buildPageUrl } from "@/features/page/page.utils";
 import classes from "./sync-block-references-dropdown.module.css";
 
 type Props = {
@@ -49,15 +49,15 @@ export default function SyncBlockReferencesDropdown({
   const { data, isLoading } = useReferencesQuery(
     sourcePageId,
     transclusionId,
-    enabled,
+    enabled
   );
 
   const allPages: Array<{ page: ReferencingPage; isOriginal: boolean }> = [];
   if (data?.source) {
-    allPages.push({ page: data.source, isOriginal: true });
+    allPages.push({ isOriginal: true, page: data.source });
   }
   for (const ref of data?.references ?? []) {
-    allPages.push({ page: ref, isOriginal: false });
+    allPages.push({ isOriginal: false, page: ref });
   }
 
   const otherCount = allPages.filter((p) => p.page.id !== currentPageId).length;
@@ -72,20 +72,20 @@ export default function SyncBlockReferencesDropdown({
 
   return (
     <Popover
+      onChange={handleOpenChange}
+      opened={opened}
       position="bottom-start"
       shadow="lg"
-      opened={opened}
-      onChange={handleOpenChange}
       width={340}
       withinPortal
     >
       <Popover.Target>
         <button
-          type="button"
-          className={classes.trigger}
-          onClick={() => handleOpenChange(!opened)}
           aria-expanded={opened}
           aria-haspopup="dialog"
+          className={classes.trigger}
+          onClick={() => handleOpenChange(!opened)}
+          type="button"
         >
           <span className={classes.triggerIcon}>
             <IconCornerDownLeft size={14} stroke={1.8} />
@@ -105,25 +105,25 @@ export default function SyncBlockReferencesDropdown({
             </span>
             <div>
               <Trans
-                i18nKey="sourceReadOnlyHint"
-                defaults="This section is read-only here. Edit it on the <link>original source page</link>."
                 components={{
                   link: (
                     <Link
+                      className={classes.bannerLink}
+                      onClick={() => handleOpenChange(false)}
                       to={
                         data.source.spaceSlug
                           ? buildPageUrl(
                               data.source.spaceSlug,
                               data.source.slugId,
-                              data.source.title,
+                              data.source.title
                             )
                           : `/p/${data.source.id}`
                       }
-                      className={classes.bannerLink}
-                      onClick={() => handleOpenChange(false)}
                     />
                   ),
                 }}
+                defaults="This section is read-only here. Edit it on the <link>original source page</link>."
+                i18nKey="sourceReadOnlyHint"
               />
             </div>
           </div>
@@ -148,9 +148,9 @@ export default function SyncBlockReferencesDropdown({
                 return (
                   <li key={page.id}>
                     <Link
-                      to={href}
                       className={classes.row}
                       onClick={() => handleOpenChange(false)}
+                      to={href}
                     >
                       {page.icon ? (
                         <span className={classes.rowEmoji}>{page.icon}</span>

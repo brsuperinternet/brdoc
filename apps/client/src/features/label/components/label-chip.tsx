@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom";
 import { useComputedColorScheme } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import classes from "@/features/label/label.module.css";
 import { ILabel } from "@/features/label/types/label.types.ts";
 import { getLabelColor } from "@/features/label/utils/label-colors.ts";
-import classes from "@/features/label/label.module.css";
 
 type LabelChipProps = {
   label: Pick<ILabel, "id" | "name">;
@@ -19,9 +19,9 @@ export function LabelChip({ label, onRemove, asLink }: LabelChipProps) {
 
   const nameNode = asLink ? (
     <Link
-      to={`/labels/${encodeURIComponent(label.name)}`}
       className={classes.chipLink}
       onClick={(e) => e.stopPropagation()}
+      to={`/labels/${encodeURIComponent(label.name)}`}
     >
       <span className={classes.chipName}>{label.name}</span>
     </Link>
@@ -34,14 +34,14 @@ export function LabelChip({ label, onRemove, asLink }: LabelChipProps) {
       {nameNode}
       {onRemove && (
         <button
-          type="button"
+          aria-label={t("Remove label {{name}}", { name: label.name })}
           className={classes.chipX}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onRemove();
           }}
-          aria-label={t("Remove label {{name}}", { name: label.name })}
+          type="button"
         >
           <IconX size={12} stroke={2} />
         </button>

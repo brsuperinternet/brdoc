@@ -1,21 +1,21 @@
 import {
-  Modal,
-  Text,
-  Stack,
   Alert,
-  Group,
   Button,
+  Group,
+  Modal,
+  Stack,
+  Text,
   TextInput,
 } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { IApiKey } from "@/ee/api-key";
 import CopyTextButton from "@/components/common/copy.tsx";
+import { IApiKey } from "@/ee/api-key";
 
 interface ApiKeyCreatedModalProps {
-  opened: boolean;
-  onClose: () => void;
   apiKey: IApiKey;
+  onClose: () => void;
+  opened: boolean;
 }
 
 export function ApiKeyCreatedModal({
@@ -25,47 +25,49 @@ export function ApiKeyCreatedModal({
 }: ApiKeyCreatedModalProps) {
   const { t } = useTranslation();
 
-  if (!apiKey) return null;
+  if (!apiKey) {
+    return null;
+  }
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={t("{{credential}} created", { credential: t("API key") })}
-      size="lg"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      size="lg"
+      title={t("{{credential}} created", { credential: t("API key") })}
     >
       <Stack gap="md">
         <Alert
+          color="red"
           icon={<IconAlertTriangle size={16} />}
           title={t("Important")}
-          color="red"
         >
           {t(
             "Make sure to copy your {{credential}} now. You won't be able to see it again!",
-            { credential: t("API key") },
+            { credential: t("API key") }
           )}
         </Alert>
 
         <div>
-          <Text size="sm" fw={500} mb="xs">
+          <Text fw={500} mb="xs" size="sm">
             {t("API key")}
           </Text>
           <Group gap="xs" wrap="nowrap">
             <TextInput
-              variant="filled"
+              readOnly
               style={{
                 flex: 1,
               }}
               value={apiKey.token}
-              readOnly
+              variant="filled"
             />
 
             <CopyTextButton text={apiKey.token} />
           </Group>
         </div>
 
-        <Button fullWidth onClick={onClose} mt="md">
+        <Button fullWidth mt="md" onClick={onClose}>
           {t("I've saved my {{credential}}", { credential: t("API key") })}
         </Button>
       </Stack>

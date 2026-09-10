@@ -12,12 +12,16 @@ export type ResolvedPage = {
 };
 
 async function resolvePages(pageIds: string[]): Promise<ResolvedPage[]> {
-  if (pageIds.length === 0) return [];
+  if (pageIds.length === 0) {
+    return [];
+  }
   const map = await expandPagesBatched(pageIds);
   const out: ResolvedPage[] = [];
   for (const id of pageIds) {
     const p = map.get(id);
-    if (p) out.push(p);
+    if (p) {
+      out.push(p);
+    }
   }
   return out;
 }
@@ -26,7 +30,9 @@ async function resolvePages(pageIds: string[]): Promise<ResolvedPage[]> {
 function normalize(ids: (string | null | undefined)[]): string[] {
   const set = new Set<string>();
   for (const id of ids) {
-    if (typeof id === "string" && id.length > 0) set.add(id);
+    if (typeof id === "string" && id.length > 0) {
+      set.add(id);
+    }
   }
   return Array.from(set).sort();
 }
@@ -38,24 +44,28 @@ export type PageResolution = {
 };
 
 export function useResolvedPages(
-  pageIds: (string | null | undefined)[],
+  pageIds: (string | null | undefined)[]
 ): PageResolution {
   const normalized = useMemo(() => normalize(pageIds), [pageIds]);
 
   const { data, isSuccess, isLoading } = useQuery({
-    queryKey: ["bases", "pages", "expand", normalized],
-    queryFn: () => resolvePages(normalized),
     enabled: normalized.length > 0,
-    staleTime: 30_000,
     gcTime: 5 * 60_000,
+    queryFn: () => resolvePages(normalized),
+    queryKey: ["bases", "pages", "expand", normalized],
+    staleTime: 30_000,
   });
 
   const pages = useMemo(() => {
     const map = new Map<string, ResolvedPage | null | undefined>();
-    for (const id of normalized) map.set(id, isSuccess ? null : undefined);
-    for (const item of data ?? []) map.set(item.id, item);
+    for (const id of normalized) {
+      map.set(id, isSuccess ? null : undefined);
+    }
+    for (const item of data ?? []) {
+      map.set(item.id, item);
+    }
     return map;
   }, [normalized, data, isSuccess]);
 
-  return { pages, isLoading };
+  return { isLoading, pages };
 }

@@ -23,8 +23,8 @@
 }
 
 .itemMenu {
-  opacity: 0;
   margin-right: var(--mantine-spacing-xs);
+  opacity: 0;
 }
 
 .history:hover .itemMenu,
@@ -47,11 +47,11 @@
   }
 
   & :global(.history-diff-deleted) {
-    text-decoration: line-through;
+    padding: 0 rem(2px);
     color: light-dark(var(--mantine-color-red-7), var(--mantine-color-red-4));
+    text-decoration: line-through;
     background: light-dark(var(--mantine-color-red-0), rgba(255, 0, 0, 0.1));
     border-radius: rem(2px);
-    padding: 0 rem(2px);
   }
 
   & :global(.history-diff-node-added) {
@@ -62,11 +62,11 @@
   }
 
   & :global(.history-diff-node-deleted) {
-    opacity: 0.5;
     outline: rem(2px) dashed
       light-dark(var(--mantine-color-red-4), var(--mantine-color-red-6));
     outline-offset: rem(4px);
     border-radius: rem(4px);
+    opacity: 0.5;
   }
 }
 
@@ -78,11 +78,11 @@
 }
 
 .sidebar {
-  max-height: rem(700px);
-  width: rem(250px);
-  padding: var(--mantine-spacing-sm);
   display: flex;
   flex-direction: column;
+  width: rem(250px);
+  max-height: rem(700px);
+  padding: var(--mantine-spacing-sm);
   border-right: rem(1px) solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }

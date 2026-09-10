@@ -1,28 +1,3 @@
-import {
-  useState,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
-import {
-  Group,
-  UnstyledButton,
-  Text,
-  TextInput,
-  Popover,
-  Stack,
-  Divider,
-} from "@mantine/core";
-import {
-  IconPencil,
-  IconTrash,
-  IconTable,
-  IconLink,
-  IconLayoutKanban,
-} from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import {
   draggable,
@@ -30,20 +5,45 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import {
   attachClosestEdge,
-  extractClosestEdge,
   type Edge,
+  extractClosestEdge,
 } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { generateJitteredKeyBetween } from "fractional-indexing-jittered";
-import { IBase, IBaseView } from "@/ee/base/types/base.types";
-import { ViewCreateMenu } from "@/ee/base/components/views/view-create-menu";
 import {
-  useUpdateViewMutation,
-  useDeleteViewMutation,
-} from "@/ee/base/queries/base-view-query";
+  Divider,
+  Group,
+  Popover,
+  Stack,
+  Text,
+  TextInput,
+  UnstyledButton,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import {
+  IconLayoutKanban,
+  IconLink,
+  IconPencil,
+  IconTable,
+  IconTrash,
+} from "@tabler/icons-react";
+import { generateJitteredKeyBetween } from "fractional-indexing-jittered";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
-import cellClasses from "@/ee/base/styles/cells.module.css";
-import { useBaseEditable } from "@/ee/base/context/base-editable";
 import { BaseDropEdgeIndicator } from "@/ee/base/components/grid/base-drop-edge-indicator";
+import { ViewCreateMenu } from "@/ee/base/components/views/view-create-menu";
+import { useBaseEditable } from "@/ee/base/context/base-editable";
+import {
+  useDeleteViewMutation,
+  useUpdateViewMutation,
+} from "@/ee/base/queries/base-view-query";
+import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBase, IBaseView } from "@/ee/base/types/base.types";
 
 const VIEW_DRAG_TYPE = "base-view";
 
@@ -80,17 +80,21 @@ export function ViewTabs({
   const orderedViews = useMemo(
     () =>
       [...views].sort((a, b) =>
-        a.position < b.position ? -1 : a.position > b.position ? 1 : 0,
+        a.position < b.position ? -1 : a.position > b.position ? 1 : 0
       ),
-    [views],
+    [views]
   );
 
   const handleReorder = useCallback(
     (sourceId: string, targetId: string, edge: Edge) => {
-      if (sourceId === targetId) return;
+      if (sourceId === targetId) {
+        return;
+      }
       const remaining = orderedViews.filter((v) => v.id !== sourceId);
       const targetIndex = remaining.findIndex((v) => v.id === targetId);
-      if (targetIndex === -1) return;
+      if (targetIndex === -1) {
+        return;
+      }
 
       let lowerPos: string | null = null;
       let upperPos: string | null = null;
@@ -111,31 +115,30 @@ export function ViewTabs({
           lowerPos && upperPos && lowerPos === upperPos
             ? generateJitteredKeyBetween(lowerPos, null)
             : generateJitteredKeyBetween(lowerPos, upperPos);
-        updateViewMutation.mutate({ viewId: sourceId, pageId, position });
+        updateViewMutation.mutate({ pageId, position, viewId: sourceId });
       } catch {
         // Position computation failed; skip the reorder.
       }
     },
-    [orderedViews, pageId, updateViewMutation],
+    [orderedViews, pageId, updateViewMutation]
   );
 
-  const handleRenameStart = useCallback(
-    (view: IBaseView) => {
-      setEditingViewId(view.id);
-      setEditingName(view.name);
-    },
-    [],
-  );
+  const handleRenameStart = useCallback((view: IBaseView) => {
+    setEditingViewId(view.id);
+    setEditingName(view.name);
+  }, []);
 
   const handleRenameCommit = useCallback(() => {
-    if (!editingViewId) return;
+    if (!editingViewId) {
+      return;
+    }
     const trimmed = editingName.trim();
     const view = views.find((v) => v.id === editingViewId);
     if (trimmed && view && trimmed !== view.name) {
       updateViewMutation.mutate({
-        viewId: editingViewId,
-        pageId,
         name: trimmed,
+        pageId,
+        viewId: editingViewId,
       });
     }
     setEditingViewId(null);
@@ -152,45 +155,45 @@ export function ViewTabs({
         setEditingViewId(null);
       }
     },
-    [handleRenameCommit],
+    [handleRenameCommit]
   );
 
   const handleDelete = useCallback(
     (viewId: string) => {
-      if (orderedViews.length <= 1) return;
-      deleteViewMutation.mutate({ viewId, pageId });
+      if (orderedViews.length <= 1) {
+        return;
+      }
+      deleteViewMutation.mutate({ pageId, viewId });
       if (viewId === activeViewId) {
         const remaining = orderedViews.filter((v) => v.id !== viewId);
         onViewChange(remaining[0].id);
       }
     },
-    [orderedViews, pageId, activeViewId, deleteViewMutation, onViewChange],
+    [orderedViews, pageId, activeViewId, deleteViewMutation, onViewChange]
   );
 
   return (
     <Group gap={4}>
       {orderedViews.map((view) => (
         <ViewTab
-          key={view.id}
-          view={view}
+          canDelete={orderedViews.length > 1}
+          editingName={editingName}
+          getViewShareUrl={getViewShareUrl}
           isActive={view.id === activeViewId}
           isEditing={view.id === editingViewId}
-          editingName={editingName}
-          canDelete={orderedViews.length > 1}
-          reorderEnabled={editable && orderedViews.length > 1}
-          onReorder={handleReorder}
+          key={view.id}
           onClick={() => onViewChange(view.id)}
-          onRenameStart={() => handleRenameStart(view)}
+          onDelete={() => handleDelete(view.id)}
           onRenameChange={setEditingName}
           onRenameCommit={handleRenameCommit}
           onRenameKeyDown={handleRenameKeyDown}
-          onDelete={() => handleDelete(view.id)}
-          getViewShareUrl={getViewShareUrl}
+          onRenameStart={() => handleRenameStart(view)}
+          onReorder={handleReorder}
+          reorderEnabled={editable && orderedViews.length > 1}
+          view={view}
         />
       ))}
-      {canAddView && base && (
-        <ViewCreateMenu base={base} pageId={pageId} />
-      )}
+      {canAddView && base && <ViewCreateMenu base={base} pageId={pageId} />}
     </Group>
   );
 }
@@ -240,7 +243,9 @@ function ViewTab({
 
   useEffect(() => {
     const el = tabRef.current;
-    if (!el || !reorderEnabled || isEditing) return;
+    if (!(el && reorderEnabled) || isEditing) {
+      return;
+    }
     return combine(
       draggable({
         element: el,
@@ -249,24 +254,25 @@ function ViewTab({
         onDrop: () => setIsDragging(false),
       }),
       dropTargetForElements({
-        element: el,
         canDrop: ({ source }) =>
-          source.data.type === VIEW_DRAG_TYPE &&
-          source.data.viewId !== view.id,
+          source.data.type === VIEW_DRAG_TYPE && source.data.viewId !== view.id,
+        element: el,
         getData: ({ input, element }) =>
           attachClosestEdge(
             { viewId: view.id },
-            { input, element, allowedEdges: ["left", "right"] },
+            { allowedEdges: ["left", "right"], element, input }
           ),
         onDrag: ({ self }) => setClosestEdge(extractClosestEdge(self.data)),
         onDragLeave: () => setClosestEdge(null),
         onDrop: ({ source, self }) => {
           setClosestEdge(null);
           const edge = extractClosestEdge(self.data);
-          if (!edge) return;
+          if (!edge) {
+            return;
+          }
           onReorderRef.current(source.data.viewId as string, view.id, edge);
         },
-      }),
+      })
     );
   }, [view.id, reorderEnabled, isEditing]);
 
@@ -281,7 +287,9 @@ function ViewTab({
   const handleCopyLink = useCallback(() => {
     setMenuOpened(false);
     const url = getViewShareUrl?.(view.id);
-    if (!url) return;
+    if (!url) {
+      return;
+    }
     void navigator.clipboard.writeText(url);
     notifications.show({ message: t("Link copied to clipboard") });
   }, [getViewShareUrl, view.id, t]);
@@ -290,31 +298,31 @@ function ViewTab({
     return (
       <div
         style={{
-          display: "inline-flex",
           alignItems: "center",
-          padding: "1px 10px",
           border: "1px solid var(--mantine-color-default-border)",
           borderRadius: "var(--mantine-radius-xl)",
+          display: "inline-flex",
+          padding: "1px 10px",
         }}
       >
         <TextInput
-          variant="unstyled"
-          size="xs"
-          value={editingName}
-          onChange={(e) => onRenameChange(e.currentTarget.value)}
-          onBlur={onRenameCommit}
-          onKeyDown={onRenameKeyDown}
           autoFocus
+          onBlur={onRenameCommit}
+          onChange={(e) => onRenameChange(e.currentTarget.value)}
+          onKeyDown={onRenameKeyDown}
+          size="xs"
           styles={{
             input: {
+              fontSize: "var(--mantine-font-size-sm)",
               height: "auto",
+              lineHeight: 1.2,
               minHeight: 0,
               padding: 0,
               width: 100,
-              fontSize: "var(--mantine-font-size-sm)",
-              lineHeight: 1.2,
             },
           }}
+          value={editingName}
+          variant="unstyled"
         />
       </div>
     );
@@ -324,93 +332,93 @@ function ViewTab({
     <div
       ref={tabRef}
       style={{
-        position: "relative",
         display: "inline-flex",
         opacity: isDragging ? 0.4 : 1,
+        position: "relative",
       }}
     >
       <Popover
-        opened={menuOpened}
+        closeOnClickOutside
+        closeOnEscape
         onChange={setMenuOpened}
+        opened={menuOpened}
         position="bottom-start"
         shadow="md"
-        width={180}
         trapFocus
-        closeOnEscape
-        closeOnClickOutside
+        width={180}
         withinPortal
       >
         <Popover.Target>
           <UnstyledButton
             onClick={handleTabClick}
             style={{
-              padding: "2px 10px",
-              borderRadius: "var(--mantine-radius-xl)",
-              fontWeight: isActive ? 600 : 400,
               backgroundColor: isActive
                 ? "light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))"
                 : undefined,
+              borderRadius: "var(--mantine-radius-xl)",
+              fontWeight: isActive ? 600 : 400,
+              padding: "2px 10px",
             }}
           >
             <Group gap={6} wrap="nowrap">
               {view.type === "kanban" ? (
-                <IconLayoutKanban size={14} opacity={isActive ? 1 : 0.5} />
+                <IconLayoutKanban opacity={isActive ? 1 : 0.5} size={14} />
               ) : (
-                <IconTable size={14} opacity={isActive ? 1 : 0.5} />
+                <IconTable opacity={isActive ? 1 : 0.5} size={14} />
               )}
-              <Text size="sm" lh={1.2} c={isActive ? undefined : "dimmed"}>
+              <Text c={isActive ? undefined : "dimmed"} lh={1.2} size="sm">
                 {view.name}
               </Text>
             </Group>
           </UnstyledButton>
         </Popover.Target>
-      <Popover.Dropdown p={4}>
-        <Stack gap={0}>
-          {editable && (
-            <UnstyledButton
-              className={cellClasses.menuItem}
-              onClick={() => {
-                setMenuOpened(false);
-                onRenameStart();
-              }}
-            >
-              <Group gap={8} wrap="nowrap">
-                <IconPencil size={14} />
-                <Text size="sm">{t("Rename")}</Text>
-              </Group>
-            </UnstyledButton>
-          )}
-          {getViewShareUrl && (
-            <UnstyledButton
-              className={cellClasses.menuItem}
-              onClick={handleCopyLink}
-            >
-              <Group gap={8} wrap="nowrap">
-                <IconLink size={14} />
-                <Text size="sm">{t("Copy link to view")}</Text>
-              </Group>
-            </UnstyledButton>
-          )}
-          {editable && canDelete && (
-            <>
-              <Divider my={4} />
+        <Popover.Dropdown p={4}>
+          <Stack gap={0}>
+            {editable && (
               <UnstyledButton
                 className={cellClasses.menuItem}
                 onClick={() => {
                   setMenuOpened(false);
-                  onDelete();
+                  onRenameStart();
                 }}
-                style={{ color: "var(--mantine-color-red-6)" }}
               >
                 <Group gap={8} wrap="nowrap">
-                  <IconTrash size={14} />
-                  <Text size="sm">{t("Delete view")}</Text>
+                  <IconPencil size={14} />
+                  <Text size="sm">{t("Rename")}</Text>
                 </Group>
               </UnstyledButton>
-            </>
-          )}
-        </Stack>
-      </Popover.Dropdown>
+            )}
+            {getViewShareUrl && (
+              <UnstyledButton
+                className={cellClasses.menuItem}
+                onClick={handleCopyLink}
+              >
+                <Group gap={8} wrap="nowrap">
+                  <IconLink size={14} />
+                  <Text size="sm">{t("Copy link to view")}</Text>
+                </Group>
+              </UnstyledButton>
+            )}
+            {editable && canDelete && (
+              <>
+                <Divider my={4} />
+                <UnstyledButton
+                  className={cellClasses.menuItem}
+                  onClick={() => {
+                    setMenuOpened(false);
+                    onDelete();
+                  }}
+                  style={{ color: "var(--mantine-color-red-6)" }}
+                >
+                  <Group gap={8} wrap="nowrap">
+                    <IconTrash size={14} />
+                    <Text size="sm">{t("Delete view")}</Text>
+                  </Group>
+                </UnstyledButton>
+              </>
+            )}
+          </Stack>
+        </Popover.Dropdown>
       </Popover>
       {closestEdge && <BaseDropEdgeIndicator edge={closestEdge} />}
     </div>

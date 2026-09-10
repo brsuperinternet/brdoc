@@ -4,9 +4,9 @@
 }
 
 .linkInput {
+  background: transparent;
   border: 1.5px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-  background: transparent;
 
   &:focus {
     border-color: light-dark(
@@ -20,14 +20,14 @@
 
 .pageIcon {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 20px;
   height: 20px;
-  flex-shrink: 0;
-  color: var(--mantine-color-dimmed);
-  font-size: 16px;
   margin-top: 2px;
+  font-size: 16px;
+  color: var(--mantine-color-dimmed);
 }
 
 .searchItem {
@@ -59,12 +59,12 @@
 
 .linkChip {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   width: 100%;
   padding: 6px 10px;
-  border-radius: var(--mantine-radius-sm);
   cursor: pointer;
+  border-radius: var(--mantine-radius-sm);
 
   @mixin light {
     background: var(--mantine-color-gray-1);

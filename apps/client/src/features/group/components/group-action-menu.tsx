@@ -1,15 +1,14 @@
+import { ActionIcon, Menu, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
+import { IconDots, IconTrash } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
+import EditGroupModal from "@/features/group/components/edit-group-modal.tsx";
 import {
   useDeleteGroupMutation,
   useGroupQuery,
 } from "@/features/group/queries/group-query";
-import { useNavigate, useParams } from "react-router-dom";
-import { Menu, ActionIcon, Text } from "@mantine/core";
-import React from "react";
-import { IconDots, IconTrash } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
-import EditGroupModal from "@/features/group/components/edit-group-modal.tsx";
-import { modals } from "@mantine/modals";
-import { useTranslation } from "react-i18next";
 import { IGroup } from "@/features/group/types/group.types.ts";
 
 interface GroupActionMenuProps {
@@ -20,7 +19,9 @@ export default function GroupActionMenu(props: GroupActionMenuProps = {}) {
   const { t } = useTranslation();
   const { groupId: routeGroupId } = useParams();
   const groupId = props.group?.id ?? routeGroupId;
-  const { data: queriedGroup } = useGroupQuery(props.group ? undefined : groupId);
+  const { data: queriedGroup } = useGroupQuery(
+    props.group ? undefined : groupId
+  );
   const group = props.group ?? queriedGroup;
   const deleteGroupMutation = useDeleteGroupMutation();
   const navigate = useNavigate();
@@ -36,18 +37,18 @@ export default function GroupActionMenu(props: GroupActionMenuProps = {}) {
 
   const openDeleteModal = () =>
     modals.openConfirmModal({
-      title: t("Delete group"),
+      centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Are you sure you want to delete this group? Members will lose access to resources this group has access to.",
+            "Are you sure you want to delete this group? Members will lose access to resources this group has access to."
           )}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Delete"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Delete") },
       onConfirm: onDelete,
+      title: t("Delete group"),
     });
 
   return (
@@ -55,33 +56,35 @@ export default function GroupActionMenu(props: GroupActionMenuProps = {}) {
       {group && (
         <>
           <Menu
-            shadow="xl"
-            position="bottom-end"
+            arrowPosition="center"
             offset={20}
+            position="bottom-end"
+            shadow="xl"
             width={200}
             withArrow
-            arrowPosition="center"
           >
             <Menu.Target>
               <ActionIcon
-                variant="subtle"
+                aria-label={t("Group actions for {{name}}", {
+                  name: group.name,
+                })}
                 color="gray"
-                aria-label={t("Group actions for {{name}}", { name: group.name })}
+                variant="subtle"
               >
                 <IconDots size={20} stroke={2} />
               </ActionIcon>
             </Menu.Target>
 
             <Menu.Dropdown>
-              <Menu.Item onClick={open} disabled={group.isDefault}>
+              <Menu.Item disabled={group.isDefault} onClick={open}>
                 {t("Edit group")}
               </Menu.Item>
               <Menu.Divider />
               <Menu.Item
                 c="red"
-                onClick={openDeleteModal}
                 disabled={group.isDefault}
                 leftSection={<IconTrash size={16} stroke={2} />}
+                onClick={openDeleteModal}
               >
                 {t("Delete group")}
               </Menu.Item>
@@ -90,7 +93,7 @@ export default function GroupActionMenu(props: GroupActionMenuProps = {}) {
         </>
       )}
 
-      <EditGroupModal opened={opened} onClose={close} group={group} />
+      <EditGroupModal group={group} onClose={close} opened={opened} />
     </>
   );
 }

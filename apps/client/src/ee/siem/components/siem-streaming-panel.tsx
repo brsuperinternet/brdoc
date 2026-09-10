@@ -1,31 +1,32 @@
-import { useState } from "react";
 import { Alert, Button, Group, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconAlertCircle, IconInfoCircle } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import useUserRole from "@/hooks/use-user-role";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
+import { DeleteDestinationModal } from "@/ee/siem/components/delete-destination-modal";
+import { DestinationFormModal } from "@/ee/siem/components/destination-form-modal";
+import { DestinationTable } from "@/ee/siem/components/destination-table";
+import {
+  extractErrorMessage,
+  useRetrySiemDestinationMutation,
+  useSiemDestinationsQuery,
+  useTestSiemDestinationMutation,
+  useUpdateSiemDestinationMutation,
+} from "@/ee/siem/queries/siem-query";
 import {
   ISiemDestination,
   SIEM_MAX_DESTINATIONS_PER_WORKSPACE,
 } from "@/ee/siem/types/siem.types";
-import {
-  useRetrySiemDestinationMutation,
-  useSiemDestinationsQuery,
-  extractErrorMessage,
-  useTestSiemDestinationMutation,
-  useUpdateSiemDestinationMutation,
-} from "@/ee/siem/queries/siem-query";
-import { DestinationTable } from "@/ee/siem/components/destination-table";
-import { DestinationFormModal } from "@/ee/siem/components/destination-form-modal";
-import { DeleteDestinationModal } from "@/ee/siem/components/delete-destination-modal";
+import useUserRole from "@/hooks/use-user-role";
 
 export default function SiemStreamingPanel() {
   const { t } = useTranslation();
   const { isOwner } = useUserRole();
   const hasFeature = useHasFeature(Feature.SIEM);
-  const { data, isLoading, isError, error } = useSiemDestinationsQuery(hasFeature);
+  const { data, isLoading, isError, error } =
+    useSiemDestinationsQuery(hasFeature);
   const updateMutation = useUpdateSiemDestinationMutation();
   const retryMutation = useRetrySiemDestinationMutation();
   const testMutation = useTestSiemDestinationMutation();
@@ -43,42 +44,44 @@ export default function SiemStreamingPanel() {
   const handleTest = async (destination: ISiemDestination) => {
     const result = await testMutation
       .mutateAsync({
-        type: destination.type,
         config: destination.config as unknown as Record<string, unknown>,
         destinationId: destination.id,
+        type: destination.type,
       })
       .catch(() => null);
-    if (!result) return;
+    if (!result) {
+      return;
+    }
     notifications.show({
+      color: result.delivered ? "green" : "red",
       message: result.delivered
         ? t("Test event delivered to {{name}}", { name: destination.name })
         : result.error,
-      color: result.delivered ? "green" : "red",
     });
   };
 
   return (
     <>
       {!hasFeature && (
-        <Alert icon={<IconInfoCircle size={16} />} color="yellow" mb="md">
+        <Alert color="yellow" icon={<IconInfoCircle size={16} />} mb="md">
           {t("SIEM streaming requires an Enterprise license.")}
         </Alert>
       )}
 
       <Group justify="flex-end" mb="md">
         <Tooltip
+          disabled={!atDestinationLimit}
           label={t("Maximum of {{limit}} destinations reached", {
             limit: SIEM_MAX_DESTINATIONS_PER_WORKSPACE,
           })}
-          disabled={!atDestinationLimit}
         >
           <span>
             <Button
+              disabled={!hasFeature || atDestinationLimit}
               onClick={() => {
                 setSelected(null);
                 setFormOpened(true);
               }}
-              disabled={!hasFeature || atDestinationLimit}
             >
               {t("Add destination")}
             </Button>
@@ -87,7 +90,7 @@ export default function SiemStreamingPanel() {
       </Group>
 
       {isError && (
-        <Alert icon={<IconAlertCircle size={16} />} color="red" mb="md">
+        <Alert color="red" icon={<IconAlertCircle size={16} />} mb="md">
           {t("Could not load SIEM destinations: {{message}}", {
             message: extractErrorMessage(error),
           })}
@@ -95,34 +98,36 @@ export default function SiemStreamingPanel() {
       )}
 
       {hasFeature && !isError && (
-      <DestinationTable
-        destinations={data}
-        isLoading={isLoading}
-        onEdit={(destination) => {
-          setSelected(destination);
-          setFormOpened(true);
-        }}
-        onTest={handleTest}
-        onRetry={(destination) => retryMutation.mutate({ destinationId: destination.id })}
-        onDelete={(destination) => {
-          setSelected(destination);
-          setDeleteOpened(true);
-        }}
-        onToggle={(destination, enabled) =>
-          updateMutation.mutate({ destinationId: destination.id, enabled })
-        }
-      />
+        <DestinationTable
+          destinations={data}
+          isLoading={isLoading}
+          onDelete={(destination) => {
+            setSelected(destination);
+            setDeleteOpened(true);
+          }}
+          onEdit={(destination) => {
+            setSelected(destination);
+            setFormOpened(true);
+          }}
+          onRetry={(destination) =>
+            retryMutation.mutate({ destinationId: destination.id })
+          }
+          onTest={handleTest}
+          onToggle={(destination, enabled) =>
+            updateMutation.mutate({ destinationId: destination.id, enabled })
+          }
+        />
       )}
 
       <DestinationFormModal
-        opened={formOpened}
-        onClose={() => setFormOpened(false)}
         destination={selected}
+        onClose={() => setFormOpened(false)}
+        opened={formOpened}
       />
       <DeleteDestinationModal
-        opened={deleteOpened}
-        onClose={() => setDeleteOpened(false)}
         destination={selected}
+        onClose={() => setDeleteOpened(false)}
+        opened={deleteOpened}
       />
     </>
   );

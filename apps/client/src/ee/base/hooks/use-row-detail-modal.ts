@@ -19,7 +19,7 @@ export function useRowDetailModal(baseId: string) {
       // modal instead of replaying every visited record.
       setSearchParams(next, { replace: options?.replace ?? false });
     },
-    [searchParams, setSearchParams, baseId],
+    [searchParams, setSearchParams, baseId]
   );
 
   const closeRow = useCallback(() => {
@@ -29,5 +29,5 @@ export function useRowDetailModal(baseId: string) {
     setSearchParams(next, { replace: false });
   }, [searchParams, setSearchParams]);
 
-  return { openRowId, openRow, closeRow };
+  return { closeRow, openRow, openRowId };
 }

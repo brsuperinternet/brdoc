@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
-import { Group, TextInput, UnstyledButton, Text } from "@mantine/core";
+import { Group, Text, TextInput, UnstyledButton } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
-import type { IBaseProperty } from "@/ee/base/types/base.types";
+import { useMemo, useState } from "react";
 import classes from "@/ee/base/styles/formula.module.css";
+import type { IBaseProperty } from "@/ee/base/types/base.types";
 
 export function PropertyChipRow({
   properties,
@@ -15,36 +15,38 @@ export function PropertyChipRow({
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return properties;
+    if (!q) {
+      return properties;
+    }
     return properties.filter((p) => p.name.toLowerCase().includes(q));
   }, [properties, query]);
 
   return (
     <div>
       <Group justify="space-between" mb={8}>
-        <Text size="xs" fw={600} c="gray.7">
+        <Text c="gray.7" fw={600} size="xs">
           Properties
         </Text>
         <TextInput
-          size="xs"
-          placeholder="Search"
           leftSection={<IconSearch size={12} />}
-          value={query}
           onChange={(e) => setQuery(e.currentTarget.value)}
+          placeholder="Search"
+          size="xs"
+          value={query}
           w={140}
         />
       </Group>
       {visible.length === 0 ? (
-        <Text size="xs" c="dimmed" py={6}>
+        <Text c="dimmed" py={6} size="xs">
           No matches.
         </Text>
       ) : (
         <Group gap={6}>
           {visible.map((p) => (
             <UnstyledButton
+              className={classes.propChip}
               key={p.id}
               onClick={() => onInsert(p.name)}
-              className={classes.propChip}
             >
               {p.name}
             </UnstyledButton>

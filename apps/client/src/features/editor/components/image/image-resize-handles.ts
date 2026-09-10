@@ -1,6 +1,6 @@
 import {
-  createResizeHandle,
   buildResizeClasses,
+  createResizeHandle,
 } from "../common/node-resize-handles";
 
 export const createImageHandle = createResizeHandle;

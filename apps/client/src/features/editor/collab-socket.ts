@@ -13,8 +13,8 @@ let releaseTimer: ReturnType<typeof setTimeout> | null = null;
 export function getCollabSocket(): HocuspocusProviderWebsocket {
   if (!socket) {
     socket = new HocuspocusProviderWebsocket({
-      url: getCollaborationUrl(),
       autoConnect: false,
+      url: getCollaborationUrl(),
     });
   }
   return socket;
@@ -35,8 +35,12 @@ export function acquireCollabSocket(): void {
 
 export function releaseCollabSocket(): void {
   editorCount--;
-  if (editorCount > 0) return;
-  if (releaseTimer) clearTimeout(releaseTimer);
+  if (editorCount > 0) {
+    return;
+  }
+  if (releaseTimer) {
+    clearTimeout(releaseTimer);
+  }
   releaseTimer = setTimeout(() => {
     releaseTimer = null;
     if (editorCount === 0) {

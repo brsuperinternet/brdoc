@@ -1,12 +1,17 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { ActionIcon, Menu, Tooltip } from "@mantine/core";
+import {
+  IconArrowLeft,
+  IconLayoutKanban,
+  IconPlus,
+  IconTable,
+} from "@tabler/icons-react";
 import { useAtom } from "jotai";
-import { Menu, ActionIcon, Tooltip } from "@mantine/core";
-import { IconPlus, IconTable, IconLayoutKanban, IconArrowLeft } from "@tabler/icons-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { IBase } from "@/ee/base/types/base.types";
-import { useCreateViewMutation } from "@/ee/base/queries/base-view-query";
 import { activeViewIdAtomFamily } from "@/ee/base/atoms/base-atoms";
 import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
+import { useCreateViewMutation } from "@/ee/base/queries/base-view-query";
+import { IBase } from "@/ee/base/types/base.types";
 
 type Panel = "types" | "groupBy";
 
@@ -22,11 +27,11 @@ export function ViewCreateMenu({ base, pageId }: ViewCreateMenuProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const createViewMutation = useCreateViewMutation();
   const [, setActiveViewId] = useAtom(
-    activeViewIdAtomFamily(pageId),
+    activeViewIdAtomFamily(pageId)
   ) as unknown as [string | null, (val: string | null) => void];
 
   const groupable = base.properties.filter(
-    (p) => p.type === "select" || p.type === "status",
+    (p) => p.type === "select" || p.type === "status"
   );
 
   const close = useCallback(() => {
@@ -35,14 +40,18 @@ export function ViewCreateMenu({ base, pageId }: ViewCreateMenuProps) {
   }, []);
 
   const submitView = useCallback(
-    (input: { name: string; type: "table" | "kanban"; config?: Record<string, unknown> }) => {
+    (input: {
+      name: string;
+      type: "table" | "kanban";
+      config?: Record<string, unknown>;
+    }) => {
       createViewMutation.mutate(
         { pageId, ...input },
-        { onSuccess: (created) => setActiveViewId(created.id) },
+        { onSuccess: (created) => setActiveViewId(created.id) }
       );
       close();
     },
-    [pageId, createViewMutation, setActiveViewId, close],
+    [pageId, createViewMutation, setActiveViewId, close]
   );
 
   const handleCreateTable = useCallback(() => {
@@ -55,7 +64,7 @@ export function ViewCreateMenu({ base, pageId }: ViewCreateMenuProps) {
         groupable.length === 1
           ? { groupByPropertyId: groupable[0].id }
           : undefined;
-      submitView({ name: t("Kanban"), type: "kanban", config });
+      submitView({ config, name: t("Kanban"), type: "kanban" });
     } else {
       setPanel("groupBy");
     }
@@ -64,12 +73,12 @@ export function ViewCreateMenu({ base, pageId }: ViewCreateMenuProps) {
   const handleGroupByPick = useCallback(
     (propertyId: string) => {
       submitView({
+        config: { groupByPropertyId: propertyId },
         name: t("Kanban"),
         type: "kanban",
-        config: { groupByPropertyId: propertyId },
       });
     },
-    [submitView, t],
+    [submitView, t]
   );
 
   useEffect(() => {
@@ -83,20 +92,27 @@ export function ViewCreateMenu({ base, pageId }: ViewCreateMenuProps) {
 
   return (
     <Menu
-      opened={opened}
+      closeOnItemClick={false}
       onChange={(o) => {
         setOpened(o);
-        if (!o) setPanel("types");
+        if (!o) {
+          setPanel("types");
+        }
       }}
+      opened={opened}
       position="bottom-start"
       shadow="md"
       width={200}
       withinPortal
-      closeOnItemClick={false}
     >
       <Menu.Target>
         <Tooltip label={t("Add view")}>
-          <ActionIcon variant="subtle" size="sm" color="gray" aria-label={t("Add view")}>
+          <ActionIcon
+            aria-label={t("Add view")}
+            color="gray"
+            size="sm"
+            variant="subtle"
+          >
             <IconPlus size={14} />
           </ActionIcon>
         </Tooltip>
@@ -105,10 +121,16 @@ export function ViewCreateMenu({ base, pageId }: ViewCreateMenuProps) {
       <Menu.Dropdown ref={dropdownRef}>
         {panel === "types" && (
           <>
-            <Menu.Item leftSection={<IconTable size={14} />} onClick={handleCreateTable}>
+            <Menu.Item
+              leftSection={<IconTable size={14} />}
+              onClick={handleCreateTable}
+            >
               {t("Table")}
             </Menu.Item>
-            <Menu.Item leftSection={<IconLayoutKanban size={14} />} onClick={handleBoardClick}>
+            <Menu.Item
+              leftSection={<IconLayoutKanban size={14} />}
+              onClick={handleBoardClick}
+            >
               {t("Kanban")}
             </Menu.Item>
           </>
@@ -116,7 +138,10 @@ export function ViewCreateMenu({ base, pageId }: ViewCreateMenuProps) {
 
         {panel === "groupBy" && (
           <>
-            <Menu.Item leftSection={<IconArrowLeft size={14} />} onClick={() => setPanel("types")}>
+            <Menu.Item
+              leftSection={<IconArrowLeft size={14} />}
+              onClick={() => setPanel("types")}
+            >
               {t("Group by")}
             </Menu.Item>
             <Menu.Divider />

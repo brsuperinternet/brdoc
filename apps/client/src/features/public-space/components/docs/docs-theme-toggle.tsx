@@ -16,13 +16,13 @@ export default function DocsThemeToggle() {
   return (
     <Tooltip label={t("Toggle color scheme")} withArrow>
       <ActionIcon
-        variant="subtle"
+        aria-label={t("Toggle color scheme")}
         className={styles.headerAction}
-        size="md"
         onClick={() =>
           setColorScheme(computedColorScheme === "light" ? "dark" : "light")
         }
-        aria-label={t("Toggle color scheme")}
+        size="md"
+        variant="subtle"
       >
         {computedColorScheme === "light" ? (
           <IconMoon size={18} stroke={1.75} />

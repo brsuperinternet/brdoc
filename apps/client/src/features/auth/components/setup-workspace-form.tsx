@@ -1,33 +1,34 @@
-import * as React from "react";
-import { z } from "zod/v4";
+import {
+  Anchor,
+  Box,
+  Button,
+  Container,
+  PasswordInput,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import {
-  Container,
-  Title,
-  TextInput,
-  Button,
-  PasswordInput,
-  Box,
-  Anchor,
-  Text,
-} from "@mantine/core";
-import useAuth from "@/features/auth/hooks/use-auth";
-import classes from "@/features/auth/components/auth.module.css";
 import { useTranslation } from "react-i18next";
-import SsoCloudSignup from "@/ee/components/sso-cloud-signup.tsx";
-import { isCloud } from "@/lib/config.ts";
 import { Link } from "react-router-dom";
+import { z } from "zod/v4";
+import SsoCloudSignup from "@/ee/components/sso-cloud-signup.tsx";
+import classes from "@/features/auth/components/auth.module.css";
+import useAuth from "@/features/auth/hooks/use-auth";
 import APP_ROUTE from "@/lib/app-route.ts";
+import { isCloud } from "@/lib/config.ts";
 import { AuthLayout } from "./auth-layout.tsx";
 
 const formSchema = z.object({
-  workspaceName: z.string().trim().max(50).optional(),
-  name: z.string().min(1, { message: "Name is required" }).max(50),
   email: z
     .email({ message: "Invalid email address" })
     .min(1, { message: "Email is required" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  name: z.string().min(1, { message: "Name is required" }).max(50),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" }),
+  workspaceName: z.string().trim().max(50).optional(),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -37,13 +38,13 @@ export function SetupWorkspaceForm() {
   // useRedirectIfAuthenticated();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
-      workspaceName: "",
-      name: "",
       email: "",
+      name: "",
       password: "",
+      workspaceName: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   async function onSubmit(data: FormValues) {
@@ -52,9 +53,9 @@ export function SetupWorkspaceForm() {
 
   return (
     <AuthLayout>
-      <Container size={420} className={classes.container}>
-        <Box p="xl" className={classes.containerBox}>
-          <Title order={2} ta="center" fw={500} mb="md">
+      <Container className={classes.container} size={420}>
+        <Box className={classes.containerBox} p="xl">
+          <Title fw={500} mb="md" order={2} ta="center">
             {t("Create workspace")}
           </Title>
 
@@ -64,48 +65,48 @@ export function SetupWorkspaceForm() {
             {!isCloud() && (
               <TextInput
                 id="workspaceName"
-                type="text"
                 label={t("Workspace Name")}
-                placeholder={t("e.g ACME Inc")}
-                variant="filled"
                 mt="md"
+                placeholder={t("e.g ACME Inc")}
+                type="text"
+                variant="filled"
                 {...form.getInputProps("workspaceName")}
               />
             )}
 
             <TextInput
               id="name"
-              type="text"
               label={t("Your Name")}
-              placeholder={t("enter your full name")}
-              variant="filled"
               mt="md"
+              placeholder={t("enter your full name")}
+              type="text"
+              variant="filled"
               {...form.getInputProps("name")}
             />
 
             <TextInput
               id="email"
-              type="email"
               label={t("Your Email")}
-              placeholder="email@example.com"
-              variant="filled"
               mt="md"
+              placeholder="email@example.com"
+              type="email"
+              variant="filled"
               {...form.getInputProps("email")}
             />
 
             <PasswordInput
               label={t("Password")}
+              mt="md"
               placeholder={t("Enter a strong password")}
               variant="filled"
-              mt="md"
               visibilityToggleButtonProps={{
-                "aria-label": t("Toggle password visibility"),
                 "aria-hidden": false,
+                "aria-label": t("Toggle password visibility"),
                 tabIndex: 0,
               }}
               {...form.getInputProps("password")}
             />
-            <Button type="submit" fullWidth mt="xl" loading={isLoading}>
+            <Button fullWidth loading={isLoading} mt="xl" type="submit">
               {t("Create workspace")}
             </Button>
           </form>
@@ -116,8 +117,8 @@ export function SetupWorkspaceForm() {
           {t("Already part of an existing workspace?")}{" "}
           <Anchor
             component={Link}
-            to={APP_ROUTE.AUTH.SELECT_WORKSPACE}
             fw={500}
+            to={APP_ROUTE.AUTH.SELECT_WORKSPACE}
           >
             {t("Sign-in")}
           </Anchor>

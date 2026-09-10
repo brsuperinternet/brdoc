@@ -1,5 +1,5 @@
-import { ILicenseInfo } from "@/ee/licence/types/license.types.ts";
 import { differenceInDays, isAfter } from "date-fns";
+import { ILicenseInfo } from "@/ee/licence/types/license.types.ts";
 
 export const GRACE_PERIOD_DAYS = 10;
 
@@ -21,6 +21,8 @@ export function isValid(license: ILicenseInfo): boolean {
 }
 
 export function hasExpiredGracePeriod(license: ILicenseInfo): boolean {
-  if (!isLicenseExpired(license)) return false;
+  if (!isLicenseExpired(license)) {
+    return false;
+  }
   return differenceInDays(new Date(), license.expiresAt) > GRACE_PERIOD_DAYS;
 }

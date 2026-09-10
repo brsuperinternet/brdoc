@@ -1,6 +1,3 @@
-import React from "react";
-import type { Editor } from "@tiptap/react";
-import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { ColorSwatch, Menu } from "@mantine/core";
 import {
   IconBoxMargin,
@@ -13,14 +10,17 @@ import {
   IconSquareToggle,
   IconTableRow,
 } from "@tabler/icons-react";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Editor } from "@tiptap/react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useTableClear } from "../hooks/use-table-clear";
 import { TABLE_COLORS } from "../../table-background-color";
+import { useTableClear } from "../hooks/use-table-clear";
 import { AlignmentSubmenu } from "./alignment-submenu";
 
 interface CellChevronMenuProps {
-  editor: Editor;
   cellPos: number;
+  editor: Editor;
   tableNode: ProseMirrorNode;
   tablePos: number;
 }
@@ -34,8 +34,8 @@ export const CellChevronMenu = React.memo(function CellChevronMenu({
   const { t } = useTranslation();
 
   const clearCell = useTableClear(editor, tableNode, tablePos, {
-    kind: "cell",
     cellPos,
+    kind: "cell",
   });
 
   const setBackground = (color: string, name: string) => {
@@ -65,23 +65,23 @@ export const CellChevronMenu = React.memo(function CellChevronMenu({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
               gap: 8,
+              gridTemplateColumns: "repeat(4, 1fr)",
               padding: 8,
             }}
           >
             {TABLE_COLORS.map((c) => (
               <button
-                key={c.name}
-                type="button"
-                onClick={() => setBackground(c.color, c.name)}
                 aria-label={t(c.name)}
+                key={c.name}
+                onClick={() => setBackground(c.color, c.name)}
                 style={{
-                  border: "none",
                   background: "transparent",
-                  padding: 0,
+                  border: "none",
                   cursor: "pointer",
+                  padding: 0,
                 }}
+                type="button"
               >
                 <ColorSwatch
                   color={c.color || "#ffffff"}
@@ -99,16 +99,16 @@ export const CellChevronMenu = React.memo(function CellChevronMenu({
       <AlignmentSubmenu editor={editor} />
 
       <Menu.Item
+        disabled={!editor?.can().mergeCells()}
         leftSection={<IconBoxMargin size={16} />}
         onClick={() => editor.chain().focus().mergeCells().run()}
-        disabled={!editor?.can().mergeCells()}
       >
         {t("Merge cells")}
       </Menu.Item>
       <Menu.Item
+        disabled={!editor?.can().splitCell()}
         leftSection={<IconSquareToggle size={16} />}
         onClick={() => editor.chain().focus().splitCell().run()}
-        disabled={!editor?.can().splitCell()}
       >
         {t("Split cell")}
       </Menu.Item>

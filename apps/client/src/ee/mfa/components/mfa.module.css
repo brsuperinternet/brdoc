@@ -1,16 +1,16 @@
 .qrCodeContainer {
-  background-color: white;
-  padding: 1rem;
-  border-radius: var(--mantine-radius-md);
   display: inline-block;
+  padding: 1rem;
+  background-color: white;
+  border-radius: var(--mantine-radius-md);
 }
 
 .backupCodesList {
+  padding: 1rem;
   font-family: var(--mantine-font-family-monospace);
   background-color: var(--mantine-color-gray-0);
-  padding: 1rem;
   border-radius: var(--mantine-radius-md);
-  
+
   @mixin dark {
     background-color: var(--mantine-color-dark-7);
   }

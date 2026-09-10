@@ -1,7 +1,7 @@
 import { Button, Divider, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { CreateGroupForm } from "@/features/group/components/create-group-form.tsx";
 import { useTranslation } from "react-i18next";
+import { CreateGroupForm } from "@/features/group/components/create-group-form.tsx";
 
 export default function CreateGroupModal() {
   const { t } = useTranslation();
@@ -12,12 +12,12 @@ export default function CreateGroupModal() {
       <Button onClick={open}>{t("Create group")}</Button>
 
       <Modal
-        opened={opened}
-        onClose={close}
-        title={t("Create group")}
         closeButtonProps={{ "aria-label": t("Close") }}
+        onClose={close}
+        opened={opened}
+        title={t("Create group")}
       >
-        <Divider size="xs" mb="xs" />
+        <Divider mb="xs" size="xs" />
         <CreateGroupForm />
       </Modal>
     </>

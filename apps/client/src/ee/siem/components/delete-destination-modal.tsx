@@ -1,31 +1,37 @@
 import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ISiemDestination } from "@/ee/siem/types/siem.types";
 import { useDeleteSiemDestinationMutation } from "@/ee/siem/queries/siem-query";
+import { ISiemDestination } from "@/ee/siem/types/siem.types";
 
 interface DeleteDestinationModalProps {
-  opened: boolean;
-  onClose: () => void;
   destination: ISiemDestination | null;
+  onClose: () => void;
+  opened: boolean;
 }
 
-export function DeleteDestinationModal({ opened, onClose, destination }: DeleteDestinationModalProps) {
+export function DeleteDestinationModal({
+  opened,
+  onClose,
+  destination,
+}: DeleteDestinationModalProps) {
   const { t } = useTranslation();
   const deleteMutation = useDeleteSiemDestinationMutation();
 
   const handleDelete = async () => {
-    if (!destination) return;
+    if (!destination) {
+      return;
+    }
     await deleteMutation.mutateAsync({ destinationId: destination.id });
     onClose();
   };
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={t("Delete destination")}
-      size="md"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      size="md"
+      title={t("Delete destination")}
     >
       <Stack gap="md">
         <Text>
@@ -33,8 +39,14 @@ export function DeleteDestinationModal({ opened, onClose, destination }: DeleteD
           <strong>{destination?.name}</strong>?
         </Text>
         <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={onClose}>{t("Cancel")}</Button>
-          <Button color="red" onClick={handleDelete} loading={deleteMutation.isPending}>
+          <Button onClick={onClose} variant="default">
+            {t("Cancel")}
+          </Button>
+          <Button
+            color="red"
+            loading={deleteMutation.isPending}
+            onClick={handleDelete}
+          >
             {t("Delete")}
           </Button>
         </Group>

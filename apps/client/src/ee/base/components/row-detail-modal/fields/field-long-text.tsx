@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
 import { Textarea } from "@mantine/core";
-import { FieldProps, FieldShell } from "./detail-field";
+import { useEffect, useRef, useState } from "react";
 import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { FieldProps, FieldShell } from "./detail-field";
 
 const toText = (value: unknown) => (typeof value === "string" ? value : "");
 const normalize = (s: string) => {
@@ -24,7 +24,9 @@ export function FieldLongText({
   const cancelRef = useRef(false);
 
   useEffect(() => {
-    if (!focused) setDraft(text);
+    if (!focused) {
+      setDraft(text);
+    }
   }, [text, focused]);
 
   const commit = () => {
@@ -35,7 +37,9 @@ export function FieldLongText({
       setDraft(text);
       return;
     }
-    if (normalize(draft) !== normalize(text)) onChange(normalize(draft));
+    if (normalize(draft) !== normalize(text)) {
+      onChange(normalize(draft));
+    }
   };
 
   if (readOnly) {
@@ -47,22 +51,21 @@ export function FieldLongText({
   }
 
   return (
-    <FieldShell cursor="text" alignTop>
+    <FieldShell alignTop cursor="text">
       <Textarea
+        aria-label={property.name}
         autosize
-        minRows={3}
-        maxRows={16}
-        maxLength={25000}
-        variant="unstyled"
         className={classes.fieldTextarea}
         classNames={{ input: classes.fieldTextareaInput }}
-        value={draft}
+        maxLength={25_000}
+        maxRows={16}
+        minRows={3}
+        onBlur={commit}
+        onChange={(e) => setDraft(e.currentTarget.value)}
         onFocus={() => {
           setFocused(true);
           onEditingChange?.(true);
         }}
-        onChange={(e) => setDraft(e.currentTarget.value)}
-        onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             cancelRef.current = true;
@@ -72,7 +75,8 @@ export function FieldLongText({
             e.currentTarget.blur();
           }
         }}
-        aria-label={property.name}
+        value={draft}
+        variant="unstyled"
       />
     </FieldShell>
   );

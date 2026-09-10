@@ -1,35 +1,42 @@
 import {
-  Text,
-  Group,
-  UnstyledButton,
   Badge,
-  Table,
-  Container,
-  Title,
-  ThemeIcon,
   Button,
+  Container,
+  Group,
+  Table,
+  Text,
+  ThemeIcon,
+  Title,
+  UnstyledButton,
 } from "@mantine/core";
-import { Link } from "react-router-dom";
-import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
-import { formattedDate } from "@/lib/time";
-import { useFavoritesQuery } from "@/features/favorite/queries/favorite-query";
 import { IconFileDescription, IconStar } from "@tabler/icons-react";
-import { EmptyState } from "@/components/ui/empty-state";
-import { getSpaceUrl } from "@/lib/config";
 import { useTranslation } from "react-i18next";
-import { getInitialsColor } from "@/lib/get-initials-color";
-import PageListSkeleton from "@/components/ui/page-list-skeleton";
+import { Link } from "react-router-dom";
 import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import { EmptyState } from "@/components/ui/empty-state";
+import PageListSkeleton from "@/components/ui/page-list-skeleton";
+import { useFavoritesQuery } from "@/features/favorite/queries/favorite-query";
+import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
+import { getSpaceUrl } from "@/lib/config";
+import { getInitialsColor } from "@/lib/get-initials-color";
+import { formattedDate } from "@/lib/time";
 
 export default function FavoritesPage() {
   const { t } = useTranslation();
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFavoritesQuery("page");
+  const {
+    data,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useFavoritesQuery("page");
   const favorites = data?.pages.flatMap((p) => p.items) ?? [];
 
   if (isLoading) {
     return (
-      <Container size={800} py="xl">
-        <Title order={3} mb="lg">
+      <Container py="xl" size={800}>
+        <Title mb="lg" order={3}>
           {t("Favorites")}
         </Title>
         <PageListSkeleton />
@@ -39,8 +46,8 @@ export default function FavoritesPage() {
 
   if (isError) {
     return (
-      <Container size={800} py="xl">
-        <Title order={3} mb="lg">
+      <Container py="xl" size={800}>
+        <Title mb="lg" order={3}>
           {t("Favorites")}
         </Title>
         <Text>{t("Failed to fetch favorite pages")}</Text>
@@ -49,8 +56,8 @@ export default function FavoritesPage() {
   }
 
   return (
-    <Container size={800} py="xl">
-      <Title order={1} size="h3" mb="lg">
+    <Container py="xl" size={800}>
+      <Title mb="lg" order={1} size="h3">
         {t("Favorites")}
       </Title>
       {favorites.length > 0 ? (
@@ -60,7 +67,7 @@ export default function FavoritesPage() {
               <Table.Tbody>
                 {favorites.map((fav) =>
                   fav.page ? (
-                    <Table.Tr key={fav.id} className={rowClasses.row}>
+                    <Table.Tr className={rowClasses.row} key={fav.id}>
                       <Table.Td>
                         <UnstyledButton
                           className={rowClasses.link}
@@ -68,20 +75,20 @@ export default function FavoritesPage() {
                           to={buildPageUrl(
                             fav.space?.slug,
                             fav.page.slugId,
-                            fav.page.title,
+                            fav.page.title
                           )}
                         >
                           <Group wrap="nowrap">
                             {fav.page.icon || (
                               <ThemeIcon
-                                variant="transparent"
                                 color="gray"
                                 size={18}
+                                variant="transparent"
                               >
                                 <IconFileDescription size={18} />
                               </ThemeIcon>
                             )}
-                            <Text fw={500} size="md" lineClamp={1}>
+                            <Text fw={500} lineClamp={1} size="md">
                               {getPageTitle(fav.page.title, undefined, t)}
                             </Text>
                           </Group>
@@ -91,10 +98,10 @@ export default function FavoritesPage() {
                         {fav.space && (
                           <Badge
                             color={getInitialsColor(fav.space.name)}
-                            variant="light"
                             component={Link}
-                            to={getSpaceUrl(fav.space.slug)}
                             style={{ cursor: "pointer" }}
+                            to={getSpaceUrl(fav.space.slug)}
+                            variant="light"
                           >
                             {fav.space.name}
                           </Badge>
@@ -103,27 +110,27 @@ export default function FavoritesPage() {
                       <Table.Td>
                         <Text
                           c="dimmed"
-                          style={{ whiteSpace: "nowrap" }}
-                          size="xs"
                           fw={500}
+                          size="xs"
+                          style={{ whiteSpace: "nowrap" }}
                         >
                           {formattedDate(new Date(fav.createdAt))}
                         </Text>
                       </Table.Td>
                     </Table.Tr>
-                  ) : null,
+                  ) : null
                 )}
               </Table.Tbody>
             </Table>
           </Table.ScrollContainer>
           {hasNextPage && (
             <Button
-              variant="subtle"
               fullWidth
-              mt="sm"
-              mb="xl"
-              onClick={() => fetchNextPage()}
               loading={isFetchingNextPage}
+              mb="xl"
+              mt="sm"
+              onClick={() => fetchNextPage()}
+              variant="subtle"
             >
               {t("Load more")}
             </Button>
@@ -131,9 +138,9 @@ export default function FavoritesPage() {
         </>
       ) : (
         <EmptyState
+          description={t("Pages you favorite will show up here.")}
           icon={IconStar}
           title={t("No favorite pages")}
-          description={t("Pages you favorite will show up here.")}
         />
       )}
     </Container>

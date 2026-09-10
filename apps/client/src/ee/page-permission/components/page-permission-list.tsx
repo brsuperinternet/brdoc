@@ -1,16 +1,16 @@
 import { Center, Group, Loader, ScrollArea, Text } from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import { modals } from "@mantine/modals";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
-import { modals } from "@mantine/modals";
-import { userAtom } from "@/features/user/atoms/current-user-atom";
-import { PagePermissionRole } from "@/ee/page-permission/types/page-permission.types";
+import { useTranslation } from "react-i18next";
+import { PagePermissionItem } from "@/ee/page-permission";
 import {
   usePagePermissionsQuery,
   useRemovePagePermissionMutation,
   useUpdatePagePermissionRoleMutation,
 } from "@/ee/page-permission/queries/page-permission-query";
-import { PagePermissionItem } from "@/ee/page-permission";
+import { PagePermissionRole } from "@/ee/page-permission/types/page-permission.types";
+import { userAtom } from "@/features/user/atoms/current-user-atom";
 import classes from "./page-permission.module.css";
 
 type PagePermissionListProps = {
@@ -37,7 +37,9 @@ export function PagePermissionList({
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -45,7 +47,7 @@ export function PagePermissionList({
           fetchNextPage();
         }
       },
-      { root: viewportRef.current, threshold: 0.1 },
+      { root: viewportRef.current, threshold: 0.1 }
     );
 
     observer.observe(sentinel);
@@ -55,7 +57,7 @@ export function PagePermissionList({
   const handleRoleChange = async (
     memberId: string,
     type: "user" | "group",
-    newRole: string,
+    newRole: string
   ) => {
     await updateRoleMutation.mutateAsync({
       pageId,
@@ -66,17 +68,16 @@ export function PagePermissionList({
 
   const handleRemove = (memberId: string, type: "user" | "group") => {
     modals.openConfirmModal({
-      title: t("Remove access"),
+      centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Are you sure you want to remove this member's access to the page?",
+            "Are you sure you want to remove this member's access to the page?"
           )}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Remove"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Remove") },
       onConfirm: async () => {
         await removeMutation.mutateAsync({
           pageId,
@@ -85,33 +86,42 @@ export function PagePermissionList({
             : { groupIds: [memberId] }),
         });
       },
+      title: t("Remove access"),
     });
   };
 
   const handleRemoveAll = () => {
     modals.openConfirmModal({
-      title: t("Remove all access"),
+      centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Are you sure you want to remove all specific access? This will make the page open to everyone in the space.",
+            "Are you sure you want to remove all specific access? This will make the page open to everyone in the space."
           )}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Remove all"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Remove all") },
       onConfirm: () => onRemoveAll?.(),
+      title: t("Remove all access"),
     });
   };
 
   const members = data?.pages.flatMap((page) => page.items) ?? [];
 
   const sortedMembers = [...members].sort((a, b) => {
-    if (a.type === "user" && a.id === currentUser?.id) return -1;
-    if (b.type === "user" && b.id === currentUser?.id) return 1;
-    if (a.type === "group" && b.type === "user") return -1;
-    if (a.type === "user" && b.type === "group") return 1;
+    if (a.type === "user" && a.id === currentUser?.id) {
+      return -1;
+    }
+    if (b.type === "user" && b.id === currentUser?.id) {
+      return 1;
+    }
+    if (a.type === "group" && b.type === "user") {
+      return -1;
+    }
+    if (a.type === "user" && b.type === "group") {
+      return 1;
+    }
     return 0;
   });
 
@@ -129,8 +139,8 @@ export function PagePermissionList({
 
   return (
     <>
-      <Group justify="space-between" align="center">
-        <Text size="sm" fw={500}>
+      <Group align="center" justify="space-between">
+        <Text fw={500} size="sm">
           {t("People with access")}
         </Text>
         {canManage && members.length > 0 && (
@@ -143,11 +153,11 @@ export function PagePermissionList({
       <ScrollArea.Autosize mah={400} viewportRef={viewportRef}>
         {sortedMembers.map((member) => (
           <PagePermissionItem
+            disabled={!canManage}
             key={`${member.type}-${member.id}`}
             member={member}
-            onRoleChange={handleRoleChange}
             onRemove={handleRemove}
-            disabled={!canManage}
+            onRoleChange={handleRoleChange}
           />
         ))}
 

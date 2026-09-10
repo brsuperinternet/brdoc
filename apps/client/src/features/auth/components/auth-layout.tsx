@@ -1,5 +1,5 @@
-import React from "react";
 import { Group, Text } from "@mantine/core";
+import React from "react";
 import classes from "./auth.module.css";
 
 type AuthLayoutProps = {
@@ -9,14 +9,14 @@ type AuthLayoutProps = {
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <>
-      <Group justify="center" gap={8} className={classes.logo}>
+      <Group className={classes.logo} gap={8} justify="center">
         <img
-          src="/icons/favicon-32x32.png"
           alt="Docmost"
-          width={22}
           height={22}
+          src="/icons/favicon-32x32.png"
+          width={22}
         />
-        <Text size="28px" fw={700} style={{ userSelect: "none" }}>
+        <Text fw={700} size="28px" style={{ userSelect: "none" }}>
           Docmost
         </Text>
       </Group>

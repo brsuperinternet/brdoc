@@ -1,13 +1,13 @@
+import { isEditorReady } from "@docmost/editor-ext";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconCircleCheck, IconCircleCheckFilled } from "@tabler/icons-react";
-import { useResolveCommentMutation } from "@/ee/comment/queries/comment-query";
-import { useTranslation } from "react-i18next";
 import { Editor } from "@tiptap/react";
-import { isEditorReady } from "@docmost/editor-ext";
+import { useTranslation } from "react-i18next";
+import { useResolveCommentMutation } from "@/ee/comment/queries/comment-query";
 
 interface ResolveCommentProps {
-  editor: Editor;
   commentId: string;
+  editor: Editor;
   pageId: string;
   resolvedAt?: Date;
 }
@@ -48,12 +48,12 @@ function ResolveComment({
       position="top"
     >
       <ActionIcon
-        onClick={handleResolveToggle}
-        variant="subtle"
         color={isResolved ? "green" : "gray"}
-        size="sm"
-        loading={resolveCommentMutation.isPending}
         disabled={resolveCommentMutation.isPending}
+        loading={resolveCommentMutation.isPending}
+        onClick={handleResolveToggle}
+        size="sm"
+        variant="subtle"
       >
         {isResolved ? (
           <IconCircleCheckFilled size={18} />

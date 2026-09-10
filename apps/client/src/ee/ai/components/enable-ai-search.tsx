@@ -1,25 +1,25 @@
-import { Group, Text, Switch, MantineSize, Tooltip } from "@mantine/core";
+import { Group, MantineSize, Switch, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
-import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 
 export default function EnableAiSearch() {
   const { t } = useTranslation();
 
   return (
     <>
-      <Group justify="space-between" wrap="nowrap" gap="xl">
+      <Group gap="xl" justify="space-between" wrap="nowrap">
         <div>
           <Text size="md">{t("AI-powered search (AI Answers)")}</Text>
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             {t(
-              "AI search uses vector embeddings to provide semantic search capabilities across your workspace content.",
+              "AI search uses vector embeddings to provide semantic search capabilities across your workspace content."
             )}
           </Text>
         </div>
@@ -31,8 +31,8 @@ export default function EnableAiSearch() {
 }
 
 interface AiSearchToggleProps {
-  size?: MantineSize;
   label?: string;
+  size?: MantineSize;
 }
 export function AiSearchToggle({ size, label }: AiSearchToggleProps) {
   const { t } = useTranslation();
@@ -49,22 +49,22 @@ export function AiSearchToggle({ size, label }: AiSearchToggleProps) {
       setWorkspace(updatedWorkspace);
     } catch (err) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
   };
 
   return (
-    <Tooltip label={upgradeLabel} disabled={hasAccess} refProp="rootRef">
+    <Tooltip disabled={hasAccess} label={upgradeLabel} refProp="rootRef">
       <Switch
-        size={size}
+        aria-label={t("Toggle AI search")}
+        defaultChecked={checked}
+        disabled={!hasAccess}
         label={label}
         labelPosition="left"
-        defaultChecked={checked}
         onChange={handleChange}
-        disabled={!hasAccess}
-        aria-label={t("Toggle AI search")}
+        size={size}
       />
     </Tooltip>
   );

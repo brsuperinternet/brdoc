@@ -1,9 +1,9 @@
-import { SpaceRole } from "@/lib/types.ts";
+import { ExportFormat } from "@/features/page/types/page.types.ts";
 import {
   SpaceCaslAction,
   SpaceCaslSubject,
 } from "@/features/space/permissions/permissions.type.ts";
-import { ExportFormat } from "@/features/page/types/page.types.ts";
+import { SpaceRole } from "@/lib/types.ts";
 
 export interface ISpaceSharingSettings {
   disabled?: boolean;
@@ -14,35 +14,35 @@ export interface ISpaceCommentsSettings {
 }
 
 export interface ISpaceSettings {
-  sharing?: ISpaceSharingSettings;
   comments?: ISpaceCommentsSettings;
+  sharing?: ISpaceSharingSettings;
 }
 
 export interface ISpace {
-  id: string;
-  name: string;
-  description: string;
-  logo?: string;
-  slug: string;
-  isPersonal?: boolean;
-  hostname: string;
-  creatorId: string;
+  allowViewerComments?: boolean;
   createdAt: Date;
-  updatedAt: Date;
-  memberCount?: number;
-  isPublished?: boolean;
-  spaceId?: string;
-  membership?: IMembership;
-  settings?: ISpaceSettings;
+  creatorId: string;
+  description: string;
   // for updates
   disablePublicSharing?: boolean;
-  allowViewerComments?: boolean;
+  hostname: string;
+  id: string;
+  isPersonal?: boolean;
+  isPublished?: boolean;
+  logo?: string;
+  memberCount?: number;
+  membership?: IMembership;
+  name: string;
+  settings?: ISpaceSettings;
+  slug: string;
+  spaceId?: string;
+  updatedAt: Date;
 }
 
 interface IMembership {
-  userId: string;
-  role: SpaceRole;
   permissions?: Permissions;
+  role: SpaceRole;
+  userId: string;
 }
 
 interface Permission {
@@ -53,44 +53,44 @@ interface Permission {
 type Permissions = Permission[];
 
 export interface IAddSpaceMember {
+  groupIds?: string[];
   spaceId: string;
   userIds?: string[];
-  groupIds?: string[];
 }
 
 export interface IRemoveSpaceMember {
+  groupId?: string;
   spaceId: string;
   userId?: string;
-  groupId?: string;
 }
 
 export interface IChangeSpaceMemberRole {
+  groupId?: string;
   spaceId: string;
   userId?: string;
-  groupId?: string;
 }
 
 // space member
 export interface SpaceUserInfo {
+  avatarUrl: string;
+  email: string;
   id: string;
   name: string;
-  email: string;
-  avatarUrl: string;
   type: "user";
 }
 
 export interface SpaceGroupInfo {
   id: string;
-  name: string;
   isDefault: boolean;
   memberCount: number;
+  name: string;
   type: "group";
 }
 
 export type ISpaceMember = { role: string } & (SpaceUserInfo | SpaceGroupInfo);
 
 export interface IExportSpaceParams {
-  spaceId: string;
   format: ExportFormat;
   includeAttachments?: boolean;
+  spaceId: string;
 }

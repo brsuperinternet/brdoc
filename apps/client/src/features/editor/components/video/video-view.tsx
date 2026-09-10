@@ -1,19 +1,25 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { Group, Loader, Text } from "@mantine/core";
-import { useMemo } from "react";
-import { getFileUrl } from "@/lib/config.ts";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import clsx from "clsx";
-import classes from "./video-view.module.css";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { getFileUrl } from "@/lib/config.ts";
+import classes from "./video-view.module.css";
 
 export default function VideoView(props: NodeViewProps) {
   const { t } = useTranslation();
   const { editor, node, selected } = props;
   const { src, width, align, alt, aspectRatio, placeholder } = node.attrs;
   const alignClass = useMemo(() => {
-    if (align === "left") return "alignLeft";
-    if (align === "right") return "alignRight";
-    if (align === "center") return "alignCenter";
+    if (align === "left") {
+      return "alignLeft";
+    }
+    if (align === "right") {
+      return "alignRight";
+    }
+    if (align === "center") {
+      return "alignCenter";
+    }
     return "alignCenter";
   }, [align]);
   const previewSrc = useMemo(() => {
@@ -34,7 +40,7 @@ export default function VideoView(props: NodeViewProps) {
           selected && "ProseMirror-selectednode",
           classes.videoWrapper,
           !src && placeholder && classes.skeleton,
-          alignClass,
+          alignClass
         )}
         style={{
           aspectRatio: aspectRatio ? aspectRatio : src ? undefined : "16 / 9",
@@ -43,27 +49,27 @@ export default function VideoView(props: NodeViewProps) {
       >
         {src && (
           <video
-            className={classes.video}
-            preload="metadata"
-            controls
-            src={getFileUrl(src)}
             aria-label={alt || undefined}
+            className={classes.video}
+            controls
+            preload="metadata"
+            src={getFileUrl(src)}
           />
         )}
         {!src && previewSrc && (
-          <Group pos="relative" h="100%" w="100%">
+          <Group h="100%" pos="relative" w="100%">
             <video
-              className={classes.video}
-              preload="metadata"
-              controls
-              src={previewSrc}
               aria-label={placeholder?.name || t("Video")}
+              className={classes.video}
+              controls
+              preload="metadata"
+              src={previewSrc}
             />
-            <Loader size={20} pos="absolute" top={6} right={6} />
+            <Loader pos="absolute" right={6} size={20} top={6} />
           </Group>
         )}
-        {!src && !previewSrc && placeholder && (
-          <Group justify="center" wrap="nowrap" gap="xs" maw="100%" px="md">
+        {!(src || previewSrc) && placeholder && (
+          <Group gap="xs" justify="center" maw="100%" px="md" wrap="nowrap">
             <Loader size={20} style={{ flexShrink: 0 }} />
             <Text component="span" size="sm" truncate="end">
               {placeholder?.name
@@ -72,8 +78,8 @@ export default function VideoView(props: NodeViewProps) {
             </Text>
           </Group>
         )}
-        {!src && !previewSrc && !placeholder && (
-          <video className={classes.video} controls aria-label={t("Video")} />
+        {!(src || previewSrc || placeholder) && (
+          <video aria-label={t("Video")} className={classes.video} controls />
         )}
       </div>
     </NodeViewWrapper>

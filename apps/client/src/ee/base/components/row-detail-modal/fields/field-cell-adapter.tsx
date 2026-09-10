@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
-import { FieldProps, FieldShell } from "./detail-field";
 import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { FieldProps, FieldShell } from "./detail-field";
 
 /** Person, file and page editors are popover pickers owned by their cell
  *  components; the shell supplies modal styling and click-anywhere
@@ -32,7 +32,9 @@ export function FieldCellAdapter({
   }, [editing]);
 
   const handleClick = useCallback(() => {
-    if (!canActivate || editingAtMouseDownRef.current || editing) return;
+    if (!canActivate || editingAtMouseDownRef.current || editing) {
+      return;
+    }
     setEditing(true);
   }, [canActivate, editing]);
 
@@ -41,38 +43,40 @@ export function FieldCellAdapter({
       setEditing(false);
       onChange(next);
     },
-    [onChange],
+    [onChange]
   );
   const handleCancel = useCallback(() => setEditing(false), []);
 
-  if (!CellComponent) return <FieldShell />;
+  if (!CellComponent) {
+    return <FieldShell />;
+  }
 
   return (
     <FieldShell
-      cursor={canActivate ? "pointer" : "default"}
       active={editing}
-      onMouseDown={handleMouseDown}
-      onClick={handleClick}
-      role={canActivate ? "button" : undefined}
-      tabIndex={canActivate ? 0 : undefined}
       aria-label={property.name}
+      cursor={canActivate ? "pointer" : "default"}
+      onClick={handleClick}
       onKeyDown={(e) => {
         if (canActivate && !editing && (e.key === "Enter" || e.key === " ")) {
           e.preventDefault();
           setEditing(true);
         }
       }}
+      onMouseDown={handleMouseDown}
+      role={canActivate ? "button" : undefined}
+      tabIndex={canActivate ? 0 : undefined}
     >
       <div className={classes.fieldCellDisplay}>
         <CellComponent
-          value={value}
-          property={property}
-          rowId={rowId}
           isEditing={editing}
-          readOnly={readOnly}
+          onCancel={handleCancel}
           onCommit={handleCommit}
           onValueChange={onChange}
-          onCancel={handleCancel}
+          property={property}
+          readOnly={readOnly}
+          rowId={rowId}
+          value={value}
         />
       </div>
     </FieldShell>

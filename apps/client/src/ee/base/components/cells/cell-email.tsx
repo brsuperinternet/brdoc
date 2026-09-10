@@ -1,7 +1,7 @@
-import { IBaseProperty } from "@/ee/base/types/base.types";
 import { Tooltip } from "@mantine/core";
 import { useEditableTextCell } from "@/ee/base/hooks/use-editable-text-cell";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 
 type CellEmailProps = {
   value: unknown;
@@ -15,30 +15,37 @@ type CellEmailProps = {
 const toDraft = (value: unknown) => (typeof value === "string" ? value : "");
 const parse = (draft: string) => draft || null;
 
-export function CellEmail({ value, property, rowId, isEditing, onCommit, onCancel }: CellEmailProps) {
+export function CellEmail({
+  value,
+  property,
+  rowId,
+  isEditing,
+  onCommit,
+  onCancel,
+}: CellEmailProps) {
   const { draft, setDraft, inputRef, handleKeyDown, handleBlur } =
     useEditableTextCell({
-      value,
       isEditing,
-      onCommit,
       onCancel,
-      toDraft,
+      onCommit,
       parse,
-      rowId,
       propertyId: property.id,
+      rowId,
+      toDraft,
+      value,
     });
 
   if (isEditing) {
     return (
       <input
-        ref={inputRef}
-        type="email"
         className={cellClasses.cellInput}
-        value={draft}
-        placeholder="email@example.com"
+        onBlur={handleBlur}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
+        placeholder="email@example.com"
+        ref={inputRef}
+        type="email"
+        value={draft}
       />
     );
   }
@@ -48,7 +55,13 @@ export function CellEmail({ value, property, rowId, isEditing, onCommit, onCance
     return <span className={cellClasses.emptyValue} />;
   }
   return (
-    <Tooltip label={displayValue} multiline withinPortal openDelay={400} maw={420}>
+    <Tooltip
+      label={displayValue}
+      maw={420}
+      multiline
+      openDelay={400}
+      withinPortal
+    >
       <a
         className={cellClasses.emailLink}
         href={`mailto:${displayValue}`}

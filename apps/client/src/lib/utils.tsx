@@ -1,14 +1,13 @@
-import { validate as isValidUUID } from "uuid";
 import { IconFileDescription } from "@tabler/icons-react";
-import { ReactNode } from "react";
 import { TFunction } from "i18next";
+import { ReactNode } from "react";
+import { validate as isValidUUID } from "uuid";
 
 export function formatMemberCount(memberCount: number, t: TFunction): string {
   if (memberCount === 1) {
     return `1 ${t("member")}`;
-  } else {
-    return `${memberCount} ${t("members")}`;
   }
+  return `${memberCount} ${t("members")}`;
 }
 
 export function extractPageSlugId(slug: string): string {
@@ -29,13 +28,14 @@ export const computeSpaceSlug = (name: string) => {
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase())
       .join("");
-  } else {
-    return alphanumericName.toLowerCase();
   }
+  return alphanumericName.toLowerCase();
 };
 
 export const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return "0.0 KB";
+  if (bytes === 0) {
+    return "0.0 KB";
+  }
 
   const unitSize = 1024;
   const units = ["KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
@@ -44,7 +44,7 @@ export const formatBytes = (bytes: number): string => {
 
   const unitIndex = Math.floor(Math.log(kilobytes) / Math.log(unitSize));
   const adjustedUnitIndex = Math.max(unitIndex, 0);
-  const adjustedSize = kilobytes / Math.pow(unitSize, adjustedUnitIndex);
+  const adjustedSize = kilobytes / unitSize ** adjustedUnitIndex;
 
   // Use one decimal for KB and no decimals for MB or higher
   const precision = adjustedUnitIndex === 0 ? 1 : 0;
@@ -54,7 +54,7 @@ export const formatBytes = (bytes: number): string => {
 
 export async function svgStringToFile(
   svgString: string,
-  fileName: string,
+  fileName: string
 ): Promise<File> {
   const blob = new Blob([svgString], { type: "image/svg+xml" });
   return new File([blob], fileName, { type: "image/svg+xml" });
@@ -87,17 +87,21 @@ export function getPageIcon(icon: string, size = 18): string | ReactNode {
   return (
     icon || (
       <IconFileDescription
-        size={size}
-        color="var(--mantine-color-gray-6)"
         aria-hidden="true"
+        color="var(--mantine-color-gray-6)"
+        size={size}
       />
     )
   );
 }
 
 export const normalizeUrl = (url: string): string => {
-  if (!url) return url;
-  if (url.startsWith("/") || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) return url;
+  if (!url) {
+    return url;
+  }
+  if (url.startsWith("/") || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
+    return url;
+  }
   return `https://${url}`;
 };
 

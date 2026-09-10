@@ -1,18 +1,17 @@
-import React from "react";
-import { socketAtom } from "@/features/websocket/atoms/socket-atom.ts";
-import { useAtom } from "jotai";
 import { InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import React from "react";
+import { IComment } from "@/features/comment/types/comment.types";
+import { socketAtom } from "@/features/websocket/atoms/socket-atom.ts";
 import { WebSocketEvent } from "@/features/websocket/types";
-import { IPage } from "../page/types/page.types";
 import { IPagination } from "@/lib/types";
+import { RQ_KEY } from "../comment/queries/comment-query";
 import {
   invalidateOnCreatePage,
   invalidateOnDeletePage,
-  updateCacheOnMovePage,
   invalidateOnUpdatePage,
+  updateCacheOnMovePage,
 } from "../page/queries/page-query";
-import { RQ_KEY } from "../comment/queries/comment-query";
-import { IComment } from "@/features/comment/types/comment.types";
 
 export const useQuerySubscription = () => {
   const queryClient = useQueryClient();
@@ -31,15 +30,17 @@ export const useQuerySubscription = () => {
           });
           break;
         case "commentCreated": {
-          const createCache = queryClient.getQueryData(
-            RQ_KEY(data.pageId),
-          ) as InfiniteData<IPagination<IComment>> | undefined;
+          const createCache = queryClient.getQueryData(RQ_KEY(data.pageId)) as
+            | InfiniteData<IPagination<IComment>>
+            | undefined;
 
           if (createCache && createCache.pages.length > 0) {
             const alreadyExists = createCache.pages.some((page) =>
-              page.items.some((c) => c.id === data.comment.id),
+              page.items.some((c) => c.id === data.comment.id)
             );
-            if (alreadyExists) break;
+            if (alreadyExists) {
+              break;
+            }
 
             const lastIdx = createCache.pages.length - 1;
             queryClient.setQueryData(RQ_KEY(data.pageId), {
@@ -47,7 +48,7 @@ export const useQuerySubscription = () => {
               pages: createCache.pages.map((page, i) =>
                 i === lastIdx
                   ? { ...page, items: [...page.items, data.comment] }
-                  : page,
+                  : page
               ),
             });
           }
@@ -55,9 +56,9 @@ export const useQuerySubscription = () => {
         }
         case "commentUpdated":
         case "commentResolved": {
-          const updateCache = queryClient.getQueryData(
-            RQ_KEY(data.pageId),
-          ) as InfiniteData<IPagination<IComment>> | undefined;
+          const updateCache = queryClient.getQueryData(RQ_KEY(data.pageId)) as
+            | InfiniteData<IPagination<IComment>>
+            | undefined;
 
           if (updateCache) {
             queryClient.setQueryData(RQ_KEY(data.pageId), {
@@ -65,7 +66,7 @@ export const useQuerySubscription = () => {
               pages: updateCache.pages.map((page) => ({
                 ...page,
                 items: page.items.map((comment) =>
-                  comment.id === data.comment.id ? data.comment : comment,
+                  comment.id === data.comment.id ? data.comment : comment
                 ),
               })),
             });
@@ -73,9 +74,9 @@ export const useQuerySubscription = () => {
           break;
         }
         case "commentDeleted": {
-          const deleteCache = queryClient.getQueryData(
-            RQ_KEY(data.pageId),
-          ) as InfiniteData<IPagination<IComment>> | undefined;
+          const deleteCache = queryClient.getQueryData(RQ_KEY(data.pageId)) as
+            | InfiniteData<IPagination<IComment>>
+            | undefined;
 
           if (deleteCache) {
             queryClient.setQueryData(RQ_KEY(data.pageId), {
@@ -83,7 +84,7 @@ export const useQuerySubscription = () => {
               pages: deleteCache.pages.map((page) => ({
                 ...page,
                 items: page.items.filter(
-                  (comment) => comment.id !== data.commentId,
+                  (comment) => comment.id !== data.commentId
                 ),
               })),
             });
@@ -99,7 +100,7 @@ export const useQuerySubscription = () => {
             data.payload.id,
             data.payload.oldParentId,
             data.payload.parentId,
-            data.payload.pageData,
+            data.payload.pageData
           );
           break;
         case "deleteTreeNode":
@@ -111,7 +112,9 @@ export const useQuerySubscription = () => {
             entity === "pages" ? [data.payload.slugId, data.id] : [data.id];
 
           for (const keyId of keyIds) {
-            if (!keyId) continue;
+            if (!keyId) {
+              continue;
+            }
             const cached = queryClient.getQueryData<Record<string, unknown>>([
               ...data.entity,
               keyId,
@@ -130,7 +133,7 @@ export const useQuerySubscription = () => {
               data.payload.parentPageId,
               data.id,
               data.payload.title,
-              data.payload.icon,
+              data.payload.icon
             );
           }
           break;

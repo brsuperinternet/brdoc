@@ -1,15 +1,15 @@
+import { ActionIcon, Text } from "@mantine/core";
+import { IconGripVertical, IconPlus } from "@tabler/icons-react";
+import clsx from "clsx";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Text } from "@mantine/core";
-import { IconPlus, IconGripVertical } from "@tabler/icons-react";
-import clsx from "clsx";
-import { IBaseProperty, KanbanColumn } from "@/ee/base/types/base.types";
 import { choiceColor } from "@/ee/base/components/cells/choice-color";
-import { useKanbanColumnDnd } from "@/ee/base/hooks/use-kanban-column-dnd";
 import { BaseDropEdgeIndicator } from "@/ee/base/components/grid/base-drop-edge-indicator";
-import { KanbanColumnTitle } from "@/ee/base/components/kanban/kanban-column-title";
 import { KanbanColumnMenu } from "@/ee/base/components/kanban/kanban-column-menu";
+import { KanbanColumnTitle } from "@/ee/base/components/kanban/kanban-column-title";
+import { useKanbanColumnDnd } from "@/ee/base/hooks/use-kanban-column-dnd";
 import classes from "@/ee/base/styles/kanban.module.css";
+import { IBaseProperty, KanbanColumn } from "@/ee/base/types/base.types";
 
 type KanbanColumnHeaderProps = {
   column: KanbanColumn;
@@ -21,45 +21,74 @@ type KanbanColumnHeaderProps = {
   onAddCard: () => void;
 };
 
-export function KanbanColumnHeader({ column, pageId, property, count, canEdit, onHide, onAddCard }: KanbanColumnHeaderProps) {
+export function KanbanColumnHeader({
+  column,
+  pageId,
+  property,
+  count,
+  canEdit,
+  onHide,
+  onAddCard,
+}: KanbanColumnHeaderProps) {
   const { t } = useTranslation();
   const dotColor = column.color
-    ? choiceColor(column.color).color as string
+    ? (choiceColor(column.color).color as string)
     : "light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-3))";
 
   const headerRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const { closestEdge, isDragging } = useKanbanColumnDnd({
-    headerRef,
-    handleRef,
     columnKey: column.key,
+    handleRef,
+    headerRef,
     pageId,
   });
 
   return (
-    <div ref={headerRef} className={clsx(classes.columnHeader, isDragging && classes.columnHeaderDragging)}>
+    <div
+      className={clsx(
+        classes.columnHeader,
+        isDragging && classes.columnHeaderDragging
+      )}
+      ref={headerRef}
+    >
       {canEdit && (
-        <div ref={handleRef} className={classes.columnDragHandle} aria-hidden>
+        <div aria-hidden className={classes.columnDragHandle} ref={handleRef}>
           <IconGripVertical size={14} />
         </div>
       )}
       <div
         style={{
-          width: 8,
-          height: 8,
+          background: dotColor,
           borderRadius: "50%",
           flexShrink: 0,
-          background: dotColor,
+          height: 8,
+          width: 8,
         }}
       />
-      <KanbanColumnTitle column={column} property={property} pageId={pageId} canEdit={canEdit} />
+      <KanbanColumnTitle
+        canEdit={canEdit}
+        column={column}
+        pageId={pageId}
+        property={property}
+      />
       {count !== undefined && <Text className={classes.count}>{count}</Text>}
       {canEdit && (
         <>
           {property && (
-            <KanbanColumnMenu property={property} pageId={pageId} onHide={onHide} />
+            <KanbanColumnMenu
+              onHide={onHide}
+              pageId={pageId}
+              property={property}
+            />
           )}
-          <ActionIcon variant="subtle" size="sm" color="gray" aria-label={t("Add card")} onClick={onAddCard}>
+          <ActionIcon
+            aria-label={t("Add card")}
+            color="gray"
+            onClick={onAddCard}
+            size="sm"
+            variant="subtle"
+          >
             <IconPlus size={14} />
           </ActionIcon>
         </>

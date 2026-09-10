@@ -1,54 +1,54 @@
-import React, { useState } from "react";
 import {
-  Modal,
-  Stack,
-  Text,
-  Button,
-  Group,
-  Stepper,
-  Center,
-  Image,
-  PinInput,
-  Alert,
-  List,
   ActionIcon,
-  Tooltip,
-  Paper,
+  Alert,
+  Button,
+  Center,
   Code,
-  Loader,
   Collapse,
+  Group,
+  Image,
+  List,
+  Loader,
+  Modal,
+  Paper,
+  PinInput,
+  Stack,
+  Stepper,
+  Text,
+  Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import { CopyButton } from "@/components/common/copy-button";
+import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 import {
-  IconQrcode,
-  IconShieldCheck,
-  IconKey,
-  IconCopy,
-  IconCheck,
   IconAlertCircle,
+  IconCheck,
   IconChevronDown,
   IconChevronRight,
+  IconCopy,
+  IconKey,
   IconPrinter,
+  IconQrcode,
+  IconShieldCheck,
 } from "@tabler/icons-react";
-import { useForm } from "@mantine/form";
 import { useMutation } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
-import { setupMfa, enableMfa } from "@/ee/mfa";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
+import { CopyButton } from "@/components/common/copy-button";
+import { enableMfa, setupMfa } from "@/ee/mfa";
 
 interface MfaSetupModalProps {
-  opened: boolean;
+  isRequired?: boolean;
   onClose?: () => void;
   onComplete: () => void;
-  isRequired?: boolean;
+  opened: boolean;
 }
 
 interface SetupData {
-  qrCode: string;
   manualKey: string;
+  qrCode: string;
 }
 
 const formSchema = z.object({
@@ -70,23 +70,23 @@ export function MfaSetupModal({
   const [manualEntryOpen, setManualEntryOpen] = useState(false);
 
   const form = useForm({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       verificationCode: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   const setupMutation = useMutation({
     mutationFn: () => setupMfa({ method: "totp" }),
-    onSuccess: (data) => {
-      setSetupData(data);
-    },
     onError: (error: any) => {
       notifications.show({
-        title: t("Error"),
-        message: error.response?.data?.message || t("Failed to setup MFA"),
         color: "red",
+        message: error.response?.data?.message || t("Failed to setup MFA"),
+        title: t("Error"),
       });
+    },
+    onSuccess: (data) => {
+      setSetupData(data);
     },
   });
 
@@ -102,18 +102,18 @@ export function MfaSetupModal({
       enableMfa({
         verificationCode,
       }),
+    onError: (error: any) => {
+      notifications.show({
+        color: "red",
+        message:
+          error.response?.data?.message || t("Invalid verification code"),
+        title: t("Error"),
+      });
+      form.setFieldValue("verificationCode", "");
+    },
     onSuccess: (data) => {
       setBackupCodes(data.backupCodes);
       setActive(1); // Move to backup codes step
-    },
-    onError: (error: any) => {
-      notifications.show({
-        title: t("Error"),
-        message:
-          error.response?.data?.message || t("Invalid verification code"),
-        color: "red",
-      });
-      form.setFieldValue("verificationCode", "");
     },
   });
 
@@ -142,16 +142,16 @@ export function MfaSetupModal({
 
   return (
     <Modal
-      opened={opened}
       onClose={handleClose}
-      title={t("Set up two-factor authentication")}
+      opened={opened}
       size="md"
+      title={t("Set up two-factor authentication")}
     >
       <Stepper active={active} size="sm">
         <Stepper.Step
-          label={t("Setup & Verify")}
           description={t("Add to authenticator")}
           icon={<IconQrcode size={18} />}
+          label={t("Setup & Verify")}
         >
           <form onSubmit={form.onSubmit(handleVerify)}>
             <Stack gap="md" mt="xl">
@@ -168,10 +168,10 @@ export function MfaSetupModal({
                   <Center>
                     <Paper p="md" withBorder>
                       <Image
-                        src={setupData.qrCode}
                         alt="MFA QR Code"
-                        width={200}
                         height={200}
+                        src={setupData.qrCode}
+                        width={200}
                       />
                     </Paper>
                   </Center>
@@ -185,7 +185,7 @@ export function MfaSetupModal({
                       ) : (
                         <IconChevronRight size={16} />
                       )}
-                      <Text size="sm" c="dimmed">
+                      <Text c="dimmed" size="sm">
                         {t("Can't scan the code?")}
                       </Text>
                     </Group>
@@ -193,13 +193,13 @@ export function MfaSetupModal({
 
                   <Collapse expanded={manualEntryOpen}>
                     <Alert
-                      icon={<IconAlertCircle size={20} />}
                       color="gray"
+                      icon={<IconAlertCircle size={20} />}
                       variant="light"
                     >
-                      <Text size="sm" mb="sm">
+                      <Text mb="sm" size="sm">
                         {t(
-                          "Enter this code manually in your authenticator app:",
+                          "Enter this code manually in your authenticator app:"
                         )}
                       </Text>
                       <Group gap="xs">
@@ -224,17 +224,17 @@ export function MfaSetupModal({
                     </Alert>
                   </Collapse>
 
-                  <Text size="sm" mt="md">
+                  <Text mt="md" size="sm">
                     {t("2. Enter the 6-digit code from your authenticator")}
                   </Text>
 
                   <Stack align="center">
                     <PinInput
-                      length={6}
-                      type="number"
                       autoFocus
                       data-autofocus
+                      length={6}
                       oneTimeCode
+                      type="number"
                       {...form.getInputProps("verificationCode")}
                       styles={{
                         input: {
@@ -251,17 +251,17 @@ export function MfaSetupModal({
                   </Stack>
 
                   <Button
-                    type="submit"
                     fullWidth
-                    loading={enableMutation.isPending}
                     leftSection={<IconShieldCheck size={18} />}
+                    loading={enableMutation.isPending}
+                    type="submit"
                   >
                     {t("Verify and enable")}
                   </Button>
                 </>
               ) : (
                 <Center py="xl">
-                  <Text size="sm" c="dimmed">
+                  <Text c="dimmed" size="sm">
                     {t("Failed to generate QR code. Please try again.")}
                   </Text>
                 </Center>
@@ -271,35 +271,32 @@ export function MfaSetupModal({
         </Stepper.Step>
 
         <Stepper.Step
-          label={t("Backup")}
           description={t("Save codes")}
           icon={<IconKey size={18} />}
+          label={t("Backup")}
         >
           <Stack gap="md" mt="xl">
             <Alert
+              color="yellow"
               icon={<IconAlertCircle size={20} />}
               title={t("Save your backup codes")}
-              color="yellow"
             >
               <Text size="sm">
                 {t(
-                  "These codes can be used to access your account if you lose access to your authenticator app. Each code can only be used once.",
+                  "These codes can be used to access your account if you lose access to your authenticator app. Each code can only be used once."
                 )}
               </Text>
             </Alert>
 
             <Paper p="md" withBorder>
               <Group justify="space-between" mb="sm">
-                <Text size="sm" fw={600}>
+                <Text fw={600} size="sm">
                   {t("Backup codes")}
                 </Text>
                 <Group gap="xs" wrap="nowrap">
                   <CopyButton value={backupCodes.join("\n")}>
                     {({ copied, copy }) => (
                       <Button
-                        size="xs"
-                        variant="subtle"
-                        onClick={copy}
                         leftSection={
                           copied ? (
                             <IconCheck size={14} />
@@ -307,16 +304,19 @@ export function MfaSetupModal({
                             <IconCopy size={14} />
                           )
                         }
+                        onClick={copy}
+                        size="xs"
+                        variant="subtle"
                       >
                         {copied ? t("Copied") : t("Copy")}
                       </Button>
                     )}
                   </CopyButton>
                   <Button
+                    leftSection={<IconPrinter size={14} />}
+                    onClick={handlePrintBackupCodes}
                     size="xs"
                     variant="subtle"
-                    onClick={handlePrintBackupCodes}
-                    leftSection={<IconPrinter size={14} />}
                   >
                     {t("Print")}
                   </Button>
@@ -333,8 +333,8 @@ export function MfaSetupModal({
 
             <Button
               fullWidth
-              onClick={handleClose}
               leftSection={<IconCheck size={18} />}
+              onClick={handleClose}
             >
               {t("I've saved my backup codes")}
             </Button>

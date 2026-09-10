@@ -1,7 +1,7 @@
 import { Menu, Modal, Skeleton, Text, Tooltip } from "@mantine/core";
 import { useWindowEvent } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 import {
   IconChevronDown,
   IconChevronUp,
@@ -12,23 +12,23 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IBase, IBaseRow } from "@/ee/base/types/base.types";
+import { useTranslation } from "react-i18next";
+import { propertyMenuCloseRequestAtomFamily } from "@/ee/base/atoms/base-atoms";
+import { CreatePropertyPopover } from "@/ee/base/components/property/create-property-popover";
+import { useBaseEditable } from "@/ee/base/context/base-editable";
+import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
 import {
   useBaseRowQuery,
   useDeleteRowMutation,
   useUpdateRowMutation,
 } from "@/ee/base/queries/base-row-query";
-import { propertyMenuCloseRequestAtomFamily } from "@/ee/base/atoms/base-atoms";
-import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
-import { useBaseEditable } from "@/ee/base/context/base-editable";
-import { useClipboard } from "@/hooks/use-clipboard";
-import { CreatePropertyPopover } from "@/ee/base/components/property/create-property-popover";
-import { RowDetailTitle } from "./row-detail-title";
-import { PropertyRow } from "./property-row";
 import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { IBase, IBaseRow } from "@/ee/base/types/base.types";
+import { useClipboard } from "@/hooks/use-clipboard";
+import { PropertyRow } from "./property-row";
+import { RowDetailTitle } from "./row-detail-title";
 
 type RowDetailModalProps = {
   base: IBase;
@@ -53,7 +53,7 @@ export function RowDetailModal({
 
   const rowIndex = useMemo(
     () => (openRowId ? rows.findIndex((r) => r.id === openRowId) : -1),
-    [openRowId, rows],
+    [openRowId, rows]
   );
   const rowFromList = rowIndex >= 0 ? rows[rowIndex] : undefined;
   // Deep links (?row=) can target rows outside the loaded pages or filtered
@@ -65,12 +65,14 @@ export function RowDetailModal({
   const row = rowFromList ?? rowQuery.data;
   const primaryProperty = useMemo(
     () => base.properties.find((p) => p.isPrimary),
-    [base.properties],
+    [base.properties]
   );
 
   const rowMissing = !!openRowId && !rowFromList && rowQuery.isError;
   useEffect(() => {
-    if (rowMissing) onClose();
+    if (rowMissing) {
+      onClose();
+    }
   }, [rowMissing, onClose]);
 
   const isSaving = updateRowMutation.isPending;
@@ -85,7 +87,7 @@ export function RowDetailModal({
   const clearNewProperty = useCallback(() => setNewPropertyId(null), []);
   const menuDirtyRef = useRef(false);
   const [closeRequest, setCloseRequest] = useAtom(
-    propertyMenuCloseRequestAtomFamily(base.id),
+    propertyMenuCloseRequestAtomFamily(base.id)
   ) as unknown as [number, (val: number) => void];
 
   useEffect(() => {
@@ -119,15 +121,21 @@ export function RowDetailModal({
       }
       setOpenMenuId(propertyId);
     },
-    [openMenuId, closeRequest, setCloseRequest],
+    [openMenuId, closeRequest, setCloseRequest]
   );
 
   useEffect(() => {
-    if (!openMenuId) return;
+    if (!openMenuId) {
+      return;
+    }
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest("[data-position]")) return;
-      if (target.closest("[data-property-menu-target]")) return;
+      if (target.closest("[data-position]")) {
+        return;
+      }
+      if (target.closest("[data-property-menu-target]")) {
+        return;
+      }
       requestMenuClose();
     };
     document.addEventListener("mousedown", handler);
@@ -138,11 +146,15 @@ export function RowDetailModal({
   const hasNext = rowIndex >= 0 && rowIndex < rows.length - 1;
   const navigate = useCallback(
     (delta: number) => {
-      if (rowIndex === -1) return;
+      if (rowIndex === -1) {
+        return;
+      }
       const next = rows[rowIndex + delta];
-      if (next) onNavigate(next.id);
+      if (next) {
+        onNavigate(next.id);
+      }
     },
-    [rows, rowIndex, onNavigate],
+    [rows, rowIndex, onNavigate]
   );
 
   const handleCopyLink = useCallback(() => {
@@ -151,18 +163,20 @@ export function RowDetailModal({
   }, [clipboard, t]);
 
   const handleDeleteRecord = useCallback(() => {
-    if (!row) return;
+    if (!row) {
+      return;
+    }
     const rowId = row.id;
     modals.openConfirmModal({
-      title: t("Delete record?"),
       centered: true,
       children: <Text size="sm">{t("This action cannot be undone.")}</Text>,
-      labels: { confirm: t("Delete"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Delete") },
       onConfirm: () => {
-        deleteRowMutation.mutate({ rowId, pageId: base.id });
+        deleteRowMutation.mutate({ pageId: base.id, rowId });
         onClose();
       },
+      title: t("Delete record?"),
     });
   }, [row, base.id, deleteRowMutation, onClose, t]);
 
@@ -176,7 +190,9 @@ export function RowDetailModal({
     (event: KeyboardEvent) => {
       const isEscape = event.key === "Escape";
       const isArrow = event.key === "ArrowUp" || event.key === "ArrowDown";
-      if ((!isEscape && !isArrow) || event.isComposing || !opened) return;
+      if (!(isEscape || isArrow) || event.isComposing || !opened) {
+        return;
+      }
       const target = event.target as HTMLElement | null;
       if (target) {
         const dialog = target.closest('[role="dialog"]');
@@ -198,28 +214,30 @@ export function RowDetailModal({
         onClose();
         return;
       }
-      if (openMenuId) return;
+      if (openMenuId) {
+        return;
+      }
       event.preventDefault();
       navigate(event.key === "ArrowUp" ? -1 : 1);
     },
-    [opened, openMenuId, requestMenuClose, onClose, navigate],
+    [opened, openMenuId, requestMenuClose, onClose, navigate]
   );
   useWindowEvent("keydown", handleKeyDown, { capture: true });
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      size="lg"
       centered
-      withCloseButton={false}
-      closeOnEscape={false}
+      classNames={{ content: classes.modalContent }}
       closeOnClickOutside={!openMenuId}
+      closeOnEscape={false}
+      onClose={onClose}
+      opened={opened}
       padding={0}
       radius="md"
-      title={null}
-      classNames={{ content: classes.modalContent }}
       removeScrollProps={{ noIsolation: true }}
+      size="lg"
+      title={null}
+      withCloseButton={false}
     >
       {row ? (
         <>
@@ -227,22 +245,22 @@ export function RowDetailModal({
             <div className={classes.topBarGroup}>
               <Tooltip label={t("Previous record")} openDelay={400}>
                 <button
-                  type="button"
-                  className={classes.iconButton}
-                  onClick={() => navigate(-1)}
-                  disabled={!hasPrev}
                   aria-label={t("Previous record")}
+                  className={classes.iconButton}
+                  disabled={!hasPrev}
+                  onClick={() => navigate(-1)}
+                  type="button"
                 >
                   <IconChevronUp size={16} />
                 </button>
               </Tooltip>
               <Tooltip label={t("Next record")} openDelay={400}>
                 <button
-                  type="button"
-                  className={classes.iconButton}
-                  onClick={() => navigate(1)}
-                  disabled={!hasNext}
                   aria-label={t("Next record")}
+                  className={classes.iconButton}
+                  disabled={!hasNext}
+                  onClick={() => navigate(1)}
+                  type="button"
                 >
                   <IconChevronDown size={16} />
                 </button>
@@ -252,9 +270,9 @@ export function RowDetailModal({
               <Menu position="bottom-end" shadow="md" withinPortal>
                 <Menu.Target>
                   <button
-                    type="button"
-                    className={classes.iconButton}
                     aria-label={t("Record actions")}
+                    className={classes.iconButton}
+                    type="button"
                   >
                     <IconDotsVertical size={16} />
                   </button>
@@ -281,10 +299,10 @@ export function RowDetailModal({
                 </Menu.Dropdown>
               </Menu>
               <button
-                type="button"
+                aria-label={t("Close")}
                 className={classes.iconButton}
                 onClick={onClose}
-                aria-label={t("Close")}
+                type="button"
               >
                 <IconX size={16} />
               </button>
@@ -292,18 +310,20 @@ export function RowDetailModal({
           </div>
 
           <RowDetailTitle
-            row={row}
-            primaryProperty={primaryProperty}
             canEdit={canEdit}
-            onEditingChange={setEditingField}
             onCommit={(value) => {
-              if (!primaryProperty) return;
+              if (!primaryProperty) {
+                return;
+              }
               updateRowMutation.mutate({
-                rowId: row.id,
-                pageId: base.id,
                 cells: { [primaryProperty.id]: value },
+                pageId: base.id,
+                rowId: row.id,
               });
             }}
+            onEditingChange={setEditingField}
+            primaryProperty={primaryProperty}
+            row={row}
           />
 
           <div className={classes.body}>
@@ -312,38 +332,38 @@ export function RowDetailModal({
                 .filter((p) => !p.isPrimary)
                 .map((property) => (
                   <PropertyRow
-                    key={property.id}
-                    property={property}
-                    row={row}
-                    pageId={base.id}
                     autoFocusValue={property.id === newPropertyId}
-                    onAutoFocused={clearNewProperty}
+                    key={property.id}
                     menuOpened={openMenuId === property.id}
+                    onAutoFocused={clearNewProperty}
                     onEditingChange={setEditingField}
+                    onMenuDirtyChange={handleMenuDirtyChange}
                     onMenuOpenChange={(nextOpened) =>
                       handleMenuOpenChange(property.id, nextOpened)
                     }
-                    onMenuDirtyChange={handleMenuDirtyChange}
                     onUpdate={(propertyId, value) => {
                       updateRowMutation.mutate({
-                        rowId: row.id,
-                        pageId: base.id,
                         cells: { [propertyId]: value },
+                        pageId: base.id,
+                        rowId: row.id,
                       });
                     }}
+                    pageId={base.id}
+                    property={property}
+                    row={row}
                   />
                 ))}
             </div>
             {canEdit && (
               <CreatePropertyPopover
+                onPropertyCreated={(p) => setNewPropertyId(p.id)}
                 pageId={base.id}
                 properties={base.properties}
-                onPropertyCreated={(p) => setNewPropertyId(p.id)}
                 renderTarget={(open) => (
                   <button
-                    type="button"
                     className={classes.addPropertyRow}
                     onClick={open}
+                    type="button"
                   >
                     <span className={classes.addPropertyLabel}>
                       <IconPlus size={15} />
@@ -357,24 +377,26 @@ export function RowDetailModal({
 
           <footer className={classes.footer}>
             <div className={classes.footerStatus}>
-              {!canEdit ? (
+              {canEdit ? (
+                isSaving ? (
+                  <>
+                    <span className={classes.savingDot} />
+                    <span>{t("Saving…")}</span>
+                  </>
+                ) : null
+              ) : (
                 <span className={classes.lockedHint}>
                   <IconLock size={12} />
                   {t("Read-only")}
                 </span>
-              ) : isSaving ? (
-                <>
-                  <span className={classes.savingDot} />
-                  <span>{t("Saving…")}</span>
-                </>
-              ) : null}
+              )}
             </div>
             <div className={classes.kbdHint}>
               {editingField ? (
                 <>
                   <span className={classes.kbdGroup}>
                     <kbd className={classes.kbd}>Ctrl/Cmd</kbd>
-                    <span className={classes.kbdPlus} >+</span>
+                    <span className={classes.kbdPlus}>+</span>
                     <kbd className={classes.kbd}>Enter</kbd>
                     <span>{t("to save")}</span>
                   </span>
@@ -420,18 +442,18 @@ function RowDetailSkeleton({ base }: { base: IBase }) {
     <>
       <div className={classes.topBar}>
         <div className={classes.topBarGroup}>
-          <Skeleton height={28} width={28} radius={6} />
-          <Skeleton height={28} width={28} radius={6} />
+          <Skeleton height={28} radius={6} width={28} />
+          <Skeleton height={28} radius={6} width={28} />
         </div>
         <div className={classes.topBarGroup}>
-          <Skeleton height={28} width={28} radius={6} />
-          <Skeleton height={28} width={28} radius={6} />
+          <Skeleton height={28} radius={6} width={28} />
+          <Skeleton height={28} radius={6} width={28} />
         </div>
       </div>
       <header className={classes.header}>
-        <Skeleton height={30} width="45%" radius={8} />
+        <Skeleton height={30} radius={8} width="45%" />
         <div className={classes.metaRow}>
-          <Skeleton height={12} width={150} radius={4} />
+          <Skeleton height={12} radius={4} width={150} />
         </div>
       </header>
       <div className={classes.body}>
@@ -441,10 +463,10 @@ function RowDetailSkeleton({ base }: { base: IBase }) {
             .map((property) => {
               const Icon = getDescriptor(property.type)?.icon;
               return (
-                <div key={property.id} className={classes.propertyRow}>
+                <div className={classes.propertyRow} key={property.id}>
                   <div className={classes.propertyLabel}>
                     {Icon && (
-                      <Icon size={15} className={classes.propertyLabelIcon} />
+                      <Icon className={classes.propertyLabelIcon} size={15} />
                     )}
                     <span className={classes.propertyLabelText}>
                       {property.name}

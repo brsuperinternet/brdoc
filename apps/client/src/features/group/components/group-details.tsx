@@ -1,13 +1,11 @@
-import { useGroupQuery } from "@/features/group/queries/group-query";
-import { useParams } from "react-router-dom";
-import { Group, Title, Text } from "@mantine/core";
-import AddGroupMemberModal from "@/features/group/components/add-group-member-modal";
-import React from "react";
+import { Group, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useParams } from "react-router-dom";
+import AddGroupMemberModal from "@/features/group/components/add-group-member-modal";
 import EditGroupModal from "@/features/group/components/edit-group-modal.tsx";
 import GroupActionMenu from "@/features/group/components/group-action-menu.tsx";
+import { useGroupQuery } from "@/features/group/queries/group-query";
 import useUserRole from "@/hooks/use-user-role.tsx";
-import { useTranslation } from "react-i18next";
 
 export default function GroupDetails() {
   const { groupId } = useParams();
@@ -23,7 +21,7 @@ export default function GroupDetails() {
           <Title order={4}>{group.name}</Title>
           <Text c="dimmed">{group.description}</Text>
 
-          <Group my="md" justify="flex-end">
+          <Group justify="flex-end" my="md">
             {isAdmin && (
               <>
                 <AddGroupMemberModal />
@@ -34,7 +32,7 @@ export default function GroupDetails() {
         </div>
       )}
 
-      <EditGroupModal opened={opened} onClose={close} />
+      <EditGroupModal onClose={close} opened={opened} />
     </>
   );
 }

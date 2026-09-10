@@ -1,24 +1,24 @@
-import { Group, Text, Switch, Tooltip } from "@mantine/core";
+import { Group, Switch, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
-import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label.ts";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 
 export default function AllowMemberTemplates() {
   const { t } = useTranslation();
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
         <Text size="md">{t("Allow members to create templates")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "Allow non-admin members to create and manage templates in their spaces.",
+            "Allow non-admin members to create and manage templates in their spaces."
           )}
         </Text>
       </div>
@@ -32,7 +32,7 @@ function AllowMemberTemplatesToggle() {
   const { t } = useTranslation();
   const [workspace, setWorkspace] = useAtom(workspaceAtom);
   const [checked, setChecked] = useState(
-    workspace?.settings?.templates?.allowMemberTemplates === true,
+    workspace?.settings?.templates?.allowMemberTemplates === true
   );
   const hasTemplates = useHasFeature(Feature.TEMPLATES);
   const upgradeLabel = useUpgradeLabel();
@@ -47,19 +47,19 @@ function AllowMemberTemplatesToggle() {
       setWorkspace(updatedWorkspace);
     } catch (err) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
   };
 
   return (
-    <Tooltip label={upgradeLabel} disabled={hasTemplates} refProp="rootRef">
+    <Tooltip disabled={hasTemplates} label={upgradeLabel} refProp="rootRef">
       <Switch
-        checked={checked}
-        onChange={handleChange}
-        disabled={!hasTemplates}
         aria-label={t("Toggle allow members to create templates")}
+        checked={checked}
+        disabled={!hasTemplates}
+        onChange={handleChange}
       />
     </Tooltip>
   );

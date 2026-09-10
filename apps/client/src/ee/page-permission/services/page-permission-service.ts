@@ -1,5 +1,3 @@
-import api from "@/lib/api-client";
-import { IPagination } from "@/lib/types";
 import {
   IAddPagePermission,
   IPagePermissionMember,
@@ -7,25 +5,27 @@ import {
   IRemovePagePermission,
   IUpdatePagePermissionRole,
 } from "@/ee/page-permission/types/page-permission.types";
+import api from "@/lib/api-client";
+import { IPagination } from "@/lib/types";
 
 export async function restrictPage(pageId: string): Promise<void> {
   await api.post("/pages/restrict", { pageId });
 }
 
 export async function addPagePermission(
-  data: IAddPagePermission,
+  data: IAddPagePermission
 ): Promise<void> {
   await api.post("/pages/add-permission", data);
 }
 
 export async function removePagePermission(
-  data: IRemovePagePermission,
+  data: IRemovePagePermission
 ): Promise<void> {
   await api.post("/pages/remove-permission", data);
 }
 
 export async function updatePagePermissionRole(
-  data: IUpdatePagePermissionRole,
+  data: IUpdatePagePermissionRole
 ): Promise<void> {
   await api.post("/pages/update-permission", data);
 }
@@ -36,17 +36,17 @@ export async function unrestrictPage(pageId: string): Promise<void> {
 
 export async function getPagePermissions(
   pageId: string,
-  cursor?: string,
+  cursor?: string
 ): Promise<IPagination<IPagePermissionMember>> {
   const req = await api.post<IPagination<IPagePermissionMember>>(
     "/pages/permissions",
-    { pageId, ...(cursor && { cursor }) },
+    { pageId, ...(cursor && { cursor }) }
   );
   return req.data;
 }
 
 export async function getPageRestrictionInfo(
-  pageId: string,
+  pageId: string
 ): Promise<IPageRestrictionInfo> {
   const req = await api.post<IPageRestrictionInfo>("/pages/permission-info", {
     pageId,

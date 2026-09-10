@@ -13,8 +13,8 @@ export default function DocsFooterBranding({
       <a
         className={styles.footerBranding}
         href={`https://docmost.com?ref=${refSource}`}
-        target="_blank"
         rel="noreferrer"
+        target="_blank"
       >
         Powered by Docmost
       </a>

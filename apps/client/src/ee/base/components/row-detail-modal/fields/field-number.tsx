@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { NumberTypeOptions } from "@/ee/base/types/base.types";
 import {
   formatNumber,
   parseNumberDraft,
   sanitizeNumberInput,
 } from "@/ee/base/components/cells/cell-number";
-import { FieldProps, FieldShell } from "./detail-field";
 import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { NumberTypeOptions } from "@/ee/base/types/base.types";
+import { FieldProps, FieldShell } from "./detail-field";
 
 const toDraft = (value: unknown) =>
   typeof value === "number" ? String(value) : "";
@@ -27,7 +27,9 @@ export function FieldNumber({
   const cancelRef = useRef(false);
 
   useEffect(() => {
-    if (!focused) setDraft(toDraft(value));
+    if (!focused) {
+      setDraft(toDraft(value));
+    }
   }, [value, focused]);
 
   const formatted = formatNumber(numValue, typeOptions);
@@ -48,25 +50,36 @@ export function FieldNumber({
       setDraft(toDraft(value));
       return;
     }
-    if (parseNumberDraft(draft) !== numValue) onChange(parseNumberDraft(draft));
+    if (parseNumberDraft(draft) !== numValue) {
+      onChange(parseNumberDraft(draft));
+    }
   };
 
   return (
     <FieldShell cursor="text">
       <input
-        type="text"
-        inputMode="decimal"
+        aria-label={property.name}
         className={classes.fieldInput}
-        value={focused ? draft : formatted}
+        inputMode="decimal"
+        onBlur={commit}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === "" || v === "-" || /^-?\d*\.?\d*$/.test(v)) {
+            setDraft(v);
+          }
+        }}
         onFocus={() => {
           setDraft(toDraft(value));
           setFocused(true);
           onEditingChange?.(true);
         }}
-        onChange={(e) => {
-          const v = e.target.value;
-          if (v === "" || v === "-" || /^-?\d*\.?\d*$/.test(v)) {
-            setDraft(v);
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          } else if (e.key === "Escape") {
+            cancelRef.current = true;
+            e.currentTarget.blur();
           }
         }}
         onPaste={(e) => {
@@ -77,20 +90,11 @@ export function FieldNumber({
           setDraft(
             draft.slice(0, start) +
               sanitizeNumberInput(e.clipboardData.getData("text")) +
-              draft.slice(end),
+              draft.slice(end)
           );
         }}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            e.currentTarget.blur();
-          } else if (e.key === "Escape") {
-            cancelRef.current = true;
-            e.currentTarget.blur();
-          }
-        }}
-        aria-label={property.name}
+        type="text"
+        value={focused ? draft : formatted}
       />
     </FieldShell>
   );

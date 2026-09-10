@@ -1,27 +1,27 @@
-import api from "@/lib/api-client";
 import {
-  ICommentParams,
   IComment,
+  ICommentParams,
   IResolveComment,
 } from "@/features/comment/types/comment.types";
+import api from "@/lib/api-client";
 import { IPagination } from "@/lib/types.ts";
 
 export async function createComment(
-  data: Partial<IComment>,
+  data: Partial<IComment>
 ): Promise<IComment> {
   const req = await api.post<IComment>("/comments/create", data);
   return req.data;
 }
 
 export async function resolveComment(data: IResolveComment): Promise<IComment> {
-  const req = await api.post<IComment>(`/comments/resolve`, data);
+  const req = await api.post<IComment>("/comments/resolve", data);
   return req.data;
 }
 
 export async function updateComment(
-  data: Partial<IComment>,
+  data: Partial<IComment>
 ): Promise<IComment> {
-  const req = await api.post<IComment>(`/comments/update`, data);
+  const req = await api.post<IComment>("/comments/update", data);
   return req.data;
 }
 
@@ -31,7 +31,7 @@ export async function getCommentById(commentId: string): Promise<IComment> {
 }
 
 export async function getPageComments(
-  data: ICommentParams,
+  data: ICommentParams
 ): Promise<IPagination<IComment>> {
   const req = await api.post("/comments", data);
   return req.data;

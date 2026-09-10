@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { useDebouncedValue } from "@mantine/hooks";
 import { Group, MultiSelect, MultiSelectProps, Text } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { IconGroupCircle } from "@/components/icons/icon-people-circle.tsx";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { IGroup } from "@/features/group/types/group.types.ts";
 import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query.ts";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { IUser } from "@/features/user/types/user.types.ts";
-import { IconGroupCircle } from "@/components/icons/icon-people-circle.tsx";
-import { useTranslation } from "react-i18next";
 
 interface MultiMemberSelectProps {
-  value?: string[];
   onChange: (value: string[]) => void;
+  value?: string[];
 }
 
 const renderMultiSelectOption: MultiSelectProps["renderOption"] = ({
@@ -20,15 +20,19 @@ const renderMultiSelectOption: MultiSelectProps["renderOption"] = ({
     {option["type"] === "user" && (
       <CustomAvatar
         avatarUrl={option["avatarUrl"]}
-        size={20}
         name={option.label}
+        size={20}
       />
     )}
     {option["type"] === "group" && <IconGroupCircle />}
     <div>
-      <Text size="sm" lineClamp={1}>{option.label}</Text>
+      <Text lineClamp={1} size="sm">
+        {option.label}
+      </Text>
       {option["type"] === "user" && option["email"] && (
-        <Text size="xs" c="dimmed" lineClamp={1}>{option["email"]}</Text>
+        <Text c="dimmed" lineClamp={1} size="xs">
+          {option["email"]}
+        </Text>
       )}
     </div>
   </Group>
@@ -39,9 +43,9 @@ export function MultiMemberSelect({ value, onChange }: MultiMemberSelectProps) {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedQuery] = useDebouncedValue(searchValue, 500);
   const { data: suggestion, isLoading } = useSearchSuggestionsQuery({
-    query: debouncedQuery,
-    includeUsers: true,
     includeGroups: true,
+    includeUsers: true,
+    query: debouncedQuery,
   });
   const [data, setData] = useState([]);
 
@@ -49,29 +53,29 @@ export function MultiMemberSelect({ value, onChange }: MultiMemberSelectProps) {
     if (suggestion) {
       // Extract user and group items
       const userItems = suggestion?.users.map((user: IUser) => ({
-        value: `user-${user.id}`,
-        label: user.name,
-        email: user.email,
         avatarUrl: user.avatarUrl,
+        email: user.email,
+        label: user.name,
         type: "user",
+        value: `user-${user.id}`,
       }));
 
       const groupItems = suggestion?.groups.map((group: IGroup) => ({
-        value: `group-${group.id}`,
         label: group.name,
         type: "group",
+        value: `group-${group.id}`,
       }));
 
       // Create fresh data structure based on current search results
       const newData = [];
-      
+
       if (userItems && userItems.length > 0) {
         newData.push({
           group: t("Select a user"),
           items: userItems,
         });
       }
-      
+
       if (groupItems && groupItems.length > 0) {
         newData.push({
           group: t("Select a group"),
@@ -85,21 +89,21 @@ export function MultiMemberSelect({ value, onChange }: MultiMemberSelectProps) {
 
   return (
     <MultiSelect
+      clearable
       data={data}
-      value={value}
-      renderOption={renderMultiSelectOption}
+      filter={({ options }) => options}
       hidePickedOptions
-      maxDropdownHeight={300}
       label={t("Add members")}
+      maxDropdownHeight={300}
+      maxValues={50}
+      onChange={onChange}
+      onSearchChange={setSearchValue}
       placeholder={t("Search for users and groups")}
+      renderOption={renderMultiSelectOption}
       searchable
       searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      filter={({ options }) => options}
-      clearable
+      value={value}
       variant="filled"
-      onChange={onChange}
-      maxValues={50}
     />
   );
 }

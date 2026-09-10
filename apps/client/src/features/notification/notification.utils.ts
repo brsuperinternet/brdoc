@@ -9,14 +9,22 @@ export function formatRelativeTime(dateStr: string): string {
   const diffHours = Math.floor(diffMs / 3_600_000);
   const diffDays = Math.floor(diffMs / 86_400_000);
 
-  if (diffMin < 1) return i18n.t("now");
-  if (diffMin < 60) return `${diffMin}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}d`;
+  if (diffMin < 1) {
+    return i18n.t("now");
+  }
+  if (diffMin < 60) {
+    return `${diffMin}m`;
+  }
+  if (diffHours < 24) {
+    return `${diffHours}h`;
+  }
+  if (diffDays < 7) {
+    return `${diffDays}d`;
+  }
 
   return new Intl.DateTimeFormat(i18n.language, {
-    month: "short",
     day: "numeric",
+    month: "short",
   }).format(date);
 }
 
@@ -29,16 +37,22 @@ export function getTimeGroup(dateStr: string): TimeGroup {
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
-    now.getDate(),
+    now.getDate()
   );
   const startOfYesterday = new Date(startOfToday);
   startOfYesterday.setDate(startOfYesterday.getDate() - 1);
   const startOfWeek = new Date(startOfToday);
   startOfWeek.setDate(startOfWeek.getDate() - 7);
 
-  if (date >= startOfToday) return "today";
-  if (date >= startOfYesterday) return "yesterday";
-  if (date >= startOfWeek) return "this_week";
+  if (date >= startOfToday) {
+    return "today";
+  }
+  if (date >= startOfYesterday) {
+    return "yesterday";
+  }
+  if (date >= startOfWeek) {
+    return "this_week";
+  }
   return "older";
 }
 
@@ -50,13 +64,13 @@ export type GroupedNotifications = {
 
 export function groupNotificationsByTime(
   notifications: INotification[],
-  labels: Record<TimeGroup, string>,
+  labels: Record<TimeGroup, string>
 ): GroupedNotifications[] {
   const groups: Record<TimeGroup, INotification[]> = {
+    older: [],
+    this_week: [],
     today: [],
     yesterday: [],
-    this_week: [],
-    older: [],
   };
 
   for (const notification of notifications) {

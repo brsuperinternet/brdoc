@@ -1,109 +1,116 @@
 .navbar {
-    height: 100%;
-    width: 100%;
-    padding: var(--mantine-spacing-md);
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: var(--mantine-spacing-md);
 }
 
 .section {
-    padding-bottom: var(--mantine-spacing-xs);
+  padding-bottom: var(--mantine-spacing-xs);
 }
 
 .link {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    font-size: var(--mantine-font-size-sm);
-    color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-    padding-left: var(--mantine-spacing-xs);
-    min-height: 30px;
-    border-radius: var(--mantine-radius-sm);
-    font-weight: 500;
-    user-select: none;
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding-left: var(--mantine-spacing-xs);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--mantine-radius-sm);
+
+  @mixin hover {
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+    background-color: light-dark(
+      var(--mantine-color-gray-1),
+      var(--mantine-color-dark-6)
+    );
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-primary-color-filled);
+    outline-offset: 2px;
+  }
+
+  &[data-active] {
+    &,
+    & :hover {
+      color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+      background-color: light-dark(
+        var(--mantine-color-gray-2),
+        var(--mantine-color-dark-6)
+      );
+    }
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
 
     @mixin hover {
-        background-color: light-dark(
-                var(--mantine-color-gray-1),
-                var(--mantine-color-dark-6)
-        );
-        color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+      color: light-dark(
+        var(--mantine-color-gray-7),
+        var(--mantine-color-dark-1)
+      );
+      background-color: transparent;
     }
-
-    &:focus-visible {
-        outline: 2px solid var(--mantine-primary-color-filled);
-        outline-offset: 2px;
-    }
-
-    &[data-active] {
-        &,
-        & :hover {
-            background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-6));
-            color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-        }
-    }
-
-    &[data-disabled] {
-        cursor: not-allowed;
-        opacity: 0.5;
-
-        @mixin hover {
-            background-color: transparent;
-            color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-        }
-    }
+  }
 }
 
 .linkIcon {
-    color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
-    margin-right: var(--mantine-spacing-sm);
-    width: rem(16px);
-    height: rem(16px);
+  width: rem(16px);
+  height: rem(16px);
+  margin-right: var(--mantine-spacing-sm);
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
 }
 
 .sectionHeader {
-    padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
-    font-size: var(--mantine-font-size-xs);
-    color: var(--mantine-color-dimmed);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  color: var(--mantine-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .spacer {
-    flex: 1;
+  flex: 1;
 }
 
 .bottomSection {
-    padding-top: var(--mantine-spacing-xs);
-    border-top: rem(1px) solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  padding-top: var(--mantine-spacing-xs);
+  border-top: rem(1px) solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
 .spaceItem {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: var(--mantine-spacing-sm);
-    text-decoration: none;
-    font-size: var(--mantine-font-size-sm);
-    color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-    padding-left: var(--mantine-spacing-xs);
-    min-height: 30px;
-    border-radius: var(--mantine-radius-sm);
-    font-weight: 500;
-    user-select: none;
+  display: flex;
+  gap: var(--mantine-spacing-sm);
+  align-items: center;
+  min-height: 30px;
+  padding-left: var(--mantine-spacing-xs);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--mantine-radius-sm);
 
-    @mixin hover {
-        background-color: light-dark(
-                var(--mantine-color-gray-1),
-                var(--mantine-color-dark-6)
-        );
-        color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-    }
+  @mixin hover {
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+    background-color: light-dark(
+      var(--mantine-color-gray-1),
+      var(--mantine-color-dark-6)
+    );
+  }
 
-    &:focus-visible {
-        outline: 2px solid var(--mantine-primary-color-filled);
-        outline-offset: 2px;
-    }
+  &:focus-visible {
+    outline: 2px solid var(--mantine-primary-color-filled);
+    outline-offset: 2px;
+  }
 }

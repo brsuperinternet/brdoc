@@ -1,23 +1,23 @@
 import { Group, NumberInput, Select, Text } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
-import i18n from "@/i18n.ts";
 import {
   ExpirationMode,
   PeriodUnit,
 } from "@/ee/page-verification/types/page-verification.types";
+import i18n from "@/i18n.ts";
 
 export const PERIOD_UNIT_DAYS: Record<PeriodUnit, number> = {
   day: 1,
-  week: 7,
   month: 30,
+  week: 7,
   year: 365,
 };
 
 export const PERIOD_UNIT_MAX_AMOUNT: Record<PeriodUnit, number> = {
   day: 3650,
-  week: 520,
   month: 120,
+  week: 520,
   year: 20,
 };
 
@@ -32,16 +32,16 @@ export function addDays(days: number, from?: Date): Date {
 function formatShortDate(date: Date): string {
   const crossesYear = date.getFullYear() !== new Date().getFullYear();
   return date.toLocaleDateString(i18n.language, {
-    month: "short",
     day: "numeric",
+    month: "short",
     ...(crossesYear && { year: "numeric" }),
   });
 }
 
 function formatLongDate(date: Date): string {
   return date.toLocaleDateString(i18n.language, {
-    month: "long",
     day: "numeric",
+    month: "long",
     year: "numeric",
   });
 }
@@ -57,7 +57,7 @@ export function toLocalDateString(input: Date | string): string {
 function pluralizeUnit(
   unit: PeriodUnit,
   amount: number,
-  t: (key: string) => string,
+  t: (key: string) => string
 ): string {
   switch (unit) {
     case "day":
@@ -72,23 +72,23 @@ function pluralizeUnit(
 }
 
 function buildModeOptions(
-  t: (key: string) => string,
+  t: (key: string) => string
 ): { value: ExpirationMode; label: string }[] {
   return [
-    { value: "period", label: t("Period") },
-    { value: "fixed", label: t("Fixed date") },
-    { value: "indefinite", label: t("Indefinitely") },
+    { label: t("Period"), value: "period" },
+    { label: t("Fixed date"), value: "fixed" },
+    { label: t("Indefinitely"), value: "indefinite" },
   ];
 }
 
 function buildUnitOptions(
-  t: (key: string) => string,
+  t: (key: string) => string
 ): { value: PeriodUnit; label: string }[] {
   return [
-    { value: "day", label: t("Days") },
-    { value: "week", label: t("Weeks") },
-    { value: "month", label: t("Months") },
-    { value: "year", label: t("Years") },
+    { label: t("Days"), value: "day" },
+    { label: t("Weeks"), value: "week" },
+    { label: t("Months"), value: "month" },
+    { label: t("Years"), value: "year" },
   ];
 }
 
@@ -154,14 +154,14 @@ export function ExpirationFields({
       "Re-verifies every {{amount}} {{unit}} · Next due {{date}}",
       {
         amount: periodAmount,
-        unit: pluralizeUnit(periodUnit, periodAmount, t),
         date: formatShortDate(nextDueDate),
-      },
+        unit: pluralizeUnit(periodUnit, periodAmount, t),
+      }
     );
   } else if (mode === "fixed" && fixedDateObj) {
     helperText = t(
       "Expires on {{date}}. Re-verifying won't change the deadline.",
-      { date: formatLongDate(fixedDateObj) },
+      { date: formatLongDate(fixedDateObj) }
     );
   } else if (mode === "indefinite") {
     helperText = t("Never expires. Verifiers can re-verify at any time.");
@@ -171,60 +171,64 @@ export function ExpirationFields({
     <div>
       <Group align="flex-start" gap="xs" wrap="wrap">
         <Select
-          data={modeOptions}
-          value={mode}
-          onChange={(val) => val && onModeChange(val as ExpirationMode)}
-          variant="filled"
           allowDeselect={false}
+          data={modeOptions}
+          onChange={(val) => val && onModeChange(val as ExpirationMode)}
           style={{ flex: "1 1 140px", minWidth: 140 }}
+          value={mode}
+          variant="filled"
         />
 
         {mode === "period" && (
           <Group
             gap="xs"
-            wrap="nowrap"
             style={{ flex: "1 1 220px", minWidth: 220 }}
+            wrap="nowrap"
           >
             <NumberInput
-              value={periodAmount}
+              clampBehavior="blur"
+              hideControls
+              max={unitMax}
+              min={PERIOD_AMOUNT_MIN}
               onChange={(val) => {
                 const n =
-                  typeof val === "number" ? val : parseInt(String(val), 10);
-                if (!Number.isNaN(n)) onPeriodAmountChange(n);
+                  typeof val === "number"
+                    ? val
+                    : Number.parseInt(String(val), 10);
+                if (!Number.isNaN(n)) {
+                  onPeriodAmountChange(n);
+                }
               }}
-              min={PERIOD_AMOUNT_MIN}
-              max={unitMax}
-              clampBehavior="blur"
-              variant="filled"
               style={{ flex: "0 0 80px" }}
-              hideControls
+              value={periodAmount}
+              variant="filled"
             />
             <Select
-              data={unitOptions}
-              value={periodUnit}
-              onChange={(val) => val && handleUnitChange(val as PeriodUnit)}
-              variant="filled"
               allowDeselect={false}
+              data={unitOptions}
+              onChange={(val) => val && handleUnitChange(val as PeriodUnit)}
               style={{ flex: 1, minWidth: 120 }}
+              value={periodUnit}
+              variant="filled"
             />
           </Group>
         )}
 
         {mode === "fixed" && (
           <DateInput
-            value={fixedDate || undefined}
+            clearable
+            minDate={addDays(1)}
             onChange={(val) => onFixedDateChange(val ?? "")}
             placeholder={t("Pick a date")}
-            variant="filled"
-            minDate={addDays(1)}
-            clearable
             style={{ flex: "1 1 200px", minWidth: 180 }}
+            value={fixedDate || undefined}
+            variant="filled"
           />
         )}
       </Group>
 
       {helperText && (
-        <Text size="xs" c={helperError ? "red" : "dimmed"} mt={6}>
+        <Text c={helperError ? "red" : "dimmed"} mt={6} size="xs">
           {helperText}
         </Text>
       )}

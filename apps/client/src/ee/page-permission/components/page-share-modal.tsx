@@ -1,29 +1,29 @@
-import { useState } from "react";
 import {
   Button,
+  Center,
   Indicator,
   Loader,
   Modal,
   Stack,
   Tabs,
   Text,
-  Center,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconWorld, IconLock } from "@tabler/icons-react";
+import { IconLock, IconWorld } from "@tabler/icons-react";
+import { useAtom } from "jotai";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { extractPageSlugId } from "@/lib";
-import { usePageQuery } from "@/features/page/queries/page-query";
-import { usePageRestrictionInfoQuery } from "@/ee/page-permission/queries/page-permission-query";
-import { PagePermissionTab } from "@/ee/page-permission";
-import { PublishTab } from "./publish-tab";
-import { useShareForPageQuery } from "@/features/share/queries/share-query";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
-import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom";
+import { useHasFeature } from "@/ee/hooks/use-feature";
+import { PagePermissionTab } from "@/ee/page-permission";
+import { usePageRestrictionInfoQuery } from "@/ee/page-permission/queries/page-permission-query";
+import { usePageQuery } from "@/features/page/queries/page-query";
+import { useShareForPageQuery } from "@/features/share/queries/share-query";
 import { useSpaceQuery } from "@/features/space/queries/space-query";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom";
+import { extractPageSlugId } from "@/lib";
+import { PublishTab } from "./publish-tab";
 
 type PageShareModalProps = {
   readOnly?: boolean;
@@ -36,12 +36,13 @@ export function PageShareModal({ readOnly }: PageShareModalProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const hasPagePermissions = useHasFeature(Feature.PAGE_PERMISSIONS);
   const [activeTab, setActiveTab] = useState<string | null>(
-    hasPagePermissions ? "access" : "publish",
+    hasPagePermissions ? "access" : "publish"
   );
 
   const [workspace] = useAtom(workspaceAtom);
   const { data: space } = useSpaceQuery(spaceSlug);
-  const workspaceSharingDisabled = workspace?.settings?.sharing?.disabled === true;
+  const workspaceSharingDisabled =
+    workspace?.settings?.sharing?.disabled === true;
   const spaceSharingDisabled = space?.settings?.sharing?.disabled === true;
 
   const { data: page } = usePageQuery({ pageId: pageSlugId });
@@ -52,13 +53,13 @@ export function PageShareModal({ readOnly }: PageShareModalProps) {
   const isPubliclyShared = !!share;
 
   const { data: restrictionInfo, isLoading: restrictionLoading } =
-    usePageRestrictionInfoQuery(opened && hasPagePermissions ? pageId : undefined);
+    usePageRestrictionInfoQuery(
+      opened && hasPagePermissions ? pageId : undefined
+    );
 
   return (
     <>
       <Button
-        style={{ border: "none" }}
-        size="compact-sm"
         leftSection={
           isRestricted ? (
             <Indicator color="red" offset={5} withBorder>
@@ -70,69 +71,79 @@ export function PageShareModal({ readOnly }: PageShareModalProps) {
             </Indicator>
           ) : null
         }
-        variant="default"
         onClick={() => {
-          setActiveTab(isPubliclyShared ? "publish" : hasPagePermissions ? "access" : "publish");
+          setActiveTab(
+            isPubliclyShared
+              ? "publish"
+              : hasPagePermissions
+                ? "access"
+                : "publish"
+          );
           open();
         }}
+        size="compact-sm"
+        style={{ border: "none" }}
+        variant="default"
       >
         {t("Share")}
       </Button>
 
       <Modal
-        opened={opened}
-        onClose={close}
-        title={t("Share")}
-        size={600}
         closeButtonProps={{ "aria-label": t("Close") }}
+        onClose={close}
+        opened={opened}
+        size={600}
+        title={t("Share")}
       >
-        <Tabs value={activeTab} color="dark" onChange={setActiveTab}>
+        <Tabs color="dark" onChange={setActiveTab} value={activeTab}>
           <Tabs.List mb="md">
             <Tabs.Tab value="access">{t("Access")}</Tabs.Tab>
             <Tabs.Tab
-              value="publish"
               rightSection={
                 isPubliclyShared ? (
-                  <Indicator color="green" size={8} processing />
+                  <Indicator color="green" processing size={8} />
                 ) : null
               }
+              value="publish"
             >
               {t("Publish")}
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="access">
-            {!hasPagePermissions ? (
+            {hasPagePermissions ? (
+              restrictionLoading || !pageId || !restrictionInfo ? (
+                <Center py="xl">
+                  <Loader size="sm" />
+                </Center>
+              ) : (
+                <PagePermissionTab
+                  pageId={pageId}
+                  restrictionInfo={restrictionInfo}
+                />
+              )
+            ) : (
               <Stack align="center" py="md">
                 <IconLock size={20} stroke={1.5} />
-                <Text size="sm" ta="center" fw={500}>
+                <Text fw={500} size="sm" ta="center">
                   {t("Page permissions")}
                 </Text>
-                <Text size="sm" c="dimmed" ta="center">
+                <Text c="dimmed" size="sm" ta="center">
                   {t(
-                    "Control who can view and edit individual pages. Available with an enterprise license.",
+                    "Control who can view and edit individual pages. Available with an enterprise license."
                   )}
                 </Text>
               </Stack>
-            ) : restrictionLoading || !pageId || !restrictionInfo ? (
-              <Center py="xl">
-                <Loader size="sm" />
-              </Center>
-            ) : (
-              <PagePermissionTab
-                pageId={pageId}
-                restrictionInfo={restrictionInfo}
-              />
             )}
           </Tabs.Panel>
 
           <Tabs.Panel value="publish">
             <PublishTab
+              isRestricted={isRestricted}
               pageId={pageId}
               readOnly={readOnly}
-              isRestricted={isRestricted}
-              workspaceSharingDisabled={workspaceSharingDisabled}
               spaceSharingDisabled={spaceSharingDisabled}
+              workspaceSharingDisabled={workspaceSharingDisabled}
             />
           </Tabs.Panel>
         </Tabs>

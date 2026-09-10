@@ -1,4 +1,3 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
 import {
   IconDots,
@@ -7,22 +6,23 @@ import {
   IconRefresh,
   IconTrash,
 } from "@tabler/icons-react";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { ErrorBoundary } from "react-error-boundary";
-import { useTransclusionLookup } from "./transclusion-lookup-context";
-import TransclusionContent from "./transclusion-content";
-import NoAccessPlaceholder from "./no-access-placeholder";
-import NotFoundPlaceholder from "./not-found-placeholder";
-import ErrorPlaceholder from "./error-placeholder";
-import classes from "./transclusion.module.css";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { buildPageUrl } from "@/features/page/page.utils";
 import SyncBlockReferencesDropdown from "@/features/transclusion/components/sync-block-references-dropdown";
 import {
   useReferencesQuery,
   useUnsyncReferenceMutation,
 } from "@/features/transclusion/queries/transclusion-query";
-import { buildPageUrl } from "@/features/page/page.utils";
+import ErrorPlaceholder from "./error-placeholder";
+import NoAccessPlaceholder from "./no-access-placeholder";
+import NotFoundPlaceholder from "./not-found-placeholder";
+import classes from "./transclusion.module.css";
+import TransclusionContent from "./transclusion-content";
+import { useTransclusionLookup } from "./transclusion-lookup-context";
 
 export default function TransclusionReferenceView(props: NodeViewProps) {
   const isEditable = props.editor.isEditable;
@@ -35,14 +35,14 @@ export default function TransclusionReferenceView(props: NodeViewProps) {
   return (
     <NodeViewWrapper
       className={classes.includeWrap}
+      contentEditable={false}
       data-editable={isEditable ? "true" : "false"}
       data-focused={isEditable && props.selected ? "true" : "false"}
       data-menu-open={openMenus > 0 ? "true" : "false"}
-      contentEditable={false}
     >
       <ErrorBoundary
-        resetKeys={[sourcePageId, transclusionId]}
         fallback={<ErrorPlaceholder />}
+        resetKeys={[sourcePageId, transclusionId]}
       >
         <TransclusionReferenceBody {...props} trackOpen={trackOpen} />
       </ErrorBoundary>
@@ -64,7 +64,7 @@ function TransclusionReferenceBody({
 
   const { result, refresh } = useTransclusionLookup(
     sourcePageId,
-    transclusionId,
+    transclusionId
   );
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = async () => {
@@ -75,7 +75,7 @@ function TransclusionReferenceBody({
       setRefreshing(false);
     }
   };
-  // @ts-ignore - editor.storage.pageId is set by the host editor
+  // @ts-expect-error - editor.storage.pageId is set by the host editor
   const hostPageId: string | undefined = editor.storage?.pageId;
   const unsyncMutation = useUnsyncReferenceMutation();
   // Cached against the dropdown's identical query so the source link target
@@ -84,7 +84,7 @@ function TransclusionReferenceBody({
   const referencesQuery = useReferencesQuery(
     sourcePageId,
     transclusionId,
-    isEditable,
+    isEditable
   );
   const sourcePageHref = (() => {
     const source = referencesQuery.data?.source;
@@ -93,21 +93,29 @@ function TransclusionReferenceBody({
       : sourcePageId
         ? `/p/${sourcePageId}`
         : null;
-    if (!base) return null;
+    if (!base) {
+      return null;
+    }
     return transclusionId ? `${base}#${transclusionId}` : base;
   })();
 
   const handleUnsync = async () => {
-    if (!hostPageId || !sourcePageId || !transclusionId) return;
+    if (!(hostPageId && sourcePageId && transclusionId)) {
+      return;
+    }
     try {
       const { content } = await unsyncMutation.mutateAsync({
         referencePageId: hostPageId,
         sourcePageId,
         transclusionId,
       });
-      if (editor.isDestroyed) return;
+      if (editor.isDestroyed) {
+        return;
+      }
       const pos = getPos();
-      if (typeof pos !== "number") return;
+      if (typeof pos !== "number") {
+        return;
+      }
       const from = pos;
       const to = pos + node.nodeSize;
       editor
@@ -130,22 +138,22 @@ function TransclusionReferenceBody({
         >
           {sourcePageId && transclusionId && hostPageId && (
             <SyncBlockReferencesDropdown
-              sourcePageId={sourcePageId}
-              transclusionId={transclusionId}
               currentPageId={hostPageId}
               mode="reference"
               onOpenChange={trackOpen}
+              sourcePageId={sourcePageId}
+              transclusionId={transclusionId}
             />
           )}
           <span className={classes.controlsDivider} />
           <Tooltip label={t("Refresh")}>
             <ActionIcon
-              variant="subtle"
               color="gray"
-              size="sm"
-              onClick={handleRefresh}
+              disabled={!(sourcePageId && transclusionId)}
               loading={refreshing}
-              disabled={!sourcePageId || !transclusionId}
+              onClick={handleRefresh}
+              size="sm"
+              variant="subtle"
             >
               <IconRefresh size={14} />
             </ActionIcon>
@@ -153,36 +161,36 @@ function TransclusionReferenceBody({
           {sourcePageHref && (
             <Tooltip label={t("Edit source")}>
               <ActionIcon
-                component={Link}
-                to={sourcePageHref}
-                variant="subtle"
                 color="gray"
+                component={Link}
                 size="sm"
                 style={{
-                  textDecoration: "none",
                   borderBottom: "none",
+                  textDecoration: "none",
                 }}
+                to={sourcePageHref}
+                variant="subtle"
               >
                 <IconPencil size={14} />
               </ActionIcon>
             </Tooltip>
           )}
-          <Menu position="bottom-end" withinPortal onChange={trackOpen}>
+          <Menu onChange={trackOpen} position="bottom-end" withinPortal>
             <Menu.Target>
-              <ActionIcon variant="subtle" color="gray" size="sm">
+              <ActionIcon color="gray" size="sm" variant="subtle">
                 <IconDots size={14} />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item
-                leftSection={<IconLinkOff size={14} />}
-                onClick={handleUnsync}
                 disabled={
                   unsyncMutation.isPending ||
                   !hostPageId ||
                   !sourcePageId ||
                   !transclusionId
                 }
+                leftSection={<IconLinkOff size={14} />}
+                onClick={handleUnsync}
               >
                 {t("Unsync")}
               </Menu.Item>
@@ -198,14 +206,20 @@ function TransclusionReferenceBody({
         </div>
       )}
 
-      {!sourcePageId || !transclusionId ? (
-        <NotFoundPlaceholder />
-      ) : !result ? (
-        <div style={{ minHeight: 24 }} />
-      ) : !("status" in result) ? (
-        <TransclusionContent content={result.content} />
-      ) : result.status === "no_access" ? (
-        <NoAccessPlaceholder />
+      {sourcePageId && transclusionId ? (
+        result ? (
+          "status" in result ? (
+            result.status === "no_access" ? (
+              <NoAccessPlaceholder />
+            ) : (
+              <NotFoundPlaceholder />
+            )
+          ) : (
+            <TransclusionContent content={result.content} />
+          )
+        ) : (
+          <div style={{ minHeight: 24 }} />
+        )
       ) : (
         <NotFoundPlaceholder />
       )}

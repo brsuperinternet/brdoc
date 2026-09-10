@@ -1,14 +1,14 @@
-import { z } from "zod/v4";
-import React, { useRef } from "react";
 import { Button, Divider, Group, Modal, Stack, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslation } from "react-i18next";
-import { useActivateMutation } from "@/ee/licence/queries/license-query.ts";
 import { useDisclosure } from "@mantine/hooks";
 import { useAtom } from "jotai";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import React, { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
 import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
 import RemoveLicense from "@/ee/licence/components/remove-license.tsx";
+import { useActivateMutation } from "@/ee/licence/queries/license-query.ts";
 
 export default function ActivateLicense() {
   const { t } = useTranslation();
@@ -17,7 +17,7 @@ export default function ActivateLicense() {
   const hasLicense = entitlements != null && entitlements.tier !== "free";
 
   return (
-    <Group justify="flex-end" wrap="nowrap" mb="sm">
+    <Group justify="flex-end" mb="sm" wrap="nowrap">
       <Button onClick={open}>
         {hasLicense ? t("Update license") : t("Add license")}
       </Button>
@@ -25,11 +25,11 @@ export default function ActivateLicense() {
       {hasLicense && <RemoveLicense />}
 
       <Modal
-        size="550"
-        opened={opened}
-        onClose={close}
-        title={t("Enterprise license")}
         centered
+        onClose={close}
+        opened={opened}
+        size="550"
+        title={t("Enterprise license")}
       >
         <ActivateLicenseForm onClose={close} />
       </Modal>
@@ -52,10 +52,10 @@ export function ActivateLicenseForm({ onClose }: ActivateLicenseFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       licenseKey: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   async function handleSubmit(data: { licenseKey: string }) {
@@ -66,7 +66,9 @@ export function ActivateLicenseForm({ onClose }: ActivateLicenseFormProps) {
 
   function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -86,30 +88,30 @@ export function ActivateLicenseForm({ onClose }: ActivateLicenseFormProps) {
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <input
-        type="file"
         accept=".txt,.license"
-        ref={fileInputRef}
-        onChange={handleFileUpload}
         hidden
+        onChange={handleFileUpload}
+        ref={fileInputRef}
+        type="file"
       />
 
       <Stack gap="xs">
         <Textarea
+          autosize
+          data-autofocus
           label={t("License key")}
+          maxRows={5}
+          minRows={3}
           placeholder={t("e.g eyJhb.....")}
           variant="filled"
-          autosize
-          minRows={3}
-          maxRows={5}
-          data-autofocus
           {...form.getInputProps("licenseKey")}
         />
 
         <Group justify="flex-end">
           <Button
-            type="submit"
             disabled={activateLicenseMutation.isPending}
             loading={activateLicenseMutation.isPending}
+            type="submit"
           >
             {t("Save")}
           </Button>
@@ -118,10 +120,7 @@ export function ActivateLicenseForm({ onClose }: ActivateLicenseFormProps) {
         <Divider label={t("Or")} labelPosition="center" />
 
         <Group justify="center">
-          <Button
-            variant="light"
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <Button onClick={() => fileInputRef.current?.click()} variant="light">
             {t("Upload license file")}
           </Button>
         </Group>

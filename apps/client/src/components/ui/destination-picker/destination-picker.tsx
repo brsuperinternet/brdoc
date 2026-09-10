@@ -1,15 +1,15 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { ActionIcon, TextInput, ScrollArea, Loader } from "@mantine/core";
+import { ActionIcon, Loader, ScrollArea, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { IconSearch, IconFileDescription } from "@tabler/icons-react";
+import { IconFileDescription, IconSearch } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetSpacesQuery } from "@/features/space/queries/space-query";
-import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
-import { ISpace } from "@/features/space/types/space.types";
 import { IPage } from "@/features/page/types/page.types";
+import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
+import { useGetSpacesQuery } from "@/features/space/queries/space-query";
+import { ISpace } from "@/features/space/types/space.types";
+import classes from "./destination-picker.module.css";
 import { DestinationSelection } from "./destination-picker.types";
 import { SpaceRow } from "./space-row";
-import classes from "./destination-picker.module.css";
 
 type DestinationPickerProps = {
   onSelectionChange: (selection: DestinationSelection | null) => void;
@@ -41,80 +41,87 @@ export function DestinationPicker({
 
   const { data: searchData, isLoading: searchLoading } =
     useSearchSuggestionsQuery({
-      query: searchEnabled ? debouncedQuery : "",
       includePages: true,
       limit: 20,
+      query: searchEnabled ? debouncedQuery : "",
     });
 
   const isSearching = !!searchEnabled;
 
   const filteredSpaces = useMemo(() => {
     const items = spacesData?.items ?? [];
-    if (!searchSpacesOnly || !debouncedQuery) return items;
+    if (!(searchSpacesOnly && debouncedQuery)) {
+      return items;
+    }
     const fold = (s: string) =>
-      s
-        .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "")
-        .toLocaleLowerCase();
+      s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLocaleLowerCase();
     const term = fold(debouncedQuery);
     return items.filter((s) => fold(s.name).includes(term));
   }, [spacesData, searchSpacesOnly, debouncedQuery]);
 
   const selectedId =
-    selection?.type === "space" ? selection.spaceId : selection?.pageId ?? null;
+    selection?.type === "space"
+      ? selection.spaceId
+      : (selection?.pageId ?? null);
 
   const updateSelection = useCallback(
     (next: DestinationSelection | null) => {
       setSelection(next);
       onSelectionChange(next);
     },
-    [onSelectionChange],
+    [onSelectionChange]
   );
 
   const handleSearchResultClick = (page: Partial<IPage>) => {
-    if (!page.space || !page.id) return;
+    if (!(page.space && page.id)) {
+      return;
+    }
 
     updateSelection({
-      type: "page",
-      spaceId: page.space.id,
-      pageId: page.id,
       page,
+      pageId: page.id,
       space: page.space,
+      spaceId: page.space.id,
+      type: "page",
     });
     setSearchQuery("");
   };
 
   const handleSelectSpace = useCallback(
     (space: ISpace) => {
-      updateSelection({ type: "space", spaceId: space.id, space });
+      updateSelection({ space, spaceId: space.id, type: "space" });
     },
-    [updateSelection],
+    [updateSelection]
   );
 
   const handleSelectPage = useCallback(
     (page: Partial<IPage>, space: ISpace) => {
-      if (!page.id) return;
+      if (!page.id) {
+        return;
+      }
       updateSelection({
-        type: "page",
-        spaceId: page.spaceId ?? space.id,
-        pageId: page.id,
         page,
+        pageId: page.id,
         space,
+        spaceId: page.spaceId ?? space.id,
+        type: "page",
       });
     },
-    [updateSelection],
+    [updateSelection]
   );
 
   // Pre-select space when initialSpaceId is set and spaces have loaded.
   // Only runs once: skip if user has already made a selection.
   useEffect(() => {
-    if (!initialSpaceId || selection) return;
+    if (!initialSpaceId || selection) {
+      return;
+    }
     const match = spacesData?.items?.find((s) => s.id === initialSpaceId);
     if (match) {
-      updateSelection({ type: "space", spaceId: match.id, space: match });
+      updateSelection({ space: match, spaceId: match.id, type: "space" });
       requestAnimationFrame(() => {
         const el = viewportRef.current?.querySelector<HTMLElement>(
-          `[data-space-id="${match.id}"]`,
+          `[data-space-id="${match.id}"]`
         );
         el?.scrollIntoView({ block: "nearest" });
       });
@@ -124,27 +131,27 @@ export function DestinationPicker({
   return (
     <>
       <TextInput
-        leftSection={<IconSearch size={16} />}
-        placeholder={
-          searchSpacesOnly
-            ? t("Search spaces...")
-            : t("Search pages and spaces...")
-        }
         aria-label={
           searchSpacesOnly
             ? t("Search spaces...")
             : t("Search pages and spaces...")
         }
-        variant="filled"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.currentTarget.value)}
         className={classes.searchInput}
+        leftSection={<IconSearch size={16} />}
+        onChange={(e) => setSearchQuery(e.currentTarget.value)}
+        placeholder={
+          searchSpacesOnly
+            ? t("Search spaces...")
+            : t("Search pages and spaces...")
+        }
+        value={searchQuery}
+        variant="filled"
       />
 
       <ScrollArea
+        className={classes.scrollArea}
         h="50vh"
         offsetScrollbars
-        className={classes.scrollArea}
         viewportRef={viewportRef}
       >
         {isSearching ? (
@@ -157,10 +164,8 @@ export function DestinationPicker({
               (page) =>
                 page && (
                   <div
-                    key={page.id}
                     className={classes.searchResult}
-                    role="button"
-                    tabIndex={0}
+                    key={page.id}
                     onClick={() => handleSearchResultClick(page)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -168,16 +173,18 @@ export function DestinationPicker({
                         handleSearchResultClick(page);
                       }
                     }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className={classes.iconWrapper}>
                       {page.icon ? (
                         page.icon
                       ) : (
                         <ActionIcon
-                          component="div"
-                          variant="transparent"
                           c="gray"
+                          component="div"
                           size={22}
+                          variant="transparent"
                         >
                           <IconFileDescription size={18} />
                         </ActionIcon>
@@ -187,12 +194,10 @@ export function DestinationPicker({
                       {page.title || t("Untitled")}
                     </div>
                     {page.space && (
-                      <div className={classes.spaceName}>
-                        {page.space.name}
-                      </div>
+                      <div className={classes.spaceName}>{page.space.name}</div>
                     )}
                   </div>
-                ),
+                )
             )
           ) : (
             <div className={classes.emptyState}>{t("No results found")}</div>
@@ -210,13 +215,13 @@ export function DestinationPicker({
         ) : (
           filteredSpaces.map((space) => (
             <SpaceRow
-              key={space.id}
-              space={space}
-              limit={pageLimit}
-              selectedId={selectedId}
               excludePageId={excludePageId}
-              onSelectSpace={handleSelectSpace}
+              key={space.id}
+              limit={pageLimit}
               onSelectPage={handleSelectPage}
+              onSelectSpace={handleSelectSpace}
+              selectedId={selectedId}
+              space={space}
             />
           ))
         )}

@@ -11,14 +11,22 @@ export function cellValuesEqual(a: unknown, b: unknown): boolean {
   const aArr = Array.isArray(a);
   const bArr = Array.isArray(b);
 
-  if (!aArr && !bArr) {
-    if (isEmpty(a) && isEmpty(b)) return true;
-    if (isEmpty(a) !== isEmpty(b)) return false;
+  if (!(aArr || bArr)) {
+    if (isEmpty(a) && isEmpty(b)) {
+      return true;
+    }
+    if (isEmpty(a) !== isEmpty(b)) {
+      return false;
+    }
   }
 
   if (aArr || bArr) {
-    if (!aArr || !bArr) return false;
-    if (a.length !== b.length) return false;
+    if (!(aArr && bArr)) {
+      return false;
+    }
+    if (a.length !== b.length) {
+      return false;
+    }
     return a.every((x, i) => cellValuesEqual(x, b[i]));
   }
 

@@ -1,4 +1,3 @@
-import api from "@/lib/api-client";
 import {
   IChangePassword,
   ICollabToken,
@@ -10,6 +9,7 @@ import {
   IVerifyUserToken,
 } from "@/features/auth/types/auth.types";
 import { IWorkspace } from "@/features/workspace/types/workspace.types.ts";
+import api from "@/lib/api-client";
 
 export async function login(data: ILogin): Promise<ILoginResponse> {
   const response = await api.post<ILoginResponse>("/auth/login", data);
@@ -21,14 +21,14 @@ export async function logout(): Promise<void> {
 }
 
 export async function changePassword(
-  data: IChangePassword,
+  data: IChangePassword
 ): Promise<IChangePassword> {
   const req = await api.post<IChangePassword>("/auth/change-password", data);
   return req.data;
 }
 
 export async function setupWorkspace(
-  data: ISetupWorkspace,
+  data: ISetupWorkspace
 ): Promise<IWorkspace> {
   const req = await api.post<IWorkspace>("/auth/setup", data);
   return req.data;
@@ -38,7 +38,9 @@ export async function forgotPassword(data: IForgotPassword): Promise<void> {
   await api.post<void>("/auth/forgot-password", data);
 }
 
-export async function passwordReset(data: IPasswordReset): Promise<{ requiresLogin?: boolean; }> {
+export async function passwordReset(
+  data: IPasswordReset
+): Promise<{ requiresLogin?: boolean }> {
   const req = await api.post("/auth/password-reset", data);
   return req.data;
 }
@@ -51,4 +53,3 @@ export async function getCollabToken(): Promise<ICollabToken> {
   const req = await api.post<ICollabToken>("/auth/collab-token");
   return req.data;
 }
-

@@ -21,17 +21,20 @@ const CURRENCY_CODES = new Set(CURRENCIES.map((c) => c.code));
 export function formatCurrency(
   value: number,
   code: string | undefined,
-  precision: number | undefined,
+  precision: number | undefined
 ): string {
   const currency =
     code && CURRENCY_CODES.has(code) ? code : DEFAULT_CURRENCY_CODE;
   try {
     return new Intl.NumberFormat(undefined, {
-      style: "currency",
       currency,
-      ...(precision != null
-        ? { minimumFractionDigits: precision, maximumFractionDigits: precision }
-        : {}),
+      style: "currency",
+      ...(precision == null
+        ? {}
+        : {
+            maximumFractionDigits: precision,
+            minimumFractionDigits: precision,
+          }),
     }).format(value);
   } catch {
     return String(value);

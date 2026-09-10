@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useAiGenerateStreamMutation } from "@/ee/ai/queries/ai-query.ts";
 import { AiGenerateDto } from "@/ee/ai/types/ai.types.ts";
 
@@ -19,11 +19,11 @@ export function useAiStream() {
           onChunk: (chunk) => {
             setContent((prev) => prev + chunk.content);
           },
-          onError: (error) => {
-            console.error("AI stream error:", error);
+          onComplete: () => {
             setIsStreaming(false);
           },
-          onComplete: () => {
+          onError: (error) => {
+            console.error("AI stream error:", error);
             setIsStreaming(false);
           },
         });
@@ -51,11 +51,11 @@ export function useAiStream() {
 
   return {
     content,
+    error: mutation.error,
+    isLoading: mutation.isPending,
     isStreaming,
+    resetContent,
     startStream,
     stopStream,
-    resetContent,
-    isLoading: mutation.isPending,
-    error: mutation.error,
   };
 }

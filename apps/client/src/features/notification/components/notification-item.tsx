@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Avatar,
   Group,
   Text,
   Tooltip,
@@ -11,16 +12,15 @@ import {
   IconFileDescription,
   IconPointFilled,
 } from "@tabler/icons-react";
-import { Avatar } from "@mantine/core";
-import { CustomAvatar } from "@/components/ui/custom-avatar";
-import { INotification } from "../types/notification.types";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { useMarkReadMutation } from "../queries/notification-query";
+import { CustomAvatar } from "@/components/ui/custom-avatar";
 import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
-import { formatRelativeTime } from "../notification.utils";
 import classes from "../notification.module.css";
+import { formatRelativeTime } from "../notification.utils";
+import { useMarkReadMutation } from "../queries/notification-query";
+import { INotification } from "../types/notification.types";
 
 type NotificationItemProps = {
   notification: INotification;
@@ -79,7 +79,7 @@ export function NotificationItem({
       ? buildPageUrl(
           notification.space.slug,
           notification.page.slugId,
-          notification.page.title,
+          notification.page.title
         )
       : undefined;
 
@@ -115,18 +115,18 @@ export function NotificationItem({
 
   return (
     <UnstyledButton
+      className={classes.notificationItem}
       component={Link}
-      to={linkUrl ?? ""}
-      onClick={handleClick}
       // auxclick fires for all non-primary buttons; guard to middle-click only (button 1)
       // so that right-click (button 2, context menu) does not mark as read
       onAuxClick={(e: React.MouseEvent) => e.button === 1 && markReadIfNeeded()}
+      onClick={handleClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      to={linkUrl ?? ""}
       w="100%"
-      className={classes.notificationItem}
     >
-      <Group wrap="nowrap" align="flex-start" gap="sm">
+      <Group align="flex-start" gap="sm" wrap="nowrap">
         {notification.actor ? (
           <CustomAvatar
             avatarUrl={notification.actor.avatarUrl}
@@ -134,26 +134,26 @@ export function NotificationItem({
             size="sm"
           />
         ) : (
-          <Avatar size="sm" color="gray" radius="xl">
+          <Avatar color="gray" radius="xl" size="sm">
             <IconBell size={14} />
           </Avatar>
         )}
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Text size="sm" lineClamp={2}>
+          <Text lineClamp={2} size="sm">
             <Trans
+              components={{ bold: <Text fw={600} span /> }}
               i18nKey={getNotificationMessageKey()}
               values={{
                 name: isSiemDestination
                   ? destinationName
                   : notification.actor?.name,
               }}
-              components={{ bold: <Text span fw={600} /> }}
             />
           </Text>
 
           {lastError && (
-            <Text size="xs" c="dimmed" lineClamp={1} mt={2}>
+            <Text c="dimmed" lineClamp={1} mt={2} size="xs">
               {lastError}
             </Text>
           )}
@@ -168,37 +168,36 @@ export function NotificationItem({
                 <IconFileDescription
                   size={14}
                   stroke={1.5}
-                  style={{ flexShrink: 0, color: "var(--mantine-color-dimmed)" }}
+                  style={{
+                    color: "var(--mantine-color-dimmed)",
+                    flexShrink: 0,
+                  }}
                 />
               )}
-              <Text size="xs" c="dimmed" lineClamp={1}>
+              <Text c="dimmed" lineClamp={1} size="xs">
                 {getPageTitle(notification.page.title, undefined, t)}
               </Text>
             </Group>
           )}
         </div>
 
-        <Group gap={4} wrap="nowrap" align="center" style={{ flexShrink: 0 }}>
+        <Group align="center" gap={4} style={{ flexShrink: 0 }} wrap="nowrap">
           {hovered && isUnread ? (
             <Tooltip label={t("Mark as read")} withArrow>
-              <ActionIcon
-                variant="subtle"
-                size="sm"
-                onClick={handleMarkRead}
-              >
+              <ActionIcon onClick={handleMarkRead} size="sm" variant="subtle">
                 <IconCheck size={14} />
               </ActionIcon>
             </Tooltip>
           ) : (
-            <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+            <Text c="dimmed" size="xs" style={{ whiteSpace: "nowrap" }}>
               {formatRelativeTime(notification.createdAt)}
             </Text>
           )}
 
           {isUnread && (
             <IconPointFilled
-              size={12}
               color="var(--mantine-color-blue-filled)"
+              size={12}
               style={{ flexShrink: 0 }}
             />
           )}

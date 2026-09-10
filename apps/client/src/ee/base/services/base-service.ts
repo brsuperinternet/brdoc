@@ -1,29 +1,29 @@
-import api from "@/lib/api-client";
 import { saveAs } from "file-saver";
 import {
+  CreateBaseInput,
+  CreatePropertyInput,
+  CreateRowInput,
+  CreateViewInput,
+  DeletePropertyInput,
+  DeleteRowInput,
+  DeleteRowsInput,
+  DeleteViewInput,
+  FilterNode,
   IBase,
   IBaseProperty,
   IBaseRow,
   IBaseView,
-  CreateBaseInput,
-  UpdateBaseInput,
-  CreatePropertyInput,
-  UpdatePropertyInput,
-  DeletePropertyInput,
   ReorderPropertyInput,
-  CreateRowInput,
-  UpdateRowInput,
-  DeleteRowInput,
-  DeleteRowsInput,
   ReorderRowInput,
-  CreateViewInput,
-  UpdateViewInput,
-  DeleteViewInput,
-  UpdatePropertyResult,
-  FilterNode,
-  ViewSortConfig,
   RowReferences,
+  UpdateBaseInput,
+  UpdatePropertyInput,
+  UpdatePropertyResult,
+  UpdateRowInput,
+  UpdateViewInput,
+  ViewSortConfig,
 } from "@/ee/base/types/base.types";
+import api from "@/lib/api-client";
 import { IPagination } from "@/lib/types";
 
 export type IBaseRowsPage = IPagination<IBaseRow> & {
@@ -51,7 +51,7 @@ export async function deleteBase(pageId: string): Promise<void> {
 
 export async function convertPageToBase(
   pageId: string,
-  template?: "kanban",
+  template?: "kanban"
 ): Promise<IBase> {
   const req = await api.post<IBase>("/bases/convert", { pageId, template });
   return req.data;
@@ -61,7 +61,7 @@ export async function exportBaseToCsv(pageId: string): Promise<void> {
   const req = await api.post(
     "/bases/export-csv",
     { pageId },
-    { responseType: "blob" },
+    { responseType: "blob" }
   );
 
   const header = (req?.headers?.["content-disposition"] as string) ?? "";
@@ -79,25 +79,25 @@ export async function exportBaseToCsv(pageId: string): Promise<void> {
 
 export async function listBases(
   spaceId: string,
-  params?: { cursor?: string; limit?: number },
+  params?: { cursor?: string; limit?: number }
 ): Promise<IPagination<IBase>> {
   const req = await api.post("/bases", { spaceId, ...params });
   return req.data;
 }
 
 export async function createProperty(
-  data: CreatePropertyInput,
+  data: CreatePropertyInput
 ): Promise<IBaseProperty> {
   const req = await api.post<IBaseProperty>("/bases/properties/create", data);
   return req.data;
 }
 
 export async function updateProperty(
-  data: UpdatePropertyInput,
+  data: UpdatePropertyInput
 ): Promise<UpdatePropertyResult> {
   const req = await api.post<UpdatePropertyResult>(
     "/bases/properties/update",
-    data,
+    data
   );
   return req.data;
 }
@@ -107,7 +107,7 @@ export async function deleteProperty(data: DeletePropertyInput): Promise<void> {
 }
 
 export async function reorderProperty(
-  data: ReorderPropertyInput,
+  data: ReorderPropertyInput
 ): Promise<void> {
   await api.post("/bases/properties/reorder", data);
 }
@@ -119,9 +119,9 @@ export async function createRow(data: CreateRowInput): Promise<IBaseRow> {
 
 export async function getRowInfo(
   rowId: string,
-  pageId: string,
+  pageId: string
 ): Promise<IBaseRow> {
-  const req = await api.post<IBaseRow>("/bases/rows/info", { rowId, pageId });
+  const req = await api.post<IBaseRow>("/bases/rows/info", { pageId, rowId });
   return req.data;
 }
 
@@ -145,7 +145,7 @@ export async function listRows(
     limit?: number;
     filter?: FilterNode;
     sorts?: ViewSortConfig[];
-  },
+  }
 ): Promise<IBaseRowsPage> {
   const req = await api.post("/bases/rows", { pageId, ...params });
   return req.data;

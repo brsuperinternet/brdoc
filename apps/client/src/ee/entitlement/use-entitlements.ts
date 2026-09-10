@@ -1,11 +1,11 @@
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { getEntitlements } from "./entitlement-service";
+import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import { Entitlements } from "./entitlement.types";
+import { getEntitlements } from "./entitlement-service";
 
 export function useEntitlements(): UseQueryResult<Entitlements> {
   return useQuery({
-    queryKey: ["entitlements"],
     queryFn: getEntitlements,
+    queryKey: ["entitlements"],
     staleTime: 5 * 60 * 1000,
   });
 }

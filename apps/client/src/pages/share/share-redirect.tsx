@@ -1,7 +1,7 @@
-import { useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
-import { buildSharedPageUrl } from "@/features/page/page.utils.ts";
+import { useNavigate, useParams } from "react-router-dom";
 import { Error404 } from "@/components/ui/error-404.tsx";
+import { buildSharedPageUrl } from "@/features/page/page.utils.ts";
 import { useGetShareByIdQuery } from "@/features/share/queries/share-query.ts";
 
 export default function ShareRedirect() {
@@ -14,11 +14,11 @@ export default function ShareRedirect() {
     if (share) {
       navigate(
         buildSharedPageUrl({
-          shareId: share.key,
           pageSlugId: share?.sharedPage.slugId,
           pageTitle: share?.sharedPage.title,
+          shareId: share.key,
         }),
-        { replace: true },
+        { replace: true }
       );
     }
   }, [isLoading, share]);

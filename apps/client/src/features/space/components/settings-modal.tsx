@@ -1,25 +1,24 @@
-import { Modal, Tabs, rem, Group, ScrollArea, Text } from "@mantine/core";
-import SpaceMembersList from "@/features/space/components/space-members.tsx";
-import AddSpaceMembersModal from "@/features/space/components/add-space-members-modal.tsx";
-import React from "react";
-import SpaceDetails from "@/features/space/components/space-details.tsx";
-import SpaceSecuritySettings from "@/features/space/components/space-security-settings.tsx";
+import { Group, Modal, rem, ScrollArea, Tabs, Text } from "@mantine/core";
+import { useAtom } from "jotai";
+import { useTranslation } from "react-i18next";
 import PublishSpaceSettings from "@/features/public-space/components/publish-space-settings.tsx";
 import { isPublicSpacesAllowed } from "@/features/public-space/utils/public-space-access.ts";
-import { useSpaceQuery } from "@/features/space/queries/space-query.ts";
-import { useSpaceAbility } from "@/features/space/permissions/use-space-ability.ts";
+import AddSpaceMembersModal from "@/features/space/components/add-space-members-modal.tsx";
+import SpaceDetails from "@/features/space/components/space-details.tsx";
+import SpaceMembersList from "@/features/space/components/space-members.tsx";
+import SpaceSecuritySettings from "@/features/space/components/space-security-settings.tsx";
 import {
   SpaceCaslAction,
   SpaceCaslSubject,
 } from "@/features/space/permissions/permissions.type.ts";
-import { useTranslation } from "react-i18next";
-import { useAtom } from "jotai";
+import { useSpaceAbility } from "@/features/space/permissions/use-space-ability.ts";
+import { useSpaceQuery } from "@/features/space/queries/space-query.ts";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 
 interface SpaceSettingsModalProps {
-  spaceId: string;
-  opened: boolean;
   onClose: () => void;
+  opened: boolean;
+  spaceId: string;
 }
 
 export default function SpaceSettingsModal({
@@ -37,19 +36,19 @@ export default function SpaceSettingsModal({
   const allowPublicSpaces = isPublicSpacesAllowed(workspace);
   const canManageSettings = spaceAbility.can(
     SpaceCaslAction.Manage,
-    SpaceCaslSubject.Settings,
+    SpaceCaslSubject.Settings
   );
 
   return (
     <>
       <Modal.Root
-        opened={opened}
-        onClose={onClose}
-        size={600}
-        padding="xl"
-        yOffset="10vh"
-        xOffset={0}
         mah={400}
+        onClose={onClose}
+        opened={opened}
+        padding="xl"
+        size={600}
+        xOffset={0}
+        yOffset="10vh"
       >
         <Modal.Overlay />
         <Modal.Content style={{ overflow: "hidden" }}>
@@ -84,52 +83,52 @@ export default function SpaceSettingsModal({
                 </Tabs.List>
 
                 <Tabs.Panel value="general">
-                  <ScrollArea h={580} scrollbarSize={5} pr={8}>
+                  <ScrollArea h={580} pr={8} scrollbarSize={5}>
                     <div style={{ paddingBottom: "100px" }}>
                       <SpaceDetails
-                        spaceId={space?.id}
                         readOnly={spaceAbility.cannot(
                           SpaceCaslAction.Manage,
-                          SpaceCaslSubject.Settings,
+                          SpaceCaslSubject.Settings
                         )}
+                        spaceId={space?.id}
                       />
                     </div>
                   </ScrollArea>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="members">
-                  <Group my="md" justify="flex-end">
+                  <Group justify="flex-end" my="md">
                     {spaceAbility.can(
                       SpaceCaslAction.Manage,
-                      SpaceCaslSubject.Member,
+                      SpaceCaslSubject.Member
                     ) && <AddSpaceMembersModal spaceId={space?.id} />}
                   </Group>
 
                   <SpaceMembersList
-                    spaceId={space?.id}
                     readOnly={spaceAbility.cannot(
                       SpaceCaslAction.Manage,
-                      SpaceCaslSubject.Member,
+                      SpaceCaslSubject.Member
                     )}
+                    spaceId={space?.id}
                   />
                 </Tabs.Panel>
 
                 <Tabs.Panel value="security">
-                  <ScrollArea h={580} scrollbarSize={5} pr={8}>
+                  <ScrollArea h={580} pr={8} scrollbarSize={5}>
                     <div style={{ paddingBottom: "100px" }}>
                       <SpaceSecuritySettings
-                        space={space}
                         readOnly={spaceAbility.cannot(
                           SpaceCaslAction.Manage,
-                          SpaceCaslSubject.Settings,
+                          SpaceCaslSubject.Settings
                         )}
+                        space={space}
                       />
                     </div>
                   </ScrollArea>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="publish">
-                  <ScrollArea h={580} scrollbarSize={5} pr={8}>
+                  <ScrollArea h={580} pr={8} scrollbarSize={5}>
                     <div style={{ paddingBottom: "100px" }}>
                       {canManageSettings && allowPublicSpaces && (
                         <PublishSpaceSettings space={space} />

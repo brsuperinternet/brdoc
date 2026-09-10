@@ -1,11 +1,11 @@
-import { z } from "zod/v4";
+import { Box, Button, Container, PasswordInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import useAuth from "@/features/auth/hooks/use-auth";
-import { Box, Button, Container, PasswordInput, Title } from "@mantine/core";
-import classes from "./auth.module.css";
-import { useRedirectIfAuthenticated } from "@/features/auth/hooks/use-redirect-if-authenticated.ts";
 import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import useAuth from "@/features/auth/hooks/use-auth";
+import { useRedirectIfAuthenticated } from "@/features/auth/hooks/use-redirect-if-authenticated.ts";
+import classes from "./auth.module.css";
 import { AuthLayout } from "./auth-layout.tsx";
 
 const formSchema = z.object({
@@ -25,47 +25,47 @@ export function PasswordResetForm({ resetToken }: PasswordResetFormProps) {
   useRedirectIfAuthenticated();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       newPassword: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   async function onSubmit(data: FormValues) {
     await passwordReset({
-      token: resetToken,
       newPassword: data.newPassword,
+      token: resetToken,
     });
   }
 
   return (
     <AuthLayout>
-    <Container size={420} className={classes.container}>
-      <Box p="xl" className={classes.containerBox}>
-        <Title order={2} ta="center" fw={500} mb="md">
-          {t("Password reset")}
-        </Title>
+      <Container className={classes.container} size={420}>
+        <Box className={classes.containerBox} p="xl">
+          <Title fw={500} mb="md" order={2} ta="center">
+            {t("Password reset")}
+          </Title>
 
-        <form onSubmit={form.onSubmit(onSubmit)}>
-          <PasswordInput
-            label={t("New password")}
-            placeholder={t("Your new password")}
-            variant="filled"
-            mt="md"
-            visibilityToggleButtonProps={{
-              "aria-label": t("Toggle password visibility"),
-              "aria-hidden": false,
-              tabIndex: 0,
-            }}
-            {...form.getInputProps("newPassword")}
-          />
+          <form onSubmit={form.onSubmit(onSubmit)}>
+            <PasswordInput
+              label={t("New password")}
+              mt="md"
+              placeholder={t("Your new password")}
+              variant="filled"
+              visibilityToggleButtonProps={{
+                "aria-hidden": false,
+                "aria-label": t("Toggle password visibility"),
+                tabIndex: 0,
+              }}
+              {...form.getInputProps("newPassword")}
+            />
 
-          <Button type="submit" fullWidth mt="xl" loading={isLoading}>
-            {t("Set password")}
-          </Button>
-        </form>
-      </Box>
-    </Container>
+            <Button fullWidth loading={isLoading} mt="xl" type="submit">
+              {t("Set password")}
+            </Button>
+          </form>
+        </Box>
+      </Container>
     </AuthLayout>
   );
 }

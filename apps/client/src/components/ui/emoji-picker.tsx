@@ -1,12 +1,11 @@
-import React, { ReactNode, useEffect, useState } from "react";
 import {
   ActionIcon,
-  Popover,
   Button,
+  Popover,
   useMantineColorScheme,
 } from "@mantine/core";
 import { useClickOutside, useDisclosure, useWindowEvent } from "@mantine/hooks";
-import { Suspense } from "react";
+import React, { ReactNode, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 // Load the picker module AND the emoji data in parallel inside the lazy
@@ -26,16 +25,16 @@ const Picker = React.lazy(async () => {
 });
 
 export interface EmojiPickerInterface {
-  onEmojiSelect: (emoji: any) => void;
-  icon: ReactNode;
-  removeEmojiAction: () => void;
-  readOnly: boolean;
   actionIconProps?: {
     size?: string;
     variant?: string;
     c?: string;
     tabIndex?: number;
   };
+  icon: ReactNode;
+  onEmojiSelect: (emoji: any) => void;
+  readOnly: boolean;
+  removeEmojiAction: () => void;
 }
 
 function EmojiPicker({
@@ -54,7 +53,7 @@ function EmojiPicker({
   useClickOutside(
     () => handlers.close(),
     ["mousedown", "touchstart"],
-    [dropdown, target],
+    [dropdown, target]
   );
 
   // We need this because the default Mantine popover closeOnEscape does not work
@@ -74,14 +73,18 @@ function EmojiPicker({
   // element's shadow root, so we poll for it after the dropdown mounts and
   // focus it ourselves with preventScroll.
   useEffect(() => {
-    if (!opened || !dropdown) return;
+    if (!(opened && dropdown)) {
+      return;
+    }
     let cancelled = false;
     let rafId = 0;
     const tryFocus = (attempts: number) => {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
       const pickerEl = dropdown.querySelector("em-emoji-picker");
       const input = pickerEl?.shadowRoot?.querySelector<HTMLInputElement>(
-        'input[type="search"]',
+        'input[type="search"]'
       );
       if (input) {
         input.focus({ preventScroll: true });
@@ -110,29 +113,29 @@ function EmojiPicker({
 
   return (
     <Popover
-      opened={opened}
-      onClose={handlers.close}
-      width={332}
-      position="bottom"
-      disabled={readOnly}
       closeOnEscape={true}
+      disabled={readOnly}
+      onClose={handlers.close}
+      opened={opened}
+      position="bottom"
+      width={332}
     >
       <Popover.Target ref={setTarget}>
         <ActionIcon
+          aria-expanded={opened}
+          aria-haspopup="dialog"
+          aria-label={t("Pick emoji")}
           c={actionIconProps?.c || "gray"}
-          variant={actionIconProps?.variant || "transparent"}
+          onClick={handlers.toggle}
           size={actionIconProps?.size}
           tabIndex={actionIconProps?.tabIndex}
-          onClick={handlers.toggle}
-          aria-label={t("Pick emoji")}
-          aria-haspopup="dialog"
-          aria-expanded={opened}
+          variant={actionIconProps?.variant || "transparent"}
         >
           {icon}
         </ActionIcon>
       </Popover.Target>
       <Suspense fallback={null}>
-        <Popover.Dropdown bg="000" style={{ border: "none" }} ref={setDropdown}>
+        <Popover.Dropdown bg="000" ref={setDropdown} style={{ border: "none" }}>
           <Picker
             onEmojiSelect={handleEmojiSelect}
             perLine={8}
@@ -140,16 +143,16 @@ function EmojiPicker({
             theme={colorScheme}
           />
           <Button
-            variant="default"
             c="gray"
+            onClick={handleRemoveEmoji}
             size="xs"
             style={{
-              position: "absolute",
-              zIndex: 2,
               bottom: "1rem",
+              position: "absolute",
               right: "1rem",
+              zIndex: 2,
             }}
-            onClick={handleRemoveEmoji}
+            variant="default"
           >
             {t("Remove")}
           </Button>

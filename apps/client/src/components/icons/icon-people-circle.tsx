@@ -1,10 +1,9 @@
 import { ThemeIcon } from "@mantine/core";
-import React from "react";
 import { IconUsersGroup } from "@tabler/icons-react";
 
 export function IconGroupCircle() {
   return (
-    <ThemeIcon variant="light" size="lg" color="gray" radius="xl">
+    <ThemeIcon color="gray" radius="xl" size="lg" variant="light">
       <IconUsersGroup stroke={1.5} />
     </ThemeIcon>
   );

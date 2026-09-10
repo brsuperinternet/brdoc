@@ -1,8 +1,11 @@
-.header, .navbar, .aside {
+.header,
+.navbar,
+.aside {
   background-color: light-dark(#f6f7f9, var(--mantine-color-dark-8));
 }
 
-.navbar, .aside {
+.navbar,
+.aside {
   @media (max-width: $mantine-breakpoint-sm) {
     width: 350px;
   }
@@ -15,15 +18,19 @@
 }
 
 .resizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 3px;
   cursor: col-resize;
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
 
-  &:hover, &:active {
+  &:hover,
+  &:active {
     width: 5px;
-    background: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-5))
+    background: light-dark(
+      var(--mantine-color-gray-4),
+      var(--mantine-color-dark-5)
+    );
   }
 }

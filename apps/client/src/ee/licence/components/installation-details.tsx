@@ -1,16 +1,9 @@
-import React from "react";
-import useUserRole from "@/hooks/use-user-role.tsx";
-import classes from "@/ee/billing/components/billing.module.css";
-import {
-  Group,
-  Paper,
-  SimpleGrid,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Group, Paper, SimpleGrid, Text, TextInput } from "@mantine/core";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import CopyTextButton from "@/components/common/copy.tsx";
+import classes from "@/ee/billing/components/billing.module.css";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import useUserRole from "@/hooks/use-user-role.tsx";
 
 export default function InstallationDetails() {
   const { isAdmin } = useUserRole();
@@ -22,26 +15,26 @@ export default function InstallationDetails() {
 
   return (
     <>
-      <SimpleGrid cols={{ base: 1, xs: 2, sm: 2 }}>
+      <SimpleGrid cols={{ base: 1, sm: 2, xs: 2 }}>
         <Paper p="sm" radius="md" withBorder={true}>
-          <Group justify="apart" grow>
+          <Group grow justify="apart">
             <div>
               <Text
                 c="dimmed"
-                tt="uppercase"
+                className={classes.label}
                 fw={700}
                 fz="xs"
-                className={classes.label}
+                tt="uppercase"
               >
                 Workspace ID
               </Text>
               <TextInput
-                style={{ fontWeight: 700 }}
-                variant="unstyled"
-                readOnly
-                value={workspace?.id}
                 pointer
+                readOnly
                 rightSection={<CopyTextButton text={workspace?.id} />}
+                style={{ fontWeight: 700 }}
+                value={workspace?.id}
+                variant="unstyled"
               />
             </div>
           </Group>
@@ -52,10 +45,10 @@ export default function InstallationDetails() {
             <div>
               <Text
                 c="dimmed"
-                tt="uppercase"
+                className={classes.label}
                 fw={700}
                 fz="xs"
-                className={classes.label}
+                tt="uppercase"
               >
                 Member count
               </Text>

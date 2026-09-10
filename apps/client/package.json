@@ -1,13 +1,13 @@
 {
   "name": "client",
-  "private": true,
   "version": "0.96.0",
+  "private": true,
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
+    "dev": "vite",
+    "format": "prettier --write \"src/**/*.tsx\" \"src/**/*.ts\"",
     "lint": "eslint .",
     "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.tsx\" \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest"
   },

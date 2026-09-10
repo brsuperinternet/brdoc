@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import { Popover, Textarea, Group, CloseButton, Tooltip } from "@mantine/core";
+import { CloseButton, Group, Popover, Textarea, Tooltip } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
-import { IBaseProperty } from "@/ee/base/types/base.types";
+import { useEffect, useRef, useState } from "react";
 import { formatLongTextPreview } from "@/ee/base/formatters/cell-formatters";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 
 type CellLongTextProps = {
   value: unknown;
@@ -45,7 +45,9 @@ export function CellLongText({
       setDraft(toText(value));
       requestAnimationFrame(() => {
         const el = textareaRef.current;
-        if (!el) return;
+        if (!el) {
+          return;
+        }
         el.focus();
         el.setSelectionRange(el.value.length, el.value.length);
       });
@@ -60,7 +62,9 @@ export function CellLongText({
   }, 10_000);
 
   const commit = () => {
-    if (committedRef.current) return;
+    if (committedRef.current) {
+      return;
+    }
     committedRef.current = true;
     debouncedAutosave.cancel();
     onCommit(normalize(draft));
@@ -75,9 +79,12 @@ export function CellLongText({
 
   return (
     <Popover
-      opened={isEditing}
+      closeOnClickOutside
+      closeOnEscape={false}
       onChange={(opened) => {
-        if (opened) return;
+        if (opened) {
+          return;
+        }
         // Programmatic close after cancel must not re-commit.
         if (cancelledRef.current) {
           cancelledRef.current = false;
@@ -85,18 +92,23 @@ export function CellLongText({
         }
         commit();
       }}
+      opened={isEditing}
       position="bottom-start"
-      width={320}
       shadow="md"
-      withinPortal
-      closeOnClickOutside
-      closeOnEscape={false}
       trapFocus
+      width={320}
+      withinPortal
     >
       <Popover.Target>
         <div className={cellClasses.popoverTargetFlex}>
           {preview ? (
-            <Tooltip label={toText(value)} multiline withinPortal openDelay={400} maw={420}>
+            <Tooltip
+              label={toText(value)}
+              maw={420}
+              multiline
+              openDelay={400}
+              withinPortal
+            >
               <span className={cellClasses.longTextPreview}>{preview}</span>
             </Tooltip>
           ) : (
@@ -105,24 +117,21 @@ export function CellLongText({
         </div>
       </Popover.Target>
       <Popover.Dropdown
-        p={4}
-        onClick={(e) => e.stopPropagation()}
         className={cellClasses.longTextDropdown}
+        onClick={(e) => e.stopPropagation()}
+        p={4}
       >
         {isEditing && (
           <>
             <Group justify="flex-end" mb={2}>
-              <CloseButton size="sm" onClick={commit} aria-label="Close" />
+              <CloseButton aria-label="Close" onClick={commit} size="sm" />
             </Group>
             <Textarea
-              ref={textareaRef}
-              data-autofocus
               autosize
-              minRows={3}
+              data-autofocus
+              maxLength={25_000}
               maxRows={12}
-              maxLength={25000}
-              variant="unstyled"
-              value={draft}
+              minRows={3}
               onChange={(e) => {
                 setDraft(e.currentTarget.value);
                 debouncedAutosave();
@@ -141,7 +150,10 @@ export function CellLongText({
                   commit();
                 }
               }}
+              ref={textareaRef}
               styles={{ input: { padding: 4 } }}
+              value={draft}
+              variant="unstyled"
             />
           </>
         )}

@@ -1,16 +1,18 @@
-import { useEffect } from "react";
 import {
   autoScrollForElements,
   autoScrollWindowForElements,
 } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
+import { useEffect } from "react";
 import { ROW_DRAG_TYPE } from "@/ee/base/components/grid/grid-row";
 
 export function useRowAutoScroll(
   scrollElement: HTMLElement | Window | null,
-  pageId: string,
+  pageId: string
 ): void {
   useEffect(() => {
-    if (!scrollElement) return;
+    if (!scrollElement) {
+      return;
+    }
     if (scrollElement === window) {
       return autoScrollWindowForElements({
         canScroll: ({ source }) =>
@@ -19,9 +21,9 @@ export function useRowAutoScroll(
       });
     }
     return autoScrollForElements({
-      element: scrollElement as HTMLElement,
       canScroll: ({ source }) =>
         source.data?.type === ROW_DRAG_TYPE && source.data?.pageId === pageId,
+      element: scrollElement as HTMLElement,
       getAllowedAxis: () => "vertical" as const,
     });
   }, [scrollElement, pageId]);

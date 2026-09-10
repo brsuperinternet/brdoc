@@ -1,19 +1,19 @@
-import React from "react";
 import { Avatar, MantineColor } from "@mantine/core";
-import { getAvatarUrl } from "@/lib/config.ts";
+import React from "react";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
+import { getAvatarUrl } from "@/lib/config.ts";
 
 interface CustomAvatarProps {
   avatarUrl?: string;
-  name: string;
   color?: string;
-  size?: string | number;
-  radius?: string | number;
-  variant?: string;
-  style?: any;
   component?: any;
-  type?: AvatarIconType;
   mt?: string | number;
+  name: string;
+  radius?: string | number;
+  size?: string | number;
+  style?: any;
+  type?: AvatarIconType;
+  variant?: string;
 }
 
 // color.shade picks whose FILLED variant (white text on the shade) meets WCAG AA 4.5:1.
@@ -51,34 +51,39 @@ function sanitizeInitialsSource(name: string) {
 export const CustomAvatar = React.forwardRef<
   HTMLInputElement,
   CustomAvatarProps
->(({ avatarUrl, name, type, color, variant, ...props }: CustomAvatarProps, ref) => {
-  const avatarLink = getAvatarUrl(avatarUrl, type);
-  const isInitials = !color || color === "initials";
-  const pickedColor = isInitials ? pickInitialsColor(name ?? "") : color;
-  const hue = pickedColor.split(".")[0];
-  const initialsSource = sanitizeInitialsSource(name ?? "");
+>(
+  (
+    { avatarUrl, name, type, color, variant, ...props }: CustomAvatarProps,
+    ref
+  ) => {
+    const avatarLink = getAvatarUrl(avatarUrl, type);
+    const isInitials = !color || color === "initials";
+    const pickedColor = isInitials ? pickInitialsColor(name ?? "") : color;
+    const hue = pickedColor.split(".")[0];
+    const initialsSource = sanitizeInitialsSource(name ?? "");
 
-  const resolvedColor = variant === "filled" ? pickedColor : hue;
+    const resolvedColor = variant === "filled" ? pickedColor : hue;
 
-  const placeholderStyles =
-    isInitials && variant !== "filled"
-      ? {
-          placeholder: {
-            color: `var(--mantine-color-${hue}-9)`,
-          },
-        }
-      : undefined;
+    const placeholderStyles =
+      isInitials && variant !== "filled"
+        ? {
+            placeholder: {
+              color: `var(--mantine-color-${hue}-9)`,
+            },
+          }
+        : undefined;
 
-  return (
-    <Avatar
-      ref={ref}
-      src={avatarLink}
-      name={initialsSource}
-      alt={name}
-      color={resolvedColor}
-      variant={variant}
-      styles={placeholderStyles}
-      {...props}
-    />
-  );
-});
+    return (
+      <Avatar
+        alt={name}
+        color={resolvedColor}
+        name={initialsSource}
+        ref={ref}
+        src={avatarLink}
+        styles={placeholderStyles}
+        variant={variant}
+        {...props}
+      />
+    );
+  }
+);

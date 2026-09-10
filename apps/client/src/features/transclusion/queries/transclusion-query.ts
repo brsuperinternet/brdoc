@@ -1,22 +1,19 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  listReferences,
-  unsyncReference,
-} from "../services/transclusion-api";
+import { listReferences, unsyncReference } from "../services/transclusion-api";
 
 export function useReferencesQuery(
   sourcePageId: string | null,
   transclusionId: string | null,
-  enabled: boolean,
+  enabled: boolean
 ) {
   return useQuery({
-    queryKey: ["transclusion-references", sourcePageId, transclusionId],
+    enabled: enabled && !!sourcePageId && !!transclusionId,
     queryFn: () =>
       listReferences({
         sourcePageId: sourcePageId!,
         transclusionId: transclusionId!,
       }),
-    enabled: enabled && !!sourcePageId && !!transclusionId,
+    queryKey: ["transclusion-references", sourcePageId, transclusionId],
     staleTime: 10 * 1000,
   });
 }

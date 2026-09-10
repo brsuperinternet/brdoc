@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
 import { searchSuggestions } from "@/features/search/services/search-service";
 
 export type PersonSuggestion = {
@@ -11,21 +11,21 @@ export type PersonSuggestion = {
 
 export function usePersonSearch(
   search: string,
-  enabled: boolean,
+  enabled: boolean
 ): PersonSuggestion[] {
   const [debounced] = useDebouncedValue(search, 250);
   const trimmed = debounced.trim();
   const { data = [] } = useQuery({
-    queryKey: ["bases", "persons", "search", trimmed],
+    enabled,
     queryFn: async () => {
       const res = await searchSuggestions({
-        query: trimmed,
         includeUsers: true,
         limit: trimmed ? 25 : 10,
+        query: trimmed,
       });
       return (res.users ?? []) as PersonSuggestion[];
     },
-    enabled,
+    queryKey: ["bases", "persons", "search", trimmed],
     staleTime: 15_000,
   });
   return data;

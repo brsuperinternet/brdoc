@@ -1,28 +1,26 @@
-import { AiAction } from "@/ee/ai/types/ai.types.ts";
 import {
-  IconSparkles,
-  IconArrowsMaximize,
-  IconArrowsMinimize,
-  IconWriting,
+  IconAlignJustified,
+  IconArrowDownLeft,
+  IconCheck,
+  IconChevronLeft,
+  IconCopy,
   IconHelp,
+  IconLanguage,
   IconList,
   IconMoodSmile,
-  IconLanguage,
-  IconTrash,
   IconRefresh,
-  IconChevronLeft,
-  IconCheck,
-  IconArrowDownLeft,
-  IconCopy,
+  IconSparkles,
   IconTextPlus,
-  IconAlignJustified,
+  IconTrash,
+  IconWriting,
 } from "@tabler/icons-react";
+import { AiAction } from "@/ee/ai/types/ai.types.ts";
 
 interface CommandItem {
-  name: string;
-  id: string;
-  icon?: typeof IconSparkles;
   action?: AiAction;
+  icon?: typeof IconSparkles;
+  id: string;
+  name: string;
   prompt?: string;
   subCommandSet?: CommandSet;
 }
@@ -31,188 +29,188 @@ type CommandSet = "main" | "tone" | "translate" | "result";
 
 const mainItems: CommandItem[] = [
   {
+    action: AiAction.IMPROVE_WRITING,
+    icon: IconSparkles,
     id: "improve-writing",
     name: "Improve writing",
-    icon: IconSparkles,
-    action: AiAction.IMPROVE_WRITING,
   },
   {
+    action: AiAction.FIX_SPELLING_GRAMMAR,
+    icon: IconCheck,
     id: "fix-spelling-grammar",
     name: "Fix spelling & grammar",
-    icon: IconCheck,
-    action: AiAction.FIX_SPELLING_GRAMMAR,
   },
   {
+    action: AiAction.MAKE_LONGER,
+    icon: IconTextPlus,
     id: "make-longer",
     name: "Make longer",
-    icon: IconTextPlus,
-    action: AiAction.MAKE_LONGER,
   },
   {
+    action: AiAction.MAKE_SHORTER,
+    icon: IconAlignJustified,
     id: "make-shorter",
     name: "Make shorter",
-    icon: IconAlignJustified,
-    action: AiAction.MAKE_SHORTER,
   },
   {
+    action: AiAction.CONTINUE_WRITING,
+    icon: IconWriting,
     id: "continue-writing",
     name: "Continue writing",
-    icon: IconWriting,
-    action: AiAction.CONTINUE_WRITING,
   },
   {
+    action: AiAction.EXPLAIN,
+    icon: IconHelp,
     id: "explain",
     name: "Explain",
-    icon: IconHelp,
-    action: AiAction.EXPLAIN,
   },
   {
+    action: AiAction.SUMMARIZE,
+    icon: IconList,
     id: "summarize",
     name: "Summarize",
-    icon: IconList,
-    action: AiAction.SUMMARIZE,
   },
   {
+    icon: IconMoodSmile,
     id: "change-tone",
     name: "Change tone",
-    icon: IconMoodSmile,
     subCommandSet: "tone",
   },
   {
+    icon: IconLanguage,
     id: "translate",
     name: "Translate",
-    icon: IconLanguage,
     subCommandSet: "translate",
   },
 ];
 const toneItems: CommandItem[] = [
   {
+    icon: IconChevronLeft,
     id: "back",
     name: "Back",
-    icon: IconChevronLeft,
   },
   {
+    action: AiAction.CHANGE_TONE,
+    icon: IconMoodSmile,
     id: "tone-professional",
     name: "Professional",
-    icon: IconMoodSmile,
-    action: AiAction.CHANGE_TONE,
     prompt: "Professional",
   },
   {
+    action: AiAction.CHANGE_TONE,
+    icon: IconMoodSmile,
     id: "tone-casual",
     name: "Casual",
-    icon: IconMoodSmile,
-    action: AiAction.CHANGE_TONE,
     prompt: "Casual",
   },
   {
+    action: AiAction.CHANGE_TONE,
+    icon: IconMoodSmile,
     id: "tone-friendly",
     name: "Friendly",
-    icon: IconMoodSmile,
-    action: AiAction.CHANGE_TONE,
     prompt: "Friendly",
   },
 ];
 const translateItems: CommandItem[] = [
   {
+    icon: IconChevronLeft,
     id: "back",
     name: "Back",
-    icon: IconChevronLeft,
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-english",
     name: "English",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "English",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-spanish",
     name: "Spanish",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Spanish",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-german",
     name: "German",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "German",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-french",
     name: "French",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "French",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-dutch",
     name: "Dutch",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Dutch",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-portuguese",
     name: "Portuguese",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Portuguese",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-italian",
     name: "Italian",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Italian",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-japanese",
     name: "Japanese",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Japanese",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-korean",
     name: "Korean",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Korean",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-swedish",
     name: "Swedish",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Swedish",
   },
   {
+    action: AiAction.TRANSLATE,
+    icon: IconLanguage,
     id: "translate-chinese",
     name: "Chinese (Simplified)",
-    icon: IconLanguage,
-    action: AiAction.TRANSLATE,
     prompt: "Simplified Chinese",
   },
 ];
 const resultItems: CommandItem[] = [
-  { id: "result-replace", name: "Replace", icon: IconCheck },
-  { id: "result-insert-below", name: "Insert below", icon: IconArrowDownLeft },
-  { id: "result-copy", name: "Copy", icon: IconCopy },
-  { id: "result-discard", name: "Discard", icon: IconTrash },
+  { icon: IconCheck, id: "result-replace", name: "Replace" },
+  { icon: IconArrowDownLeft, id: "result-insert-below", name: "Insert below" },
+  { icon: IconCopy, id: "result-copy", name: "Copy" },
+  { icon: IconTrash, id: "result-discard", name: "Discard" },
   {
+    icon: IconRefresh,
     id: "result-try-again",
     name: "Try again",
-    icon: IconRefresh,
   },
 ];
 const commandItems: Record<CommandSet, CommandItem[]> = {
   main: mainItems,
+  result: resultItems,
   tone: toneItems,
   translate: translateItems,
-  result: resultItems,
 };
 
 export type { CommandItem, CommandSet };

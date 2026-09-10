@@ -1,16 +1,16 @@
-import React, { useMemo } from "react";
-import { Paper, Text, Group, Stack, Loader, Box } from "@mantine/core";
-import { IconSparkles, IconFileText } from "@tabler/icons-react";
-import { Link } from "react-router-dom";
-import { IAiSearchResponse } from "../services/ai-search-service.ts";
-import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { markdownToHtml } from "@docmost/editor-ext";
+import { Box, Group, Loader, Paper, Stack, Text } from "@mantine/core";
+import { IconFileText, IconSparkles } from "@tabler/icons-react";
 import DOMPurify from "dompurify";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { buildPageUrl } from "@/features/page/page.utils.ts";
+import { IAiSearchResponse } from "../services/ai-search-service.ts";
 
 interface AiSearchResultProps {
-  result?: IAiSearchResponse;
   isLoading?: boolean;
+  result?: IAiSearchResponse;
   streamingAnswer?: string;
   streamingSources?: any[];
 }
@@ -30,7 +30,9 @@ export function AiSearchResult({
 
   // Deduplicate sources by pageId, keeping the one with highest similarity
   const deduplicatedSources = useMemo(() => {
-    if (!sources || sources.length === 0) return [];
+    if (!sources || sources.length === 0) {
+      return [];
+    }
 
     const pageMap = new Map();
     sources.forEach((source) => {
@@ -54,7 +56,7 @@ export function AiSearchResult({
     );
   }
 
-  if (!answer && !isLoading) {
+  if (!(answer || isLoading)) {
     return null;
   }
 
@@ -62,7 +64,7 @@ export function AiSearchResult({
     <Stack gap="md" p="md">
       <Paper p="md" radius="md" withBorder>
         <Group gap="xs" mb="sm">
-          <IconSparkles size={20} color="var(--mantine-color-blue-6)" />
+          <IconSparkles color="var(--mantine-color-blue-6)" size={20} />
           <Text fw={600} size="sm">
             {t("AI Answer")}
           </Text>
@@ -77,25 +79,25 @@ export function AiSearchResult({
 
       {deduplicatedSources.length > 0 && (
         <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
+          <Text c="dimmed" fw={600} size="xs">
             {t("Sources")}
           </Text>
           {deduplicatedSources.map((source) => (
             <Box
-              key={source.pageId}
               component={Link}
-              to={buildPageUrl(source.spaceSlug, source.slugId, source.title)}
+              key={source.pageId}
               style={{
-                textDecoration: "none",
                 color: "inherit",
                 display: "block",
+                textDecoration: "none",
               }}
+              to={buildPageUrl(source.spaceSlug, source.slugId, source.title)}
             >
               <Paper
                 p="xs"
                 radius="sm"
-                withBorder
                 style={{ cursor: "pointer" }}
+                withBorder
               >
                 <Group gap="xs">
                   <IconFileText size={16} />

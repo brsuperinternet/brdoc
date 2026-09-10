@@ -1,9 +1,9 @@
+import { Container, Stack, Text, Title } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import { Container, Title, Text, Stack } from "@mantine/core";
 import { BaseView } from "@/ee/base/components/base-view";
 import { useBaseQuery } from "@/ee/base/queries/base-query";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 
 export default function BasePage() {
   const { pageId } = useParams<{ pageId: string }>();
@@ -22,14 +22,22 @@ export default function BasePage() {
     <Container
       fluid
       p="md"
-      style={{ height: "calc(100vh - 60px)", display: "flex", flexDirection: "column" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 60px)",
+      }}
     >
       {base && (
-        <Title order={3} mb="xs">
-          {base.icon ? `${base.icon} ` : ""}{base.name}
+        <Title mb="xs" order={3}>
+          {base.icon ? `${base.icon} ` : ""}
+          {base.name}
         </Title>
       )}
-      <BaseView pageId={pageId} editable={hasBases && (base?.permissions?.canEdit ?? false)} />
+      <BaseView
+        editable={hasBases && (base?.permissions?.canEdit ?? false)}
+        pageId={pageId}
+      />
     </Container>
   );
 }

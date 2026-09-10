@@ -1,13 +1,13 @@
 .cellInput {
   width: 100%;
   height: 100%;
-  border: none;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: var(--mantine-font-size-sm);
+  color: inherit;
   outline: none;
   background: transparent;
-  font-size: var(--mantine-font-size-sm);
-  font-family: inherit;
-  color: inherit;
-  padding: 0 8px;
+  border: none;
 }
 
 .cellInput::placeholder {
@@ -15,8 +15,8 @@
 }
 
 .numberValue {
-  text-align: right;
   width: 100%;
+  text-align: right;
 }
 
 .numberInput {
@@ -26,23 +26,23 @@
 .badge {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   padding: 1px 8px;
-  border-radius: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: var(--mantine-font-size-xs);
   font-weight: 500;
   line-height: 1.5;
   white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border-radius: 12px;
 }
 
 .badgeGroup {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 4px;
   flex: 1;
+  gap: 4px;
+  align-items: center;
   min-width: 0;
   overflow: hidden;
 }
@@ -52,16 +52,16 @@
   top: 0;
   left: 0;
   display: flex;
-  gap: 4px;
   visibility: hidden;
-  pointer-events: none;
+  gap: 4px;
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .overflowCount {
+  flex-shrink: 0;
   font-size: 11px;
   color: light-dark(#686868, var(--mantine-color-dark-1));
-  flex-shrink: 0;
   white-space: nowrap;
 }
 
@@ -90,12 +90,12 @@
 }
 
 .urlLink {
-  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
-  text-decoration: none;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
   white-space: nowrap;
-  max-width: 100%;
+  text-decoration: none;
 }
 
 .urlLink:hover {
@@ -103,12 +103,12 @@
 }
 
 .emailLink {
-  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
-  text-decoration: none;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-4));
   white-space: nowrap;
-  max-width: 100%;
+  text-decoration: none;
 }
 
 .emailLink:hover {
@@ -126,9 +126,12 @@
 /* Person cell: read mode (vertical list) */
 
 .personChip {
-  padding-left: 2px;
   gap: 4px;
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+  padding-left: 2px;
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
 }
 
 .personChipName {
@@ -141,23 +144,23 @@
 .filterTriggerChips {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   overflow: hidden;
 }
 
 .filterTriggerChip {
   display: inline-flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   min-width: 0;
 }
 
 .filterTriggerChipName {
-  font-size: var(--mantine-font-size-xs);
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: var(--mantine-font-size-xs);
+  white-space: nowrap;
 }
 
 /* Person cell: edit mode (tag input + dropdown) */
@@ -165,22 +168,25 @@
 .personTagArea {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 4px;
-  padding: 6px 8px;
+  align-items: center;
   min-height: 34px;
+  padding: 6px 8px;
 }
 
 .personTag {
   display: inline-flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
+  max-width: 160px;
   padding: 2px 4px 2px 2px;
-  border-radius: 3px;
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
   font-size: var(--mantine-font-size-xs);
   white-space: nowrap;
-  max-width: 160px;
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
+  border-radius: 3px;
 }
 
 .personTagName {
@@ -191,34 +197,37 @@
 
 .personTagRemove {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
   padding: 0;
-  border: none;
-  border-radius: 2px;
-  background: transparent;
   color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2));
   cursor: pointer;
-  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
 }
 
 .personTagRemove:hover {
-  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-0));
+  background-color: light-dark(
+    var(--mantine-color-gray-2),
+    var(--mantine-color-dark-4)
+  );
 }
 
 .personTagInput {
   flex: 1;
   min-width: 60px;
-  border: none;
+  padding: 2px 0;
+  font-family: inherit;
+  font-size: var(--mantine-font-size-xs);
+  color: inherit;
   outline: none;
   background: transparent;
-  font-size: var(--mantine-font-size-xs);
-  font-family: inherit;
-  color: inherit;
-  padding: 2px 0;
+  border: none;
 }
 
 .personTagInput::placeholder {
@@ -227,7 +236,10 @@
 
 .personDropdownDivider {
   height: 1px;
-  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  background-color: light-dark(
+    var(--mantine-color-gray-2),
+    var(--mantine-color-dark-4)
+  );
 }
 
 .personDropdownHint {
@@ -237,57 +249,60 @@
 }
 
 .personOptionText {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-width: 0;
   line-height: 1.25;
 }
 
 .personOptionName {
-  font-size: 13px;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .personOptionEmail {
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 12px;
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Page picker option: title stacked above the space name. min-width:0 +
  * flex:1 lets both lines truncate within the row instead of overflowing. */
 .pageOptionText {
   display: flex;
-  flex-direction: column;
   flex: 1;
+  flex-direction: column;
   min-width: 0;
 }
 
 .fileGroup {
   display: flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   overflow: hidden;
 }
 
 .fileBadge {
   display: inline-flex;
-  align-items: center;
   gap: 4px;
-  padding: 1px 6px;
-  border-radius: var(--mantine-radius-sm);
-  font-size: 11px;
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  white-space: nowrap;
+  align-items: center;
   max-width: 120px;
+  padding: 1px 6px;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 11px;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  white-space: nowrap;
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
+  border-radius: var(--mantine-radius-sm);
 }
 
 .selectDropdown {
@@ -297,8 +312,8 @@
 
 .selectOption {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 6px 8px;
   cursor: pointer;
   border-radius: var(--mantine-radius-sm);
@@ -306,98 +321,123 @@
 }
 
 .selectOption:hover {
-  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  background-color: light-dark(
+    var(--mantine-color-gray-2),
+    var(--mantine-color-dark-4)
+  );
 }
 
 .selectOptionActive {
-  background-color: light-dark(var(--mantine-color-blue-0), var(--mantine-color-blue-9));
+  background-color: light-dark(
+    var(--mantine-color-blue-0),
+    var(--mantine-color-blue-9)
+  );
 }
 
 .selectOptionKeyboardActive {
-  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  background-color: light-dark(
+    var(--mantine-color-gray-2),
+    var(--mantine-color-dark-4)
+  );
 }
 
 .selectOptionActive.selectOptionKeyboardActive {
-  background-color: light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8));
+  background-color: light-dark(
+    var(--mantine-color-blue-1),
+    var(--mantine-color-blue-8)
+  );
 }
 
 .selectCategoryLabel {
+  padding: 8px 8px 4px;
   font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
   color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
-  padding: 8px 8px 4px;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .menuItem {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   width: 100%;
   padding: 6px 10px;
-  border-radius: var(--mantine-radius-sm);
   font-size: var(--mantine-font-size-sm);
   color: light-dark(var(--mantine-color-black), var(--mantine-color-dark-0));
   cursor: pointer;
+  border-radius: var(--mantine-radius-sm);
   transition: background-color 100ms ease;
 }
 
 .menuItem:hover {
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-5));
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-5)
+  );
 }
 
 .addOptionRow {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 6px 8px;
+  margin-top: 4px;
   cursor: pointer;
+  border-top: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
   border-radius: var(--mantine-radius-sm);
   transition: background-color 100ms ease;
-  border-top: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
-  margin-top: 4px;
 }
 
 .addOptionRow:hover {
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-5));
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-5)
+  );
 }
 
 .addOptionLabel {
+  flex-shrink: 0;
   font-size: var(--mantine-font-size-xs);
   color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .pagePill {
   display: inline-flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
+  max-width: 100%;
   padding: 1px 6px;
-  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
   font-size: var(--mantine-font-size-xs);
   color: light-dark(var(--mantine-color-dark-4), var(--mantine-color-dark-1));
-  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
   text-decoration: none;
-  max-width: 100%;
-  overflow: hidden;
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
+  border-radius: var(--mantine-radius-sm);
 }
 
 .pagePill:hover {
-  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  background-color: light-dark(
+    var(--mantine-color-gray-2),
+    var(--mantine-color-dark-4)
+  );
 }
 
 .pagePillIcon {
   display: inline-flex;
+  flex-shrink: 0;
   font-size: 14px;
   line-height: 1;
-  flex-shrink: 0;
 }
 
 .pagePillIconFallback {
-  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
   flex-shrink: 0;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
 }
 
 .pagePillText {
@@ -408,18 +448,18 @@
 
 .pageMissing {
   display: inline-flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   font-size: var(--mantine-font-size-xs);
-  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
   font-style: italic;
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
 }
 
 .longTextPreview {
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
 }
 
 /* Popover target wrapper that fills the cell. */
@@ -430,10 +470,10 @@
 
 /* Popover target that also centers content (long-text preview). */
 .popoverTargetFlex {
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 /* Active-edit border on the long-text popover dropdown. */
@@ -443,17 +483,17 @@
 
 /* Inline name span inside CellLastEditedBy. */
 .lastEditedByName {
-  font-size: var(--mantine-font-size-sm);
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: var(--mantine-font-size-sm);
   white-space: nowrap;
 }
 
 /* File attachment row inside the edit popover. */
 .fileItemRow {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 4px 0;
   border-bottom: 1px solid var(--mantine-color-default-border);
 }
@@ -466,8 +506,8 @@
 .fileItemLink {
   flex: 1;
   min-width: 0;
-  text-decoration: none;
   color: inherit;
+  text-decoration: none;
 }
 
 /* Remove button inside a badge/tag (multi-select). */
@@ -479,8 +519,8 @@
 /* Upload trigger button in the file edit popover. */
 .fileUploadBtn {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   padding: 6px 0;
   margin-top: 4px;
   font-size: var(--mantine-font-size-xs);

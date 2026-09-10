@@ -1,27 +1,27 @@
-import api from "@/lib/api-client";
 import {
-  ICreateApiKeyRequest,
   IApiKey,
+  ICreateApiKeyRequest,
   IUpdateApiKeyRequest,
 } from "@/ee/api-key/types/api-key.types";
+import api from "@/lib/api-client";
 import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export async function getApiKeys(
-  params?: QueryParams,
+  params?: QueryParams
 ): Promise<IPagination<IApiKey>> {
   const req = await api.post("/api-keys", { ...params });
   return req.data;
 }
 
 export async function createApiKey(
-  data: ICreateApiKeyRequest,
+  data: ICreateApiKeyRequest
 ): Promise<IApiKey> {
   const req = await api.post<IApiKey>("/api-keys/create", data);
   return req.data;
 }
 
 export async function updateApiKey(
-  data: IUpdateApiKeyRequest,
+  data: IUpdateApiKeyRequest
 ): Promise<IApiKey> {
   const req = await api.post<IApiKey>("/api-keys/update", data);
   return req.data;

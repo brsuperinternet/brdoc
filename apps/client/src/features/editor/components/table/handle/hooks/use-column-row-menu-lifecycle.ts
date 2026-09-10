@@ -1,13 +1,16 @@
-import { useCallback } from "react";
-import type { Editor } from "@tiptap/react";
-import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { isEditorReady } from "@docmost/editor-ext";
-import { buildRowOrColumnSelection, Orientation } from "../lib/select-row-column";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Editor } from "@tiptap/react";
+import { useCallback } from "react";
+import {
+  buildRowOrColumnSelection,
+  Orientation,
+} from "../lib/select-row-column";
 
 interface Args {
   editor: Editor;
-  orientation: Orientation;
   index: number;
+  orientation: Orientation;
   tableNode: ProseMirrorNode;
   tablePos: number;
 }
@@ -20,24 +23,30 @@ export function useColumnRowMenuLifecycle({
   tablePos,
 }: Args) {
   const onOpen = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const selection = buildRowOrColumnSelection(
       editor.state,
       tableNode,
       tablePos,
       orientation,
-      index,
+      index
     );
     const tr = editor.state.tr;
-    if (selection) tr.setSelection(selection);
+    if (selection) {
+      tr.setSelection(selection);
+    }
     editor.view.dispatch(tr);
     editor.commands.freezeHandles();
   }, [editor, orientation, index, tableNode, tablePos]);
 
   const onClose = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     editor.commands.unfreezeHandles();
   }, [editor]);
 
-  return { onOpen, onClose };
+  return { onClose, onOpen };
 }

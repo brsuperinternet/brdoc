@@ -1,5 +1,5 @@
-import { useMemo } from "react";
 import { useAtomValue } from "jotai";
+import { useMemo } from "react";
 import { sharedTreeDataAtom } from "@/features/share/atoms/shared-page-atom";
 import { findSubpagesInTree } from "@/features/share/utils";
 
@@ -8,6 +8,6 @@ export function useSharedPageSubpages(pageId: string | undefined) {
 
   return useMemo(
     () => findSubpagesInTree(treeData, pageId),
-    [treeData, pageId],
+    [treeData, pageId]
   );
 }

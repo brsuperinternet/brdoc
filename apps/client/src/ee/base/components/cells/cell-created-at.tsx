@@ -1,6 +1,6 @@
-import { IBaseProperty } from "@/ee/base/types/base.types";
 import { formatTimestamp } from "@/ee/base/formatters/cell-formatters";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 
 type CellCreatedAtProps = {
   value: unknown;

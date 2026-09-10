@@ -10,7 +10,7 @@ export function getHostnameUrl(hostname: string): string {
 
 export function exchangeTokenRedirectUrl(
   hostname: string,
-  exchangeToken: string,
+  exchangeToken: string
 ) {
   return getHostnameUrl(hostname) + "/api/auth/exchange?token=" + exchangeToken;
 }

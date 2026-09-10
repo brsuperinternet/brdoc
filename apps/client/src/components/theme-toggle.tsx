@@ -14,11 +14,11 @@ export function ThemeToggle() {
   return (
     <Tooltip label="Toggle Color Scheme">
       <ActionIcon
-        variant="default"
+        aria-label="Toggle color scheme"
         onClick={() => {
           setColorScheme(computedColorScheme === "light" ? "dark" : "light");
         }}
-        aria-label="Toggle color scheme"
+        variant="default"
       >
         <IconSun className={classes.light} size={18} stroke={1.5} />
         <IconMoon className={classes.dark} size={18} stroke={1.5} />

@@ -1,14 +1,13 @@
-import { Group, Table, Avatar, Text, Alert } from "@mantine/core";
-import { useWorkspaceInvitationsQuery } from "@/features/workspace/queries/workspace-query.ts";
-import React from "react";
-import { getUserRoleLabel } from "@/features/workspace/types/user-role-data.ts";
-import InviteActionMenu from "@/features/workspace/components/members/components/invite-action-menu.tsx";
+import { Alert, Avatar, Group, Table, Text } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { timeAgo } from "@/lib/time.ts";
-import useUserRole from "@/hooks/use-user-role.tsx";
 import { useTranslation } from "react-i18next";
 import Paginate from "@/components/common/paginate.tsx";
+import InviteActionMenu from "@/features/workspace/components/members/components/invite-action-menu.tsx";
+import { useWorkspaceInvitationsQuery } from "@/features/workspace/queries/workspace-query.ts";
+import { getUserRoleLabel } from "@/features/workspace/types/user-role-data.ts";
 import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { timeAgo } from "@/lib/time.ts";
 
 export default function WorkspaceInvitesTable() {
   const { t } = useTranslation();
@@ -21,9 +20,9 @@ export default function WorkspaceInvitesTable() {
 
   return (
     <>
-      <Alert variant="light" color="blue" icon={<IconInfoCircle />}>
+      <Alert color="blue" icon={<IconInfoCircle />} variant="light">
         {t(
-          "Invited members who are yet to accept their invitation will appear here.",
+          "Invited members who are yet to accept their invitation will appear here."
         )}
       </Alert>
 
@@ -43,9 +42,9 @@ export default function WorkspaceInvitesTable() {
               <Table.Tr key={index}>
                 <Table.Td>
                   <Group gap="sm" wrap="nowrap">
-                    <Avatar name={invitation.email} color="initials" />
+                    <Avatar color="initials" name={invitation.email} />
                     <div>
-                      <Text fz="sm" fw={500}>
+                      <Text fw={500} fz="sm">
                         {invitation.email}
                       </Text>
                     </div>
@@ -67,8 +66,8 @@ export default function WorkspaceInvitesTable() {
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
           hasNextPage={data?.meta?.hasNextPage}
+          hasPrevPage={data?.meta?.hasPrevPage}
           onNext={() => goNext(data?.meta?.nextCursor)}
           onPrev={goPrev}
         />

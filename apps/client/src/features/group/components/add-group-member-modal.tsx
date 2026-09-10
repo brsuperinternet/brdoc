@@ -1,10 +1,10 @@
 import { Button, Divider, Group, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import React, { useState } from "react";
-import { MultiUserSelect } from "@/features/group/components/multi-user-select.tsx";
-import { useParams } from "react-router-dom";
-import { useAddGroupMemberMutation } from "@/features/group/queries/group-query.ts";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
+import { MultiUserSelect } from "@/features/group/components/multi-user-select.tsx";
+import { useAddGroupMemberMutation } from "@/features/group/queries/group-query.ts";
 
 export default function AddGroupMemberModal() {
   const { t } = useTranslation();
@@ -19,8 +19,8 @@ export default function AddGroupMemberModal() {
 
   const handleSubmit = async () => {
     const addGroupMember = {
-      groupId: groupId,
-      userIds: userIds,
+      groupId,
+      userIds,
     };
 
     await addGroupMemberMutation.mutateAsync(addGroupMember);
@@ -32,12 +32,12 @@ export default function AddGroupMemberModal() {
       <Button onClick={open}>{t("Add group members")}</Button>
 
       <Modal
-        opened={opened}
-        onClose={close}
-        title={t("Add group members")}
         closeButtonProps={{ "aria-label": t("Close") }}
+        onClose={close}
+        opened={opened}
+        title={t("Add group members")}
       >
-        <Divider size="xs" mb="xs" />
+        <Divider mb="xs" size="xs" />
 
         <MultiUserSelect
           label={t("Add group members")}

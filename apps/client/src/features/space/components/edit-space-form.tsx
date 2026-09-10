@@ -1,41 +1,40 @@
-import { Group, Box, Button, TextInput, Stack, Textarea } from "@mantine/core";
-import React from "react";
+import { Box, Button, Group, Stack, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 import { useUpdateSpaceMutation } from "@/features/space/queries/space-query.ts";
 import { ISpace } from "@/features/space/types/space.types.ts";
-import { useTranslation } from "react-i18next";
 
 const formSchema = z.object({
-  name: z.string().min(2).max(100),
   description: z.string().max(500),
+  name: z.string().min(2).max(100),
   slug: z
     .string()
     .min(2)
     .max(100)
     .regex(
       /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/,
-      "Space slug must start with a letter or number and may contain hyphens and underscores",
+      "Space slug must start with a letter or number and may contain hyphens and underscores"
     ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 interface EditSpaceFormProps {
-  space: ISpace;
   readOnly?: boolean;
+  space: ISpace;
 }
 export function EditSpaceForm({ space, readOnly }: EditSpaceFormProps) {
   const { t } = useTranslation();
   const updateSpaceMutation = useUpdateSpaceMutation();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
-      name: space?.name,
       description: space?.description || "",
+      name: space?.name,
       slug: space.slug,
     },
+    validate: zod4Resolver(formSchema),
   });
 
   const handleSubmit = async (values: {
@@ -70,35 +69,35 @@ export function EditSpaceForm({ space, readOnly }: EditSpaceFormProps) {
               id="name"
               label={t("Name")}
               placeholder={t("e.g Sales")}
-              variant="filled"
               readOnly={readOnly}
+              variant="filled"
               {...form.getInputProps("name")}
             />
 
             <TextInput
               id="slug"
               label={t("Slug")}
-              variant="filled"
               readOnly={readOnly}
+              variant="filled"
               {...form.getInputProps("slug")}
             />
 
             <Textarea
+              autosize
               id="description"
               label={t("Description")}
-              placeholder={t("e.g Space for sales team to collaborate")}
-              variant="filled"
-              readOnly={readOnly}
-              autosize
-              minRows={1}
               maxRows={3}
+              minRows={1}
+              placeholder={t("e.g Space for sales team to collaborate")}
+              readOnly={readOnly}
+              variant="filled"
               {...form.getInputProps("description")}
             />
           </Stack>
 
           {!readOnly && (
             <Group justify="flex-end" mt="md">
-              <Button type="submit" disabled={!form.isDirty()}>
+              <Button disabled={!form.isDirty()} type="submit">
                 {t("Save")}
               </Button>
             </Group>

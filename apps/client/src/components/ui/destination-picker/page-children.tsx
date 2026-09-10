@@ -1,11 +1,11 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { Loader } from "@mantine/core";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { getSidebarPages } from "@/features/page/services/page-service";
 import { IPage } from "@/features/page/types/page.types";
 import { IPagination } from "@/lib/types";
-import { PageRow } from "./page-row";
 import classes from "./destination-picker.module.css";
+import { PageRow } from "./page-row";
 
 type PageChildrenProps = {
   spaceId: string;
@@ -29,17 +29,17 @@ export function PageChildren({
   const { t } = useTranslation();
 
   const { data, isLoading, hasNextPage, fetchNextPage } = useInfiniteQuery({
-    queryKey: ["destination-pages", spaceId, pageId ?? "root"],
-    queryFn: ({ pageParam }) =>
-      getSidebarPages({
-        spaceId,
-        pageId,
-        limit,
-        cursor: pageParam,
-      }),
-    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: IPagination<IPage>) =>
       lastPage.meta?.nextCursor ?? undefined,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      getSidebarPages({
+        cursor: pageParam,
+        limit,
+        pageId,
+        spaceId,
+      }),
+    queryKey: ["destination-pages", spaceId, pageId ?? "root"],
   });
 
   const pages = data?.pages.flatMap((page) => page.items) ?? [];
@@ -64,13 +64,13 @@ export function PageChildren({
     <>
       {pages.map((page) => (
         <PageRow
-          key={page.id}
-          page={page}
           depth={depth}
-          limit={limit}
-          selectedId={selectedId}
           excludePageId={excludePageId}
+          key={page.id}
+          limit={limit}
           onSelect={onSelectPage}
+          page={page}
+          selectedId={selectedId}
         />
       ))}
       {hasNextPage && (

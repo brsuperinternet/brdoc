@@ -11,10 +11,10 @@ export default function DocsSearchButton({ onClick }: DocsSearchButtonProps) {
   const { t } = useTranslation();
 
   return (
-    <button type="button" className={styles.searchButton} onClick={onClick}>
-      <IconSearch size={15} stroke={2} aria-hidden />
+    <button className={styles.searchButton} onClick={onClick} type="button">
+      <IconSearch aria-hidden size={15} stroke={2} />
       <span className={styles.searchLabel}>{t("Search")}</span>
-      <span className={styles.searchKbd} aria-hidden>
+      <span aria-hidden className={styles.searchKbd}>
         {platformModifierLabel} K
       </span>
     </button>

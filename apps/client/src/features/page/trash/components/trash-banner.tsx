@@ -10,8 +10,8 @@ export function TrashBanner() {
   const retentionDays = workspace?.trashRetentionDays ?? 30;
 
   return (
-    <Alert icon={<IconInfoCircle size={16} />} variant="light" color="red">
-      <Text size="sm" lh={1.35}>
+    <Alert color="red" icon={<IconInfoCircle size={16} />} variant="light">
+      <Text lh={1.35} size="sm">
         {t("Pages in trash will be permanently deleted after {{count}} days.", {
           count: retentionDays,
         })}

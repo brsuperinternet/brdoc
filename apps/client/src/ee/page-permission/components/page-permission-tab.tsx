@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Box,
   Button,
@@ -10,24 +9,24 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
+import { IconArrowRight, IconShieldLock } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
-import { IconArrowRight, IconLock, IconShieldLock } from "@tabler/icons-react";
-import { MultiMemberSelect } from "@/features/space/components/multi-member-select";
-import {
-  IPageRestrictionInfo,
-  PagePermissionRole,
-} from "@/ee/page-permission/types/page-permission.types";
+import { GeneralAccessSelect, PagePermissionList } from "@/ee/page-permission";
 import {
   useAddPagePermissionMutation,
   useRestrictPageMutation,
   useUnrestrictPageMutation,
 } from "@/ee/page-permission/queries/page-permission-query";
+import {
+  IPageRestrictionInfo,
+  PagePermissionRole,
+} from "@/ee/page-permission/types/page-permission.types";
 import { pagePermissionRoleData } from "@/ee/page-permission/types/page-permission-role-data";
-import { GeneralAccessSelect } from "@/ee/page-permission";
-import { PagePermissionList } from "@/ee/page-permission";
-import classes from "./page-permission.module.css";
 import { buildPageUrl } from "@/features/page/page.utils";
+import { MultiMemberSelect } from "@/features/space/components/multi-member-select";
+import classes from "./page-permission.module.css";
 
 type PagePermissionTabProps = {
   pageId: string;
@@ -60,7 +59,9 @@ export function PagePermissionTab({
   };
 
   const handleAddMembers = async () => {
-    if (memberIds.length === 0) return;
+    if (memberIds.length === 0) {
+      return;
+    }
 
     const userIds = memberIds
       .filter((id) => id.startsWith("user-"))
@@ -89,36 +90,34 @@ export function PagePermissionTab({
       {hasInheritedRestriction && (
         <Paper className={classes.inheritedSection} p="sm" radius="sm">
           <Group gap="sm" wrap="nowrap">
-            <ThemeIcon
-              size="lg"
-              radius="sm"
-              variant="light"
-              color="orange"
-            >
+            <ThemeIcon color="orange" radius="sm" size="lg" variant="light">
               <IconShieldLock size={18} stroke={1.5} />
             </ThemeIcon>
             <Box style={{ flex: 1 }}>
-              <Text size="sm" fw={500}>
+              <Text fw={500} size="sm">
                 {t("Inherited restriction")}
               </Text>
               <Group gap={4}>
-                <Text size="xs" c="dimmed">
+                <Text c="dimmed" size="xs">
                   {t("Access limited by")}
                 </Text>
                 {restrictionInfo.inheritedFrom && (
                   <Link
+                    style={{ textDecoration: "none" }}
                     to={buildPageUrl(
                       spaceSlug,
                       restrictionInfo.inheritedFrom.slugId,
-                      restrictionInfo.inheritedFrom.title,
+                      restrictionInfo.inheritedFrom.title
                     )}
-                    style={{ textDecoration: "none" }}
                   >
                     <Group gap={2}>
-                      <Text size="xs" fw={500} c="blue">
+                      <Text c="blue" fw={500} size="xs">
                         {restrictionInfo.inheritedFrom.title || t("Untitled")}
                       </Text>
-                      <IconArrowRight size={12} color="var(--mantine-color-blue-6)" />
+                      <IconArrowRight
+                        color="var(--mantine-color-blue-6)"
+                        size={12}
+                      />
                     </Group>
                   </Link>
                 )}
@@ -130,18 +129,18 @@ export function PagePermissionTab({
 
       <Box>
         <GeneralAccessSelect
-          value={hasDirectRestriction ? "restricted" : "open"}
-          onChange={handleDirectAccessChange}
           disabled={!canManage}
           hasInheritedRestriction={hasInheritedRestriction}
+          onChange={handleDirectAccessChange}
+          value={hasDirectRestriction ? "restricted" : "open"}
         />
-        {!hasDirectRestriction && !hasInheritedRestriction && (
-          <Text size="xs" c="dimmed" mt={4}>
+        {!(hasDirectRestriction || hasInheritedRestriction) && (
+          <Text c="dimmed" mt={4} size="xs">
             {t("Restrict access to control who can view and edit this page")}
           </Text>
         )}
         {!hasDirectRestriction && hasInheritedRestriction && (
-          <Text size="xs" c="dimmed" mt={4}>
+          <Text c="dimmed" mt={4} size="xs">
             {t("Add additional restrictions specific to this page")}
           </Text>
         )}
@@ -152,25 +151,25 @@ export function PagePermissionTab({
           <Divider />
 
           {canManage && (
-            <Group gap="xs" align="flex-end">
+            <Group align="flex-end" gap="xs">
               <Box style={{ flex: 1 }}>
-                <MultiMemberSelect value={memberIds} onChange={setMemberIds} />
+                <MultiMemberSelect onChange={setMemberIds} value={memberIds} />
               </Box>
               <Select
+                allowDeselect={false}
                 data={pagePermissionRoleData.map((r) => ({
                   label: t(r.label),
                   value: r.value,
                 }))}
-                value={role}
                 onChange={(value) => value && setRole(value)}
-                allowDeselect={false}
+                value={role}
                 variant="filled"
                 w={120}
               />
               <Button
-                onClick={handleAddMembers}
                 disabled={memberIds.length === 0}
                 loading={addPermissionMutation.isPending}
+                onClick={handleAddMembers}
               >
                 {t("Add")}
               </Button>
@@ -178,9 +177,9 @@ export function PagePermissionTab({
           )}
 
           <PagePermissionList
-            pageId={pageId}
             canManage={canManage}
             onRemoveAll={handleRemoveAll}
+            pageId={pageId}
           />
         </>
       )}

@@ -1,29 +1,29 @@
-import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
-import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
-import React, { useCallback, useRef } from "react";
-import { useSetAtom } from "jotai";
-import { Node as PMNode } from "@tiptap/pm/model";
 import { isEditorReady } from "@docmost/editor-ext";
-import {
-  EditorMenuProps,
-  ShouldShowProps,
-} from "@/features/editor/components/table/types/types.ts";
 import { ActionIcon, Tooltip } from "@mantine/core";
-import clsx from "clsx";
 import {
+  IconDownload,
   IconLayoutAlignCenter,
   IconLayoutAlignLeft,
   IconLayoutAlignRight,
-  IconDownload,
   IconRefresh,
   IconTrash,
   IconZoomIn,
 } from "@tabler/icons-react";
+import { Node as PMNode } from "@tiptap/pm/model";
+import { findParentNode, posToDOMRect, useEditorState } from "@tiptap/react";
+import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react/menus";
+import clsx from "clsx";
+import { useSetAtom } from "jotai";
+import React, { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { getFileUrl } from "@/lib/config.ts";
-import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
-import { useAltTextControl } from "@/features/editor/components/common/use-alt-text-control.tsx";
 import { lightboxRequestAtom } from "@/features/editor/atoms/editor-atoms";
+import { useAltTextControl } from "@/features/editor/components/common/use-alt-text-control.tsx";
+import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
+import {
+  EditorMenuProps,
+  ShouldShowProps,
+} from "@/features/editor/components/table/types/types.ts";
+import { getFileUrl } from "@/lib/config.ts";
 import classes from "../common/toolbar-menu.module.css";
 
 export function ImageMenu({ editor }: EditorMenuProps) {
@@ -41,12 +41,12 @@ export function ImageMenu({ editor }: EditorMenuProps) {
       const imageAttrs = ctx.editor.getAttributes("image");
 
       return {
-        isImage: ctx.editor.isActive("image"),
-        isAlignLeft: ctx.editor.isActive("image", { align: "left" }),
-        isAlignCenter: ctx.editor.isActive("image", { align: "center" }),
-        isAlignRight: ctx.editor.isActive("image", { align: "right" }),
-        src: imageAttrs?.src || null,
         alt: imageAttrs?.alt || "",
+        isAlignCenter: ctx.editor.isActive("image", { align: "center" }),
+        isAlignLeft: ctx.editor.isActive("image", { align: "left" }),
+        isAlignRight: ctx.editor.isActive("image", { align: "right" }),
+        isImage: ctx.editor.isActive("image"),
+        src: imageAttrs?.src || null,
       };
     },
   });
@@ -59,11 +59,13 @@ export function ImageMenu({ editor }: EditorMenuProps) {
 
       return editor.isActive("image") && editor.getAttributes("image").src;
     },
-    [editor],
+    [editor]
   );
 
   const getReferencedVirtualElement = useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const { selection } = editor.state;
     const predicate = (node: PMNode) => node.type.name === "image";
     const parent = findParentNode(predicate)(selection);
@@ -109,7 +111,9 @@ export function ImageMenu({ editor }: EditorMenuProps) {
   }, [editor]);
 
   const handleDownload = useCallback(() => {
-    if (!editorState?.src) return;
+    if (!editorState?.src) {
+      return;
+    }
     const url = getFileUrl(editorState.src);
     const a = document.createElement("a");
     a.href = url;
@@ -124,9 +128,11 @@ export function ImageMenu({ editor }: EditorMenuProps) {
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (!file) return;
+      if (!file) {
+        return;
+      }
 
-      // @ts-ignore
+      // @ts-expect-error
       const pageId = editor.storage?.pageId;
       if (pageId) {
         const pos = editor.state.selection.from;
@@ -135,7 +141,7 @@ export function ImageMenu({ editor }: EditorMenuProps) {
       // Reset so the same file can be selected again
       e.target.value = "";
     },
-    [editor],
+    [editor]
   );
 
   const handleDelete = useCallback(() => {
@@ -147,131 +153,141 @@ export function ImageMenu({ editor }: EditorMenuProps) {
     panel: altTextPanel,
     isEditing: isEditingAlt,
   } = useAltTextControl({
+    currentAlt: editorState?.alt || "",
     editor,
     nodeName: "image",
-    currentAlt: editorState?.alt || "",
   });
 
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey={`image-menu`}
-      ref={(element) => {
-        if (element) element.style.zIndex = "99";
-      }}
-      updateDelay={0}
       getReferencedVirtualElement={getReferencedVirtualElement}
       options={{
-        placement: "top",
-        offset: 8,
         flip: false,
+        offset: 8,
+        placement: "top",
+      }}
+      pluginKey={"image-menu"}
+      ref={(element) => {
+        if (element) {
+          element.style.zIndex = "99";
+        }
       }}
       shouldShow={shouldShow}
+      updateDelay={0}
     >
       {isEditingAlt ? (
         altTextPanel
       ) : (
         <div className={classes.toolbar}>
-        <Tooltip position="top" label={t("Align left")} withinPortal={false}>
-          <ActionIcon
-            onClick={alignImageLeft}
-            size="lg"
-            aria-label={t("Align left")}
-            variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isAlignLeft })}
+          <Tooltip label={t("Align left")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Align left")}
+              className={clsx({ [classes.active]: editorState?.isAlignLeft })}
+              onClick={alignImageLeft}
+              size="lg"
+              variant="subtle"
+            >
+              <IconLayoutAlignLeft size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip
+            label={t("Align center")}
+            position="top"
+            withinPortal={false}
           >
-            <IconLayoutAlignLeft size={18} />
-          </ActionIcon>
-        </Tooltip>
+            <ActionIcon
+              aria-label={t("Align center")}
+              className={clsx({ [classes.active]: editorState?.isAlignCenter })}
+              onClick={alignImageCenter}
+              size="lg"
+              variant="subtle"
+            >
+              <IconLayoutAlignCenter size={18} />
+            </ActionIcon>
+          </Tooltip>
 
-        <Tooltip position="top" label={t("Align center")} withinPortal={false}>
-          <ActionIcon
-            onClick={alignImageCenter}
-            size="lg"
-            aria-label={t("Align center")}
-            variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isAlignCenter })}
+          <Tooltip label={t("Align right")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Align right")}
+              className={clsx({ [classes.active]: editorState?.isAlignRight })}
+              onClick={alignImageRight}
+              size="lg"
+              variant="subtle"
+            >
+              <IconLayoutAlignRight size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <div className={classes.divider} />
+
+          {altTextButton}
+
+          <div className={classes.divider} />
+
+          <Tooltip label={t("Expand")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Expand")}
+              onClick={() =>
+                editorState?.src &&
+                setLightboxRequest({
+                  src: getFileUrl(editorState.src),
+                  type: "image",
+                })
+              }
+              size="lg"
+              variant="subtle"
+            >
+              <IconZoomIn size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label={t("Download")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Download")}
+              onClick={handleDownload}
+              size="lg"
+              variant="subtle"
+            >
+              <IconDownload size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip
+            label={t("Replace image")}
+            position="top"
+            withinPortal={false}
           >
-            <IconLayoutAlignCenter size={18} />
-          </ActionIcon>
-        </Tooltip>
+            <ActionIcon
+              aria-label={t("Replace image")}
+              onClick={handleReplace}
+              size="lg"
+              variant="subtle"
+            >
+              <IconRefresh size={18} />
+            </ActionIcon>
+          </Tooltip>
 
-        <Tooltip position="top" label={t("Align right")} withinPortal={false}>
-          <ActionIcon
-            onClick={alignImageRight}
-            size="lg"
-            aria-label={t("Align right")}
-            variant="subtle"
-            className={clsx({ [classes.active]: editorState?.isAlignRight })}
-          >
-            <IconLayoutAlignRight size={18} />
-          </ActionIcon>
-        </Tooltip>
-
-        <div className={classes.divider} />
-
-        {altTextButton}
-
-        <div className={classes.divider} />
-
-        <Tooltip position="top" label={t("Expand")} withinPortal={false}>
-          <ActionIcon
-            onClick={() =>
-              editorState?.src &&
-              setLightboxRequest({
-                src: getFileUrl(editorState.src),
-                type: "image",
-              })
-            }
-            size="lg"
-            aria-label={t("Expand")}
-            variant="subtle"
-          >
-            <IconZoomIn size={18} />
-          </ActionIcon>
-        </Tooltip>
-
-        <Tooltip position="top" label={t("Download")} withinPortal={false}>
-          <ActionIcon
-            onClick={handleDownload}
-            size="lg"
-            aria-label={t("Download")}
-            variant="subtle"
-          >
-            <IconDownload size={18} />
-          </ActionIcon>
-        </Tooltip>
-
-        <Tooltip position="top" label={t("Replace image")} withinPortal={false}>
-          <ActionIcon
-            onClick={handleReplace}
-            size="lg"
-            aria-label={t("Replace image")}
-            variant="subtle"
-          >
-            <IconRefresh size={18} />
-          </ActionIcon>
-        </Tooltip>
-
-        <Tooltip position="top" label={t("Delete")} withinPortal={false}>
-          <ActionIcon
-            onClick={handleDelete}
-            size="lg"
-            aria-label={t("Delete")}
-            variant="subtle"
-          >
-            <IconTrash size={18} />
-          </ActionIcon>
-        </Tooltip>
+          <Tooltip label={t("Delete")} position="top" withinPortal={false}>
+            <ActionIcon
+              aria-label={t("Delete")}
+              onClick={handleDelete}
+              size="lg"
+              variant="subtle"
+            >
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Tooltip>
         </div>
       )}
 
       <input
-        ref={fileInputRef}
-        type="file"
         accept="image/*"
-        style={{ display: "none" }}
         onChange={handleFileChange}
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        type="file"
       />
     </BaseBubbleMenu>
   );

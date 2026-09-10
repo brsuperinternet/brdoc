@@ -17,5 +17,5 @@ export const viewDraftAtomFamily = atomFamily(
   (k: ViewDraftKey) =>
     atomWithStorage<BaseViewDraft | null>(viewDraftStorageKey(k), null),
   (a, b) =>
-    a.userId === b.userId && a.pageId === b.pageId && a.viewId === b.viewId,
+    a.userId === b.userId && a.pageId === b.pageId && a.viewId === b.viewId
 );

@@ -1,10 +1,10 @@
-import { useWorkspacePublicDataQuery } from "@/features/workspace/queries/workspace-query.ts";
-import { SetupWorkspaceForm } from "@/features/auth/components/setup-workspace-form.tsx";
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import APP_ROUTE from "@/lib/app-route.ts";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { SetupWorkspaceForm } from "@/features/auth/components/setup-workspace-form.tsx";
+import { useWorkspacePublicDataQuery } from "@/features/workspace/queries/workspace-query.ts";
+import APP_ROUTE from "@/lib/app-route.ts";
 
 export default function SetupWorkspace() {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ export default function SetupWorkspace() {
   }, [isLoading, workspace]);
 
   if (isLoading) {
-    return <div></div>;
+    return <div />;
   }
 
   if (

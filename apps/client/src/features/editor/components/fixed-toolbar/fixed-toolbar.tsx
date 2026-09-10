@@ -1,20 +1,19 @@
-import { FC } from "react";
-import { useAtomValue } from "jotai";
 import type { Editor } from "@tiptap/react";
+import { useAtomValue } from "jotai";
+import { FC } from "react";
 import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms";
-import { useToolbarState } from "./use-toolbar-state";
-import { BlockTypeGroup } from "./groups/block-type-group";
-import { InlineMarksGroup } from "./groups/inline-marks-group";
-import { ColorGroup } from "./groups/color-group";
-import { ListsGroup } from "./groups/lists-group";
-import { AlignmentGroup } from "./groups/alignment-group";
-import { MediaGroup } from "./groups/media-group";
-import { QuickInsertsGroup } from "./groups/quick-inserts-group";
-import { MoreInsertsGroup } from "./groups/more-inserts-group";
-import { HistoryGroup } from "./groups/history-group";
-import { AskAiGroup } from "./groups/ask-ai-group";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom";
 import classes from "./fixed-toolbar.module.css";
+import { AlignmentGroup } from "./groups/alignment-group";
+import { BlockTypeGroup } from "./groups/block-type-group";
+import { ColorGroup } from "./groups/color-group";
+import { HistoryGroup } from "./groups/history-group";
+import { InlineMarksGroup } from "./groups/inline-marks-group";
+import { ListsGroup } from "./groups/lists-group";
+import { MediaGroup } from "./groups/media-group";
+import { MoreInsertsGroup } from "./groups/more-inserts-group";
+import { QuickInsertsGroup } from "./groups/quick-inserts-group";
+import { useToolbarState } from "./use-toolbar-state";
 
 type FixedToolbarProps = {
   editor?: Editor | null;
@@ -34,11 +33,11 @@ export const FixedToolbar: FC<FixedToolbarProps> = ({
   return (
     <>
       <div
+        aria-label="Editor toolbar"
         className={classes.fixedToolbar}
         data-fixed-toolbar="true"
-        role="toolbar"
-        aria-label="Editor toolbar"
         onMouseDown={(e) => e.preventDefault()}
+        role="toolbar"
       >
         <div className={classes.inner}>
           {/* {isGenerativeAiEnabled && (
@@ -69,7 +68,7 @@ export const FixedToolbar: FC<FixedToolbarProps> = ({
           )}
         </div>
       </div>
-      <div className={classes.spacer} aria-hidden />
+      <div aria-hidden className={classes.spacer} />
     </>
   );
 };

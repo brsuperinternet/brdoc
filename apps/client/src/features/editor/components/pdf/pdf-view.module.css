@@ -1,22 +1,32 @@
 .pdfWrapper {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   max-width: 100%;
-  border-radius: 8px;
   overflow: hidden;
+  border-radius: 8px;
 }
 
 .skeleton {
   animation: pulse 1.2s ease-in-out infinite;
 
   @mixin light {
-    background: linear-gradient(-90deg, var(--mantine-color-gray-3) 0%, var(--mantine-color-gray-1) 50%, var(--mantine-color-gray-3) 100%);
+    background: linear-gradient(
+      -90deg,
+      var(--mantine-color-gray-3) 0%,
+      var(--mantine-color-gray-1) 50%,
+      var(--mantine-color-gray-3) 100%
+    );
     background-size: 400% 400%;
   }
 
   @mixin dark {
-    background: linear-gradient(-90deg, var(--mantine-color-dark-6) 0%, var(--mantine-color-dark-5) 50%, var(--mantine-color-dark-6) 100%);
+    background: linear-gradient(
+      -90deg,
+      var(--mantine-color-dark-6) 0%,
+      var(--mantine-color-dark-5) 50%,
+      var(--mantine-color-dark-6) 100%
+    );
     background-size: 400% 400%;
   }
 
@@ -60,16 +70,16 @@
   display: flex;
   gap: 4px;
   padding: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
   border-radius: 6px;
   opacity: 0;
   transition: opacity 0.15s ease;
-  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .hoverMenu::before {
-  content: "";
   position: absolute;
   inset: -12px;
+  content: "";
 }
 
 .hoverMenu:hover {
@@ -83,12 +93,12 @@
 .pdfError {
   display: flex;
   flex-direction: column;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   padding: 12px 32px;
-  border-radius: 8px;
   cursor: pointer;
+  border-radius: 8px;
 
   @mixin light {
     background-color: var(--mantine-color-gray-0);

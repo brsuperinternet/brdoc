@@ -1,5 +1,3 @@
-import api from "@/lib/api-client";
-import { IPagination, QueryParams } from "@/lib/types.ts";
 import {
   IPublicSpace,
   IPublicSpaceDirectory,
@@ -9,19 +7,21 @@ import {
   IPublishedSpaceItem,
   IPublishSpace,
 } from "@/features/public-space/types/public-space.types.ts";
+import api from "@/lib/api-client";
+import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export async function getPublishedSpaces(
-  params?: QueryParams,
+  params?: QueryParams
 ): Promise<IPagination<IPublishedSpaceItem>> {
   const req = await api.post<IPagination<IPublishedSpaceItem>>(
     "/public-spaces",
-    params,
+    params
   );
   return req.data;
 }
 
 export async function getPublicSpaceInfo(
-  spaceSlug: string,
+  spaceSlug: string
 ): Promise<IPublicSpaceInfo> {
   const req = await api.post<IPublicSpaceInfo>("/public-spaces/info", {
     spaceSlug,
@@ -30,7 +30,7 @@ export async function getPublicSpaceInfo(
 }
 
 export async function getPublicSpaceTree(
-  spaceSlug: string,
+  spaceSlug: string
 ): Promise<IPublicSpaceTree> {
   const req = await api.post<IPublicSpaceTree>("/public-spaces/tree", {
     spaceSlug,
@@ -45,7 +45,7 @@ export async function getPublicSpacePage(params: {
 }): Promise<IPublicSpacePage> {
   const req = await api.post<IPublicSpacePage>(
     "/public-spaces/page-info",
-    params,
+    params
   );
   return req.data;
 }
@@ -53,13 +53,13 @@ export async function getPublicSpacePage(params: {
 export async function getPublicSpaceDirectory(): Promise<IPublicSpaceDirectory> {
   const req = await api.post<IPublicSpaceDirectory>(
     "/public-spaces/directory",
-    {},
+    {}
   );
   return req.data;
 }
 
 export async function getPublicSpaceForSpace(
-  spaceId: string,
+  spaceId: string
 ): Promise<IPublicSpace | null> {
   const req = await api.post<IPublicSpace | null>("/public-spaces/for-space", {
     spaceId,

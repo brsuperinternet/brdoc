@@ -1,15 +1,15 @@
-import classes from "./page-header.module.css";
-import PageHeaderMenu from "@/features/page/components/header/page-header-menu.tsx";
 import { Badge, Group, Tooltip } from "@mantine/core";
 import { IconExternalLink, IconWorld } from "@tabler/icons-react";
-import Breadcrumb from "@/features/page/components/breadcrumbs/breadcrumb.tsx";
-import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useGetSpaceBySlugQuery } from "@/features/space/queries/space-query.ts";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
-import { extractPageSlugId } from "@/lib";
+import { useParams } from "react-router-dom";
+import Breadcrumb from "@/features/page/components/breadcrumbs/breadcrumb.tsx";
+import PageHeaderMenu from "@/features/page/components/header/page-header-menu.tsx";
 import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
+import { usePageQuery } from "@/features/page/queries/page-query.ts";
+import { useGetSpaceBySlugQuery } from "@/features/space/queries/space-query.ts";
+import { extractPageSlugId } from "@/lib";
 import { isBetaPublicSpaces } from "@/lib/config.ts";
+import classes from "./page-header.module.css";
 
 interface Props {
   readOnly?: boolean;
@@ -32,8 +32,14 @@ export default function PageHeader({ readOnly }: Props) {
 
   return (
     <div className={classes.header} data-page-header="true">
-      <Group justify="space-between" h="100%" px="md" wrap="nowrap" className={classes.group}>
-        <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+      <Group
+        className={classes.group}
+        h="100%"
+        justify="space-between"
+        px="md"
+        wrap="nowrap"
+      >
+        <Group gap="xs" style={{ minWidth: 0 }} wrap="nowrap">
           <Breadcrumb />
 
           {showPublicBadge && (
@@ -41,17 +47,17 @@ export default function PageHeader({ readOnly }: Props) {
               <Badge
                 component="a"
                 href={buildPublicSpaceUrl({
-                  spaceSlug: space.slug,
                   pageSlugId: page.slugId,
                   pageTitle: page.title,
+                  spaceSlug: space.slug,
                 })}
-                target="_blank"
-                rel="noopener"
-                size="sm"
-                variant="light"
                 leftSection={<IconWorld size={12} />}
+                rel="noopener"
                 rightSection={<IconExternalLink size={11} />}
-                style={{ flexShrink: 0, cursor: "pointer" }}
+                size="sm"
+                style={{ cursor: "pointer", flexShrink: 0 }}
+                target="_blank"
+                variant="light"
               >
                 {t("Public")}
               </Badge>
@@ -59,7 +65,13 @@ export default function PageHeader({ readOnly }: Props) {
           )}
         </Group>
 
-        <Group justify="flex-end" h="100%" px="md" wrap="nowrap" gap="var(--mantine-spacing-xs)">
+        <Group
+          gap="var(--mantine-spacing-xs)"
+          h="100%"
+          justify="flex-end"
+          px="md"
+          wrap="nowrap"
+        >
           <PageHeaderMenu readOnly={readOnly} />
         </Group>
       </Group>

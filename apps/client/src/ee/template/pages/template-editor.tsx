@@ -1,48 +1,47 @@
 import "@/features/editor/styles/index.css";
-import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActionIcon,
   Button,
   Container,
   Group,
-  Select,
   Popover,
+  Select,
   Stack,
-  ActionIcon,
   Text,
 } from "@mantine/core";
-import {
-  IconArrowLeft,
-  IconSettings,
-  IconMoodSmile,
-  IconCheck,
-} from "@tabler/icons-react";
-import EmojiPicker from "@/components/ui/emoji-picker";
-import TemplateMeta from "@/ee/template/components/template-meta";
-import { useTranslation } from "react-i18next";
 import { useDisclosure, useWindowEvent } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { Link, useParams } from "react-router-dom";
-import { useEditor, EditorContent } from "@tiptap/react";
-import { templateExtensions } from "@/features/editor/extensions/extensions";
 import {
-  useUpdateTemplateMutation,
-  useGetTemplateByIdQuery,
-} from "../queries/template-query";
-import { useGetSpacesQuery } from "@/features/space/queries/space-query";
-import useUserRole from "@/hooks/use-user-role";
+  IconArrowLeft,
+  IconCheck,
+  IconMoodSmile,
+  IconSettings,
+} from "@tabler/icons-react";
+import { EditorContent, useEditor } from "@tiptap/react";
 import { useAtomValue } from "jotai";
-import { userAtom } from "@/features/user/atoms/current-user-atom";
-import { FixedToolbar } from "@/features/editor/components/fixed-toolbar/fixed-toolbar";
-import { EditorLinkMenu } from "@/features/editor/components/link/link-menu";
-import { EditorBubbleMenu } from "@/features/editor/components/bubble-menu/bubble-menu";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import EmojiPicker from "@/components/ui/emoji-picker";
 import { EditorAiMenu } from "@/ee/ai/components/editor/ai-menu/ai-menu";
-import TableMenu from "@/features/editor/components/table/table-menu.tsx";
-import { TableHandlesLayer } from "@/features/editor/components/table/handle/table-handles-layer";
+import TemplateMeta from "@/ee/template/components/template-meta";
+import { EditorBubbleMenu } from "@/features/editor/components/bubble-menu/bubble-menu";
 import CalloutMenu from "@/features/editor/components/callout/callout-menu.tsx";
 import ColumnsMenu from "@/features/editor/components/columns/columns-menu.tsx";
-
+import { FixedToolbar } from "@/features/editor/components/fixed-toolbar/fixed-toolbar";
+import { EditorLinkMenu } from "@/features/editor/components/link/link-menu";
+import { TableHandlesLayer } from "@/features/editor/components/table/handle/table-handles-layer";
+import TableMenu from "@/features/editor/components/table/table-menu.tsx";
+import { templateExtensions } from "@/features/editor/extensions/extensions";
+import { useGetSpacesQuery } from "@/features/space/queries/space-query";
+import { userAtom } from "@/features/user/atoms/current-user-atom";
+import useUserRole from "@/hooks/use-user-role";
+import {
+  useGetTemplateByIdQuery,
+  useUpdateTemplateMutation,
+} from "../queries/template-query";
 import classes from "./template-editor.module.css";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
 
 export default function TemplateEditor() {
   const { t } = useTranslation();
@@ -85,12 +84,8 @@ export default function TemplateEditor() {
   const savedFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor({
-    extensions: templateExtensions,
     content: "",
-    textDirection: "auto",
     editorProps: {
-      scrollThreshold: 80,
-      scrollMargin: 80,
       handleDOMEvents: {
         keydown: (_view, event) => {
           if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
@@ -101,12 +96,16 @@ export default function TemplateEditor() {
           }
         },
       },
+      scrollMargin: 80,
+      scrollThreshold: 80,
     },
+    extensions: templateExtensions,
     onUpdate() {
       if (loadedRef.current) {
         markDirty();
       }
     },
+    textDirection: "auto",
   });
 
   // Load template data into editor
@@ -130,15 +129,13 @@ export default function TemplateEditor() {
 
   const spaceOptions = [
     ...(isWorkspaceAdmin
-      ? [
-          { group: t("Workspace"), items: [{ value: "", label: t("Global") }] },
-        ]
+      ? [{ group: t("Workspace"), items: [{ label: t("Global"), value: "" }] }]
       : []),
     ...(spaces?.items?.length
       ? [
           {
             group: t("Spaces"),
-            items: spaces.items.map((s) => ({ value: s.id, label: s.name })),
+            items: spaces.items.map((s) => ({ label: s.name, value: s.id })),
           },
         ]
       : []),
@@ -146,22 +143,28 @@ export default function TemplateEditor() {
 
   // Save function
   const save = useCallback(async () => {
-    if (!editor || !templateId || !titleRef.current.trim()) return;
-    if (!isDirtyRef.current) return;
+    if (!(editor && templateId && titleRef.current.trim())) {
+      return;
+    }
+    if (!isDirtyRef.current) {
+      return;
+    }
 
     setSaveStatus("saving");
     try {
       await updateMutationRef.current({
+        content: editor.getJSON(),
+        icon: iconRef.current || undefined,
+        spaceId: spaceIdRef.current,
         templateId,
         title: titleRef.current,
-        icon: iconRef.current || undefined,
-        content: editor.getJSON(),
-        spaceId: spaceIdRef.current,
       });
       isDirtyRef.current = false;
       setSaveStatus("saved");
 
-      if (savedFadeTimerRef.current) clearTimeout(savedFadeTimerRef.current);
+      if (savedFadeTimerRef.current) {
+        clearTimeout(savedFadeTimerRef.current);
+      }
       savedFadeTimerRef.current = setTimeout(() => {
         setSaveStatus((prev) => (prev === "saved" ? "idle" : prev));
       }, 3000);
@@ -172,10 +175,12 @@ export default function TemplateEditor() {
 
   // Schedule save 30s after last change
   const scheduleSave = useCallback(() => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
     saveTimerRef.current = setTimeout(() => {
       save();
-    }, 30000);
+    }, 30_000);
   }, [save]);
 
   // Mark content as dirty and schedule save
@@ -189,27 +194,33 @@ export default function TemplateEditor() {
     (value: string) => {
       setTitle(value);
       titleRef.current = value;
-      if (loadedRef.current) markDirty();
+      if (loadedRef.current) {
+        markDirty();
+      }
     },
-    [markDirty],
+    [markDirty]
   );
 
   const handleIconChange = useCallback(
     (value: string | null) => {
       setIcon(value);
       iconRef.current = value;
-      if (loadedRef.current) markDirty();
+      if (loadedRef.current) {
+        markDirty();
+      }
     },
-    [markDirty],
+    [markDirty]
   );
 
   const handleSpaceIdChange = useCallback(
     (value: string | null) => {
       setSpaceId(value);
       spaceIdRef.current = value;
-      if (loadedRef.current) markDirty();
+      if (loadedRef.current) {
+        markDirty();
+      }
     },
-    [markDirty],
+    [markDirty]
   );
 
   // beforeunload warning for unsaved changes
@@ -230,15 +241,20 @@ export default function TemplateEditor() {
   }, [save]);
 
   // Save on unmount if dirty
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      if (savedFadeTimerRef.current) clearTimeout(savedFadeTimerRef.current);
+  useEffect(
+    () => () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+      if (savedFadeTimerRef.current) {
+        clearTimeout(savedFadeTimerRef.current);
+      }
       if (isDirtyRef.current) {
         save();
       }
-    };
-  }, [save]);
+    },
+    [save]
+  );
 
   // Manual retry for error state
   const handleRetry = useCallback(() => {
@@ -254,111 +270,111 @@ export default function TemplateEditor() {
       )}
 
       <div className={classes.header}>
-        <Container size={900} h="100%" px={0}>
-        <Group justify="space-between" h="100%" wrap="nowrap">
-          <Link to="/templates" className={classes.backLink}>
-            <IconArrowLeft size={16} />
-            {t("Templates")}
-          </Link>
+        <Container h="100%" px={0} size={900}>
+          <Group h="100%" justify="space-between" wrap="nowrap">
+            <Link className={classes.backLink} to="/templates">
+              <IconArrowLeft size={16} />
+              {t("Templates")}
+            </Link>
 
-          <Group gap="xs" wrap="nowrap">
-            {saveStatus === "saving" && (
-              <Text size="xs" c="dimmed">
-                {t("Saving...")}
-              </Text>
-            )}
-            {saveStatus === "saved" && (
-              <Group gap={4} wrap="nowrap">
-                <IconCheck size={14} color="var(--mantine-color-green-6)" />
-                <Text size="xs" c="dimmed">
-                  {t("Saved")}
+            <Group gap="xs" wrap="nowrap">
+              {saveStatus === "saving" && (
+                <Text c="dimmed" size="xs">
+                  {t("Saving...")}
                 </Text>
-              </Group>
-            )}
-            {saveStatus === "error" && (
-              <Text
-                size="xs"
-                c="red"
-                style={{ cursor: "pointer" }}
-                onClick={handleRetry}
-              >
-                {t("Save failed. Retry")}
-              </Text>
-            )}
-
-            <Popover
-              width={300}
-              position="bottom"
-              shadow="md"
-              opened={settingsOpened}
-              onDismiss={closeSettings}
-            >
-              <Popover.Target>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="md"
-                  aria-label={t("Template settings")}
-                  onClick={() => {
-                    setDraftSpaceId(spaceId);
-                    openSettings();
-                  }}
+              )}
+              {saveStatus === "saved" && (
+                <Group gap={4} wrap="nowrap">
+                  <IconCheck color="var(--mantine-color-green-6)" size={14} />
+                  <Text c="dimmed" size="xs">
+                    {t("Saved")}
+                  </Text>
+                </Group>
+              )}
+              {saveStatus === "error" && (
+                <Text
+                  c="red"
+                  onClick={handleRetry}
+                  size="xs"
+                  style={{ cursor: "pointer" }}
                 >
-                  <IconSettings size={18} />
-                </ActionIcon>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Stack gap="sm">
-                  <Select
-                    label={t("Scope")}
-                    description={t("Choose which space this template belongs to")}
-                    data={spaceOptions}
-                    value={draftSpaceId || ""}
-                    onChange={(val) =>
-                      setDraftSpaceId(val || null)
-                    }
-                    searchable
-                    size="sm"
-                    comboboxProps={{ withinPortal: false }}
-                  />
-                  <Group justify="flex-end" mt="xs">
-                    <Button
-                      variant="default"
-                      size="xs"
-                      onClick={closeSettings}
-                    >
-                      {t("Cancel")}
-                    </Button>
-                    <Button
-                      size="xs"
-                      onClick={() => {
-                        const scopeChanged = draftSpaceId !== spaceId;
-                        handleSpaceIdChange(draftSpaceId);
-                        closeSettings();
-                        if (scopeChanged) {
-                          notifications.show({
-                            message: t("Template scope updated"),
-                          });
-                        }
-                      }}
-                    >
-                      {t("Save")}
-                    </Button>
-                  </Group>
-                </Stack>
-              </Popover.Dropdown>
-            </Popover>
+                  {t("Save failed. Retry")}
+                </Text>
+              )}
+
+              <Popover
+                onDismiss={closeSettings}
+                opened={settingsOpened}
+                position="bottom"
+                shadow="md"
+                width={300}
+              >
+                <Popover.Target>
+                  <ActionIcon
+                    aria-label={t("Template settings")}
+                    color="gray"
+                    onClick={() => {
+                      setDraftSpaceId(spaceId);
+                      openSettings();
+                    }}
+                    size="md"
+                    variant="subtle"
+                  >
+                    <IconSettings size={18} />
+                  </ActionIcon>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Stack gap="sm">
+                    <Select
+                      comboboxProps={{ withinPortal: false }}
+                      data={spaceOptions}
+                      description={t(
+                        "Choose which space this template belongs to"
+                      )}
+                      label={t("Scope")}
+                      onChange={(val) => setDraftSpaceId(val || null)}
+                      searchable
+                      size="sm"
+                      value={draftSpaceId || ""}
+                    />
+                    <Group justify="flex-end" mt="xs">
+                      <Button
+                        onClick={closeSettings}
+                        size="xs"
+                        variant="default"
+                      >
+                        {t("Cancel")}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const scopeChanged = draftSpaceId !== spaceId;
+                          handleSpaceIdChange(draftSpaceId);
+                          closeSettings();
+                          if (scopeChanged) {
+                            notifications.show({
+                              message: t("Template scope updated"),
+                            });
+                          }
+                        }}
+                        size="xs"
+                      >
+                        {t("Save")}
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Popover.Dropdown>
+              </Popover>
+            </Group>
           </Group>
-        </Group>
         </Container>
       </div>
 
-      <Container size={900} className={classes.editor}>
+      <Container className={classes.editor} size={900}>
         <div className={classes.titleArea}>
           <div className={classes.emojiButton}>
             <EmojiPicker
-              onEmojiSelect={(emoji: { native: string }) =>
-                handleIconChange(emoji.native)
+              actionIconProps={
+                icon ? { size: "3rem", variant: "transparent" } : undefined
               }
               icon={
                 icon ? (
@@ -367,32 +383,29 @@ export default function TemplateEditor() {
                   <IconMoodSmile size={20} stroke={1.5} />
                 )
               }
-              removeEmojiAction={() =>
-                handleIconChange(null)
+              onEmojiSelect={(emoji: { native: string }) =>
+                handleIconChange(emoji.native)
               }
               readOnly={false}
-              actionIconProps={icon ? { size: "3rem", variant: "transparent" } : undefined}
+              removeEmojiAction={() => handleIconChange(null)}
             />
           </div>
           <input
-            className={classes.titleInput}
-            placeholder={t("Untitled")}
             autoFocus
-            value={title}
-            onChange={(e) =>
-              handleTitleChange(e.currentTarget.value)
-            }
+            className={classes.titleInput}
+            onChange={(e) => handleTitleChange(e.currentTarget.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                if (editor && !editor.isDestroyed)
+                if (editor && !editor.isDestroyed) {
                   editor.commands.focus("start");
+                }
               }
             }}
+            placeholder={t("Untitled")}
+            value={title}
           />
-          {existingTemplate && (
-            <TemplateMeta template={existingTemplate} />
-          )}
+          {existingTemplate && <TemplateMeta template={existingTemplate} />}
         </div>
         <EditorContent editor={editor} />
         {editor && (
@@ -408,7 +421,9 @@ export default function TemplateEditor() {
         )}
         <div
           onClick={() => {
-            if (editor && !editor.isDestroyed) editor.commands.focus("end");
+            if (editor && !editor.isDestroyed) {
+              editor.commands.focus("end");
+            }
           }}
           style={{ paddingBottom: "20vh" }}
         />

@@ -1,17 +1,12 @@
+import { notifications } from "@mantine/notifications";
 import {
   keepPreviousData,
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
-import {
-  IPageVerificationInfo,
-  ISetupVerification,
-  IUpdateVerification,
-  IVerificationListItem,
-  IVerificationListParams,
-} from "@/ee/page-verification/types/page-verification.types";
+import { useTranslation } from "react-i18next";
 import {
   getVerificationInfo,
   getVerificationList,
@@ -23,17 +18,22 @@ import {
   updateVerification,
   verifyPage,
 } from "@/ee/page-verification/services/page-verification-service";
-import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
+import {
+  IPageVerificationInfo,
+  ISetupVerification,
+  IUpdateVerification,
+  IVerificationListItem,
+  IVerificationListParams,
+} from "@/ee/page-verification/types/page-verification.types";
 import { IPagination } from "@/lib/types";
 
 export function usePageVerificationInfoQuery(
-  pageId: string | undefined,
+  pageId: string | undefined
 ): UseQueryResult<IPageVerificationInfo, Error> {
   return useQuery({
-    queryKey: ["page-verification-info", pageId],
-    queryFn: () => getVerificationInfo(pageId!),
     enabled: !!pageId,
+    queryFn: () => getVerificationInfo(pageId!),
+    queryKey: ["page-verification-info", pageId],
   });
 }
 
@@ -43,18 +43,18 @@ export function useSetupVerificationMutation() {
 
   return useMutation<void, Error, ISetupVerification>({
     mutationFn: (data) => setupVerification(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({
+        color: "red",
+        message: errorMessage || t("Failed to enable verification"),
+      });
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["page-verification-info", variables.pageId],
       });
       notifications.show({ message: t("Verification enabled") });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({
-        message: errorMessage || t("Failed to enable verification"),
-        color: "red",
-      });
     },
   });
 }
@@ -65,18 +65,18 @@ export function useUpdateVerificationMutation() {
 
   return useMutation<void, Error, IUpdateVerification>({
     mutationFn: (data) => updateVerification(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({
+        color: "red",
+        message: errorMessage || t("Failed to update verification"),
+      });
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["page-verification-info", variables.pageId],
       });
       notifications.show({ message: t("Verification updated") });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({
-        message: errorMessage || t("Failed to update verification"),
-        color: "red",
-      });
     },
   });
 }
@@ -87,18 +87,18 @@ export function useRemoveVerificationMutation() {
 
   return useMutation<void, Error, string>({
     mutationFn: (pageId) => removeVerification(pageId),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({
+        color: "red",
+        message: errorMessage || t("Failed to remove verification"),
+      });
+    },
     onSuccess: (_, pageId) => {
       queryClient.invalidateQueries({
         queryKey: ["page-verification-info", pageId],
       });
       notifications.show({ message: t("Verification removed") });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({
-        message: errorMessage || t("Failed to remove verification"),
-        color: "red",
-      });
     },
   });
 }
@@ -109,18 +109,18 @@ export function useVerifyPageMutation() {
 
   return useMutation<void, Error, string>({
     mutationFn: (pageId) => verifyPage(pageId),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({
+        color: "red",
+        message: errorMessage || t("Failed to verify page"),
+      });
+    },
     onSuccess: (_, pageId) => {
       queryClient.invalidateQueries({
         queryKey: ["page-verification-info", pageId],
       });
       notifications.show({ message: t("Page verified") });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({
-        message: errorMessage || t("Failed to verify page"),
-        color: "red",
-      });
     },
   });
 }
@@ -131,18 +131,18 @@ export function useSubmitForApprovalMutation() {
 
   return useMutation<void, Error, string>({
     mutationFn: (pageId) => submitForApproval(pageId),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({
+        color: "red",
+        message: errorMessage || t("Failed to submit for approval"),
+      });
+    },
     onSuccess: (_, pageId) => {
       queryClient.invalidateQueries({
         queryKey: ["page-verification-info", pageId],
       });
       notifications.show({ message: t("Submitted for approval") });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({
-        message: errorMessage || t("Failed to submit for approval"),
-        color: "red",
-      });
     },
   });
 }
@@ -153,18 +153,18 @@ export function useRejectApprovalMutation() {
 
   return useMutation<void, Error, { pageId: string; comment?: string }>({
     mutationFn: (data) => rejectApproval(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({
+        color: "red",
+        message: errorMessage || t("Failed to reject approval"),
+      });
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["page-verification-info", variables.pageId],
       });
       notifications.show({ message: t("Approval rejected") });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({
-        message: errorMessage || t("Failed to reject approval"),
-        color: "red",
-      });
     },
   });
 }
@@ -175,28 +175,28 @@ export function useMarkObsoleteMutation() {
 
   return useMutation<void, Error, string>({
     mutationFn: (pageId) => markObsolete(pageId),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({
+        color: "red",
+        message: errorMessage || t("Failed to mark as obsolete"),
+      });
+    },
     onSuccess: (_, pageId) => {
       queryClient.invalidateQueries({
         queryKey: ["page-verification-info", pageId],
       });
       notifications.show({ message: t("Page marked as obsolete") });
     },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({
-        message: errorMessage || t("Failed to mark as obsolete"),
-        color: "red",
-      });
-    },
   });
 }
 
 export function useVerificationListQuery(
-  params?: IVerificationListParams,
+  params?: IVerificationListParams
 ): UseQueryResult<IPagination<IVerificationListItem>, Error> {
   return useQuery({
-    queryKey: ["verification-list", params],
-    queryFn: () => getVerificationList(params),
     placeholderData: keepPreviousData,
+    queryFn: () => getVerificationList(params),
+    queryKey: ["verification-list", params],
   });
 }

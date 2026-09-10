@@ -1,32 +1,32 @@
 import {
-  Modal,
+  Badge,
   Button,
+  Divider,
   Group,
-  Text,
+  Modal,
   Select,
   Switch,
-  Divider,
+  Text,
   Tooltip,
-  Badge,
 } from "@mantine/core";
-import {
-  exportPage,
-  exportPageToDocx,
-} from "@/features/page/services/page-service.ts";
-import { useState } from "react";
-import { ExportFormat } from "@/features/page/types/page.types.ts";
 import { notifications } from "@mantine/notifications";
-import { exportSpace } from "@/features/space/services/space-service";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Feature } from "@/ee/features";
 import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import {
+  exportPage,
+  exportPageToDocx,
+} from "@/features/page/services/page-service.ts";
+import { ExportFormat } from "@/features/page/types/page.types.ts";
+import { exportSpace } from "@/features/space/services/space-service";
 
 interface ExportModalProps {
   id: string;
-  type: "space" | "page";
-  open: boolean;
   onClose: () => void;
+  open: boolean;
+  type: "space" | "page";
 }
 
 export default function ExportModal({
@@ -53,15 +53,15 @@ export default function ExportModal({
           await exportPageToDocx({ pageId: id });
         } else {
           await exportPage({
-            pageId: id,
             format,
-            includeChildren,
             includeAttachments,
+            includeChildren,
+            pageId: id,
           });
         }
       }
       if (type === "space") {
-        await exportSpace({ spaceId: id, format, includeAttachments });
+        await exportSpace({ format, includeAttachments, spaceId: id });
       }
       notifications.show({
         message: t("Export successful"),
@@ -69,8 +69,8 @@ export default function ExportModal({
       onClose();
     } catch (err) {
       notifications.show({
-        message: "Export failed:" + err.response?.data.message,
         color: "red",
+        message: "Export failed:" + err.response?.data.message,
       });
       console.error("export error", err);
     } finally {
@@ -84,14 +84,14 @@ export default function ExportModal({
 
   return (
     <Modal.Root
-      opened={open}
-      onClose={onClose}
-      size={500}
-      padding="xl"
-      yOffset="10vh"
-      xOffset={0}
       mah={400}
       onClick={(e) => e.stopPropagation()}
+      onClose={onClose}
+      opened={open}
+      padding="xl"
+      size={500}
+      xOffset={0}
+      yOffset="10vh"
     >
       <Modal.Overlay />
       <Modal.Content style={{ overflow: "hidden" }}>
@@ -105,10 +105,10 @@ export default function ExportModal({
               <Text size="md">{t("Format")}</Text>
             </div>
             <ExportFormatSelection
-              format={format}
-              onChange={handleChange}
-              includeDocx={type === "page"}
               docxEntitled={docxEntitled}
+              format={format}
+              includeDocx={type === "page"}
+              onChange={handleChange}
             />
           </Group>
 
@@ -121,22 +121,22 @@ export default function ExportModal({
                   <Text size="md">{t("Include subpages")}</Text>
                 </div>
                 <Switch
+                  checked={includeChildren}
                   onChange={(event) =>
                     setIncludeChildren(event.currentTarget.checked)
                   }
-                  checked={includeChildren}
                 />
               </Group>
 
-              <Group justify="space-between" wrap="nowrap" mt="md">
+              <Group justify="space-between" mt="md" wrap="nowrap">
                 <div>
                   <Text size="md">{t("Include attachments")}</Text>
                 </div>
                 <Switch
+                  checked={includeAttachments}
                   onChange={(event) =>
                     setIncludeAttachments(event.currentTarget.checked)
                   }
-                  checked={includeAttachments}
                 />
               </Group>
             </>
@@ -151,10 +151,10 @@ export default function ExportModal({
                   <Text size="md">{t("Include attachments")}</Text>
                 </div>
                 <Switch
+                  checked={includeAttachments}
                   onChange={(event) =>
                     setIncludeAttachments(event.currentTarget.checked)
                   }
-                  checked={includeAttachments}
                 />
               </Group>
             </>
@@ -164,12 +164,16 @@ export default function ExportModal({
             <Button onClick={onClose} variant="default">
               {t("Cancel")}
             </Button>
-            <Tooltip label={upgradeLabel} disabled={!blockedByLicense} withArrow>
+            <Tooltip
+              disabled={!blockedByLicense}
+              label={upgradeLabel}
+              withArrow
+            >
               <Button
-                onClick={handleExport}
-                loading={isExporting}
-                disabled={blockedByLicense}
                 data-disabled={blockedByLicense || undefined}
+                disabled={blockedByLicense}
+                loading={isExporting}
+                onClick={handleExport}
               >
                 {t("Export")}
               </Button>
@@ -182,10 +186,10 @@ export default function ExportModal({
 }
 
 interface ExportFormatSelection {
-  format: ExportFormat;
-  onChange: (value: string) => void;
-  includeDocx?: boolean;
   docxEntitled?: boolean;
+  format: ExportFormat;
+  includeDocx?: boolean;
+  onChange: (value: string) => void;
 }
 function ExportFormatSelection({
   format,
@@ -196,30 +200,28 @@ function ExportFormatSelection({
   const { t } = useTranslation();
 
   const data = [
-    { value: "markdown", label: "Markdown" },
-    { value: "html", label: "HTML" },
+    { label: "Markdown", value: "markdown" },
+    { label: "HTML", value: "html" },
     ...(includeDocx
-      ? [{ value: "docx", label: "Word (.docx)", disabled: !docxEntitled }]
+      ? [{ disabled: !docxEntitled, label: "Word (.docx)", value: "docx" }]
       : []),
   ];
 
   return (
     <Select
+      allowDeselect={false}
+      aria-label={t("Select export format")}
+      comboboxProps={{ width: 200 }}
       data={data}
       defaultValue={format}
       onChange={onChange}
-      styles={{ wrapper: { maxWidth: 140 }, option: { opacity: 1 } }}
-      comboboxProps={{ width: 200 }}
-      allowDeselect={false}
-      withCheckIcon={false}
-      aria-label={t("Select export format")}
       renderOption={({ option }) =>
         option.value === "docx" && !docxEntitled ? (
           <div>
-            <Text size="sm" c="dimmed">
+            <Text c="dimmed" size="sm">
               {option.label}
             </Text>
-            <Badge size="xs" mt={4}>
+            <Badge mt={4} size="xs">
               {t("Enterprise")}
             </Badge>
           </div>
@@ -227,6 +229,8 @@ function ExportFormatSelection({
           <Text size="sm">{option.label}</Text>
         )
       }
+      styles={{ option: { opacity: 1 }, wrapper: { maxWidth: 140 } }}
+      withCheckIcon={false}
     />
   );
 }

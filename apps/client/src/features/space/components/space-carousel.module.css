@@ -1,6 +1,6 @@
 .card {
-  background-color: var(--mantine-color-body);
   width: 220px;
+  background-color: var(--mantine-color-body);
 
   @mixin hover {
     box-shadow: var(--mantine-shadow-xs);
@@ -14,14 +14,17 @@
 }
 
 .cardSection {
-  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  background: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-6)
+  );
 }
 
 .title {
-  font-family:
-          Greycliff CF,
-          var(--mantine-font-family);
-  text-overflow: ellipsis;
   overflow: hidden;
+  text-overflow: ellipsis;
+  font-family:
+    Greycliff CF,
+    var(--mantine-font-family);
   white-space: nowrap;
 }

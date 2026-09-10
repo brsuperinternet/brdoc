@@ -1,20 +1,20 @@
-import React from "react";
 import { Editor as CoreEditor } from "@tiptap/core";
-import { Editor } from "@tiptap/react";
 import { EditorState } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
+import { Editor } from "@tiptap/react";
+import React from "react";
 
 export interface EditorMenuProps {
-  editor: Editor;
   appendTo?: React.RefObject<any>;
+  editor: Editor;
   shouldHide?: boolean;
 }
 
 export interface ShouldShowProps {
   editor?: CoreEditor;
-  view: EditorView;
-  state?: EditorState;
-  oldState?: EditorState;
   from?: number;
+  oldState?: EditorState;
+  state?: EditorState;
   to?: number;
+  view: EditorView;
 }

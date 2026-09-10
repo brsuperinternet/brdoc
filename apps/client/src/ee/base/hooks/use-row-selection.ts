@@ -1,8 +1,8 @@
-import { useCallback } from "react";
 import { useAtom } from "jotai";
+import { useCallback } from "react";
 import {
-  selectedRowIdsAtomFamily,
   lastToggledRowIndexAtomFamily,
+  selectedRowIdsAtomFamily,
 } from "@/ee/base/atoms/base-atoms";
 
 type ToggleOpts = {
@@ -13,18 +13,18 @@ type ToggleOpts = {
 
 export function useRowSelection(pageId: string) {
   const [selectedIds, setSelectedIds] = useAtom(
-    selectedRowIdsAtomFamily(pageId),
+    selectedRowIdsAtomFamily(pageId)
   ) as unknown as [
     Set<string>,
     (val: Set<string> | ((prev: Set<string>) => Set<string>)) => void,
   ];
   const [lastToggledIndex, setLastToggledIndex] = useAtom(
-    lastToggledRowIndexAtomFamily(pageId),
+    lastToggledRowIndexAtomFamily(pageId)
   ) as unknown as [number | null, (val: number | null) => void];
 
   const isSelected = useCallback(
     (rowId: string) => selectedIds.has(rowId),
-    [selectedIds],
+    [selectedIds]
   );
 
   const toggle = useCallback(
@@ -32,31 +32,43 @@ export function useRowSelection(pageId: string) {
       const { shiftKey, rowIndex, orderedRowIds } = opts;
       const next = new Set(selectedIds);
 
-      if (shiftKey && lastToggledIndex !== null && lastToggledIndex !== rowIndex) {
+      if (
+        shiftKey &&
+        lastToggledIndex !== null &&
+        lastToggledIndex !== rowIndex
+      ) {
         const start = Math.min(lastToggledIndex, rowIndex);
         const end = Math.max(lastToggledIndex, rowIndex);
         const anchorId = orderedRowIds[lastToggledIndex];
         const turnOn = anchorId ? next.has(anchorId) : true;
         for (let i = start; i <= end; i += 1) {
           const id = orderedRowIds[i];
-          if (!id) continue;
-          if (turnOn) next.add(id);
-          else next.delete(id);
+          if (!id) {
+            continue;
+          }
+          if (turnOn) {
+            next.add(id);
+          } else {
+            next.delete(id);
+          }
         }
+      } else if (next.has(rowId)) {
+        next.delete(rowId);
       } else {
-        if (next.has(rowId)) next.delete(rowId);
-        else next.add(rowId);
+        next.add(rowId);
       }
 
       setSelectedIds(next);
       setLastToggledIndex(rowIndex);
     },
-    [selectedIds, lastToggledIndex, setSelectedIds, setLastToggledIndex],
+    [selectedIds, lastToggledIndex, setSelectedIds, setLastToggledIndex]
   );
 
   const toggleAll = useCallback(
     (loadedRowIds: string[]) => {
-      if (loadedRowIds.length === 0) return;
+      if (loadedRowIds.length === 0) {
+        return;
+      }
       const allSelected = loadedRowIds.every((id) => selectedIds.has(id));
       if (allSelected) {
         setSelectedIds(new Set());
@@ -65,7 +77,7 @@ export function useRowSelection(pageId: string) {
       }
       setLastToggledIndex(null);
     },
-    [selectedIds, setSelectedIds, setLastToggledIndex],
+    [selectedIds, setSelectedIds, setLastToggledIndex]
   );
 
   const clear = useCallback(() => {
@@ -75,27 +87,33 @@ export function useRowSelection(pageId: string) {
 
   const removeIds = useCallback(
     (rowIds: string[]) => {
-      if (rowIds.length === 0) return;
+      if (rowIds.length === 0) {
+        return;
+      }
       setSelectedIds((prev) => {
-        if (prev.size === 0) return prev;
+        if (prev.size === 0) {
+          return prev;
+        }
         let changed = false;
         const next = new Set(prev);
         for (const id of rowIds) {
-          if (next.delete(id)) changed = true;
+          if (next.delete(id)) {
+            changed = true;
+          }
         }
         return changed ? next : prev;
       });
     },
-    [setSelectedIds],
+    [setSelectedIds]
   );
 
   return {
+    clear,
+    isSelected,
+    removeIds,
     selectedIds,
     selectionCount: selectedIds.size,
-    isSelected,
     toggle,
     toggleAll,
-    clear,
-    removeIds,
   };
 }

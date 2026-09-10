@@ -1,22 +1,21 @@
-import { Menu, ActionIcon, Text } from "@mantine/core";
-import React from "react";
+import { ActionIcon, Menu, Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 import {
   IconCopy,
   IconDots,
   IconFileDescription,
   IconTrash,
 } from "@tabler/icons-react";
-import { modals } from "@mantine/modals";
 import { useTranslation } from "react-i18next";
-import { ISharedItem } from "@/features/share/types/share.types.ts";
+import { useNavigate } from "react-router-dom";
 import {
   buildPageUrl,
   buildSharedPageUrl,
 } from "@/features/page/page.utils.ts";
-import { useClipboard } from "@/hooks/use-clipboard";
-import { notifications } from "@mantine/notifications";
-import { useNavigate } from "react-router-dom";
 import { useDeleteShareMutation } from "@/features/share/queries/share-query.ts";
+import { ISharedItem } from "@/features/share/types/share.types.ts";
+import { useClipboard } from "@/hooks/use-clipboard";
 
 interface Props {
   share: ISharedItem;
@@ -31,16 +30,16 @@ export default function ShareActionMenu({ share }: Props) {
     const pageLink = buildPageUrl(
       share.space.slug,
       share.page.slugId,
-      share.page.title,
+      share.page.title
     );
     navigate(pageLink);
   };
 
   const copyLink = () => {
     const shareLink = buildSharedPageUrl({
-      shareId: share.key,
-      pageTitle: share.page.title,
       pageSlugId: share.page.slugId,
+      pageTitle: share.page.title,
+      shareId: share.key,
     });
 
     clipboard.copy(shareLink);
@@ -52,50 +51,50 @@ export default function ShareActionMenu({ share }: Props) {
 
   const openDeleteModal = () =>
     modals.openConfirmModal({
-      title: t("Delete public share link"),
+      centered: true,
       children: (
         <Text size="sm">
           {t("Are you sure you want to delete this shared link?")}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Delete"), cancel: t("Don't") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Don't"), confirm: t("Delete") },
       onConfirm: onDelete,
+      title: t("Delete public share link"),
     });
 
   return (
     <>
       <Menu
-        shadow="xl"
-        position="bottom-end"
+        arrowPosition="center"
         offset={20}
+        position="bottom-end"
+        shadow="xl"
         width={200}
         withArrow
-        arrowPosition="center"
       >
         <Menu.Target>
-          <ActionIcon variant="subtle" c="gray" aria-label={t("More options")}>
+          <ActionIcon aria-label={t("More options")} c="gray" variant="subtle">
             <IconDots size={20} stroke={2} />
           </ActionIcon>
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Menu.Item onClick={copyLink} leftSection={<IconCopy size={16} />}>
+          <Menu.Item leftSection={<IconCopy size={16} />} onClick={copyLink}>
             {t("Copy link")}
           </Menu.Item>
 
           <Menu.Item
-            onClick={openPage}
             leftSection={<IconFileDescription size={16} />}
+            onClick={openPage}
           >
             {t("Open page")}
           </Menu.Item>
           <Menu.Item
             c="red"
-            onClick={openDeleteModal}
-            leftSection={<IconTrash size={16} />}
             disabled={share.space?.userRole === "reader"}
+            leftSection={<IconTrash size={16} />}
+            onClick={openDeleteModal}
           >
             {t("Delete share")}
           </Menu.Item>

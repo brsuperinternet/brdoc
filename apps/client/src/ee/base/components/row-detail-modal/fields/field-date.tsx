@@ -1,15 +1,19 @@
-import { useState } from "react";
 import { Popover } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
-import { DateTypeOptions } from "@/ee/base/types/base.types";
+import { useState } from "react";
 import { formatDateDisplay } from "@/ee/base/components/cells/cell-date";
-import { FieldProps, FieldShell } from "./detail-field";
 import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { DateTypeOptions } from "@/ee/base/types/base.types";
+import { FieldProps, FieldShell } from "./detail-field";
 
 function toISODateString(dateStr: string | null): string | null {
-  if (!dateStr) return null;
+  if (!dateStr) {
+    return null;
+  }
   const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return null;
+  if (isNaN(date.getTime())) {
+    return null;
+  }
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -32,24 +36,22 @@ export function FieldDate({ property, value, readOnly, onChange }: FieldProps) {
 
   return (
     <Popover
-      opened={opened}
-      onChange={setOpened}
-      position="bottom-start"
-      width="auto"
-      shadow="md"
-      withinPortal
-      trapFocus
       closeOnClickOutside
       closeOnEscape
       hideDetached={false}
+      onChange={setOpened}
+      opened={opened}
+      position="bottom-start"
+      shadow="md"
+      trapFocus
+      width="auto"
+      withinPortal
     >
       <Popover.Target>
         <FieldShell
-          cursor="pointer"
           active={opened}
-          role="button"
-          tabIndex={0}
           aria-label={property.name}
+          cursor="pointer"
           onClick={() => setOpened((o) => !o)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -57,18 +59,20 @@ export function FieldDate({ property, value, readOnly, onChange }: FieldProps) {
               setOpened((o) => !o);
             }
           }}
+          role="button"
+          tabIndex={0}
         >
           <span className={classes.fieldValueText}>{display}</span>
         </FieldShell>
       </Popover.Target>
       <Popover.Dropdown p="xs">
         <DatePicker
-          value={toISODateString(dateStr)}
           onChange={(selected) => {
             onChange(selected ? new Date(selected).toISOString() : null);
             setOpened(false);
           }}
           size="sm"
+          value={toISODateString(dateStr)}
         />
       </Popover.Dropdown>
     </Popover>

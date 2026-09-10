@@ -9,8 +9,10 @@ export function AuthorizedAppsPanel() {
 
   return (
     <>
-      <Text size="sm" c="dimmed" mb="md">
-        {t("Applications and AI assistants you have authorized to access your account.")}
+      <Text c="dimmed" mb="md" size="sm">
+        {t(
+          "Applications and AI assistants you have authorized to access your account."
+        )}
       </Text>
 
       <OAuthGrantsTable grants={data || []} isLoading={isLoading} />

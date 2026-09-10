@@ -1,20 +1,20 @@
+import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   forwardRef,
+  type ReactNode,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
-  type Ref,
-} from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
-import type { TreeNode, DropOp } from '../model/tree-model.types';
-import { treeModel } from '../model/tree-model';
-import { DocTreeRow } from './doc-tree-row';
-import styles from '../styles/tree.module.css';
+} from "react";
+import { treeModel } from "../model/tree-model";
+import type { DropOp, TreeNode } from "../model/tree-model.types";
+import styles from "../styles/tree.module.css";
+import { DocTreeRow } from "./doc-tree-row";
 
 export type RenderRowProps<T extends object> = {
   node: TreeNode<T>;
@@ -23,7 +23,7 @@ export type RenderRowProps<T extends object> = {
   hasChildren: boolean;
   isSelected: boolean;
   isDragging: boolean;
-  isReceivingDrop: 'before' | 'after' | 'make-child' | null;
+  isReceivingDrop: "before" | "after" | "make-child" | null;
 
   rowRef: Ref<HTMLElement>;
   // Roving tabindex: exactly one row in the tree carries tabIndex={0} (the
@@ -36,13 +36,13 @@ export type RenderRowProps<T extends object> = {
   // and replaces the descendant-text accname with the row's label, so action
   // button labels inside the row don't get concatenated.
   treeItemProps: {
-    role: 'treeitem';
-    'aria-level': number;
-    'aria-expanded'?: boolean;
-    'aria-selected'?: true;
-    'aria-current'?: 'page';
-    'aria-label': string;
-    'data-row-id': string;
+    role: "treeitem";
+    "aria-level": number;
+    "aria-expanded"?: boolean;
+    "aria-selected"?: true;
+    "aria-current"?: "page";
+    "aria-label": string;
+    "data-row-id": string;
   };
   toggleOpen: () => void;
 };
@@ -83,13 +83,13 @@ export type DocTreeProps<T extends object> = {
   // Accessible name for the tree itself (e.g. "Pages"). Rendered as
   // aria-label on the <ul role="tree"> so screen readers announce what
   // collection of items the user has entered.
-  'aria-label'?: string;
+  "aria-label"?: string;
 };
 
 export type DocTreeApi = {
   select: (
     id: string,
-    opts?: { scrollIntoView?: boolean; focus?: boolean },
+    opts?: { scrollIntoView?: boolean; focus?: boolean }
   ) => void;
   scrollTo: (id: string) => void;
   focus: (id: string) => void;
@@ -106,13 +106,13 @@ type FlatRow<T extends object> = {
 // the precomputed `level` and `isLastSibling` it needs.
 function flattenVisible<T extends object>(
   data: TreeNode<T>[],
-  openIds: ReadonlySet<string>,
+  openIds: ReadonlySet<string>
 ): FlatRow<T>[] {
   const out: FlatRow<T>[] = [];
   const walk = (nodes: TreeNode<T>[], level: number) => {
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
-      out.push({ node, level, isLastSibling: i === nodes.length - 1 });
+      out.push({ isLastSibling: i === nodes.length - 1, level, node });
       if (openIds.has(node.id) && node.children?.length) {
         walk(node.children, level + 1);
       }
@@ -126,7 +126,7 @@ type RowElementMap = Map<string, HTMLElement>;
 
 function DocTreeInner<T extends object>(
   props: DocTreeProps<T>,
-  ref: Ref<DocTreeApi>,
+  ref: Ref<DocTreeApi>
 ) {
   const {
     data,
@@ -148,7 +148,7 @@ function DocTreeInner<T extends object>(
     uniqueContextId,
     emptyState,
     footer,
-    'aria-label': ariaLabel,
+    "aria-label": ariaLabel,
   } = props;
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -158,15 +158,15 @@ function DocTreeInner<T extends object>(
   const pendingFocusIdRef = useRef<string | null>(null);
   // Typeahead state: accumulated buffer, plus the timer that clears it after
   // ~500ms of no typing. Refs only — no re-render needed per keystroke.
-  const typeaheadBufferRef = useRef('');
+  const typeaheadBufferRef = useRef("");
   const typeaheadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Roving tabindex: the row most-recently focused by the user. Falls back
   // to selectedId, then to the first visible row, when the tracked id is
   // gone from the flat list (e.g. its branch was collapsed).
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
   const contextId = useMemo(
-    () => uniqueContextId ?? Symbol('doc-tree'),
-    [uniqueContextId],
+    () => uniqueContextId ?? Symbol("doc-tree"),
+    [uniqueContextId]
   );
 
   const registerRowElement = useCallback(
@@ -183,7 +183,7 @@ function DocTreeInner<T extends object>(
         rowElementsRef.current.delete(id);
       }
     },
-    [],
+    []
   );
 
   // Stable live tree accessor — keeps the row useEffect deps stable across
@@ -194,10 +194,7 @@ function DocTreeInner<T extends object>(
 
   // Flat visible list drives virtualization. Re-flattens on data or openIds
   // change — cheap O(N) walk of the loaded tree.
-  const flat = useMemo(
-    () => flattenVisible(data, openIds),
-    [data, openIds],
-  );
+  const flat = useMemo(() => flattenVisible(data, openIds), [data, openIds]);
 
   // Membership lookup for the flat list. Used to validate activeId/selectedId
   // before promoting them to the effective active row.
@@ -208,8 +205,12 @@ function DocTreeInner<T extends object>(
   // arrow / Home / End / typeahead navigation updates activeId via the focus
   // event delegated on the <ul>; explicit clicks also flow through focus.
   const effectiveActiveId = useMemo(() => {
-    if (activeId && flatIds.has(activeId)) return activeId;
-    if (selectedId && flatIds.has(selectedId)) return selectedId;
+    if (activeId && flatIds.has(activeId)) {
+      return activeId;
+    }
+    if (selectedId && flatIds.has(selectedId)) {
+      return selectedId;
+    }
     return flat[0]?.node.id;
   }, [activeId, selectedId, flatIds, flat]);
 
@@ -220,36 +221,40 @@ function DocTreeInner<T extends object>(
   // by the estimate and overlap their neighbors.
   const virtualizer = useVirtualizer({
     count: flat.length,
-    getScrollElement: () => scrollRef.current,
-    getItemKey: (index) => flat[index].node.id,
     estimateSize: (index) => {
       const row = flat[index];
       const gap = row && rowGap ? rowGap(row.node, row.level, index) : 0;
       return rowHeight + gap;
     },
+    getItemKey: (index) => flat[index].node.id,
+    getScrollElement: () => scrollRef.current,
     overscan: 10,
   });
 
   useImperativeHandle(
     ref,
     (): DocTreeApi => ({
+      focus: (id) => {
+        rowElementsRef.current.get(id)?.focus();
+      },
+      scrollTo: (id) => {
+        const idx = flat.findIndex((r) => r.node.id === id);
+        if (idx >= 0) {
+          virtualizer.scrollToIndex(idx, { align: "auto" });
+        }
+      },
       select: (id, opts) => {
         onSelect?.(id);
         const idx = flat.findIndex((r) => r.node.id === id);
         if (idx >= 0 && opts?.scrollIntoView) {
-          virtualizer.scrollToIndex(idx, { align: 'auto' });
+          virtualizer.scrollToIndex(idx, { align: "auto" });
         }
-        if (opts?.focus) rowElementsRef.current.get(id)?.focus();
-      },
-      scrollTo: (id) => {
-        const idx = flat.findIndex((r) => r.node.id === id);
-        if (idx >= 0) virtualizer.scrollToIndex(idx, { align: 'auto' });
-      },
-      focus: (id) => {
-        rowElementsRef.current.get(id)?.focus();
+        if (opts?.focus) {
+          rowElementsRef.current.get(id)?.focus();
+        }
       },
     }),
-    [onSelect, flat, virtualizer],
+    [onSelect, flat, virtualizer]
   );
 
   // Auto-scroll the container during drag so users can target rows currently
@@ -257,11 +262,12 @@ function DocTreeInner<T extends object>(
   // via uniqueContextId.
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     return autoScrollForElements({
+      canScroll: ({ source }) => source.data.uniqueContextId === contextId,
       element: el,
-      canScroll: ({ source }) =>
-        source.data.uniqueContextId === contextId,
     });
   }, [contextId]);
 
@@ -277,22 +283,24 @@ function DocTreeInner<T extends object>(
       lastScrolledIdRef.current = undefined;
       return;
     }
-    if (lastScrolledIdRef.current === selectedId) return;
+    if (lastScrolledIdRef.current === selectedId) {
+      return;
+    }
     const idx = flat.findIndex((r) => r.node.id === selectedId);
-    if (idx < 0) return;
+    if (idx < 0) {
+      return;
+    }
 
     const containerHeight = scrollRef.current?.clientHeight ?? 0;
     const scrollOffset = virtualizer.scrollOffset ?? 0;
-    const item = virtualizer
-      .getVirtualItems()
-      .find((v) => v.index === idx);
+    const item = virtualizer.getVirtualItems().find((v) => v.index === idx);
     const isFullyVisible =
       !!item &&
       item.start >= scrollOffset &&
       item.start + item.size <= scrollOffset + containerHeight;
 
     if (!isFullyVisible) {
-      virtualizer.scrollToIndex(idx, { align: 'center' });
+      virtualizer.scrollToIndex(idx, { align: "center" });
     }
     lastScrolledIdRef.current = selectedId;
   }, [selectedId, flat, virtualizer]);
@@ -307,48 +315,62 @@ function DocTreeInner<T extends object>(
     (e: React.KeyboardEvent<HTMLUListElement>) => {
       // Ctrl/Alt/Meta are reserved for browser/OS shortcuts; bail out.
       // Shift is allowed through so typeahead can match capital letters.
-      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.altKey || e.ctrlKey || e.metaKey) {
+        return;
+      }
       const isNavKey =
         !e.shiftKey &&
-        (e.key === 'ArrowDown' ||
-          e.key === 'ArrowUp' ||
-          e.key === 'ArrowLeft' ||
-          e.key === 'ArrowRight' ||
-          e.key === 'Home' ||
-          e.key === 'End');
+        (e.key === "ArrowDown" ||
+          e.key === "ArrowUp" ||
+          e.key === "ArrowLeft" ||
+          e.key === "ArrowRight" ||
+          e.key === "Home" ||
+          e.key === "End");
       // Star expands all sibling subtrees of the focused row (WAI-ARIA tree
       // pattern). Allowed with Shift since on most keyboards Shift+8 is how
       // "*" is produced. Handled separately from typeahead.
-      const isStarKey = e.key === '*';
+      const isStarKey = e.key === "*";
       // Space activates the focused row — same effect as clicking it. Native
       // <a> doesn't get this for free (only <button> does), so we wire it up
       // explicitly to satisfy the WAI-ARIA tree pattern.
-      const isActivateKey = e.key === ' ';
+      const isActivateKey = e.key === " ";
       // Single printable character → typeahead. e.key.length === 1 excludes
       // multi-char names like "ArrowDown", "Enter", "Tab", etc.
       const isTypeahead =
         e.key.length === 1 && !isNavKey && !isStarKey && !isActivateKey;
-      if (!isNavKey && !isTypeahead && !isStarKey && !isActivateKey) return;
+      if (!(isNavKey || isTypeahead || isStarKey || isActivateKey)) {
+        return;
+      }
 
       const target = e.target as HTMLElement;
-      if (target.matches('input, textarea, [contenteditable="true"]')) return;
-      const rowEl = target.closest('[data-row-id]');
-      if (!rowEl) return;
-      const id = rowEl.getAttribute('data-row-id');
-      if (!id) return;
+      if (target.matches('input, textarea, [contenteditable="true"]')) {
+        return;
+      }
+      const rowEl = target.closest("[data-row-id]");
+      if (!rowEl) {
+        return;
+      }
+      const id = rowEl.getAttribute("data-row-id");
+      if (!id) {
+        return;
+      }
 
       const idx = flat.findIndex((r) => r.node.id === id);
-      if (idx < 0) return;
+      if (idx < 0) {
+        return;
+      }
 
       const focusByIndex = (targetIdx: number) => {
-        if (targetIdx < 0 || targetIdx >= flat.length) return;
+        if (targetIdx < 0 || targetIdx >= flat.length) {
+          return;
+        }
         const targetId = flat[targetIdx].node.id;
         const existing = rowElementsRef.current.get(targetId);
         if (existing) {
           existing.focus();
         } else {
           pendingFocusIdRef.current = targetId;
-          virtualizer.scrollToIndex(targetIdx, { align: 'auto' });
+          virtualizer.scrollToIndex(targetIdx, { align: "auto" });
         }
       };
 
@@ -380,7 +402,7 @@ function DocTreeInner<T extends object>(
           clearTimeout(typeaheadTimerRef.current);
         }
         typeaheadTimerRef.current = setTimeout(() => {
-          typeaheadBufferRef.current = '';
+          typeaheadBufferRef.current = "";
           typeaheadTimerRef.current = null;
         }, 500);
         // Single-char buffer cycles to the next match (start at idx + 1);
@@ -424,15 +446,15 @@ function DocTreeInner<T extends object>(
       }
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           focusByIndex(idx + 1);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           focusByIndex(idx - 1);
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           e.preventDefault();
           if (hasChildren && !isOpen) {
             onToggle(row.node.id, true);
@@ -444,7 +466,7 @@ function DocTreeInner<T extends object>(
             focusByIndex(idx + 1);
           }
           break;
-        case 'ArrowLeft': {
+        case "ArrowLeft": {
           e.preventDefault();
           if (isOpen && hasChildren) {
             onToggle(row.node.id, false);
@@ -462,39 +484,40 @@ function DocTreeInner<T extends object>(
           }
           break;
         }
-        case 'Home':
+        case "Home":
           e.preventDefault();
           focusByIndex(0);
           break;
-        case 'End':
+        case "End":
           e.preventDefault();
           focusByIndex(flat.length - 1);
           break;
       }
     },
-    [flat, openIds, onToggle, virtualizer, getDragLabel],
+    [flat, openIds, onToggle, virtualizer, getDragLabel]
   );
 
   // Clear the typeahead timer if the component unmounts mid-buffer.
   useEffect(
     () => () => {
-      if (typeaheadTimerRef.current) clearTimeout(typeaheadTimerRef.current);
+      if (typeaheadTimerRef.current) {
+        clearTimeout(typeaheadTimerRef.current);
+      }
     },
-    [],
+    []
   );
 
   // Event-delegated focus tracking — when any descendant (a row's Link, or an
   // inner action button) gains focus, mark the enclosing row as active. Keeps
   // tabIndex aligned with the user's current position whether they got there
   // by click, arrow nav, or focusByIndex's programmatic .focus() call.
-  const handleFocusIn = useCallback(
-    (e: React.FocusEvent<HTMLUListElement>) => {
-      const rowEl = (e.target as HTMLElement).closest('[data-row-id]');
-      const id = rowEl?.getAttribute('data-row-id');
-      if (id) setActiveId(id);
-    },
-    [],
-  );
+  const handleFocusIn = useCallback((e: React.FocusEvent<HTMLUListElement>) => {
+    const rowEl = (e.target as HTMLElement).closest("[data-row-id]");
+    const id = rowEl?.getAttribute("data-row-id");
+    if (id) {
+      setActiveId(id);
+    }
+  }, []);
 
   if (data.length === 0 && emptyState) {
     return (
@@ -509,18 +532,18 @@ function DocTreeInner<T extends object>(
   const totalSize = virtualizer.getTotalSize();
 
   return (
-    <div ref={scrollRef} className={styles.treeContainer}>
+    <div className={styles.treeContainer} ref={scrollRef}>
       <ul
-        role="tree"
         aria-label={ariaLabel}
-        onKeyDown={handleKeyDown}
         onFocus={handleFocusIn}
+        onKeyDown={handleKeyDown}
+        role="tree"
         style={{
-          position: 'relative',
           height: totalSize,
+          listStyle: "none",
           margin: 0,
           padding: 0,
-          listStyle: 'none',
+          position: "relative",
         }}
       >
         {virtualItems.map((virtualItem) => {
@@ -530,41 +553,41 @@ function DocTreeInner<T extends object>(
             : 0;
           return (
             <li
+              data-index={dynamicRowHeight ? virtualItem.index : undefined}
               key={row.node.id}
+              ref={dynamicRowHeight ? virtualizer.measureElement : undefined}
               // role="none" — the treeitem role lives on the focusable child
               // (the row's <a>), so screen readers announce "treeitem" on
               // navigation. The <li> is just layout glue.
               role="none"
-              ref={dynamicRowHeight ? virtualizer.measureElement : undefined}
-              data-index={dynamicRowHeight ? virtualItem.index : undefined}
               style={{
-                position: 'absolute',
-                top: 0,
                 left: 0,
-                width: '100%',
+                position: "absolute",
+                top: 0,
                 transform: `translateY(${virtualItem.start}px)`,
+                width: "100%",
                 ...(gap > 0 ? { paddingTop: gap } : {}),
               }}
             >
               <DocTreeRow
-                node={row.node}
-                level={row.level}
-                isLastSibling={row.isLastSibling}
-                openIds={openIds}
-                selectedId={selectedId}
                 activeId={effectiveActiveId}
-                renderRow={renderRow}
-                indentPerLevel={indentPerLevel}
-                rowClassName={rowClassName}
-                onMove={onMove}
-                onToggle={onToggle}
-                readOnly={readOnly}
+                contextId={contextId}
                 disableDrag={disableDrag}
                 disableDrop={disableDrop}
                 getDragLabel={getDragLabel}
-                contextId={contextId}
-                registerRowElement={registerRowElement}
                 getRootData={getRootData}
+                indentPerLevel={indentPerLevel}
+                isLastSibling={row.isLastSibling}
+                level={row.level}
+                node={row.node}
+                onMove={onMove}
+                onToggle={onToggle}
+                openIds={openIds}
+                readOnly={readOnly}
+                registerRowElement={registerRowElement}
+                renderRow={renderRow}
+                rowClassName={rowClassName}
+                selectedId={selectedId}
               />
             </li>
           );
@@ -576,5 +599,5 @@ function DocTreeInner<T extends object>(
 }
 
 export const DocTree = forwardRef(DocTreeInner) as <T extends object>(
-  props: DocTreeProps<T> & { ref?: Ref<DocTreeApi> },
+  props: DocTreeProps<T> & { ref?: Ref<DocTreeApi> }
 ) => ReturnType<typeof DocTreeInner>;

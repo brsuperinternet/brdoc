@@ -1,33 +1,32 @@
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
   useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import {
-  listChats,
-  getChatInfo,
   deleteChat,
-  updateChatTitle,
+  getChatInfo,
+  listChats,
   searchChats,
+  updateChatTitle,
 } from "../services/ai-chat-service";
 
 export function useChatsQuery() {
   return useInfiniteQuery({
-    queryKey: ["ai-chats"],
-    queryFn: ({ pageParam }) =>
-      listChats({ cursor: pageParam, limit: 30 }),
-    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.nextCursor : undefined,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => listChats({ cursor: pageParam, limit: 30 }),
+    queryKey: ["ai-chats"],
   });
 }
 
 export function useChatInfoQuery(chatId: string | undefined) {
   return useQuery({
-    queryKey: ["ai-chat", chatId],
-    queryFn: () => getChatInfo(chatId!),
     enabled: !!chatId,
+    queryFn: () => getChatInfo(chatId!),
+    queryKey: ["ai-chat", chatId],
   });
 }
 
@@ -54,8 +53,8 @@ export function useUpdateChatTitleMutation() {
 
 export function useSearchChatsQuery(query: string) {
   return useQuery({
-    queryKey: ["ai-chats-search", query],
-    queryFn: () => searchChats(query),
     enabled: query.length > 0,
+    queryFn: () => searchChats(query),
+    queryKey: ["ai-chats-search", query],
   });
 }

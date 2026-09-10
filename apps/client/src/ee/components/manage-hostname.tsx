@@ -1,23 +1,22 @@
-import { Button, Group, Text, Modal, TextInput } from "@mantine/core";
-import { z } from "zod/v4";
-import { useState } from "react";
-import { useDisclosure } from "@mantine/hooks";
-import * as React from "react";
+import { Button, Group, Modal, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
-import { getSubdomainHost } from "@/lib/config.ts";
-import { IWorkspace } from "@/features/workspace/types/workspace.types.ts";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
-import { getHostnameUrl } from "@/ee/utils.ts";
 import { useAtom } from "jotai";
+import { RESET } from "jotai/utils";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import { getHostnameUrl } from "@/ee/utils.ts";
 import {
   currentUserAtom,
   workspaceAtom,
 } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
+import { IWorkspace } from "@/features/workspace/types/workspace.types.ts";
 import useUserRole from "@/hooks/use-user-role.tsx";
-import { RESET } from "jotai/utils";
+import { getSubdomainHost } from "@/lib/config.ts";
 
 export default function ManageHostname() {
   const { t } = useTranslation();
@@ -26,10 +25,10 @@ export default function ManageHostname() {
   const { isAdmin } = useUserRole();
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
         <Text size="md">{t("Hostname")}</Text>
-        <Text size="sm" c="dimmed" fw={500}>
+        <Text c="dimmed" fw={500} size="sm">
           {workspace?.hostname}.{getSubdomainHost()}
         </Text>
       </div>
@@ -41,10 +40,10 @@ export default function ManageHostname() {
       )}
 
       <Modal
-        opened={opened}
-        onClose={close}
-        title={t("Change hostname")}
         centered
+        onClose={close}
+        opened={opened}
+        title={t("Change hostname")}
       >
         <ChangeHostnameForm onClose={close} />
       </Modal>
@@ -67,10 +66,10 @@ function ChangeHostnameForm({ onClose }: ChangeHostnameFormProps) {
   const [currentUser, setCurrentUser] = useAtom(currentUserAtom);
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       hostname: currentUser?.workspace?.hostname,
     },
+    validate: zod4Resolver(formSchema),
   });
 
   async function handleSubmit(data: Partial<IWorkspace>) {
@@ -89,8 +88,8 @@ function ChangeHostnameForm({ onClose }: ChangeHostnameFormProps) {
       window.location.href = getHostnameUrl(data.hostname.toLowerCase());
     } catch (err) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
     setIsLoading(false);
@@ -99,19 +98,19 @@ function ChangeHostnameForm({ onClose }: ChangeHostnameFormProps) {
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <TextInput
-        type="text"
-        placeholder="e.g my-team"
         label="Hostname"
-        variant="filled"
+        placeholder="e.g my-team"
         rightSection={<Text fw={500}>.{getSubdomainHost()}</Text>}
         rightSectionWidth={150}
-        withErrorStyles={false}
+        type="text"
+        variant="filled"
         width={200}
+        withErrorStyles={false}
         {...form.getInputProps("hostname")}
       />
 
       <Group justify="flex-end" mt="md">
-        <Button type="submit" disabled={isLoading} loading={isLoading}>
+        <Button disabled={isLoading} loading={isLoading} type="submit">
           {t("Change hostname")}
         </Button>
       </Group>

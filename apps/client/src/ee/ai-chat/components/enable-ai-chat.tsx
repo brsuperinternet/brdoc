@@ -1,29 +1,29 @@
-import { Badge, Group, Text, Switch, Tooltip } from "@mantine/core";
+import { Badge, Group, Switch, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
-import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 
 export default function EnableAiChat() {
   const { t } = useTranslation();
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
-        <Group gap="xs" align="center">
+        <Group align="center" gap="xs">
           <Text size="md">{t("AI Chat")}</Text>
-          <Badge color="gray" variant="light" size="sm" radius="sm">
+          <Badge color="gray" radius="sm" size="sm" variant="light">
             {t("Beta")}
           </Badge>
         </Group>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "Enable AI Chat to allow users to have multi-turn conversations with AI about your workspace content.",
+            "Enable AI Chat to allow users to have multi-turn conversations with AI about your workspace content."
           )}
         </Text>
       </div>
@@ -48,19 +48,19 @@ function AiChatToggle() {
       setWorkspace(updatedWorkspace);
     } catch (err: any) {
       notifications.show({
-        message: err?.response?.data?.message,
         color: "red",
+        message: err?.response?.data?.message,
       });
     }
   };
 
   return (
-    <Tooltip label={upgradeLabel} disabled={hasAccess} refProp="rootRef">
+    <Tooltip disabled={hasAccess} label={upgradeLabel} refProp="rootRef">
       <Switch
-        defaultChecked={checked}
-        onChange={handleChange}
-        disabled={!hasAccess}
         aria-label={t("Toggle AI Chat")}
+        defaultChecked={checked}
+        disabled={!hasAccess}
+        onChange={handleChange}
       />
     </Tooltip>
   );

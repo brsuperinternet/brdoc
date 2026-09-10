@@ -1,23 +1,23 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { Stack, Text, Anchor, ActionIcon } from "@mantine/core";
+import { ActionIcon, Anchor, Stack, Text } from "@mantine/core";
 import { IconFileDescription } from "@tabler/icons-react";
-import { useGetSidebarPagesQuery } from "@/features/page/queries/page-query";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import { useAtomValue } from "jotai";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useParams } from "react-router-dom";
-import classes from "./subpages.module.css";
-import styles from "../mention/mention.module.css";
 import {
   buildPageUrl,
   buildPublicSpaceUrl,
   buildSharedPageUrl,
 } from "@/features/page/page.utils.ts";
-import { useTranslation } from "react-i18next";
+import { useGetSidebarPagesQuery } from "@/features/page/queries/page-query";
 import { sortPositionKeys } from "@/features/page/tree/utils/utils";
-import { useSharedPageSubpages } from "@/features/share/hooks/use-shared-page-subpages";
-import { useAtomValue } from "jotai";
 import { publicSpaceTreeDataAtom } from "@/features/public-space/atoms/public-space-atoms.ts";
+import { useSharedPageSubpages } from "@/features/share/hooks/use-shared-page-subpages";
 import { findSubpagesInTree } from "@/features/share/utils";
 import { extractPageSlugId } from "@/lib";
+import styles from "../mention/mention.module.css";
+import classes from "./subpages.module.css";
 
 export default function SubpagesView(props: NodeViewProps) {
   const { editor } = props;
@@ -28,12 +28,12 @@ export default function SubpagesView(props: NodeViewProps) {
 
   const publicSpaceTreeData = useAtomValue(publicSpaceTreeDataAtom);
 
-  // @ts-ignore
+  // @ts-expect-error
   const storagePageId = editor.storage.pageId;
   const routePageId = extractPageSlugId(pageSlug);
   let currentPageId = storagePageId;
 
-  if (shareId){
+  if (shareId) {
     currentPageId = routePageId;
   }
 
@@ -49,48 +49,44 @@ export default function SubpagesView(props: NodeViewProps) {
   const sharedSubpages = useSharedPageSubpages(currentPageId);
   const publicSpaceSubpages = useMemo(
     () => findSubpagesInTree(publicSpaceTreeData, currentPageId),
-    [publicSpaceTreeData, currentPageId],
+    [publicSpaceTreeData, currentPageId]
   );
 
   const isPublicView = Boolean(shareId) || isPublicSpaceRoute;
 
   const { data, isLoading, error } = useGetSidebarPagesQuery(
-    isPublicView ? null : { pageId: currentPageId },
+    isPublicView ? null : { pageId: currentPageId }
   );
 
   const subpages = useMemo(() => {
     // If we're in a shared context, use the shared subpages
     if (shareId && sharedSubpages) {
       return sharedSubpages.map((node) => ({
+        icon: node.icon,
         id: node.value,
+        position: node.position,
         slugId: node.slugId,
         title: node.name,
-        icon: node.icon,
-        position: node.position,
       }));
     }
 
     if (isPublicSpaceRoute) {
       return publicSpaceSubpages.map((node) => ({
+        icon: node.icon,
         id: node.value,
+        position: node.position,
         slugId: node.slugId,
         title: node.name,
-        icon: node.icon,
-        position: node.position,
       }));
     }
 
     // Otherwise use the API data
-    if (!data?.pages) return [];
+    if (!data?.pages) {
+      return [];
+    }
     const allPages = data.pages.flatMap((page) => page.items);
     return sortPositionKeys(allPages);
-  }, [
-    data,
-    shareId,
-    sharedSubpages,
-    isPublicSpaceRoute,
-    publicSpaceSubpages,
-  ]);
+  }, [data, shareId, sharedSubpages, isPublicSpaceRoute, publicSpaceSubpages]);
 
   if (isLoading && !isPublicView) {
     return null;
@@ -99,7 +95,7 @@ export default function SubpagesView(props: NodeViewProps) {
   if (error && !isPublicView) {
     return (
       <NodeViewWrapper data-drag-handle>
-        <Text c="dimmed" size="md" py="md">
+        <Text c="dimmed" py="md" size="md">
           {t("Failed to load subpages")}
         </Text>
       </NodeViewWrapper>
@@ -110,7 +106,7 @@ export default function SubpagesView(props: NodeViewProps) {
     return (
       <NodeViewWrapper data-drag-handle>
         <div className={classes.container}>
-          <Text c="dimmed" size="md" py="md">
+          <Text c="dimmed" py="md" size="md">
             {t("No subpages")}
           </Text>
         </div>
@@ -124,37 +120,37 @@ export default function SubpagesView(props: NodeViewProps) {
         <Stack gap={5}>
           {subpages.map((page) => (
             <Anchor
-              key={page.id}
+              className={styles.pageMentionLink}
               component={Link}
+              draggable={false}
               fw={500}
+              key={page.id}
               to={
                 shareId
                   ? buildSharedPageUrl({
-                      shareId,
                       pageSlugId: page.slugId,
                       pageTitle: page.title,
+                      shareId,
                     })
                   : isPublicSpaceRoute
                     ? buildPublicSpaceUrl({
-                        spaceSlug,
                         pageSlugId: page.slugId,
                         pageTitle: page.title,
+                        spaceSlug,
                       })
                     : buildPageUrl(spaceSlug, page.slugId, page.title)
               }
               underline="never"
-              className={styles.pageMentionLink}
-              draggable={false}
             >
               {page?.icon ? (
                 <span style={{ marginRight: "4px" }}>{page.icon}</span>
               ) : (
                 <ActionIcon
-                  variant="transparent"
                   color="gray"
                   component="span"
                   size={18}
                   style={{ verticalAlign: "text-bottom" }}
+                  variant="transparent"
                 >
                   <IconFileDescription size={18} />
                 </ActionIcon>

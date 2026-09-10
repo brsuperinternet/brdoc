@@ -1,8 +1,8 @@
-import { useCallback } from "react";
-import type { Editor } from "@tiptap/react";
+import { isEditorReady } from "@docmost/editor-ext";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { TableMap } from "@tiptap/pm/tables";
-import { isEditorReady } from "@docmost/editor-ext";
+import type { Editor } from "@tiptap/react";
+import { useCallback } from "react";
 
 type Scope =
   | { kind: "col"; index: number }
@@ -13,15 +13,19 @@ export function useTableClear(
   editor: Editor,
   tableNode: ProseMirrorNode,
   tablePos: number,
-  scope: Scope,
+  scope: Scope
 ) {
   return useCallback(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
     const tr = editor.state.tr;
     const tableStart = tablePos + 1;
     const map = TableMap.get(tableNode);
     const paragraph = editor.schema.nodes.paragraph;
-    if (!paragraph) return;
+    if (!paragraph) {
+      return;
+    }
 
     const cellOffsets: number[] = [];
 
@@ -45,12 +49,16 @@ export function useTableClear(
 
     for (const cellPos of targets) {
       const node = tr.doc.nodeAt(cellPos);
-      if (!node) continue;
+      if (!node) {
+        continue;
+      }
       const start = cellPos + 1;
       const end = cellPos + node.nodeSize - 1;
       tr.replaceWith(start, end, paragraph.create());
     }
 
-    if (tr.docChanged) editor.view.dispatch(tr);
+    if (tr.docChanged) {
+      editor.view.dispatch(tr);
+    }
   }, [editor, tableNode, tablePos, scope]);
 }

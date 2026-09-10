@@ -1,11 +1,11 @@
-import { Modal, Text, Button, Group, Stack } from "@mantine/core";
+import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useRevokeScimTokenMutation } from "@/ee/scim/queries/scim-token-query";
 import { IScimToken } from "@/ee/scim/types/scim-token.types";
 
 interface RevokeScimTokenModalProps {
-  opened: boolean;
   onClose: () => void;
+  opened: boolean;
   scimToken: IScimToken | null;
 }
 
@@ -18,18 +18,20 @@ export function RevokeScimTokenModal({
   const revokeMutation = useRevokeScimTokenMutation();
 
   const handleRevoke = async () => {
-    if (!scimToken) return;
+    if (!scimToken) {
+      return;
+    }
     await revokeMutation.mutateAsync({ tokenId: scimToken.id });
     onClose();
   };
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={t("Revoke {{credential}}", { credential: t("SCIM token") })}
-      size="md"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      size="md"
+      title={t("Revoke {{credential}}", { credential: t("SCIM token") })}
     >
       <Stack gap="md">
         <Text>
@@ -38,20 +40,20 @@ export function RevokeScimTokenModal({
           })}{" "}
           <strong>{scimToken?.name}</strong>?
         </Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "This action cannot be undone. Your identity provider will stop syncing immediately.",
+            "This action cannot be undone. Your identity provider will stop syncing immediately."
           )}
         </Text>
 
         <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={onClose}>
+          <Button onClick={onClose} variant="default">
             {t("Cancel")}
           </Button>
           <Button
             color="red"
-            onClick={handleRevoke}
             loading={revokeMutation.isPending}
+            onClick={handleRevoke}
           >
             {t("Revoke")}
           </Button>

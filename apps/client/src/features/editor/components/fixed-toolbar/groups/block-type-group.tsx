@@ -1,6 +1,3 @@
-import { FC } from "react";
-import type { Editor } from "@tiptap/react";
-import { useEditorState } from "@tiptap/react";
 import { Button, Menu } from "@mantine/core";
 import {
   IconBlockquote,
@@ -13,6 +10,9 @@ import {
   IconPageBreak,
   IconTypography,
 } from "@tabler/icons-react";
+import type { Editor } from "@tiptap/react";
+import { useEditorState } from "@tiptap/react";
+import { FC } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Props {
@@ -25,29 +25,35 @@ export const BlockTypeGroup: FC<Props> = ({ editor }) => {
   const state = useEditorState({
     editor,
     selector: (ctx) => ({
+      isBlockquote: !!ctx.editor?.isActive("blockquote"),
+      isCodeBlock: !!ctx.editor?.isActive("codeBlock"),
       isHeading1: !!ctx.editor?.isActive("heading", { level: 1 }),
       isHeading2: !!ctx.editor?.isActive("heading", { level: 2 }),
       isHeading3: !!ctx.editor?.isActive("heading", { level: 3 }),
-      isBlockquote: !!ctx.editor?.isActive("blockquote"),
-      isCodeBlock: !!ctx.editor?.isActive("codeBlock"),
     }),
   });
 
   let label = t("Normal text");
-  if (state.isHeading1) label = t("Heading 1");
-  else if (state.isHeading2) label = t("Heading 2");
-  else if (state.isHeading3) label = t("Heading 3");
-  else if (state.isBlockquote) label = t("Quote");
-  else if (state.isCodeBlock) label = t("Code block");
+  if (state.isHeading1) {
+    label = t("Heading 1");
+  } else if (state.isHeading2) {
+    label = t("Heading 2");
+  } else if (state.isHeading3) {
+    label = t("Heading 3");
+  } else if (state.isBlockquote) {
+    label = t("Quote");
+  } else if (state.isCodeBlock) {
+    label = t("Code block");
+  }
 
   return (
-    <Menu shadow="md" position="bottom-start" withArrow={false}>
+    <Menu position="bottom-start" shadow="md" withArrow={false}>
       <Menu.Target>
         <Button
-          variant="subtle"
           color="dark"
-          size="xs"
           rightSection={<IconChevronDown size={14} />}
+          size="xs"
+          variant="subtle"
         >
           {label}
         </Button>

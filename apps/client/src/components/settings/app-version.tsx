@@ -1,10 +1,9 @@
+import { Indicator, Text, Tooltip } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import semverGt from "semver/functions/gt";
+import classes from "@/components/settings/settings.module.css";
 import { useAppVersion } from "@/features/workspace/queries/workspace-query.ts";
 import { isCloud } from "@/lib/config.ts";
-import classes from "@/components/settings/settings.module.css";
-import { Indicator, Text, Tooltip } from "@mantine/core";
-import React from "react";
-import semverGt from "semver/functions/gt";
-import { useTranslation } from "react-i18next";
 
 export default function AppVersion() {
   const { t } = useTranslation();
@@ -13,7 +12,7 @@ export default function AppVersion() {
   try {
     hasUpdate =
       appVersion &&
-      parseFloat(appVersion.latestVersion) > 0 &&
+      Number.parseFloat(appVersion.latestVersion) > 0 &&
       semverGt(appVersion.latestVersion, appVersion.currentVersion);
   } catch (err) {
     console.error(err);
@@ -22,32 +21,32 @@ export default function AppVersion() {
   return (
     <div className={classes.text}>
       <Tooltip
+        disabled={!hasUpdate}
         label={t("{{latestVersion}} is available", {
           latestVersion: `v${appVersion?.latestVersion}`,
         })}
-        disabled={!hasUpdate}
       >
         <Indicator
-          label={t("New update")}
           color="gray"
-          inline
-          size={16}
-          position="middle-end"
-          style={{ cursor: "pointer" }}
           disabled={!hasUpdate}
+          inline
+          label={t("New update")}
           onClick={() => {
             window.open(
               "https://github.com/docmost/docmost/releases",
-              "_blank",
+              "_blank"
             );
           }}
+          position="middle-end"
+          size={16}
+          style={{ cursor: "pointer" }}
         >
           <Text
-            size="sm"
             c="dimmed"
             component="a"
-            mr={45}
             href="https://github.com/docmost/docmost/releases"
+            mr={45}
+            size="sm"
             target="_blank"
           >
             {appVersion?.currentVersion && <>v{appVersion?.currentVersion}</>}

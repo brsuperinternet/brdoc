@@ -1,14 +1,12 @@
 // adapted from: https://github.com/aguingand/tiptap-markdown/blob/main/src/extensions/tiptap/clipboard.js - MIT
+
+import { htmlToMarkdown, markdownToHtml } from "@docmost/editor-ext";
 import { Extension } from "@tiptap/core";
-import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 import { DOMParser, DOMSerializer, Fragment, Slice } from "@tiptap/pm/model";
+import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 import { find } from "linkifyjs";
-import { markdownToHtml, htmlToMarkdown } from "@docmost/editor-ext";
 
 export const MarkdownClipboard = Extension.create({
-  name: "markdownClipboard",
-  priority: 101,
-
   addOptions() {
     return {
       transformPastedText: false,
@@ -32,7 +30,9 @@ export const MarkdownClipboard = Extension.create({
               }
             });
 
-            if (!hasList || topLevelCount < 2) return null;
+            if (!hasList || topLevelCount < 2) {
+              return null;
+            }
 
             const div = document.createElement("div");
             const serializer = DOMSerializer.fromSchema(this.editor.schema);
@@ -56,14 +56,17 @@ export const MarkdownClipboard = Extension.create({
             const language = vscodeData?.mode;
 
             const isVscodeMarkdown = language === "markdown";
-            const isPlainTextOnly = !html && !vscode && !!text;
+            const isPlainTextOnly = !(html || vscode) && !!text;
 
-            if (!isVscodeMarkdown && !isPlainTextOnly) {
+            if (!(isVscodeMarkdown || isPlainTextOnly)) {
               return false;
             }
 
             if (isPlainTextOnly) {
-              if ((view as any).input?.shiftKey || !this.options.transformPastedText) {
+              if (
+                (view as any).input?.shiftKey ||
+                !this.options.transformPastedText
+              ) {
                 return false;
               }
 
@@ -84,15 +87,20 @@ export const MarkdownClipboard = Extension.create({
             normalizeTableColumnWidths(body);
 
             const contentNodes = DOMParser.fromSchema(
-              this.editor.schema,
+              this.editor.schema
             ).parseSlice(body, {
               preserveWhitespace: true,
             });
 
             tr.replaceRange(from, to, contentNodes);
             const insertEnd = tr.mapping.map(from, 1);
-            tr.setSelection(TextSelection.near(tr.doc.resolve(Math.max(from, insertEnd - 2)), -1));
-            tr.setMeta('paste', true)
+            tr.setSelection(
+              TextSelection.near(
+                tr.doc.resolve(Math.max(from, insertEnd - 2)),
+                -1
+              )
+            );
+            tr.setMeta("paste", true);
             view.dispatch(tr);
             return true;
           },
@@ -131,6 +139,8 @@ export const MarkdownClipboard = Extension.create({
       }),
     ];
   },
+  name: "markdownClipboard",
+  priority: 101,
 });
 
 function elementFromString(value) {
@@ -145,23 +155,31 @@ const DEFAULT_PASTE_COL_WIDTH_PX = 150;
 function parsePixelWidth(el: Element): number | null {
   const attr = el.getAttribute("width");
   if (attr) {
-    const n = parseInt(attr, 10);
-    if (Number.isFinite(n) && n > 0) return n;
+    const n = Number.parseInt(attr, 10);
+    if (Number.isFinite(n) && n > 0) {
+      return n;
+    }
   }
   const style = el.getAttribute("style") || "";
   const m = style.match(/(?:^|;)\s*width\s*:\s*([\d.]+)\s*px/i);
   if (m) {
-    const n = parseInt(m[1], 10);
-    if (Number.isFinite(n) && n > 0) return n;
+    const n = Number.parseInt(m[1], 10);
+    if (Number.isFinite(n) && n > 0) {
+      return n;
+    }
   }
   return null;
 }
 
 function getFirstRow(table: Element): Element | null {
   const tbodyRow = table.querySelector(":scope > tbody > tr");
-  if (tbodyRow) return tbodyRow;
+  if (tbodyRow) {
+    return tbodyRow;
+  }
   const theadRow = table.querySelector(":scope > thead > tr");
-  if (theadRow) return theadRow;
+  if (theadRow) {
+    return theadRow;
+  }
   return table.querySelector(":scope > tr");
 }
 
@@ -170,23 +188,30 @@ function deriveColumnWidths(table: Element): (number | null)[] | null {
   if (cols.length > 0) {
     const widths: (number | null)[] = [];
     cols.forEach((col) => widths.push(parsePixelWidth(col)));
-    if (widths.some((w) => w !== null)) return widths;
+    if (widths.some((w) => w !== null)) {
+      return widths;
+    }
   }
 
   const firstRow = getFirstRow(table);
-  if (!firstRow) return null;
+  if (!firstRow) {
+    return null;
+  }
 
   const widths: (number | null)[] = [];
   Array.from(firstRow.children)
     .filter((c) => c.tagName === "TD" || c.tagName === "TH")
     .forEach((cell) => {
-      const colspan = parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
+      const colspan =
+        Number.parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
       const w = parsePixelWidth(cell);
       for (let i = 0; i < colspan; i++) {
-        widths.push(w !== null ? Math.round(w / colspan) : null);
+        widths.push(w === null ? null : Math.round(w / colspan));
       }
     });
-  if (widths.length === 0 || widths.every((w) => w === null)) return null;
+  if (widths.length === 0 || widths.every((w) => w === null)) {
+    return null;
+  }
   return widths;
 }
 
@@ -197,7 +222,9 @@ function deriveColumnWidths(table: Element): (number | null)[] | null {
 export function normalizeTableColumnWidths(root: Element): void {
   root.querySelectorAll("table").forEach((table) => {
     const firstRow = getFirstRow(table);
-    if (!firstRow) return;
+    if (!firstRow) {
+      return;
+    }
 
     let colWidths = deriveColumnWidths(table);
     if (!colWidths) {
@@ -205,9 +232,12 @@ export function normalizeTableColumnWidths(root: Element): void {
       Array.from(firstRow.children)
         .filter((c) => c.tagName === "TD" || c.tagName === "TH")
         .forEach((cell) => {
-          count += parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
+          count +=
+            Number.parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
         });
-      if (count === 0) return;
+      if (count === 0) {
+        return;
+      }
       colWidths = new Array(count).fill(DEFAULT_PASTE_COL_WIDTH_PX);
     }
 
@@ -216,13 +246,16 @@ export function normalizeTableColumnWidths(root: Element): void {
       .filter((c) => c.tagName === "TD" || c.tagName === "TH")
       .forEach((cell) => {
         if (cell.getAttribute("colwidth")) {
-          col += parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
+          col += Number.parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
           return;
         }
-        const colspan = parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
+        const colspan =
+          Number.parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
         const slice = colWidths!.slice(col, col + colspan);
         col += colspan;
-        if (slice.length === 0 || slice.every((w) => w === null)) return;
+        if (slice.length === 0 || slice.every((w) => w === null)) {
+          return;
+        }
         const values = slice.map((w) => (w == null ? 100 : w));
         cell.setAttribute("colwidth", values.join(","));
       });

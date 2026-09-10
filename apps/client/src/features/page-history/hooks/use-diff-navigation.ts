@@ -7,7 +7,7 @@ import { diffCountsAtom } from "@/features/page-history/atoms/history-atoms";
  * Provides prev/next handlers and auto-scrolls to the current change.
  */
 export function useDiffNavigation(
-  scrollViewportRef: RefObject<HTMLDivElement>,
+  scrollViewportRef: RefObject<HTMLDivElement>
 ) {
   const diffCounts = useAtomValue(diffCountsAtom);
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
@@ -15,7 +15,9 @@ export function useDiffNavigation(
   const scrollToChangeIndex = useCallback(
     (index: number) => {
       const viewport = scrollViewportRef.current;
-      if (!viewport || index < 1) return;
+      if (!viewport || index < 1) {
+        return;
+      }
 
       const element = viewport.querySelector(`[data-diff-index="${index}"]`);
       if (element instanceof HTMLElement) {
@@ -23,10 +25,10 @@ export function useDiffNavigation(
         const viewportHeight = viewport.clientHeight;
         const scrollTarget =
           elementTop - viewportHeight / 2 + element.offsetHeight / 2;
-        viewport.scrollTo({ top: scrollTarget, behavior: "smooth" });
+        viewport.scrollTo({ behavior: "smooth", top: scrollTarget });
       }
     },
-    [scrollViewportRef],
+    [scrollViewportRef]
   );
 
   useEffect(() => {
@@ -39,7 +41,9 @@ export function useDiffNavigation(
   }, [diffCounts, scrollToChangeIndex]);
 
   const handlePrevChange = useCallback(() => {
-    if (!diffCounts || diffCounts.total === 0) return;
+    if (!diffCounts || diffCounts.total === 0) {
+      return;
+    }
     const newIndex =
       currentChangeIndex <= 1 ? diffCounts.total : currentChangeIndex - 1;
     setCurrentChangeIndex(newIndex);
@@ -47,12 +51,14 @@ export function useDiffNavigation(
   }, [diffCounts, currentChangeIndex, scrollToChangeIndex]);
 
   const handleNextChange = useCallback(() => {
-    if (!diffCounts || diffCounts.total === 0) return;
+    if (!diffCounts || diffCounts.total === 0) {
+      return;
+    }
     const newIndex =
       currentChangeIndex >= diffCounts.total ? 1 : currentChangeIndex + 1;
     setCurrentChangeIndex(newIndex);
     scrollToChangeIndex(newIndex);
   }, [diffCounts, currentChangeIndex, scrollToChangeIndex]);
 
-  return { currentChangeIndex, handlePrevChange, handleNextChange };
+  return { currentChangeIndex, handleNextChange, handlePrevChange };
 }

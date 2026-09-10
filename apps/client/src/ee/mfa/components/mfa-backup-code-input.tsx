@@ -1,21 +1,14 @@
-import React from "react";
-import {
-  TextInput,
-  Button,
-  Stack,
-  Text,
-  Alert,
-} from "@mantine/core";
-import { IconKey, IconAlertCircle } from "@tabler/icons-react";
+import { Alert, Button, Stack, Text, TextInput } from "@mantine/core";
+import { IconAlertCircle, IconKey } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 interface MfaBackupCodeInputProps {
-  value: string;
-  onChange: (value: string) => void;
   error?: string;
-  onSubmit: () => void;
-  onCancel: () => void;
   isLoading?: boolean;
+  onCancel: () => void;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  value: string;
 }
 
 export function MfaBackupCodeInput({
@@ -30,49 +23,49 @@ export function MfaBackupCodeInput({
 
   return (
     <Stack>
-      <Alert icon={<IconAlertCircle size={16} />} color="blue" variant="light">
+      <Alert color="blue" icon={<IconAlertCircle size={16} />} variant="light">
         <Text size="sm">
           {t(
-            "Enter one of your backup codes. Each backup code can only be used once.",
+            "Enter one of your backup codes. Each backup code can only be used once."
           )}
         </Text>
       </Alert>
 
       <TextInput
-        label={t("Backup code")}
-        placeholder="XXXXXXXX"
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value.toUpperCase())}
-        error={error}
         autoFocus
         data-autofocus
+        error={error}
+        label={t("Backup code")}
         maxLength={8}
+        onChange={(e) => onChange(e.currentTarget.value.toUpperCase())}
+        placeholder="XXXXXXXX"
         styles={{
           input: {
             fontFamily: "monospace",
-            letterSpacing: "0.1em",
             fontSize: "1rem",
+            letterSpacing: "0.1em",
           },
         }}
+        value={value}
       />
 
       <Stack>
         <Button
           fullWidth
-          size="md"
+          leftSection={<IconKey size={18} />}
           loading={isLoading}
           onClick={onSubmit}
-          leftSection={<IconKey size={18} />}
+          size="md"
         >
           {t("Verify backup code")}
         </Button>
 
         <Button
-          fullWidth
-          variant="subtle"
           color="gray"
-          onClick={onCancel}
           disabled={isLoading}
+          fullWidth
+          onClick={onCancel}
+          variant="subtle"
         >
           {t("Use authenticator app instead")}
         </Button>

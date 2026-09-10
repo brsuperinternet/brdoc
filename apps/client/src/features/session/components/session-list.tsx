@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Button,
   Divider,
@@ -10,11 +9,12 @@ import {
   VisuallyHidden,
 } from "@mantine/core";
 import { IconDevices } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useGetSessionsQuery,
-  useRevokeSessionMutation,
   useRevokeAllSessionsMutation,
+  useRevokeSessionMutation,
 } from "@/features/session/queries/session-query";
 import { formattedDate } from "@/lib/time";
 
@@ -51,15 +51,15 @@ export default function SessionList() {
             <Table.Tr key={i}>
               <Table.Td>
                 <Group gap="xs">
-                  <Skeleton height={18} width={18} radius="sm" />
-                  <Skeleton height={14} width={140} radius="xs" />
+                  <Skeleton height={18} radius="sm" width={18} />
+                  <Skeleton height={14} radius="xs" width={140} />
                 </Group>
               </Table.Td>
               <Table.Td>
-                <Skeleton height={14} width={120} radius="xs" />
+                <Skeleton height={14} radius="xs" width={120} />
               </Table.Td>
               <Table.Td>
-                <Skeleton height={30} width={70} radius="sm" />
+                <Skeleton height={30} radius="sm" width={70} />
               </Table.Td>
             </Table.Tr>
           ))}
@@ -74,18 +74,16 @@ export default function SessionList() {
         <>
           <div>
             <Text fw={500}>{t("Log out of all devices")}</Text>
-            <Group justify="space-between" align="center" mt={4}>
-              <Text size="sm" c="dimmed">
-                {t(
-                  "Log out of all sessions except this device",
-                )}
+            <Group align="center" justify="space-between" mt={4}>
+              <Text c="dimmed" size="sm">
+                {t("Log out of all sessions except this device")}
               </Text>
               <Button
-                variant="outline"
                 color="red"
-                size="xs"
                 loading={revokeAllSessionsMutation.isPending}
                 onClick={() => revokeAllSessionsMutation.mutate()}
+                size="xs"
+                variant="outline"
               >
                 {t("Log out of all devices")}
               </Button>
@@ -121,7 +119,7 @@ export default function SessionList() {
                       {session.deviceName || t("Unknown device")}
                     </Text>
                     {session?.isCurrentDevice && (
-                      <Text size="xs" c="blue">
+                      <Text c="blue" size="xs">
                         {t("This Device")}
                       </Text>
                     )}
@@ -139,14 +137,14 @@ export default function SessionList() {
                 <Table.Td>
                   {!session?.isCurrentDevice && (
                     <Button
-                      variant="outline"
-                      size="xs"
                       loading={revokeSessionMutation.isPending}
                       onClick={() =>
                         revokeSessionMutation.mutate({
                           sessionId: session.id,
                         })
                       }
+                      size="xs"
+                      variant="outline"
                     >
                       {t("Log out")}
                     </Button>
@@ -160,16 +158,16 @@ export default function SessionList() {
 
       {hasMore && (
         <Button
-          variant="subtle"
-          size="xs"
           onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+          size="xs"
+          variant="subtle"
         >
           {t("Load more")}
         </Button>
       )}
 
       {(!sessions || sessions.length === 0) && (
-        <Text size="sm" c="dimmed" ta="center">
+        <Text c="dimmed" size="sm" ta="center">
           {t("No active sessions")}
         </Text>
       )}

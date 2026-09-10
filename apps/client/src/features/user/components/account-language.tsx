@@ -1,18 +1,18 @@
-import { Group, Text, Select } from "@mantine/core";
-import { useTranslation } from "react-i18next";
-import { updateUser } from "../services/user-service";
+import { Group, Select, Text } from "@mantine/core";
 import { useAtom } from "jotai";
-import { userAtom } from "../atoms/current-user-atom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { userAtom } from "../atoms/current-user-atom";
+import { updateUser } from "../services/user-service";
 
 export default function AccountLanguage() {
   const { t } = useTranslation();
 
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
+    <Group gap="xl" justify="space-between" wrap="nowrap">
       <div>
         <Text size="md">{t("Language")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t("Choose your preferred interface language.")}
         </Text>
       </div>
@@ -25,7 +25,7 @@ function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   const [user, setUser] = useAtom(userAtom);
   const [language, setLanguage] = useState(
-    user?.locale === "en" ? "en-US" : user?.locale,
+    user?.locale === "en" ? "en-US" : user?.locale
   );
 
   const handleChange = async (value: string) => {
@@ -39,25 +39,25 @@ function LanguageSwitcher() {
 
   return (
     <Select
-      label={t("Select language")}
-      data={[
-        { value: "en-US", label: "English (US)" },
-        { value: "es-ES", label: "Español (Spanish)" },
-        { value: "de-DE", label: "Deutsch (German)" },
-        { value: "fr-FR", label: "Français (French)" },
-        { value: "nl-NL", label: "Dutch (Netherlands)" },
-        { value: "pt-BR", label: "Português (Brasil)" },
-        { value: "it-IT", label: "Italiano (Italian)" },
-        { value: "ja-JP", label: "日本語 (Japanese)" },
-        { value: "ko-KR", label: "한국어 (Korean)" },
-        { value: "uk-UA", label: "Українська (Ukrainian)" },
-        { value: "ru-RU", label: "Русский (Russian)" },
-        { value: "zh-CN", label: "中文 (简体)" },
-      ]}
-      value={language || "en-US"}
-      onChange={handleChange}
       allowDeselect={false}
       checkIconPosition="right"
+      data={[
+        { label: "English (US)", value: "en-US" },
+        { label: "Español (Spanish)", value: "es-ES" },
+        { label: "Deutsch (German)", value: "de-DE" },
+        { label: "Français (French)", value: "fr-FR" },
+        { label: "Dutch (Netherlands)", value: "nl-NL" },
+        { label: "Português (Brasil)", value: "pt-BR" },
+        { label: "Italiano (Italian)", value: "it-IT" },
+        { label: "日本語 (Japanese)", value: "ja-JP" },
+        { label: "한국어 (Korean)", value: "ko-KR" },
+        { label: "Українська (Ukrainian)", value: "uk-UA" },
+        { label: "Русский (Russian)", value: "ru-RU" },
+        { label: "中文 (简体)", value: "zh-CN" },
+      ]}
+      label={t("Select language")}
+      onChange={handleChange}
+      value={language || "en-US"}
     />
   );
 }

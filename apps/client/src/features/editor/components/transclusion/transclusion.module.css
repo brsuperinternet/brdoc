@@ -1,17 +1,17 @@
 .placeholder {
   display: flex;
   flex-direction: row;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 8px 12px;
-  border-radius: var(--mantine-radius-md);
+  font-size: var(--mantine-font-size-sm);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  user-select: none;
   background: light-dark(
     var(--mantine-color-gray-0),
     var(--mantine-color-dark-6)
   );
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
-  font-size: var(--mantine-font-size-sm);
-  user-select: none;
+  border-radius: var(--mantine-radius-md);
 }
 
 .placeholderIcon {
@@ -22,6 +22,7 @@
 .transclusionBadge {
   display: inline-block;
   padding: 2px 8px;
+  margin-bottom: 4px;
   font-size: var(--mantine-font-size-xs);
   font-weight: 600;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
@@ -30,37 +31,36 @@
     var(--mantine-color-dark-5)
   );
   border-radius: var(--mantine-radius-sm);
-  margin-bottom: 4px;
 }
 
 .transclusionWrap {
   position: relative;
-  margin-left: -3rem;
-  margin-right: -3rem;
   width: calc(100% + 6rem);
   padding: 0.5em 3rem;
-  border-radius: 8px;
+  margin-right: -3rem;
+  margin-left: -3rem;
   border: 2px solid transparent;
+  border-radius: 8px;
   transition: border 0.3s;
 }
 
 .transclusionWrap[data-editable="false"],
 .includeWrap[data-editable="false"] {
-  margin-left: 0;
-  margin-right: 0;
   width: 100%;
   padding: 0;
+  margin-right: 0;
+  margin-left: 0;
 }
 
 /* Cancel the wrapping .react-renderer's vertical spacing in read-only mode
    so the synced block sits flush with surrounding paragraphs (whose own
    margins already provide the right rhythm). */
 :global(.react-renderer.node-transclusionSource):has(
-    .transclusionWrap[data-editable="false"]
-  ),
+  .transclusionWrap[data-editable="false"]
+),
 :global(.react-renderer.node-transclusionReference):has(
-    .includeWrap[data-editable="false"]
-  ) {
+  .includeWrap[data-editable="false"]
+) {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -76,38 +76,38 @@
 
 .transclusionControls {
   position: absolute;
-  bottom: calc(100% + 8px);
   right: 4px;
+  bottom: calc(100% + 8px);
+  z-index: 2;
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+  pointer-events: none;
   background: var(--mantine-color-body);
   border: 1px solid var(--mantine-color-default-border);
   border-radius: 6px;
-  padding: 4px 6px;
   opacity: 0;
-  pointer-events: none;
   transition: opacity 0.15s ease;
-  z-index: 2;
 }
 
 /* Hover bridge: keeps :hover on the wrap while the cursor crosses the
    8px gap between wrap and floating chrome, so the menu doesn't fade out
    on the way to it. */
 .transclusionControls::after {
-  content: "";
   position: absolute;
   top: 100%;
-  left: 0;
   right: 0;
+  left: 0;
   height: 8px;
+  content: "";
 }
 
 .transclusionWrap:hover .transclusionControls,
 .transclusionWrap:focus-within .transclusionControls,
 .transclusionWrap[data-menu-open="true"] .transclusionControls {
-  opacity: 1;
   pointer-events: auto;
+  opacity: 1;
 }
 
 .controlsDivider {
@@ -119,19 +119,19 @@
 
 .transclusionControls a[href],
 .includeControls a[href] {
+  font-weight: inherit;
   color: var(--ai-color);
   border-bottom: none;
-  font-weight: inherit;
 }
 
 .includeWrap {
   position: relative;
-  margin-left: -3rem;
-  margin-right: -3rem;
   width: calc(100% + 6rem);
   padding: 0.5em 0;
-  border-radius: 8px;
+  margin-right: -3rem;
+  margin-left: -3rem;
   border: 2px solid transparent;
+  border-radius: 8px;
   transition: border 0.3s;
 }
 
@@ -147,39 +147,39 @@
 
 .includeControls {
   position: absolute;
-  bottom: calc(100% + 8px);
   right: 4px;
+  bottom: calc(100% + 8px);
+  z-index: 2;
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+  pointer-events: none;
   background: var(--mantine-color-body);
   border: 1px solid var(--mantine-color-default-border);
   border-radius: 6px;
-  padding: 4px 6px;
   opacity: 0;
-  pointer-events: none;
   transition: opacity 0.15s ease;
-  z-index: 2;
 }
 
 /* Hover bridge: keeps :hover on the wrap while the cursor crosses the
    8px gap between wrap and floating chrome, so the menu doesn't fade out
    on the way to it. */
 .includeControls::after {
-  content: "";
   position: absolute;
   top: 100%;
-  left: 0;
   right: 0;
+  left: 0;
   height: 8px;
+  content: "";
 }
 
 .includeWrap:hover .includeControls,
 .includeWrap:focus-within .includeControls,
 .includeWrap[data-focused="true"] .includeControls,
 .includeWrap[data-menu-open="true"] .includeControls {
-  opacity: 1;
   pointer-events: auto;
+  opacity: 1;
 }
 
 :global(.react-renderer.node-transclusionSource.ProseMirror-selectednode),
@@ -190,14 +190,14 @@
 @media (max-width: 48em) {
   .transclusionWrap,
   .includeWrap {
-    margin-left: -1rem;
-    margin-right: -1rem;
     width: calc(100% + 2rem);
+    margin-right: -1rem;
+    margin-left: -1rem;
   }
 
   .transclusionWrap {
-    padding-left: 1rem;
     padding-right: 1rem;
+    padding-left: 1rem;
   }
 }
 
@@ -208,11 +208,11 @@
   }
   .transclusionWrap,
   .includeWrap {
-    border: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
     width: 100% !important;
     padding: 0 !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    border: none !important;
   }
 }
 

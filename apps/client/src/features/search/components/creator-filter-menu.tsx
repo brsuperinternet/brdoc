@@ -1,14 +1,21 @@
-import { ReactNode, useMemo, useState } from "react";
-import { Divider, Group, Menu, ScrollArea, Text, TextInput } from "@mantine/core";
+import {
+  Divider,
+  Group,
+  Menu,
+  ScrollArea,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { IconCheck, IconSearch } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
-import { RadioMenuItem } from "@/components/ui/radio-menu-item";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import { IUser } from "@/features/user/types/user.types.ts";
 import { useAtomValue } from "jotai";
+import { ReactNode, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import { RadioMenuItem } from "@/components/ui/radio-menu-item";
+import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
 import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { IUser } from "@/features/user/types/user.types.ts";
 
 type CreatorFilterMenuProps = {
   value: string | null;
@@ -42,11 +49,11 @@ export function CreatorFilterMenu({
   const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
 
   const { data: suggestion, isLoading } = useSearchSuggestionsQuery({
-    query: debouncedQuery,
-    includeUsers: true,
     includeGroups: false,
     includePages: false,
+    includeUsers: true,
     preload: true,
+    query: debouncedQuery,
   });
 
   const users: IUser[] = (suggestion?.users as IUser[]) ?? [];
@@ -54,7 +61,9 @@ export function CreatorFilterMenu({
 
   // pin the signed-in user on top so they never have to search themselves
   const displayUsers = useMemo(() => {
-    if (!currentUser) return users;
+    if (!currentUser) {
+      return users;
+    }
     const others = users.filter((user) => user.id !== currentUser.id);
     const q = debouncedQuery.trim().toLowerCase();
     const matchesQuery =
@@ -66,82 +75,82 @@ export function CreatorFilterMenu({
 
   return (
     <Menu
+      onChange={onOpenChange}
+      opened={opened}
+      position={position}
       shadow="md"
       width={width}
-      position={position}
       zIndex={zIndex}
-      opened={opened}
-      onChange={onOpenChange}
     >
       <Menu.Target>{children}</Menu.Target>
       <Menu.Dropdown>
         <TextInput
-          placeholder={t("Find a user")}
-          data-autofocus
           autoFocus
+          data-autofocus
           leftSection={<IconSearch size={16} />}
-          value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          size="sm"
-          variant="filled"
+          placeholder={t("Find a user")}
           radius="sm"
+          size="sm"
           styles={{ input: { marginBottom: 8 } }}
+          value={searchQuery}
+          variant="filled"
         />
 
         <ScrollArea.Autosize mah={280}>
           <Menu.Item
-            component={RadioMenuItem}
             aria-checked={!value}
+            component={RadioMenuItem}
             onClick={() => onChange(null)}
           >
             <Group flex="1" gap="xs">
               <div style={{ flex: 1 }}>
-                <Text size="sm" fw={500}>
+                <Text fw={500} size="sm">
                   {t("Anyone")}
                 </Text>
               </div>
-              {!value && <IconCheck size={20} aria-hidden />}
+              {!value && <IconCheck aria-hidden size={20} />}
             </Group>
           </Menu.Item>
 
           <Divider my="xs" />
 
           {displayUsers.length === 0 && (
-            <Text size="xs" c="dimmed" px="xs" py="sm">
+            <Text c="dimmed" px="xs" py="sm" size="xs">
               {isLoading ? t("Loading...") : t("No users found")}
             </Text>
           )}
 
           {displayUsers.map((user) => (
             <Menu.Item
-              key={user.id}
-              component={RadioMenuItem}
               aria-checked={value === user.id}
+              component={RadioMenuItem}
+              key={user.id}
               onClick={() => onChange(user)}
             >
               <Group flex="1" gap="xs">
                 <CustomAvatar
                   avatarUrl={user.avatarUrl}
-                  size={20}
                   name={user.name}
+                  size={20}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <Text size="sm" fw={500} truncate>
+                  <Text fw={500} size="sm" truncate>
                     {user.name}
                     {user.id === currentUser?.id && (
-                      <Text span size="sm" c="dimmed" fw={400}>
+                      <Text c="dimmed" fw={400} size="sm" span>
                         {" "}
                         ({t("you")})
                       </Text>
                     )}
                   </Text>
                   {user.email && (
-                    <Text size="xs" c="dimmed" truncate>
+                    <Text c="dimmed" size="xs" truncate>
                       {user.email}
                     </Text>
                   )}
                 </div>
-                {value === user.id && <IconCheck size={20} aria-hidden />}
+                {value === user.id && <IconCheck aria-hidden size={20} />}
               </Group>
             </Menu.Item>
           ))}

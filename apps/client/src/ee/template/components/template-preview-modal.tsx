@@ -1,7 +1,15 @@
-import { Modal, Text, ScrollArea, Button, Group, Center, Loader } from "@mantine/core";
+import {
+  Button,
+  Center,
+  Group,
+  Loader,
+  Modal,
+  ScrollArea,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useGetTemplateByIdQuery } from "@/ee/template/queries/template-query";
 import ReadonlyTemplateEditor from "@/ee/template/components/readonly-template-editor";
+import { useGetTemplateByIdQuery } from "@/ee/template/queries/template-query";
 
 type TemplatePreviewModalProps = {
   templateId: string;
@@ -26,29 +34,34 @@ export default function TemplatePreviewModal({
   const title = template?.title || t("Untitled");
 
   return (
-    <Modal.Root size={1200} opened={opened} onClose={onClose} aria-label={title}>
+    <Modal.Root
+      aria-label={title}
+      onClose={onClose}
+      opened={opened}
+      size={1200}
+    >
       <Modal.Overlay />
       <Modal.Content style={{ overflow: "hidden" }}>
         <Modal.Header>
           <Modal.Title>
             <Group gap="xs">
               {template?.icon && <Text size="lg">{template.icon}</Text>}
-              <Text size="md" fw={500}>
+              <Text fw={500} size="md">
                 {title}
               </Text>
             </Group>
           </Modal.Title>
           <Group gap="sm">
             <Button
-              size="xs"
-              onClick={onUse}
-              loading={useLoading}
               disabled={useLoading}
+              loading={useLoading}
+              onClick={onUse}
+              size="xs"
             >
               {t("Use template")}
             </Button>
             {onEdit && (
-              <Button size="xs" variant="default" onClick={onEdit}>
+              <Button onClick={onEdit} size="xs" variant="default">
                 {t("Edit")}
               </Button>
             )}
@@ -61,7 +74,7 @@ export default function TemplatePreviewModal({
               <Loader size="sm" />
             </Center>
           ) : (
-            <ScrollArea h="80vh" w="100%" scrollbarSize={5}>
+            <ScrollArea h="80vh" scrollbarSize={5} w="100%">
               {template && <ReadonlyTemplateEditor template={template} />}
             </ScrollArea>
           )}

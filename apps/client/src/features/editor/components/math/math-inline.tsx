@@ -1,12 +1,12 @@
 import "katex/dist/katex.min.css";
+import { Popover, Textarea } from "@mantine/core";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import katex from "katex";
 //import "katex/dist/contrib/mhchem.min.js";
 import { useEffect, useRef, useState } from "react";
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { Popover, Textarea } from "@mantine/core";
-import classes from "./math.module.css";
-import { v4 } from "uuid";
 import { useTranslation } from "react-i18next";
+import { v4 } from "uuid";
+import classes from "./math.module.css";
 
 export default function MathInlineView(props: NodeViewProps) {
   const { t } = useTranslation();
@@ -20,7 +20,7 @@ export default function MathInlineView(props: NodeViewProps) {
 
   const renderMath = (
     katexString: string,
-    container: HTMLDivElement | null,
+    container: HTMLDivElement | null
   ) => {
     try {
       katex.render(katexString, container);
@@ -48,47 +48,50 @@ export default function MathInlineView(props: NodeViewProps) {
   useEffect(() => {
     const pos = getPos();
     const { from, to } = editor.state.selection;
-    const nodeSelected = props.selected && from === pos && to === pos + node.nodeSize;
+    const nodeSelected =
+      props.selected && from === pos && to === pos + node.nodeSize;
     setIsEditing(nodeSelected);
-    if (nodeSelected) setPreview(node.attrs.text);
+    if (nodeSelected) {
+      setPreview(node.attrs.text);
+    }
   }, [props.selected]);
 
   return (
     <>
       <Popover
+        id={v4()}
+        middlewares={{ flip: true, inline: true, shift: true }}
         opened={isEditing && editor.isEditable}
-        trapFocus
         position="top"
         shadow="md"
+        trapFocus
         width={400}
-        middlewares={{ flip: true, shift: true, inline: true }}
         withArrow={true}
         zIndex={101}
-        id={v4()}
       >
         <Popover.Target>
           <NodeViewWrapper
-            data-katex="true"
             className={[
               classes.mathInline,
               props.selected ? classes.selected : "",
               error ? classes.error : "",
               (isEditing && !preview?.trim().length) ||
-              (!isEditing && !node.attrs.text.trim().length)
+              !(isEditing || node.attrs.text.trim().length)
                 ? classes.empty
                 : "",
             ].join(" ")}
+            data-katex="true"
           >
             <div
-              style={{ display: isEditing ? undefined : "none" }}
               ref={mathPreviewContainer}
-            ></div>
+              style={{ display: isEditing ? undefined : "none" }}
+            />
             <div
-              style={{ display: isEditing ? "none" : undefined }}
               ref={mathResultContainer}
-            ></div>
+              style={{ display: isEditing ? "none" : undefined }}
+            />
             {((isEditing && !preview?.trim().length) ||
-              (!isEditing && !node.attrs.text.trim().length)) && (
+              !(isEditing || node.attrs.text.trim().length)) && (
               <div>{t("Empty equation")}</div>
             )}
             {error && <div>{t("Invalid equation")}</div>}
@@ -96,20 +99,22 @@ export default function MathInlineView(props: NodeViewProps) {
         </Popover.Target>
         <Popover.Dropdown p={"xs"}>
           <Textarea
-            minRows={1}
-            maxRows={5}
             autosize
-            ref={textAreaRef}
-            draggable={false}
             classNames={{ input: classes.textInput }}
-            value={preview ?? ""}
-            placeholder={"E = mc^2"}
+            draggable={false}
+            maxRows={5}
+            minRows={1}
+            onChange={(e) => {
+              setPreview(e.target.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Escape" || (e.key === "Enter" && !e.shiftKey)) {
                 return editor.commands.focus(getPos() + node.nodeSize);
               }
 
-              if (!textAreaRef.current) return;
+              if (!textAreaRef.current) {
+                return;
+              }
 
               const { selectionStart, selectionEnd } = textAreaRef.current;
 
@@ -129,9 +134,9 @@ export default function MathInlineView(props: NodeViewProps) {
                 editor.commands.focus(getPos() + node.nodeSize);
               }
             }}
-            onChange={(e) => {
-              setPreview(e.target.value);
-            }}
+            placeholder={"E = mc^2"}
+            ref={textAreaRef}
+            value={preview ?? ""}
           />
         </Popover.Dropdown>
       </Popover>

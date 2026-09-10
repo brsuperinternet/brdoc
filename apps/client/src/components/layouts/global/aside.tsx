@@ -1,28 +1,34 @@
-import { ActionIcon, Box, Group, ScrollArea, Title, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Group,
+  ScrollArea,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
-import { useAtom } from "jotai";
-import { asideStateAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
-import React, { lazy, ReactNode, Suspense, useEffect } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import { lazy, ReactNode, Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useAtomValue } from "jotai";
+import { asideStateAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
 import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import { ASIDE_PANEL_ID } from "@/hooks/use-toggle-aside.tsx";
 
 const CommentListWithTabs = lazy(
-  () => import("@/features/comment/components/comment-list-with-tabs.tsx"),
+  () => import("@/features/comment/components/comment-list-with-tabs.tsx")
 );
 const TableOfContents = lazy(() =>
   import(
     "@/features/editor/components/table-of-contents/table-of-contents.tsx"
-  ).then((m) => ({ default: m.TableOfContents })),
+  ).then((m) => ({ default: m.TableOfContents }))
 );
 const AsideChatPanel = lazy(
-  () => import("@/ee/ai-chat/components/aside-chat-panel"),
+  () => import("@/ee/ai-chat/components/aside-chat-panel")
 );
 const PageDetailsAside = lazy(() =>
   import("@/features/page-details/components/page-details-aside.tsx").then(
-    (m) => ({ default: m.PageDetailsAside }),
-  ),
+    (m) => ({ default: m.PageDetailsAside })
+  )
 );
 
 export default function Aside() {
@@ -32,7 +38,9 @@ export default function Aside() {
   const closeAside = () => setAsideState((s) => ({ ...s, isAsideOpen: false }));
 
   useEffect(() => {
-    if (!isAsideOpen) return;
+    if (!isAsideOpen) {
+      return;
+    }
     document.getElementById(ASIDE_PANEL_ID)?.focus();
   }, [isAsideOpen, tab]);
 
@@ -62,18 +70,23 @@ export default function Aside() {
   }
 
   return (
-    <Box p="md" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      p="md"
+      style={{ display: "flex", flexDirection: "column", height: "100%" }}
+    >
       {component && (
         <>
           {tab !== "chat" && (
-            <Group justify="space-between" wrap="nowrap" mb="md">
-              <Title order={2} size="h6" fw={500}>{t(title)}</Title>
+            <Group justify="space-between" mb="md" wrap="nowrap">
+              <Title fw={500} order={2} size="h6">
+                {t(title)}
+              </Title>
               <Tooltip label={t("Close")} withArrow>
                 <ActionIcon
-                  variant="subtle"
+                  aria-label={t("Close")}
                   color="gray"
                   onClick={closeAside}
-                  aria-label={t("Close")}
+                  variant="subtle"
                 >
                   <IconX size={18} />
                 </ActionIcon>
@@ -86,8 +99,8 @@ export default function Aside() {
               component
             ) : (
               <ScrollArea
-                style={{ height: "85vh" }}
                 scrollbarSize={5}
+                style={{ height: "85vh" }}
                 type="scroll"
               >
                 <div style={{ paddingBottom: "200px" }}>{component}</div>

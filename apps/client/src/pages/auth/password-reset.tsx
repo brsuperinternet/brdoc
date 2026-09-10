@@ -1,10 +1,10 @@
-import { PasswordResetForm } from "@/features/auth/components/password-reset-form";
-import { Link, useSearchParams } from "react-router-dom";
-import { useVerifyUserTokenQuery } from "@/features/auth/queries/auth-query";
 import { Button, Container, Group, Text } from "@mantine/core";
-import APP_ROUTE from "@/lib/app-route";
 import { useTranslation } from "react-i18next";
+import { Link, useSearchParams } from "react-router-dom";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { PasswordResetForm } from "@/features/auth/components/password-reset-form";
+import { useVerifyUserTokenQuery } from "@/features/auth/queries/auth-query";
+import APP_ROUTE from "@/lib/app-route";
 
 export default function PasswordReset() {
   const { t } = useTranslation();
@@ -16,7 +16,7 @@ export default function PasswordReset() {
   const resetToken = searchParams.get("token");
 
   if (isLoading) {
-    return <div></div>;
+    return <div />;
   }
 
   if (isError || !resetToken) {
@@ -30,9 +30,9 @@ export default function PasswordReset() {
           <Group justify="center">
             <Button
               component={Link}
+              size="md"
               to={APP_ROUTE.AUTH.LOGIN}
               variant="subtle"
-              size="md"
             >
               {t("Goto login page")}
             </Button>

@@ -19,8 +19,8 @@ export function formatLabelListDate(date: Date): string {
       return formatLocalized(date, "MMM dd", "MMM dd", locale);
     }
     return new Intl.DateTimeFormat(i18n.language, {
-      month: "short",
       day: "numeric",
+      month: "short",
     }).format(date);
   }
   return formatLocalized(date, "MMM dd, yyyy", "PP", locale);

@@ -1,15 +1,15 @@
+import { useDebouncedCallback } from "@mantine/hooks";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useDebouncedCallback } from "@mantine/hooks";
+import classes from "@/ee/base/styles/grid.module.css";
 import {
+  updatePageData,
   usePageQuery,
   useUpdateTitlePageMutation,
-  updatePageData,
 } from "@/features/page/queries/page-query";
-import { useQueryEmit } from "@/features/websocket/use-query-emit";
 import { UpdateEvent } from "@/features/websocket/types";
+import { useQueryEmit } from "@/features/websocket/use-query-emit";
 import localEmitter from "@/lib/local-emitter";
-import classes from "@/ee/base/styles/grid.module.css";
 
 // Editable base name for the inline embed. Follows the TitleEditor convention
 // (updatePageData + localEmitter + websocket emit) so the sidebar and other
@@ -24,25 +24,31 @@ export function BaseEmbedTitle({ pageId }: { pageId: string }) {
 
   // Keep in sync with the persisted title but never clobber active user input.
   useEffect(() => {
-    if (!focusedRef.current) setValue(page?.title ?? "");
+    if (!focusedRef.current) {
+      setValue(page?.title ?? "");
+    }
   }, [page?.title]);
 
   const commit = useCallback(() => {
     const trimmed = value.trim();
-    if (!page || trimmed === (page.title ?? "")) return;
+    if (!page || trimmed === (page.title ?? "")) {
+      return;
+    }
     updateTitleAsync({ pageId, title: trimmed }).then((updated) => {
-      if (updated.title !== trimmed) return;
+      if (updated.title !== trimmed) {
+        return;
+      }
       const event: UpdateEvent = {
-        operation: "updateOne",
-        spaceId: updated.spaceId,
         entity: ["pages"],
         id: updated.id,
+        operation: "updateOne",
         payload: {
-          title: updated.title,
-          slugId: updated.slugId,
-          parentPageId: updated.parentPageId,
           icon: updated.icon,
+          parentPageId: updated.parentPageId,
+          slugId: updated.slugId,
+          title: updated.title,
         },
+        spaceId: updated.spaceId,
       };
       updatePageData(updated);
       localEmitter.emit("message", event);
@@ -61,20 +67,18 @@ export function BaseEmbedTitle({ pageId }: { pageId: string }) {
 
   return (
     <input
-      className={classes.embedTitleInput}
-      value={value}
-      placeholder={t("Untitled base")}
       aria-label={t("Base name")}
+      className={classes.embedTitleInput}
+      onBlur={() => {
+        focusedRef.current = false;
+        commit();
+      }}
       onChange={(e) => {
         setValue(e.currentTarget.value);
         debouncedCommit();
       }}
       onFocus={() => {
         focusedRef.current = true;
-      }}
-      onBlur={() => {
-        focusedRef.current = false;
-        commit();
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
@@ -86,6 +90,8 @@ export function BaseEmbedTitle({ pageId }: { pageId: string }) {
           e.currentTarget.blur();
         }
       }}
+      placeholder={t("Untitled base")}
+      value={value}
     />
   );
 }

@@ -1,9 +1,20 @@
+import {
+  Button,
+  Group,
+  Popover,
+  Text,
+  TextInput,
+  UnstyledButton,
+} from "@mantine/core";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Group, Popover, Text, TextInput, UnstyledButton } from "@mantine/core";
-import { IBaseProperty, KanbanColumn, SelectTypeOptions } from "@/ee/base/types/base.types";
 import { useUpdatePropertyMutation } from "@/ee/base/queries/base-property-query";
 import classes from "@/ee/base/styles/kanban.module.css";
+import {
+  IBaseProperty,
+  KanbanColumn,
+  SelectTypeOptions,
+} from "@/ee/base/types/base.types";
 
 type KanbanColumnTitleProps = {
   column: KanbanColumn;
@@ -12,7 +23,12 @@ type KanbanColumnTitleProps = {
   canEdit: boolean;
 };
 
-export function KanbanColumnTitle({ column, property, pageId, canEdit }: KanbanColumnTitleProps) {
+export function KanbanColumnTitle({
+  column,
+  property,
+  pageId,
+  canEdit,
+}: KanbanColumnTitleProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [draft, setDraft] = useState("");
@@ -22,15 +38,19 @@ export function KanbanColumnTitle({ column, property, pageId, canEdit }: KanbanC
     setOpened(false);
     const name = draft.trim();
     const options = property?.typeOptions as SelectTypeOptions | undefined;
-    if (!property || !options || !name || name === column.name) return;
-    if (!options.choices.some((c) => c.id === column.key)) return;
+    if (!(property && options && name) || name === column.name) {
+      return;
+    }
+    if (!options.choices.some((c) => c.id === column.key)) {
+      return;
+    }
     updateProperty.mutate({
-      propertyId: property.id,
       pageId,
+      propertyId: property.id,
       typeOptions: {
         ...options,
         choices: options.choices.map((c) =>
-          c.id === column.key ? { ...c, name } : c,
+          c.id === column.key ? { ...c, name } : c
         ),
       },
     });
@@ -49,7 +69,7 @@ export function KanbanColumnTitle({ column, property, pageId, canEdit }: KanbanC
 
   if (!canEdit || column.isNoValue || !property) {
     return (
-      <Text fw={600} size="sm" flex={1} truncate>
+      <Text flex={1} fw={600} size="sm" truncate>
         {column.isNoValue ? t("No value") : column.name}
       </Text>
     );
@@ -57,28 +77,29 @@ export function KanbanColumnTitle({ column, property, pageId, canEdit }: KanbanC
 
   return (
     <Popover
-      opened={opened}
-      onChange={(next) => {
-        if (!next) commit();
-      }}
-      position="bottom-start"
-      shadow="md"
-      width={240}
-      withinPortal
-      trapFocus
-      returnFocus
       closeOnClickOutside
       closeOnEscape={false}
+      onChange={(next) => {
+        if (!next) {
+          commit();
+        }
+      }}
+      opened={opened}
+      position="bottom-start"
+      returnFocus
+      shadow="md"
+      trapFocus
+      width={240}
+      withinPortal
     >
       <Popover.Target>
         <UnstyledButton className={classes.columnTitleButton} onClick={toggle}>
-          <Text fw={600} size="sm" truncate flex={1} ta="left">
+          <Text flex={1} fw={600} size="sm" ta="left" truncate>
             {column.name}
           </Text>
         </UnstyledButton>
       </Popover.Target>
       <Popover.Dropdown
-        p="xs"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -87,23 +108,24 @@ export function KanbanColumnTitle({ column, property, pageId, canEdit }: KanbanC
             cancel();
           }
         }}
+        p="xs"
       >
         <Group gap="xs" wrap="nowrap">
           <TextInput
-            size="xs"
-            flex={1}
-            value={draft}
             data-autofocus
-            onFocus={(e) => e.currentTarget.select()}
+            flex={1}
             onChange={(e) => setDraft(e.currentTarget.value)}
+            onFocus={(e) => e.currentTarget.select()}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
                 commit();
               }
             }}
+            size="xs"
+            value={draft}
           />
-          <Button size="xs" onClick={commit}>
+          <Button onClick={commit} size="xs">
             {t("Done")}
           </Button>
         </Group>

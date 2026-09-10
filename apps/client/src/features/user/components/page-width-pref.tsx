@@ -1,10 +1,14 @@
-import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { updateUser } from "@/features/user/services/user-service.ts";
 import { MantineSize, Switch, Text } from "@mantine/core";
 import { useAtom } from "jotai/index";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ResponsiveSettingsRow, ResponsiveSettingsContent, ResponsiveSettingsControl } from "@/components/ui/responsive-settings-row";
+import {
+  ResponsiveSettingsContent,
+  ResponsiveSettingsControl,
+  ResponsiveSettingsRow,
+} from "@/components/ui/responsive-settings-row";
+import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateUser } from "@/features/user/services/user-service.ts";
 
 export default function PageWidthPref() {
   const { t } = useTranslation();
@@ -13,7 +17,7 @@ export default function PageWidthPref() {
     <ResponsiveSettingsRow>
       <ResponsiveSettingsContent>
         <Text size="md">{t("Full page width")}</Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t("Choose your preferred page width.")}
         </Text>
       </ResponsiveSettingsContent>
@@ -26,15 +30,15 @@ export default function PageWidthPref() {
 }
 
 interface PageWidthToggleProps {
-  size?: MantineSize;
   label?: string;
+  size?: MantineSize;
 }
 
 export function PageWidthToggle({ size, label }: PageWidthToggleProps) {
   const { t } = useTranslation();
   const [user, setUser] = useAtom(userAtom);
   const [checked, setChecked] = useState(
-    user.settings?.preferences?.fullPageWidth,
+    user.settings?.preferences?.fullPageWidth
   );
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,12 +54,12 @@ export function PageWidthToggle({ size, label }: PageWidthToggleProps) {
 
   return (
     <Switch
-      size={size}
+      aria-label={t("Toggle full page width")}
+      defaultChecked={checked}
       label={label}
       labelPosition="left"
-      defaultChecked={checked}
       onChange={handleChange}
-      aria-label={t("Toggle full page width")}
+      size={size}
     />
   );
 }

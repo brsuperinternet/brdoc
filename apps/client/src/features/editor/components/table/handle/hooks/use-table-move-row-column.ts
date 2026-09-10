@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from "react";
-import type { Editor } from "@tiptap/react";
+import { isEditorReady, moveColumn, moveRow } from "@docmost/editor-ext";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { TableMap } from "@tiptap/pm/tables";
-import { isEditorReady, moveColumn, moveRow } from "@docmost/editor-ext";
+import type { Editor } from "@tiptap/react";
+import { useCallback, useMemo } from "react";
 
 export type MoveDirection = "left" | "right" | "up" | "down";
 
@@ -12,7 +12,7 @@ export function useTableMoveRowColumn(
   index: number,
   direction: MoveDirection,
   tableNode: ProseMirrorNode,
-  tablePos: number,
+  tablePos: number
 ) {
   const target =
     direction === "left" || direction === "up" ? index - 1 : index + 1;
@@ -25,25 +25,29 @@ export function useTableMoveRowColumn(
   const canMove = target >= 0 && target <= maxIndex;
 
   const handleMove = useCallback(() => {
-    if (!canMove || !isEditorReady(editor)) return;
+    if (!(canMove && isEditorReady(editor))) {
+      return;
+    }
     const tr = editor.state.tr;
     const moved =
       orientation === "col"
         ? moveColumn({
-            tr,
             originIndex: index,
-            targetIndex: target,
-            select: true,
             pos: tablePos + 1,
+            select: true,
+            targetIndex: target,
+            tr,
           })
         : moveRow({
-            tr,
             originIndex: index,
-            targetIndex: target,
-            select: true,
             pos: tablePos + 1,
+            select: true,
+            targetIndex: target,
+            tr,
           });
-    if (moved) editor.view.dispatch(tr);
+    if (moved) {
+      editor.view.dispatch(tr);
+    }
   }, [editor, orientation, index, target, tablePos, canMove]);
 
   return { canMove, handleMove };

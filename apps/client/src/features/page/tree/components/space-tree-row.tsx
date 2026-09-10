@@ -1,7 +1,3 @@
-import { useRef } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useAtom } from "jotai";
-import { useTranslation } from "react-i18next";
 import { ActionIcon, rem } from "@mantine/core";
 import {
   IconChevronDown,
@@ -11,28 +7,30 @@ import {
   IconPointFilled,
   IconTable,
 } from "@tabler/icons-react";
-
-import EmojiPicker from "@/components/ui/emoji-picker.tsx";
-import { queryClient } from "@/main.tsx";
-import { buildPageUrl } from "@/features/page/page.utils.ts";
-import { getPageTitle } from "@/features/page/page.utils";
-import { getPageById } from "@/features/page/services/page-service.ts";
-import {
-  useUpdatePageMutation,
-  fetchAllAncestorChildren,
-} from "@/features/page/queries/page-query.ts";
-import { useQueryEmit } from "@/features/websocket/use-query-emit.ts";
+import { useAtom } from "jotai";
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
 import { mobileSidebarAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
 import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar.ts";
-
+import EmojiPicker from "@/components/ui/emoji-picker.tsx";
+import { getPageTitle } from "@/features/page/page.utils";
+import { buildPageUrl } from "@/features/page/page.utils.ts";
+import {
+  fetchAllAncestorChildren,
+  useUpdatePageMutation,
+} from "@/features/page/queries/page-query.ts";
+import { getPageById } from "@/features/page/services/page-service.ts";
 import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom.ts";
-import { treeModel } from "@/features/page/tree/model/tree-model";
 import { useTreeMutation } from "@/features/page/tree/hooks/use-tree-mutation.ts";
+import { treeModel } from "@/features/page/tree/model/tree-model";
+import classes from "@/features/page/tree/styles/tree.module.css";
 import type { SpaceTreeNode } from "@/features/page/tree/types.ts";
+import { updateTreeNodeIcon } from "@/features/page/tree/utils/utils.ts";
+import { useQueryEmit } from "@/features/websocket/use-query-emit.ts";
+import { queryClient } from "@/main.tsx";
 import type { RenderRowProps } from "./doc-tree";
 import { NodeMenu } from "./space-tree-node-menu";
-import classes from "@/features/page/tree/styles/tree.module.css";
-import { updateTreeNodeIcon } from "@/features/page/tree/utils/utils.ts";
 
 type SpaceTreeRowProps = RenderRowProps<SpaceTreeNode> & {
   readOnly: boolean;
@@ -63,8 +61,8 @@ export function SpaceTreeRow({
   const prefetchPage = () => {
     timerRef.current = setTimeout(async () => {
       const page = await queryClient.fetchQuery({
-        queryKey: ["pages", node.id],
         queryFn: () => getPageById({ pageId: node.id }),
+        queryKey: ["pages", node.id],
         staleTime: 5 * 60 * 1000,
       });
       if (page?.slugId) {
@@ -81,9 +79,7 @@ export function SpaceTreeRow({
   };
 
   const handleUpdateNodeIcon = (nodeId: string, newIcon: string | null) => {
-    setTreeData((prev) =>
-      updateTreeNodeIcon(prev, nodeId, newIcon),
-    );
+    setTreeData((prev) => updateTreeNodeIcon(prev, nodeId, newIcon));
   };
 
   const handleEmojiIconClick = (e: React.MouseEvent) => {
@@ -94,15 +90,15 @@ export function SpaceTreeRow({
   const handleEmojiSelect = (emoji: { native: string }) => {
     handleUpdateNodeIcon(node.id, emoji.native);
     updatePageMutation
-      .mutateAsync({ pageId: node.id, icon: emoji.native })
+      .mutateAsync({ icon: emoji.native, pageId: node.id })
       .then((data) => {
         setTimeout(() => {
           emit({
-            operation: "updateOne",
-            spaceId: node.spaceId,
             entity: ["pages"],
             id: node.id,
+            operation: "updateOne",
             payload: { icon: emoji.native, parentPageId: data.parentPageId },
+            spaceId: node.spaceId,
           });
         }, 50);
       });
@@ -110,28 +106,30 @@ export function SpaceTreeRow({
 
   const handleRemoveEmoji = () => {
     handleUpdateNodeIcon(node.id, null);
-    updatePageMutation.mutateAsync({ pageId: node.id, icon: null });
+    updatePageMutation.mutateAsync({ icon: null, pageId: node.id });
 
     setTimeout(() => {
       emit({
-        operation: "updateOne",
-        spaceId: node.spaceId,
         entity: ["pages"],
         id: node.id,
+        operation: "updateOne",
         payload: { icon: null },
+        spaceId: node.spaceId,
       });
     }, 50);
   };
 
   const handleLoadChildren = async () => {
-    if (!node.hasChildren) return;
+    if (!node.hasChildren) {
+      return;
+    }
     try {
       const childrenTree = await fetchAllAncestorChildren({
         pageId: node.id,
         spaceId: node.spaceId,
       });
       setTreeData((prev) =>
-        treeModel.appendChildren(prev, node.id, childrenTree),
+        treeModel.appendChildren(prev, node.id, childrenTree)
       );
     } catch (error) {
       console.error("Failed to fetch children:", error);
@@ -140,10 +138,10 @@ export function SpaceTreeRow({
 
   return (
     <Link
-      ref={rowRef as React.Ref<HTMLAnchorElement>}
-      to={pageUrl}
       className={classes.node}
+      ref={rowRef as React.Ref<HTMLAnchorElement>}
       tabIndex={tabIndex}
+      to={pageUrl}
       {...treeItemProps}
       onClick={() => {
         if (mobileSidebarOpened) {
@@ -154,14 +152,14 @@ export function SpaceTreeRow({
       onMouseLeave={cancelPagePrefetch}
     >
       <PageArrow
-        isOpen={isOpen}
         hasChildren={hasChildren}
+        isOpen={isOpen}
         onToggle={toggleOpen}
       />
 
       <div onClick={handleEmojiIconClick} style={{ marginRight: "4px" }}>
         <EmojiPicker
-          onEmojiSelect={handleEmojiSelect}
+          actionIconProps={{ tabIndex: -1 }}
           icon={
             node.icon ? (
               node.icon
@@ -171,24 +169,26 @@ export function SpaceTreeRow({
               <IconFileDescription size="18" />
             )
           }
+          onEmojiSelect={handleEmojiSelect}
           readOnly={!canEdit}
           removeEmojiAction={handleRemoveEmoji}
-          actionIconProps={{ tabIndex: -1 }}
         />
       </div>
 
-      <span className={classes.text}>{getPageTitle(node.name, node.isBase, t)}</span>
+      <span className={classes.text}>
+        {getPageTitle(node.name, node.isBase, t)}
+      </span>
 
       <div className={classes.actions}>
-        <NodeMenu node={node} canEdit={canEdit} />
+        <NodeMenu canEdit={canEdit} node={node} />
 
         {canEdit && (
           <CreateNode
-            node={node}
-            isOpen={isOpen}
             hasChildren={hasChildren}
-            onToggle={toggleOpen}
+            isOpen={isOpen}
+            node={node}
             onExpandTree={handleLoadChildren}
+            onToggle={toggleOpen}
           />
         )}
       </div>
@@ -197,8 +197,8 @@ export function SpaceTreeRow({
 }
 
 interface PageArrowProps {
-  isOpen: boolean;
   hasChildren: boolean;
+  isOpen: boolean;
   onToggle: () => void;
 }
 
@@ -211,12 +211,12 @@ function PageArrow({ isOpen, hasChildren, onToggle }: PageArrowProps) {
         aria-hidden
         className={classes.actionIcon}
         style={{
-          width: 20,
-          height: 20,
-          display: "inline-flex",
           alignItems: "center",
-          justifyContent: "center",
+          display: "inline-flex",
           flexShrink: 0,
+          height: 20,
+          justifyContent: "center",
+          width: 20,
         }}
       >
         <IconPointFilled size={8} />
@@ -226,34 +226,34 @@ function PageArrow({ isOpen, hasChildren, onToggle }: PageArrowProps) {
 
   return (
     <ActionIcon
-      size={20}
-      variant="subtle"
-      color="gray"
-      className={classes.actionIcon}
-      aria-label={isOpen ? t("Collapse") : t("Expand")}
       aria-expanded={isOpen}
-      tabIndex={-1}
+      aria-label={isOpen ? t("Collapse") : t("Expand")}
+      className={classes.actionIcon}
+      color="gray"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onToggle();
       }}
+      size={20}
+      tabIndex={-1}
+      variant="subtle"
     >
       {isOpen ? (
-        <IconChevronDown stroke={2} size={18} />
+        <IconChevronDown size={18} stroke={2} />
       ) : (
-        <IconChevronRight stroke={2} size={18} />
+        <IconChevronRight size={18} stroke={2} />
       )}
     </ActionIcon>
   );
 }
 
 interface CreateNodeProps {
-  node: SpaceTreeNode;
-  isOpen: boolean;
   hasChildren: boolean;
-  onToggle: () => void;
+  isOpen: boolean;
+  node: SpaceTreeNode;
   onExpandTree: () => Promise<void> | void;
+  onToggle: () => void;
 }
 
 function CreateNode({
@@ -271,7 +271,9 @@ function CreateNode({
       // Expand and lazy-load before creating a child. handleCreate reads the
       // latest tree imperatively (via useStore) so we no longer need a
       // setTimeout to wait for React to rerun the closure with fresh data.
-      if (!isOpen) onToggle();
+      if (!isOpen) {
+        onToggle();
+      }
       await onExpandTree();
     } else if (!isOpen) {
       onToggle();
@@ -281,18 +283,20 @@ function CreateNode({
 
   return (
     <ActionIcon
-      variant="subtle"
-      color="gray"
+      aria-label={t("Create subpage of {{name}}", {
+        name: node.name || t("untitled"),
+      })}
       className={classes.actionIcon}
-      aria-label={t("Create subpage of {{name}}", { name: node.name || t("untitled") })}
-      tabIndex={-1}
+      color="gray"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         handleClickCreate();
       }}
+      tabIndex={-1}
+      variant="subtle"
     >
-      <IconPlus style={{ width: rem(20), height: rem(20) }} stroke={2} />
+      <IconPlus stroke={2} style={{ height: rem(20), width: rem(20) }} />
     </ActionIcon>
   );
 }

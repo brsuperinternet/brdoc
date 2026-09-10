@@ -10,8 +10,8 @@
      * would otherwise add a link underline + bold weight on top of the chip,
      * making it look different from a standalone base. Keep it a plain chip. */
     a.pagePill {
-      border-bottom: none;
       font-weight: 400;
+      border-bottom: none;
     }
   }
 }

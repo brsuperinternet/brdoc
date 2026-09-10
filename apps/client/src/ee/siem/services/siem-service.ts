@@ -1,4 +1,3 @@
-import api from "@/lib/api-client";
 import {
   ISiemDestination,
   ISiemDestinationInput,
@@ -6,6 +5,7 @@ import {
   ITestSiemDestinationInput,
   IUpdateSiemDestinationInput,
 } from "@/ee/siem/types/siem.types";
+import api from "@/lib/api-client";
 
 export async function getSiemDestinations(): Promise<ISiemDestination[]> {
   const req = await api.post<ISiemDestination[]>("/siem/destinations");
@@ -13,16 +13,22 @@ export async function getSiemDestinations(): Promise<ISiemDestination[]> {
 }
 
 export async function createSiemDestination(
-  data: ISiemDestinationInput,
+  data: ISiemDestinationInput
 ): Promise<ISiemDestination> {
-  const req = await api.post<ISiemDestination>("/siem/destinations/create", data);
+  const req = await api.post<ISiemDestination>(
+    "/siem/destinations/create",
+    data
+  );
   return req.data;
 }
 
 export async function updateSiemDestination(
-  data: IUpdateSiemDestinationInput,
+  data: IUpdateSiemDestinationInput
 ): Promise<ISiemDestination> {
-  const req = await api.post<ISiemDestination>("/siem/destinations/update", data);
+  const req = await api.post<ISiemDestination>(
+    "/siem/destinations/update",
+    data
+  );
   return req.data;
 }
 
@@ -33,7 +39,7 @@ export async function deleteSiemDestination(data: {
 }
 
 export async function testSiemDestination(
-  data: ITestSiemDestinationInput,
+  data: ITestSiemDestinationInput
 ): Promise<ISiemTestResult> {
   const req = await api.post<ISiemTestResult>("/siem/destinations/test", data);
   return req.data;

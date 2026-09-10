@@ -12,8 +12,8 @@
  * (~7.56:1 on white).
  */
 .mantine-Menu-item[data-disabled] {
-  opacity: 1;
   color: var(--mantine-color-dimmed);
+  opacity: 1;
 }
 
 /* Mantine variant="default" inputs ship with --mantine-color-default-border
@@ -29,9 +29,9 @@
 /* better contrast for disabled inputs */
 .mantine-Input-input:disabled,
 .mantine-Input-input[data-disabled] {
-  opacity: 0.7;
   color: var(--mantine-color-dimmed);
   -webkit-text-fill-color: var(--mantine-color-dimmed);
+  opacity: 0.7;
 }
 
 /* Spotlight's selected action ships as primary-filled blue with white text,
@@ -42,13 +42,13 @@
  * fills) and keeps every child at its already-passing resting contrast.
  */
 .mantine-Spotlight-action[data-selected] {
+  --action-description-color: var(--mantine-color-dimmed);
+  --action-description-opacity: 1;
+  color: var(--mantine-color-text);
   background-color: light-dark(
     var(--mantine-color-gray-1),
     var(--mantine-color-dark-5)
   );
-  color: var(--mantine-color-text);
-  --action-description-color: var(--mantine-color-dimmed);
-  --action-description-opacity: 1;
 }
 
 /* Result actions are tab stops (tabIndex restored via ref); give keyboard

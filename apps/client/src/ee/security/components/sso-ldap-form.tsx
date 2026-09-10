@@ -1,43 +1,42 @@
-import React from "react";
-import { z } from "zod/v4";
-import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import {
+  Accordion,
   Box,
   Button,
   Group,
   Stack,
   Switch,
-  TextInput,
-  Textarea,
   Text,
-  Accordion,
+  Textarea,
+  TextInput,
 } from "@mantine/core";
-import classes from "@/ee/security/components/sso.module.css";
-import { IAuthProvider } from "@/ee/security/types/security.types.ts";
-import { useTranslation } from "react-i18next";
-import { useUpdateSsoProviderMutation } from "@/ee/security/queries/security-query.ts";
+import { useForm } from "@mantine/form";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import classes from "@/ee/security/components/sso.module.css";
+import { useUpdateSsoProviderMutation } from "@/ee/security/queries/security-query.ts";
+import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 
 const ssoSchema = z.object({
-  name: z.string().min(1, "Display name is required"),
-  ldapUrl: z.string().url().startsWith("ldap", "Must be an LDAP URL"),
-  ldapBindDn: z.string().min(1, "Bind DN is required"),
-  ldapBindPassword: z.string().min(1, "Bind password is required"),
-  ldapBaseDn: z.string().min(1, "Base DN is required"),
-  ldapUserSearchFilter: z.string().optional(),
-  ldapTlsEnabled: z.boolean(),
-  ldapTlsCaCert: z.string().optional(),
-  isEnabled: z.boolean(),
   allowSignup: z.boolean(),
   groupSync: z.boolean(),
+  isEnabled: z.boolean(),
+  ldapBaseDn: z.string().min(1, "Base DN is required"),
+  ldapBindDn: z.string().min(1, "Bind DN is required"),
+  ldapBindPassword: z.string().min(1, "Bind password is required"),
+  ldapTlsCaCert: z.string().optional(),
+  ldapTlsEnabled: z.boolean(),
+  ldapUrl: z.string().url().startsWith("ldap", "Must be an LDAP URL"),
+  ldapUserSearchFilter: z.string().optional(),
+  name: z.string().min(1, "Display name is required"),
 });
 
 type SSOFormValues = z.infer<typeof ssoSchema>;
 
 interface SsoFormProps {
-  provider: IAuthProvider;
   onClose?: () => void;
+  provider: IAuthProvider;
 }
 
 export function SsoLDAPForm({ provider, onClose }: SsoFormProps) {
@@ -46,18 +45,18 @@ export function SsoLDAPForm({ provider, onClose }: SsoFormProps) {
 
   const form = useForm<SSOFormValues>({
     initialValues: {
-      name: provider.name || "",
-      ldapUrl: provider.ldapUrl || "",
+      allowSignup: provider.allowSignup,
+      groupSync: provider.groupSync,
+      isEnabled: provider.isEnabled,
+      ldapBaseDn: provider.ldapBaseDn || "",
       ldapBindDn: provider.ldapBindDn || "",
       ldapBindPassword: provider.ldapBindPassword || "",
-      ldapBaseDn: provider.ldapBaseDn || "",
+      ldapTlsCaCert: provider.ldapTlsCaCert || "",
+      ldapTlsEnabled: provider.ldapTlsEnabled,
+      ldapUrl: provider.ldapUrl || "",
       ldapUserSearchFilter:
         provider.ldapUserSearchFilter || "(mail={{username}})",
-      ldapTlsEnabled: provider.ldapTlsEnabled || false,
-      ldapTlsCaCert: provider.ldapTlsCaCert || "",
-      isEnabled: provider.isEnabled,
-      allowSignup: provider.allowSignup,
-      groupSync: provider.groupSync || false,
+      name: provider.name || "",
     },
     validate: zod4Resolver(ssoSchema),
   });
@@ -110,44 +109,44 @@ export function SsoLDAPForm({ provider, onClose }: SsoFormProps) {
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack>
           <TextInput
+            data-autofocus
             label={t("Display name")}
             placeholder="e.g Company LDAP"
-            data-autofocus
             {...form.getInputProps("name")}
           />
 
           <TextInput
-            label="LDAP Server URL"
             description="URL of your LDAP server"
+            label="LDAP Server URL"
             placeholder="ldap://ldap.example.com:389 or ldaps://ldap.example.com:636"
             {...form.getInputProps("ldapUrl")}
           />
 
           <TextInput
-            label="Bind DN"
             description="Distinguished Name of the service account for searching"
+            label="Bind DN"
             placeholder="cn=admin,dc=example,dc=com"
             {...form.getInputProps("ldapBindDn")}
           />
 
           <TextInput
-            label="Bind Password"
             description="Password for the service account"
-            type="password"
+            label="Bind Password"
             placeholder="••••••••"
+            type="password"
             {...form.getInputProps("ldapBindPassword")}
           />
 
           <TextInput
-            label="Base DN"
             description="Base DN where user searches will start"
+            label="Base DN"
             placeholder="ou=users,dc=example,dc=com"
             {...form.getInputProps("ldapBaseDn")}
           />
 
           <TextInput
-            label="User Search Filter"
             description="LDAP filter to find users. Use {{username}} as placeholder"
+            label="User Search Filter"
             placeholder="(mail={{username}})"
             {...form.getInputProps("ldapUserSearchFilter")}
           />
@@ -162,25 +161,25 @@ export function SsoLDAPForm({ provider, onClose }: SsoFormProps) {
                   <Group justify="space-between">
                     <div>
                       <Text size="sm">{t("Enable TLS/SSL")}</Text>
-                      <Text size="xs" c="dimmed">
+                      <Text c="dimmed" size="xs">
                         Use secure connection to LDAP server
                       </Text>
                     </div>
                     <Switch
-                      className={classes.switch}
                       checked={form.values.ldapTlsEnabled}
+                      className={classes.switch}
                       {...form.getInputProps("ldapTlsEnabled")}
                     />
                   </Group>
 
                   {form.values.ldapTlsEnabled && (
                     <Textarea
-                      label="CA Certificate"
                       description="PEM-encoded CA certificate for TLS verification (optional)"
+                      label="CA Certificate"
+                      minRows={4}
                       placeholder="-----BEGIN CERTIFICATE-----
 ...
 -----END CERTIFICATE-----"
-                      minRows={4}
                       {...form.getInputProps("ldapTlsCaCert")}
                     />
                   )}
@@ -192,8 +191,8 @@ export function SsoLDAPForm({ provider, onClose }: SsoFormProps) {
           <Group justify="space-between">
             <div>{t("Group sync")}</div>
             <Switch
-              className={classes.switch}
               checked={form.values.groupSync}
+              className={classes.switch}
               {...form.getInputProps("groupSync")}
             />
           </Group>
@@ -201,8 +200,8 @@ export function SsoLDAPForm({ provider, onClose }: SsoFormProps) {
           <Group justify="space-between">
             <div>{t("Allow signup")}</div>
             <Switch
-              className={classes.switch}
               checked={form.values.allowSignup}
+              className={classes.switch}
               {...form.getInputProps("allowSignup")}
             />
           </Group>
@@ -210,14 +209,14 @@ export function SsoLDAPForm({ provider, onClose }: SsoFormProps) {
           <Group justify="space-between">
             <div>{t("Enabled")}</div>
             <Switch
-              className={classes.switch}
               checked={form.values.isEnabled}
+              className={classes.switch}
               {...form.getInputProps("isEnabled")}
             />
           </Group>
 
-          <Group mt="md" justify="flex-end">
-            <Button type="submit" disabled={!form.isDirty()}>
+          <Group justify="flex-end" mt="md">
+            <Button disabled={!form.isDirty()} type="submit">
               {t("Save")}
             </Button>
           </Group>

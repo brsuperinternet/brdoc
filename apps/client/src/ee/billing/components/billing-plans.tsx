@@ -1,24 +1,24 @@
 import {
+  Alert,
+  Badge,
   Button,
   Card,
+  Container,
+  Flex,
+  Group,
   List,
+  Select,
+  Stack,
+  Switch,
+  Text,
   ThemeIcon,
   Title,
-  Text,
-  Group,
-  Select,
-  Container,
-  Stack,
-  Badge,
-  Flex,
-  Switch,
-  Alert,
 } from "@mantine/core";
-import { useState } from "react";
 import { IconCheck, IconInfoCircle } from "@tabler/icons-react";
-import { getCheckoutLink } from "@/ee/billing/services/billing-service.ts";
-import { useBillingPlans } from "@/ee/billing/queries/billing-query.ts";
 import { useAtomValue } from "jotai";
+import { useState } from "react";
+import { useBillingPlans } from "@/ee/billing/queries/billing-query.ts";
+import { getCheckoutLink } from "@/ee/billing/services/billing-service.ts";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom";
 
 export default function BillingPlans() {
@@ -26,13 +26,13 @@ export default function BillingPlans() {
   const workspace = useAtomValue(workspaceAtom);
   const [isAnnual, setIsAnnual] = useState(true);
   const [selectedTierValue, setSelectedTierValue] = useState<string | null>(
-    null,
+    null
   );
 
   const handleCheckout = async (priceId: string) => {
     try {
       const checkoutLink = await getCheckoutLink({
-        priceId: priceId,
+        priceId,
       });
       window.location.href = checkoutLink.url;
     } catch (err) {
@@ -43,10 +43,12 @@ export default function BillingPlans() {
   // TODO: remove by July 30.
   // Check if workspace was created between June 28 and July 14, 2025
   const showTieredPricingNotice = (() => {
-    if (!workspace?.createdAt) return false;
+    if (!workspace?.createdAt) {
+      return false;
+    }
     const createdDate = new Date(workspace.createdAt);
-    const startDate = new Date('2025-06-20');
-    const endDate = new Date('2025-07-14');
+    const startDate = new Date("2025-06-20");
+    const endDate = new Date("2025-07-14");
     return createdDate >= startDate && createdDate <= endDate;
   })();
 
@@ -55,8 +57,12 @@ export default function BillingPlans() {
   }
 
   // Check if any plan is tiered
-  const hasTieredPlans = plans.some(plan => plan.billingScheme === 'tiered' && plan.pricingTiers?.length > 0);
-  const firstTieredPlan = plans.find(plan => plan.billingScheme === 'tiered' && plan.pricingTiers?.length > 0);
+  const hasTieredPlans = plans.some(
+    (plan) => plan.billingScheme === "tiered" && plan.pricingTiers?.length > 0
+  );
+  const firstTieredPlan = plans.find(
+    (plan) => plan.billingScheme === "tiered" && plan.pricingTiers?.length > 0
+  );
 
   // Set initial tier value if not set and we have tiered plans
   if (hasTieredPlans && !selectedTierValue && firstTieredPlan) {
@@ -69,26 +75,27 @@ export default function BillingPlans() {
     return null;
   }
 
-  const selectData = firstTieredPlan?.pricingTiers
-    ?.filter((tier) => !tier.custom)
-    .map((tier, index) => {
-      const prevMaxUsers =
-        index > 0 ? firstTieredPlan.pricingTiers[index - 1].upTo : 0;
-      return {
-        value: tier.upTo.toString(),
-        label: `${prevMaxUsers + 1}-${tier.upTo} users`,
-      };
-    }) || [];
+  const selectData =
+    firstTieredPlan?.pricingTiers
+      ?.filter((tier) => !tier.custom)
+      .map((tier, index) => {
+        const prevMaxUsers =
+          index > 0 ? firstTieredPlan.pricingTiers[index - 1].upTo : 0;
+        return {
+          label: `${prevMaxUsers + 1}-${tier.upTo} users`,
+          value: tier.upTo.toString(),
+        };
+      }) || [];
 
   return (
-    <Container size="xl" py="xl">
+    <Container py="xl" size="xl">
       {/* Tiered pricing notice for eligible workspaces */}
       {showTieredPricingNotice && !hasTieredPlans && (
         <Alert
-          icon={<IconInfoCircle size={16} />} 
-          title="Want the old tiered pricing?" 
           color="blue"
+          icon={<IconInfoCircle size={16} />}
           mb="lg"
+          title="Want the old tiered pricing?"
         >
           Contact support to switch back to our tiered pricing model.
         </Alert>
@@ -97,22 +104,22 @@ export default function BillingPlans() {
       {/* Controls Section */}
       <Stack gap="xl" mb="md">
         {/* Team Size and Billing Controls */}
-        <Group justify="center" align="center" gap="sm">
+        <Group align="center" gap="sm" justify="center">
           {hasTieredPlans && (
             <Select
-              label="Team size"
-              description="Select the number of users"
-              value={selectedTierValue}
-              onChange={(value) => setSelectedTierValue(value)}
-              data={selectData}
-              w={250}
-              size="md"
               allowDeselect={false}
+              data={selectData}
+              description="Select the number of users"
+              label="Team size"
+              onChange={(value) => setSelectedTierValue(value)}
+              size="md"
+              value={selectedTierValue}
+              w={250}
             />
           )}
 
-          <Group justify="center" align="start">
-            <Flex justify="center" gap="md" align="center">
+          <Group align="start" justify="center">
+            <Flex align="center" gap="md" justify="center">
               <Text size="md">Monthly</Text>
               <Switch
                 defaultChecked={isAnnual}
@@ -121,7 +128,7 @@ export default function BillingPlans() {
               />
               <Text size="md">
                 Annually
-                <Badge component="span" variant="light" color="blue">
+                <Badge color="blue" component="span" variant="light">
                   15% OFF
                 </Badge>
               </Text>
@@ -131,17 +138,20 @@ export default function BillingPlans() {
       </Stack>
 
       {/* Plans Grid */}
-      <Group justify="center" gap="lg" align="stretch">
+      <Group align="stretch" gap="lg" justify="center">
         {plans.map((plan, index) => {
           let price;
           let displayPrice;
           const priceId = isAnnual ? plan.yearlyId : plan.monthlyId;
 
-          if (plan.billingScheme === 'tiered' && plan.pricingTiers?.length > 0) {
+          if (
+            plan.billingScheme === "tiered" &&
+            plan.pricingTiers?.length > 0
+          ) {
             // Tiered billing logic
             const planSelectedTier =
               plan.pricingTiers.find(
-                (tier) => tier.upTo.toString() === selectedTierValue,
+                (tier) => tier.upTo.toString() === selectedTierValue
               ) || plan.pricingTiers[0];
 
             price = isAnnual
@@ -150,24 +160,26 @@ export default function BillingPlans() {
             displayPrice = isAnnual ? (price / 12).toFixed(0) : price;
           } else {
             // Per-unit billing logic
-            const monthlyPrice = parseFloat(plan.price?.monthly || '0');
-            const yearlyPrice = parseFloat(plan.price?.yearly || '0');
+            const monthlyPrice = Number.parseFloat(plan.price?.monthly || "0");
+            const yearlyPrice = Number.parseFloat(plan.price?.yearly || "0");
             price = isAnnual ? yearlyPrice : monthlyPrice;
-            displayPrice = isAnnual ? (yearlyPrice / 12).toFixed(0) : monthlyPrice;
+            displayPrice = isAnnual
+              ? (yearlyPrice / 12).toFixed(0)
+              : monthlyPrice;
           }
 
           return (
             <Card
               key={plan.name}
-              withBorder
+              miw={300}
+              p="xl"
               radius="lg"
               shadow="sm"
-              p="xl"
-              w={350}
-              miw={300}
               style={{
                 position: "relative",
               }}
+              w={350}
+              withBorder
             >
               <Stack gap="lg">
                 {/* Plan Header */}
@@ -176,7 +188,7 @@ export default function BillingPlans() {
                     {plan.name}
                   </Title>
                   {plan.description && (
-                    <Text size="sm" c="dimmed">
+                    <Text c="dimmed" size="sm">
                       {plan.description}
                     </Text>
                   )}
@@ -188,36 +200,40 @@ export default function BillingPlans() {
                     <Title order={1} size="h1">
                       ${displayPrice}
                     </Title>
-                    <Text size="lg" c="dimmed">
-                      {plan.billingScheme === 'per_unit' 
-                        ? `per user/month`
-                        : `per month`}
+                    <Text c="dimmed" size="lg">
+                      {plan.billingScheme === "per_unit"
+                        ? "per user/month"
+                        : "per month"}
                     </Text>
                   </Group>
-                  <Text size="sm" c="dimmed">
+                  <Text c="dimmed" size="sm">
                     {isAnnual ? "Billed annually" : "Billed monthly"}
                   </Text>
-                  {plan.billingScheme === 'tiered' && plan.pricingTiers && (
-                    <Text size="md" fw={500}>
-                      For {plan.pricingTiers.find(tier => tier.upTo.toString() === selectedTierValue)?.upTo || plan.pricingTiers[0].upTo} users
+                  {plan.billingScheme === "tiered" && plan.pricingTiers && (
+                    <Text fw={500} size="md">
+                      For{" "}
+                      {plan.pricingTiers.find(
+                        (tier) => tier.upTo.toString() === selectedTierValue
+                      )?.upTo || plan.pricingTiers[0].upTo}{" "}
+                      users
                     </Text>
                   )}
                 </Stack>
 
                 {/* CTA Button */}
-                <Button onClick={() => handleCheckout(priceId)} fullWidth>
+                <Button fullWidth onClick={() => handleCheckout(priceId)}>
                   Subscribe
                 </Button>
 
                 {/* Features */}
                 <List
-                  spacing="xs"
-                  size="sm"
                   icon={
-                    <ThemeIcon size={20} radius="xl">
+                    <ThemeIcon radius="xl" size={20}>
                       <IconCheck size={14} />
                     </ThemeIcon>
                   }
+                  size="sm"
+                  spacing="xs"
                 >
                   {plan.features.map((feature, featureIndex) => (
                     <List.Item key={featureIndex}>{feature}</List.Item>

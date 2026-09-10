@@ -1,21 +1,21 @@
+import { notifications } from "@mantine/notifications";
 import {
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
 import {
   activateLicense,
-  removeLicense,
   getLicenseInfo,
+  removeLicense,
 } from "@/ee/licence/services/license-service.ts";
 import { ILicenseInfo } from "@/ee/licence/types/license.types.ts";
-import { notifications } from "@mantine/notifications";
 
 export function useLicenseInfo(): UseQueryResult<ILicenseInfo, Error> {
   return useQuery({
-    queryKey: ["license"],
     queryFn: () => getLicenseInfo(),
+    queryKey: ["license"],
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -25,6 +25,10 @@ export function useActivateMutation() {
 
   return useMutation<ILicenseInfo, Error, string>({
     mutationFn: (licenseKey) => activateLicense(licenseKey),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       notifications.show({ message: "License activated successfully" });
       queryClient.refetchQueries({
@@ -32,10 +36,6 @@ export function useActivateMutation() {
       });
       queryClient.refetchQueries({ queryKey: ["currentUser"] });
       queryClient.refetchQueries({ queryKey: ["entitlements"] });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }

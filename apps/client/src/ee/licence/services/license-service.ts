@@ -1,5 +1,5 @@
-import api from "@/lib/api-client.ts";
 import { ILicenseInfo } from "@/ee/licence/types/license.types.ts";
+import api from "@/lib/api-client.ts";
 
 export async function getLicenseInfo(): Promise<ILicenseInfo> {
   const req = await api.post<ILicenseInfo>("/license/info");
@@ -7,7 +7,7 @@ export async function getLicenseInfo(): Promise<ILicenseInfo> {
 }
 
 export async function activateLicense(
-  licenseKey: string,
+  licenseKey: string
 ): Promise<ILicenseInfo> {
   const req = await api.post<ILicenseInfo>("/license/activate", { licenseKey });
   return req.data;

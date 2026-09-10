@@ -1,15 +1,15 @@
+import { useAtom } from "jotai";
+import { useState } from "react";
+import AvatarUploader from "@/components/common/avatar-uploader.tsx";
+import {
+  removeAvatar,
+  uploadUserAvatar,
+} from "@/features/attachments/services/attachment-service.ts";
+import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import {
   currentUserAtom,
   userAtom,
 } from "@/features/user/atoms/current-user-atom.ts";
-import { useState } from "react";
-import { useAtom } from "jotai";
-import AvatarUploader from "@/components/common/avatar-uploader.tsx";
-import {
-  uploadUserAvatar,
-  removeAvatar,
-} from "@/features/attachments/services/attachment-service.ts";
-import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 
 export default function AccountAvatar() {
   const [isLoading, setIsLoading] = useState(false);
@@ -48,11 +48,11 @@ export default function AccountAvatar() {
     <AvatarUploader
       currentImageUrl={currentUser?.user.avatarUrl}
       fallbackName={currentUser?.user.name}
+      isLoading={isLoading}
+      onRemove={handleRemove}
+      onUpload={handleUpload}
       size="60px"
       type={AvatarIconType.AVATAR}
-      onUpload={handleUpload}
-      onRemove={handleRemove}
-      isLoading={isLoading}
     />
   );
 }

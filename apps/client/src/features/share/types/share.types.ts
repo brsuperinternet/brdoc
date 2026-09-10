@@ -1,21 +1,26 @@
 import { IPage } from "@/features/page/types/page.types.ts";
 
 export interface IShare {
+  createdAt: string;
+  creatorId: string;
+  deletedAt: string | null;
   id: string;
+  includeSubPages: boolean;
   key: string;
   pageId: string;
-  includeSubPages: boolean;
   searchIndexing: boolean;
-  creatorId: string;
-  spaceId: string;
-  workspaceId: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
   sharedPage?: ISharePage;
+  spaceId: string;
+  updatedAt: string;
+  workspaceId: string;
 }
 
 export interface ISharedItem extends IShare {
+  creator: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+  };
   page: {
     id: string;
     title: string;
@@ -28,20 +33,15 @@ export interface ISharedItem extends IShare {
     slug: string;
     userRole: string;
   };
-  creator: {
-    id: string;
-    name: string;
-    avatarUrl: string | null;
-  };
 }
 
 export interface ISharedPage extends IShare {
+  features?: string[];
   page: IPage;
   share: IShare & {
     level: number;
     sharedPage: { id: string; slugId: string; title: string; icon: string };
   };
-  features?: string[];
 }
 
 export interface IShareForPage extends IShare {
@@ -50,15 +50,15 @@ export interface IShareForPage extends IShare {
 }
 
 interface ISharePage {
+  icon: string;
   id: string;
   slugId: string;
   title: string;
-  icon: string;
 }
 
 export interface ICreateShare {
-  pageId?: string;
   includeSubPages?: boolean;
+  pageId?: string;
   searchIndexing?: boolean;
 }
 
@@ -69,7 +69,7 @@ export interface IShareInfoInput {
 }
 
 export interface ISharedPageTree {
-  share: IShare;
-  pageTree: Partial<IPage[]>;
   features?: string[];
+  pageTree: Partial<IPage[]>;
+  share: IShare;
 }

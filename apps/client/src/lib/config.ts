@@ -1,7 +1,7 @@
-import bytes from "bytes";
-import { castToBoolean } from "@/lib/utils.tsx";
-import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import { sanitizeUrl } from "@docmost/editor-ext";
+import bytes from "bytes";
+import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
+import { castToBoolean } from "@/lib/utils.tsx";
 
 declare global {
   interface Window {
@@ -53,10 +53,14 @@ export function getAiVectorDriver(): string {
 
 export function getAvatarUrl(
   avatarUrl: string,
-  type: AvatarIconType = AvatarIconType.AVATAR,
+  type: AvatarIconType = AvatarIconType.AVATAR
 ) {
-  if (!avatarUrl) return null;
-  if (avatarUrl?.startsWith("http")) return avatarUrl;
+  if (!avatarUrl) {
+    return null;
+  }
+  if (avatarUrl?.startsWith("http")) {
+    return avatarUrl;
+  }
 
   return getBackendUrl() + `/attachments/img/${type}/` + encodeURI(avatarUrl);
 }
@@ -66,8 +70,12 @@ export function getSpaceUrl(spaceSlug: string) {
 }
 
 export function getFileUrl(src: string) {
-  if (!src) return src;
-  if (src.startsWith("http")) return src;
+  if (!src) {
+    return src;
+  }
+  if (src.startsWith("http")) {
+    return src;
+  }
   if (src.startsWith("/api/")) {
     // Remove the '/api' prefix
     return getBackendUrl() + src.substring(4);
@@ -108,7 +116,7 @@ export function getPostHogKey() {
   return getConfigValue("POSTHOG_KEY");
 }
 
-function getConfigValue(key: string, defaultValue: string = undefined): string {
+function getConfigValue(key: string, defaultValue: string): string {
   const rawValue = import.meta.env.DEV
     ? process?.env?.[key]
     : window?.CONFIG?.[key];

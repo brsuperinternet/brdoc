@@ -1,4 +1,3 @@
-import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Anchor,
@@ -17,25 +16,15 @@ import {
   Title,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import {
-  IconAlertTriangle,
-  IconEye,
-  IconPencil,
-} from "@tabler/icons-react";
+import { IconAlertTriangle, IconEye, IconPencil } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { RESET } from "jotai/utils";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { AuthLayout } from "@/features/auth/components/auth-layout.tsx";
-import classes from "@/features/auth/components/auth.module.css";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
 import { UserInfo } from "@/components/common/user-info.tsx";
-import useCurrentUser from "@/features/user/hooks/use-current-user";
-import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
-import { logout } from "@/features/auth/services/auth-service";
-import { ICurrentUser } from "@/features/user/types/user.types";
-import APP_ROUTE from "@/lib/app-route.ts";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
 import {
   approveOAuthAuthorization,
   getOAuthAuthorizeInfo,
@@ -45,6 +34,13 @@ import {
   IAuthorizeParams,
   IOAuthAuthorizeInfo,
 } from "@/ee/oauth/types/oauth.types";
+import classes from "@/features/auth/components/auth.module.css";
+import { AuthLayout } from "@/features/auth/components/auth-layout.tsx";
+import { logout } from "@/features/auth/services/auth-service";
+import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
+import useCurrentUser from "@/features/user/hooks/use-current-user";
+import { ICurrentUser } from "@/features/user/types/user.types";
+import APP_ROUTE from "@/lib/app-route.ts";
 
 function loginRedirectUrl(pathname: string, search: string): string {
   return `${APP_ROUTE.AUTH.LOGIN}?redirect=${encodeURIComponent(pathname + search)}`;
@@ -56,8 +52,12 @@ function errorStatus(error: any): number | undefined {
 
 function errorText(error: any): string | undefined {
   const data = error?.response?.data;
-  if (typeof data?.error_description === "string") return data.error_description;
-  if (Array.isArray(data?.message)) return data.message.join(", ");
+  if (typeof data?.error_description === "string") {
+    return data.error_description;
+  }
+  if (Array.isArray(data?.message)) {
+    return data.message.join(", ");
+  }
   return data?.message;
 }
 
@@ -89,13 +89,13 @@ export default function OAuthConsent() {
 
   const params = useMemo<IAuthorizeParams>(
     () => Object.fromEntries(searchParams.entries()),
-    [searchParams],
+    [searchParams]
   );
 
   const currentUserQuery = useCurrentUser();
   const infoQuery = useQuery({
-    queryKey: ["oauth-authorize-info", params],
     queryFn: () => getOAuthAuthorizeInfo(params),
+    queryKey: ["oauth-authorize-info", params],
   });
 
   const isUnauthenticated =
@@ -105,7 +105,7 @@ export default function OAuthConsent() {
   useEffect(() => {
     if (isUnauthenticated) {
       window.location.replace(
-        loginRedirectUrl(location.pathname, location.search),
+        loginRedirectUrl(location.pathname, location.search)
       );
     }
   }, [isUnauthenticated, location.pathname, location.search]);
@@ -116,7 +116,7 @@ export default function OAuthConsent() {
   return (
     <AuthLayout>
       <DocumentTitle title={t("Authorize application")} />
-      <Container size={460} className={classes.container}>
+      <Container className={classes.container} size={460}>
         <Box p="xl">
           {isLoading ? (
             <Center mih={200}>
@@ -124,8 +124,8 @@ export default function OAuthConsent() {
             </Center>
           ) : infoQuery.data && currentUserQuery.data ? (
             <ConsentCard
-              info={infoQuery.data}
               currentUser={currentUserQuery.data}
+              info={infoQuery.data}
               params={params}
             />
           ) : (
@@ -144,14 +144,14 @@ function InvalidRequestCard({ description }: { description?: string }) {
 
   return (
     <Stack align="center" gap="sm">
-      <ThemeIcon size={48} radius="xl" variant="light" color="red">
+      <ThemeIcon color="red" radius="xl" size={48} variant="light">
         <IconAlertTriangle size={26} stroke={1.5} />
       </ThemeIcon>
-      <Title order={3} ta="center" fw={600}>
+      <Title fw={600} order={3} ta="center">
         {t("Invalid authorization request")}
       </Title>
       {description && (
-        <Text size="sm" c="dimmed" ta="center">
+        <Text c="dimmed" size="sm" ta="center">
           {description}
         </Text>
       )}
@@ -170,28 +170,28 @@ function ConsentCard({ info, currentUser, params }: ConsentCardProps) {
   const location = useLocation();
   const [, setCurrentUser] = useAtom(currentUserAtom);
   const [approvedScopes, setApprovedScopes] = useState<string[]>(
-    info.scopes.filter((scope) => scope === "read" || scope === "write"),
+    info.scopes.filter((scope) => scope === "read" || scope === "write")
   );
   const [submitting, setSubmitting] = useState<"approve" | "deny" | null>(null);
 
   const scopeRows = [
     {
-      scope: "read",
+      description: t("View data in your workspace without making changes."),
       icon: <IconEye size={16} stroke={1.5} />,
       label: t("Read"),
-      description: t("View data in your workspace without making changes."),
+      scope: "read",
     },
     {
-      scope: "write",
+      description: t("Create and modify data in your workspace."),
       icon: <IconPencil size={16} stroke={1.5} />,
       label: t("Write"),
-      description: t("Create and modify data in your workspace."),
+      scope: "write",
     },
   ];
 
   function toggleScope(scope: string, checked: boolean) {
     setApprovedScopes((prev) =>
-      checked ? [...prev, scope] : prev.filter((item) => item !== scope),
+      checked ? [...prev, scope] : prev.filter((item) => item !== scope)
     );
   }
 
@@ -208,14 +208,14 @@ function ConsentCard({ info, currentUser, params }: ConsentCardProps) {
     } catch (err) {
       if (errorStatus(err) === 401) {
         window.location.replace(
-          loginRedirectUrl(location.pathname, location.search),
+          loginRedirectUrl(location.pathname, location.search)
         );
         return;
       }
       setSubmitting(null);
       notifications.show({
-        message: errorText(err) || t("Something went wrong. Please try again."),
         color: "red",
+        message: errorText(err) || t("Something went wrong. Please try again."),
       });
     }
   }
@@ -229,31 +229,31 @@ function ConsentCard({ info, currentUser, params }: ConsentCardProps) {
       await logout();
     } finally {
       window.location.replace(
-        loginRedirectUrl(location.pathname, location.search),
+        loginRedirectUrl(location.pathname, location.search)
       );
     }
   }
 
   return (
     <Stack gap="lg">
-      <Title order={3} ta="center" fw={600}>
+      <Title fw={600} order={3} ta="center">
         {t("{{name}} wants to access {{workspace}}", {
           name: info.clientName,
           workspace: currentUser.workspace.name,
         })}
       </Title>
 
-      <Paper withBorder radius="md" p="sm">
+      <Paper p="sm" radius="md" withBorder>
         <Group justify="space-between" wrap="nowrap">
           <UserInfo user={currentUser.user} />
           <Anchor
-            component="button"
-            type="button"
-            size="xs"
             c="dimmed"
+            component="button"
             disabled={submitting !== null}
             onClick={switchAccount}
+            size="xs"
             style={{ whiteSpace: "nowrap" }}
+            type="button"
           >
             {t("Not you? Switch account")}
           </Anchor>
@@ -263,49 +263,49 @@ function ConsentCard({ info, currentUser, params }: ConsentCardProps) {
       <Divider />
 
       <Stack gap="sm">
-        <Text size="sm" fw={500}>
+        <Text fw={500} size="sm">
           {t("This application will be able to:")}
         </Text>
         {scopeRows.map((row) => {
           const requested = info.scopes.includes(row.scope);
           return (
             <Checkbox
-              key={row.scope}
-              size="sm"
               checked={approvedScopes.includes(row.scope)}
+              description={row.description}
               disabled={!requested || submitting !== null}
-              onChange={(event) =>
-                toggleScope(row.scope, event.currentTarget.checked)
-              }
+              key={row.scope}
               label={
                 <Group gap={6} wrap="nowrap">
                   {row.icon}
-                  <Text size="sm" fw={500}>
+                  <Text fw={500} size="sm">
                     {row.label}
                   </Text>
                 </Group>
               }
-              description={row.description}
+              onChange={(event) =>
+                toggleScope(row.scope, event.currentTarget.checked)
+              }
+              size="sm"
             />
           );
         })}
       </Stack>
 
       <div>
-        <Text size="xs" c="dimmed">
+        <Text c="dimmed" size="xs">
           {t("You will be redirected to")}
         </Text>
-        <Text size="xs" ff="monospace" style={{ overflowWrap: "anywhere" }}>
+        <Text ff="monospace" size="xs" style={{ overflowWrap: "anywhere" }}>
           {info.redirectUri}
         </Text>
       </div>
 
       {!info.verified && (
         <Alert
-          variant="light"
           color="yellow"
-          py="xs"
           icon={<IconAlertTriangle size={16} />}
+          py="xs"
+          variant="light"
         >
           {t("Make sure you trust this application before authorizing it.")}
         </Alert>
@@ -313,17 +313,17 @@ function ConsentCard({ info, currentUser, params }: ConsentCardProps) {
 
       <Group grow>
         <Button
-          variant="default"
-          onClick={() => submitDecision(false)}
-          loading={submitting === "deny"}
           disabled={submitting === "approve"}
+          loading={submitting === "deny"}
+          onClick={() => submitDecision(false)}
+          variant="default"
         >
           {t("Cancel")}
         </Button>
         <Button
-          onClick={() => submitDecision(true)}
-          loading={submitting === "approve"}
           disabled={approvedScopes.length === 0 || submitting === "deny"}
+          loading={submitting === "approve"}
+          onClick={() => submitDecision(true)}
         >
           {t("Authorize")}
         </Button>

@@ -1,5 +1,5 @@
-import { CSSProperties, useRef, useState } from "react";
 import { Tooltip } from "@mantine/core";
+import { CSSProperties, useRef, useState } from "react";
 import cellClasses from "@/ee/base/styles/cells.module.css";
 
 type ChoiceBadgeProps = {
@@ -12,15 +12,17 @@ export function ChoiceBadge({ name, style }: ChoiceBadgeProps) {
   const [truncated, setTruncated] = useState(false);
 
   return (
-    <Tooltip label={name} withinPortal openDelay={400} disabled={!truncated}>
+    <Tooltip disabled={!truncated} label={name} openDelay={400} withinPortal>
       <span
-        ref={ref}
         className={cellClasses.badge}
-        style={style}
         onMouseEnter={() => {
           const el = ref.current;
-          if (el) setTruncated(el.scrollWidth > el.clientWidth);
+          if (el) {
+            setTruncated(el.scrollWidth > el.clientWidth);
+          }
         }}
+        ref={ref}
+        style={style}
       >
         {name}
       </span>

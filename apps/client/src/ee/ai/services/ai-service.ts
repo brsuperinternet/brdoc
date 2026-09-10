@@ -1,13 +1,13 @@
-import api from "@/lib/api-client.ts";
 import {
-  AiGenerateDto,
   AiContentResponse,
+  AiGenerateDto,
   AiStreamChunk,
   AiStreamError,
 } from "@/ee/ai/types/ai.types.ts";
+import api from "@/lib/api-client.ts";
 
 export async function generateAiContent(
-  data: AiGenerateDto,
+  data: AiGenerateDto
 ): Promise<AiContentResponse> {
   const req = await api.post<AiContentResponse>("/ai/generate", data);
   return req.data;
@@ -17,18 +17,18 @@ export async function generateAiContentStream(
   data: AiGenerateDto,
   onChunk: (chunk: AiStreamChunk) => void,
   onError?: (error: AiStreamError) => void,
-  onComplete?: () => void,
+  onComplete?: () => void
 ): Promise<AbortController> {
   const abortController = new AbortController();
   try {
     const response = await fetch("/api/ai/generate/stream", {
-      method: "POST",
+      body: JSON.stringify(data),
+      credentials: "include", // This ensures cookies are sent, matching axios withCredentials
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      method: "POST",
       signal: abortController.signal,
-      credentials: "include", // This ensures cookies are sent, matching axios withCredentials
     });
 
     if (!response.ok) {
@@ -47,7 +47,9 @@ export async function generateAiContentStream(
       try {
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            break;
+          }
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n");

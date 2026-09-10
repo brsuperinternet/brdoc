@@ -1,26 +1,26 @@
-import React from "react";
 import { ActionIcon, Drawer, Tooltip } from "@mantine/core";
-import { Link } from "react-router-dom";
-import { useAtom } from "jotai";
-import { useTranslation } from "react-i18next";
 import { IconList, IconMenu2 } from "@tabler/icons-react";
 import clsx from "clsx";
+import { useAtom } from "jotai";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { MAIN_CONTENT_ID, SkipToMain } from "@/components/ui/skip-to-main.tsx";
 import {
   docsMobileSidebarAtom,
   docsMobileTocAtom,
 } from "@/features/public-space/atoms/public-space-atoms.ts";
+import DocsCopyPage from "@/features/public-space/components/docs/docs-copy-page.tsx";
+import DocsEditPage from "@/features/public-space/components/docs/docs-edit-page.tsx";
+import DocsFooterBranding from "@/features/public-space/components/docs/docs-footer-branding.tsx";
+import DocsSearchButton from "@/features/public-space/components/docs/docs-search-button.tsx";
+import DocsSidebarTree from "@/features/public-space/components/docs/docs-sidebar-tree.tsx";
 import {
   DocsSurface,
   DocsSurfaceProvider,
 } from "@/features/public-space/components/docs/docs-surface-context.tsx";
-import DocsSidebarTree from "@/features/public-space/components/docs/docs-sidebar-tree.tsx";
-import DocsToc from "@/features/public-space/components/docs/docs-toc.tsx";
-import DocsEditPage from "@/features/public-space/components/docs/docs-edit-page.tsx";
-import DocsCopyPage from "@/features/public-space/components/docs/docs-copy-page.tsx";
-import DocsSearchButton from "@/features/public-space/components/docs/docs-search-button.tsx";
 import DocsThemeToggle from "@/features/public-space/components/docs/docs-theme-toggle.tsx";
-import DocsFooterBranding from "@/features/public-space/components/docs/docs-footer-branding.tsx";
-import { MAIN_CONTENT_ID, SkipToMain } from "@/components/ui/skip-to-main.tsx";
+import DocsToc from "@/features/public-space/components/docs/docs-toc.tsx";
 import { SearchMobileControl } from "@/features/search/components/search-control.tsx";
 import styles from "./docs.module.css";
 
@@ -45,7 +45,7 @@ export default function DocsShell({
   const { hasSidebar, siteName, homeUrl, showBranding, showEditPage } = surface;
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useAtom(
-    docsMobileSidebarAtom,
+    docsMobileSidebarAtom
   );
   const [mobileTocOpen, setMobileTocOpen] = useAtom(docsMobileTocAtom);
 
@@ -55,7 +55,9 @@ export default function DocsShell({
     let isPrinting = false;
 
     const restoreColorScheme = () => {
-      if (!isPrinting) return;
+      if (!isPrinting) {
+        return;
+      }
 
       if (previousColorScheme === null) {
         root.removeAttribute(MANTINE_COLOR_SCHEME_ATTRIBUTE);
@@ -67,12 +69,14 @@ export default function DocsShell({
     };
 
     const useLightPrintTheme = () => {
-      if (isPrinting) return;
+      if (isPrinting) {
+        return;
+      }
 
       previousColorScheme = root.getAttribute(MANTINE_COLOR_SCHEME_ATTRIBUTE);
       root.setAttribute(
         DOCS_PRINT_COLOR_SCHEME_ATTRIBUTE,
-        previousColorScheme ?? "light",
+        previousColorScheme ?? "light"
       );
       root.setAttribute(MANTINE_COLOR_SCHEME_ATTRIBUTE, "light");
       isPrinting = true;
@@ -99,12 +103,12 @@ export default function DocsShell({
               {hasSidebar && (
                 <Tooltip label={t("Toggle sidebar")}>
                   <ActionIcon
-                    variant="subtle"
-                    className={clsx(styles.headerAction, styles.sidebarToggle)}
-                    size="md"
-                    onClick={() => setMobileSidebarOpen((value) => !value)}
-                    aria-label={t("Toggle sidebar")}
                     aria-expanded={mobileSidebarOpen}
+                    aria-label={t("Toggle sidebar")}
+                    className={clsx(styles.headerAction, styles.sidebarToggle)}
+                    onClick={() => setMobileSidebarOpen((value) => !value)}
+                    size="md"
+                    variant="subtle"
                   >
                     <IconMenu2 size={18} stroke={2} />
                   </ActionIcon>
@@ -112,7 +116,7 @@ export default function DocsShell({
               )}
 
               {!hasSidebar && siteName && homeUrl && (
-                <Link to={homeUrl} className={styles.headerSpaceName}>
+                <Link className={styles.headerSpaceName} to={homeUrl}>
                   {siteName}
                 </Link>
               )}
@@ -140,19 +144,19 @@ export default function DocsShell({
 
         <div className={styles.body}>
           <nav
+            aria-hidden={!hasSidebar || undefined}
+            aria-label={t("Pages")}
             className={styles.sidebar}
             data-hidden={!hasSidebar || undefined}
-            aria-label={t("Pages")}
-            aria-hidden={!hasSidebar || undefined}
           >
             {hasSidebar && (
               <>
                 {siteName && homeUrl && (
                   <>
-                    <Link to={homeUrl} className={styles.sidebarTitle}>
+                    <Link className={styles.sidebarTitle} to={homeUrl}>
                       {siteName}
                     </Link>
-                    <div className={styles.sidebarDivider} aria-hidden />
+                    <div aria-hidden className={styles.sidebarDivider} />
                   </>
                 )}
                 <div className={styles.sidebarScroll}>
@@ -169,11 +173,11 @@ export default function DocsShell({
                 <span className={styles.tocOverlayControl}>
                   <Tooltip label={t("Table of contents")} withArrow>
                     <ActionIcon
-                      variant="subtle"
+                      aria-label={t("Table of contents")}
                       className={styles.headerAction}
                       onClick={() => setMobileTocOpen(true)}
                       size="md"
-                      aria-label={t("Table of contents")}
+                      variant="subtle"
                     >
                       <IconList size={18} stroke={2} />
                     </ActionIcon>
@@ -187,18 +191,18 @@ export default function DocsShell({
             </div>
           </main>
 
-          <aside className={styles.toc} aria-label={t("On this page")}>
+          <aside aria-label={t("On this page")} className={styles.toc}>
             <DocsToc />
             {showEditPage && <DocsEditPage />}
           </aside>
         </div>
 
         <Drawer
-          opened={mobileSidebarOpen}
           onClose={() => setMobileSidebarOpen(false)}
-          title={siteName}
-          size={300}
+          opened={mobileSidebarOpen}
           padding="sm"
+          size={300}
+          title={siteName}
         >
           <div className={styles.drawerTree}>
             {hasSidebar && <MemoizedDocsSidebarTree />}
@@ -206,11 +210,11 @@ export default function DocsShell({
         </Drawer>
 
         <Drawer
-          opened={mobileTocOpen}
           onClose={() => setMobileTocOpen(false)}
+          opened={mobileTocOpen}
+          padding="md"
           position="right"
           size={300}
-          padding="md"
         >
           <DocsToc />
           {showEditPage && <DocsEditPage />}

@@ -8,20 +8,20 @@ export function ScimUrlPanel() {
 
   return (
     <Stack gap="xs">
-      <Text size="sm" fw={500}>
+      <Text fw={500} size="sm">
         {t("SCIM endpoint URL")}
       </Text>
-      <Text size="xs" c="dimmed">
+      <Text c="dimmed" size="xs">
         {t(
-          "Configure your identity provider with this URL to provision users and groups.",
+          "Configure your identity provider with this URL to provision users and groups."
         )}
       </Text>
       <Group gap="xs" wrap="nowrap">
         <TextInput
-          variant="filled"
+          readOnly
           style={{ flex: 1 }}
           value={scimUrl}
-          readOnly
+          variant="filled"
         />
         <CopyTextButton text={scimUrl} />
       </Group>

@@ -1,12 +1,12 @@
 export interface IGroup {
+  createdAt: Date;
+  creatorId: string | null;
+  description: string | null;
   groupId: string;
   id: string;
-  name: string;
-  description: string | null;
   isDefault: boolean;
-  creatorId: string | null;
-  workspaceId: string;
-  createdAt: Date;
-  updatedAt: Date;
   memberCount: number;
+  name: string;
+  updatedAt: Date;
+  workspaceId: string;
 }

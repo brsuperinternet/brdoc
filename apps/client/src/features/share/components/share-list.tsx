@@ -1,20 +1,19 @@
-import { Table, Group, Text, Anchor } from "@mantine/core";
-import React from "react";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { Anchor, Group, Table, Text } from "@mantine/core";
 import { IconWorld } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import Paginate from "@/components/common/paginate.tsx";
-import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
-import { useGetSharesQuery } from "@/features/share/queries/share-query.ts";
-import { ISharedItem } from "@/features/share/types/share.types.ts";
-import ShareActionMenu from "@/features/share/components/share-action-menu.tsx";
-import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
-import { buildSharedPageUrl } from "@/features/page/page.utils.ts";
-import { getPageIcon } from "@/lib";
+import rowClasses from "@/components/ui/clickable-table-row.module.css";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { EmptyState } from "@/components/ui/empty-state.tsx";
+import { buildSharedPageUrl } from "@/features/page/page.utils.ts";
+import ShareActionMenu from "@/features/share/components/share-action-menu.tsx";
+import { useGetSharesQuery } from "@/features/share/queries/share-query.ts";
+import { ISharedItem } from "@/features/share/types/share.types.ts";
+import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import { getPageIcon } from "@/lib";
+import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
 import classes from "./share.module.css";
-import rowClasses from "@/components/ui/clickable-table-row.module.css";
 
 export default function ShareList() {
   const { t } = useTranslation();
@@ -40,28 +39,28 @@ export default function ShareList() {
 
           <Table.Tbody>
             {data?.items.map((share: ISharedItem, index: number) => (
-              <Table.Tr key={index} className={rowClasses.row}>
+              <Table.Tr className={rowClasses.row} key={index}>
                 <Table.Td>
                   <Anchor
-                    size="sm"
-                    underline="never"
-                    style={{
-                      cursor: "pointer",
-                      color: "var(--mantine-color-text)",
-                    }}
                     className={rowClasses.link}
                     component={Link}
+                    size="sm"
+                    style={{
+                      color: "var(--mantine-color-text)",
+                      cursor: "pointer",
+                    }}
                     target="_blank"
                     to={buildSharedPageUrl({
-                      shareId: share.key,
-                      pageTitle: share.page.title,
                       pageSlugId: share.page.slugId,
+                      pageTitle: share.page.title,
+                      shareId: share.key,
                     })}
+                    underline="never"
                   >
                     <Group gap="4" wrap="nowrap">
                       {getPageIcon(share.page.icon)}
                       <div className={classes.shareLinkText}>
-                        <Text fz="sm" fw={500} lineClamp={1}>
+                        <Text fw={500} fz="sm" lineClamp={1}>
                           {share.page.title || t("untitled")}
                         </Text>
                       </div>
@@ -86,7 +85,7 @@ export default function ShareList() {
                       share.createdAt,
                       "MMM dd, yyyy",
                       "PP",
-                      locale,
+                      locale
                     )}
                   </Text>
                 </Table.Td>
@@ -101,8 +100,8 @@ export default function ShareList() {
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
           hasNextPage={data?.meta?.hasNextPage}
+          hasPrevPage={data?.meta?.hasPrevPage}
           onNext={() => goNext(data?.meta?.nextCursor)}
           onPrev={goPrev}
         />

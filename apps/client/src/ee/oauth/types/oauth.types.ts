@@ -1,18 +1,18 @@
 export interface IOAuthAuthorizeInfo {
+  clientCreatedAt: string;
   clientName: string;
   redirectUri: string;
   scopes: string[];
-  clientCreatedAt: string;
   verified: boolean;
 }
 
 export interface IOAuthGrant {
-  id: string;
   clientName: string;
+  createdAt: string;
+  id: string;
+  lastUsedAt: string | null;
   redirectUris: string[];
   scopes: string[];
-  createdAt: string;
-  lastUsedAt: string | null;
 }
 
 export type IAuthorizeParams = Record<string, string>;

@@ -1,5 +1,5 @@
-import api from "@/lib/api-client";
 import {
+  MfaAccessValidationResponse,
   MfaBackupCodesResponse,
   MfaDisableRequest,
   MfaEnableRequest,
@@ -7,8 +7,8 @@ import {
   MfaSetupRequest,
   MfaSetupResponse,
   MfaStatusResponse,
-  MfaAccessValidationResponse,
 } from "@/ee/mfa";
+import api from "@/lib/api-client";
 
 export async function getMfaStatus(): Promise<MfaStatusResponse> {
   const req = await api.post("/mfa/status");
@@ -16,21 +16,21 @@ export async function getMfaStatus(): Promise<MfaStatusResponse> {
 }
 
 export async function setupMfa(
-  data: MfaSetupRequest,
+  data: MfaSetupRequest
 ): Promise<MfaSetupResponse> {
   const req = await api.post<MfaSetupResponse>("/mfa/setup", data);
   return req.data;
 }
 
 export async function enableMfa(
-  data: MfaEnableRequest,
+  data: MfaEnableRequest
 ): Promise<MfaEnableResponse> {
   const req = await api.post<MfaEnableResponse>("/mfa/enable", data);
   return req.data;
 }
 
 export async function disableMfa(
-  data: MfaDisableRequest,
+  data: MfaDisableRequest
 ): Promise<{ success: boolean }> {
   const req = await api.post<{ success: boolean }>("/mfa/disable", data);
   return req.data;
@@ -41,7 +41,7 @@ export async function regenerateBackupCodes(data: {
 }): Promise<MfaBackupCodesResponse> {
   const req = await api.post<MfaBackupCodesResponse>(
     "/mfa/generate-backup-codes",
-    data,
+    data
   );
   return req.data;
 }

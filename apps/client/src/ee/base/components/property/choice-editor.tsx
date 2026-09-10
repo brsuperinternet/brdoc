@@ -1,68 +1,103 @@
-import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
-import {
-  TextInput,
-  Group,
-  Stack,
-  Text,
-  Button,
-  Popover,
-  SimpleGrid,
-  UnstyledButton,
-  CloseButton,
-  Divider,
-} from "@mantine/core";
-import {
-  IconPlus,
-  IconGripVertical,
-  IconArrowsSort,
-} from "@tabler/icons-react";
-import classes from "@/ee/base/styles/property.module.css";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import {
-  attachClosestEdge,
-  extractClosestEdge,
-  type Edge,
-} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import { triggerPostMoveFlash } from "@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash";
+import {
+  attachClosestEdge,
+  type Edge,
+  extractClosestEdge,
+} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index";
 import * as liveRegion from "@atlaskit/pragmatic-drag-and-drop-live-region";
-import { BaseDropEdgeIndicator } from "@/ee/base/components/grid/base-drop-edge-indicator";
-import { Choice } from "@/ee/base/types/base.types";
-import { choiceColor } from "@/ee/base/components/cells/choice-color";
+import {
+  Button,
+  CloseButton,
+  Divider,
+  Group,
+  Popover,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  UnstyledButton,
+} from "@mantine/core";
+import {
+  IconArrowsSort,
+  IconGripVertical,
+  IconPlus,
+} from "@tabler/icons-react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
+import { choiceColor } from "@/ee/base/components/cells/choice-color";
+import { BaseDropEdgeIndicator } from "@/ee/base/components/grid/base-drop-edge-indicator";
+import classes from "@/ee/base/styles/property.module.css";
+import { Choice } from "@/ee/base/types/base.types";
 import { generateBaseChoiceId } from "@/ee/base/utils/generate-base-id";
 import { DefaultValuePicker } from "./default-value-picker";
 
 const CHOICE_COLORS = [
-  "gray", "red", "pink", "grape", "violet", "indigo",
-  "blue", "cyan", "teal", "green", "lime", "yellow", "orange",
+  "gray",
+  "red",
+  "pink",
+  "grape",
+  "violet",
+  "indigo",
+  "blue",
+  "cyan",
+  "teal",
+  "green",
+  "lime",
+  "yellow",
+  "orange",
 ];
 
 const STATUS_CATEGORIES = [
-  { value: "todo", label: "To Do" },
-  { value: "inProgress", label: "In Progress" },
-  { value: "complete", label: "Complete" },
+  { label: "To Do", value: "todo" },
+  { label: "In Progress", value: "inProgress" },
+  { label: "Complete", value: "complete" },
 ] as const;
 
 // Default choices for a new status property, one per category.
 export function defaultStatusChoices(): Choice[] {
   return [
-    { id: generateBaseChoiceId(), name: "Not started", color: "gray", category: "todo" },
-    { id: generateBaseChoiceId(), name: "In progress", color: "blue", category: "inProgress" },
-    { id: generateBaseChoiceId(), name: "Done", color: "green", category: "complete" },
+    {
+      category: "todo",
+      color: "gray",
+      id: generateBaseChoiceId(),
+      name: "Not started",
+    },
+    {
+      category: "inProgress",
+      color: "blue",
+      id: generateBaseChoiceId(),
+      name: "In progress",
+    },
+    {
+      category: "complete",
+      color: "green",
+      id: generateBaseChoiceId(),
+      name: "Done",
+    },
   ];
 }
 
 function pruneDefault(
   value: string | string[] | null,
-  choices: Choice[],
+  choices: Choice[]
 ): string | string[] | null {
-  if (value === null) return null;
+  if (value === null) {
+    return null;
+  }
   const ids = new Set(choices.map((c) => c.id));
   if (Array.isArray(value)) {
     const live = value.filter((id) => ids.has(id));
@@ -73,7 +108,7 @@ function pruneDefault(
 
 function defaultsEqual(
   a: string | string[] | null,
-  b: string | string[] | null,
+  b: string | string[] | null
 ): boolean {
   if (Array.isArray(a) && Array.isArray(b)) {
     return a.length === b.length && a.every((v, i) => v === b[i]);
@@ -113,7 +148,7 @@ export function ChoiceEditor({
   const [draft, setDraft] = useState<Choice[]>(initialChoices);
   const [focusChoiceId, setFocusChoiceId] = useState<string | null>(null);
   const [defaultDraft, setDefaultDraft] = useState<string | string[] | null>(
-    initialDefaultValue,
+    initialDefaultValue
   );
 
   useEffect(() => {
@@ -134,11 +169,20 @@ export function ChoiceEditor({
   }, [hideButtons, draft, defaultDraft]);
 
   const isDirty = useMemo(() => {
-    if (!defaultsEqual(defaultDraft, initialDefaultValue)) return true;
-    if (draft.length !== initialChoices.length) return true;
+    if (!defaultsEqual(defaultDraft, initialDefaultValue)) {
+      return true;
+    }
+    if (draft.length !== initialChoices.length) {
+      return true;
+    }
     return draft.some((d, i) => {
       const o = initialChoices[i];
-      return d.id !== o.id || d.name !== o.name || d.color !== o.color || d.category !== o.category;
+      return (
+        d.id !== o.id ||
+        d.name !== o.name ||
+        d.color !== o.color ||
+        d.category !== o.category
+      );
     });
   }, [draft, initialChoices, defaultDraft, initialDefaultValue]);
 
@@ -149,17 +193,23 @@ export function ChoiceEditor({
   const hasEmptyNames = draft.some((c) => !c.name.trim());
 
   const handleRename = useCallback((choiceId: string, name: string) => {
-    setDraft((prev) => prev.map((c) => (c.id === choiceId ? { ...c, name } : c)));
+    setDraft((prev) =>
+      prev.map((c) => (c.id === choiceId ? { ...c, name } : c))
+    );
   }, []);
 
   const handleColorChange = useCallback((choiceId: string, color: string) => {
-    setDraft((prev) => prev.map((c) => (c.id === choiceId ? { ...c, color } : c)));
+    setDraft((prev) =>
+      prev.map((c) => (c.id === choiceId ? { ...c, color } : c))
+    );
   }, []);
 
   const handleRemove = useCallback((choiceId: string) => {
     setDraft((prev) => prev.filter((c) => c.id !== choiceId));
     setDefaultDraft((prev) => {
-      if (prev === null) return prev;
+      if (prev === null) {
+        return prev;
+      }
       if (Array.isArray(prev)) {
         const next = prev.filter((id) => id !== choiceId);
         return next.length ? next : null;
@@ -168,20 +218,23 @@ export function ChoiceEditor({
     });
   }, []);
 
-  const handleAdd = useCallback((category?: "todo" | "inProgress" | "complete") => {
-    const id = generateBaseChoiceId();
-    setDraft((prev) => {
-      const colorIndex = prev.length % CHOICE_COLORS.length;
-      const newChoice: Choice = {
-        id,
-        name: "",
-        color: CHOICE_COLORS[colorIndex],
-        ...(category ? { category } : {}),
-      };
-      return [...prev, newChoice];
-    });
-    setFocusChoiceId(id);
-  }, []);
+  const handleAdd = useCallback(
+    (category?: "todo" | "inProgress" | "complete") => {
+      const id = generateBaseChoiceId();
+      setDraft((prev) => {
+        const colorIndex = prev.length % CHOICE_COLORS.length;
+        const newChoice: Choice = {
+          color: CHOICE_COLORS[colorIndex],
+          id,
+          name: "",
+          ...(category ? { category } : {}),
+        };
+        return [...prev, newChoice];
+      });
+      setFocusChoiceId(id);
+    },
+    []
+  );
 
   const handleAlphabetize = useCallback(() => {
     setDraft((prev) => [...prev].sort((a, b) => a.name.localeCompare(b.name)));
@@ -205,38 +258,48 @@ export function ChoiceEditor({
       setDraft((prev) => {
         const startIndex = prev.findIndex((c) => c.id === activeId);
         const indexOfTarget = prev.findIndex((c) => c.id === targetId);
-        if (startIndex === -1 || indexOfTarget === -1) return prev;
+        if (startIndex === -1 || indexOfTarget === -1) {
+          return prev;
+        }
         const finishIndex = getReorderDestinationIndex({
-          startIndex,
-          indexOfTarget,
-          closestEdgeOfTarget: edge,
           axis: "vertical",
+          closestEdgeOfTarget: edge,
+          indexOfTarget,
+          startIndex,
         });
-        if (finishIndex === startIndex) return prev;
-        return reorder({ list: prev, startIndex, finishIndex });
+        if (finishIndex === startIndex) {
+          return prev;
+        }
+        return reorder({ finishIndex, list: prev, startIndex });
       });
     },
-    [],
+    []
   );
 
   const handleCategoryReorder = useCallback(
     (category: string, activeId: string, targetId: string, edge: Edge) => {
       setDraft((prev) => {
-        const catChoices = prev.filter((c) => (c.category ?? "todo") === category);
+        const catChoices = prev.filter(
+          (c) => (c.category ?? "todo") === category
+        );
         const startIndex = catChoices.findIndex((c) => c.id === activeId);
         const indexOfTarget = catChoices.findIndex((c) => c.id === targetId);
-        if (startIndex === -1 || indexOfTarget === -1) return prev;
+        if (startIndex === -1 || indexOfTarget === -1) {
+          return prev;
+        }
         const finishIndex = getReorderDestinationIndex({
-          startIndex,
-          indexOfTarget,
-          closestEdgeOfTarget: edge,
           axis: "vertical",
+          closestEdgeOfTarget: edge,
+          indexOfTarget,
+          startIndex,
         });
-        if (finishIndex === startIndex) return prev;
+        if (finishIndex === startIndex) {
+          return prev;
+        }
         const reordered = reorder({
+          finishIndex,
           list: catChoices,
           startIndex,
-          finishIndex,
         });
         const result: Choice[] = [];
         for (const cat of ["todo", "inProgress", "complete"]) {
@@ -249,64 +312,73 @@ export function ChoiceEditor({
         return result;
       });
     },
-    [],
+    []
   );
 
   return (
     <Stack gap="xs">
       <Group justify="space-between">
-        <Text size="xs" fw={600}>
+        <Text fw={600} size="xs">
           {t("Options")}
         </Text>
-        <UnstyledButton onClick={handleAlphabetize} className={classes.alphabetizeBtn}>
-          <IconArrowsSort size={14} color="var(--mantine-color-dimmed)" />
-          <Text size="xs" c="dimmed">{t("Alphabetize")}</Text>
+        <UnstyledButton
+          className={classes.alphabetizeBtn}
+          onClick={handleAlphabetize}
+        >
+          <IconArrowsSort color="var(--mantine-color-dimmed)" size={14} />
+          <Text c="dimmed" size="xs">
+            {t("Alphabetize")}
+          </Text>
         </UnstyledButton>
       </Group>
 
       {showCategories ? (
         <StatusChoiceList
           draft={draft}
+          dropdownPortalTarget={dropdownPortalTarget}
           focusChoiceId={focusChoiceId}
-          onFocused={() => setFocusChoiceId(null)}
-          onRename={handleRename}
-          onColorChange={handleColorChange}
-          onRemove={handleRemove}
           onAdd={handleAdd}
           onCategoryReorder={handleCategoryReorder}
-          dropdownPortalTarget={dropdownPortalTarget}
+          onColorChange={handleColorChange}
+          onFocused={() => setFocusChoiceId(null)}
+          onRemove={handleRemove}
+          onRename={handleRename}
         />
       ) : (
         <FlatChoiceList
           draft={draft}
-          focusChoiceId={focusChoiceId}
-          onFocused={() => setFocusChoiceId(null)}
-          onRename={handleRename}
-          onColorChange={handleColorChange}
-          onRemove={handleRemove}
-          onAdd={handleAdd}
-          onReorder={handleReorder}
           dropdownPortalTarget={dropdownPortalTarget}
+          focusChoiceId={focusChoiceId}
+          onAdd={handleAdd}
+          onColorChange={handleColorChange}
+          onFocused={() => setFocusChoiceId(null)}
+          onRemove={handleRemove}
+          onRename={handleRename}
+          onReorder={handleReorder}
         />
       )}
 
       <DefaultValuePicker
         choices={draft.filter((c) => c.name.trim())}
-        value={defaultDraft}
+        dropdownPortalTarget={dropdownPortalTarget}
         multiple={multiDefault}
         onChange={setDefaultDraft}
-        dropdownPortalTarget={dropdownPortalTarget}
+        value={defaultDraft}
       />
 
       {!hideButtons && (
         <>
           <Divider />
 
-          <Group justify="flex-end" gap="xs">
-            <Button variant="default" size="xs" onClick={handleCancel}>
+          <Group gap="xs" justify="flex-end">
+            <Button onClick={handleCancel} size="xs" variant="default">
               {t("Cancel")}
             </Button>
-            <Button size="xs" onClick={handleSave} disabled={!isDirty || hasEmptyNames}>
+            <Button
+              disabled={!isDirty || hasEmptyNames}
+              onClick={handleSave}
+              size="xs"
+            >
               {t("Save")}
             </Button>
           </Group>
@@ -343,25 +415,24 @@ function FlatChoiceList({
     <Stack gap={4}>
       {draft.map((choice) => (
         <SortableChoiceRow
-          key={choice.id}
+          autoFocus={choice.id === focusChoiceId}
           choice={choice}
           dragType="base-choice-flat"
-          autoFocus={choice.id === focusChoiceId}
-          onFocused={onFocused}
-          onRename={onRename}
-          onColorChange={onColorChange}
-          onRemove={onRemove}
-          onReorder={onReorder}
           dropdownPortalTarget={dropdownPortalTarget}
+          key={choice.id}
+          onColorChange={onColorChange}
+          onFocused={onFocused}
+          onRemove={onRemove}
+          onRename={onRename}
+          onReorder={onReorder}
         />
       ))}
 
-      <UnstyledButton
-        onClick={() => onAdd()}
-        className={classes.addOptionBtn}
-      >
-        <IconPlus size={14} color="var(--mantine-color-dimmed)" />
-        <Text size="xs" c="dimmed">{t("Add option")}</Text>
+      <UnstyledButton className={classes.addOptionBtn} onClick={() => onAdd()}>
+        <IconPlus color="var(--mantine-color-dimmed)" size={14} />
+        <Text c="dimmed" size="xs">
+          {t("Add option")}
+        </Text>
       </UnstyledButton>
     </Stack>
   );
@@ -385,11 +456,20 @@ function StatusChoiceList({
   onColorChange: (id: string, color: string) => void;
   onRemove: (id: string) => void;
   onAdd: (category: "todo" | "inProgress" | "complete") => void;
-  onCategoryReorder: (category: string, activeId: string, targetId: string, edge: Edge) => void;
+  onCategoryReorder: (
+    category: string,
+    activeId: string,
+    targetId: string,
+    edge: Edge
+  ) => void;
   dropdownPortalTarget?: HTMLElement | null;
 }) {
   const grouped = useMemo(() => {
-    const groups: Record<string, Choice[]> = { todo: [], inProgress: [], complete: [] };
+    const groups: Record<string, Choice[]> = {
+      complete: [],
+      inProgress: [],
+      todo: [],
+    };
     for (const choice of draft) {
       const cat = choice.category ?? "todo";
       (groups[cat] ?? groups.todo).push(choice);
@@ -401,18 +481,18 @@ function StatusChoiceList({
     <Stack gap="sm">
       {STATUS_CATEGORIES.map(({ value: category, label }) => (
         <CategorySection
-          key={category}
           category={category as "todo" | "inProgress" | "complete"}
-          label={label}
           choices={grouped[category] ?? []}
-          focusChoiceId={focusChoiceId}
-          onFocused={onFocused}
-          onRename={onRename}
-          onColorChange={onColorChange}
-          onRemove={onRemove}
-          onAdd={onAdd}
-          onReorder={onCategoryReorder}
           dropdownPortalTarget={dropdownPortalTarget}
+          focusChoiceId={focusChoiceId}
+          key={category}
+          label={label}
+          onAdd={onAdd}
+          onColorChange={onColorChange}
+          onFocused={onFocused}
+          onRemove={onRemove}
+          onRename={onRename}
+          onReorder={onCategoryReorder}
         />
       ))}
     </Stack>
@@ -445,7 +525,7 @@ function CategorySection({
     category: string,
     activeId: string,
     targetId: string,
-    edge: Edge,
+    edge: Edge
   ) => void;
   dropdownPortalTarget?: HTMLElement | null;
 }) {
@@ -455,37 +535,39 @@ function CategorySection({
     (activeId: string, targetId: string, edge: Edge) => {
       onReorder(category, activeId, targetId, edge);
     },
-    [category, onReorder],
+    [category, onReorder]
   );
 
   return (
     <Stack gap={4}>
-      <Text size="xs" fw={600} c="dimmed">
+      <Text c="dimmed" fw={600} size="xs">
         {t(label)}
       </Text>
 
       {choices.map((choice) => (
         <SortableChoiceRow
-          key={choice.id}
+          autoFocus={choice.id === focusChoiceId}
           choice={choice}
           // Per-category drag type prevents cross-category drops.
           dragType={`base-choice-status:${category}`}
-          autoFocus={choice.id === focusChoiceId}
-          onFocused={onFocused}
-          onRename={onRename}
-          onColorChange={onColorChange}
-          onRemove={onRemove}
-          onReorder={handleRowReorder}
           dropdownPortalTarget={dropdownPortalTarget}
+          key={choice.id}
+          onColorChange={onColorChange}
+          onFocused={onFocused}
+          onRemove={onRemove}
+          onRename={onRename}
+          onReorder={handleRowReorder}
         />
       ))}
 
       <UnstyledButton
-        onClick={() => onAdd(category)}
         className={classes.addOptionBtn}
+        onClick={() => onAdd(category)}
       >
-        <IconPlus size={14} color="var(--mantine-color-dimmed)" />
-        <Text size="xs" c="dimmed">{t("Add option")}</Text>
+        <IconPlus color="var(--mantine-color-dimmed)" size={14} />
+        <Text c="dimmed" size="xs">
+          {t("Add option")}
+        </Text>
       </UnstyledButton>
     </Stack>
   );
@@ -535,40 +617,39 @@ function SortableChoiceRow({
   useEffect(() => {
     const row = rowRef.current;
     const handle = handleRef.current;
-    if (!row || !handle) return;
+    if (!(row && handle)) {
+      return;
+    }
     return combine(
       draggable({
-        element: row,
         dragHandle: handle,
-        getInitialData: () => ({ type: dragType, choiceId: choice.id }),
+        element: row,
+        getInitialData: () => ({ choiceId: choice.id, type: dragType }),
         onDragStart: () => setIsDragging(true),
         onDrop: () => setIsDragging(false),
       }),
       dropTargetForElements({
-        element: row,
         canDrop: ({ source }) =>
-          source.data.type === dragType &&
-          source.data.choiceId !== choice.id,
+          source.data.type === dragType && source.data.choiceId !== choice.id,
+        element: row,
         getData: ({ input, element }) =>
           attachClosestEdge(
             { choiceId: choice.id },
-            { input, element, allowedEdges: ["top", "bottom"] },
+            { allowedEdges: ["top", "bottom"], element, input }
           ),
         onDrag: ({ self }) => setClosestEdge(extractClosestEdge(self.data)),
         onDragLeave: () => setClosestEdge(null),
         onDrop: ({ source, self }) => {
           setClosestEdge(null);
           const edge = extractClosestEdge(self.data);
-          if (!edge) return;
-          onReorderRef.current(
-            source.data.choiceId as string,
-            choice.id,
-            edge,
-          );
+          if (!edge) {
+            return;
+          }
+          onReorderRef.current(source.data.choiceId as string, choice.id, edge);
           triggerPostMoveFlash(row);
           liveRegion.announce("Moved option");
         },
-      }),
+      })
     );
   }, [choice.id, dragType]);
 
@@ -576,34 +657,38 @@ function SortableChoiceRow({
 
   return (
     <Group
-      ref={rowRef}
-      gap={6}
-      wrap="nowrap"
       align="center"
-      style={{
-        position: "relative",
-        opacity: isDragging ? 0.4 : 1,
-      }}
       data-dragging={isDragging || undefined}
+      gap={6}
+      ref={rowRef}
+      style={{
+        opacity: isDragging ? 0.4 : 1,
+        position: "relative",
+      }}
+      wrap="nowrap"
     >
-      <div ref={handleRef} className={classes.dragHandle}>
+      <div className={classes.dragHandle} ref={handleRef}>
         <IconGripVertical size={14} style={{ opacity: 0.4 }} />
       </div>
       <ColorDot
         color={choice.color}
-        onChange={(c) => onColorChange(choice.id, c)}
         dropdownPortalTarget={dropdownPortalTarget}
+        onChange={(c) => onColorChange(choice.id, c)}
       />
       <TextInput
+        error={hasError}
+        onChange={(e) => onRename(choice.id, e.currentTarget.value)}
         ref={inputRef}
         size="xs"
-        value={choice.name}
-        onChange={(e) => onRename(choice.id, e.currentTarget.value)}
         style={{ flex: 1 }}
-        error={hasError}
-        styles={hasError ? { input: { borderColor: "var(--mantine-color-red-6)" } } : undefined}
+        styles={
+          hasError
+            ? { input: { borderColor: "var(--mantine-color-red-6)" } }
+            : undefined
+        }
+        value={choice.name}
       />
-      <CloseButton size="sm" onClick={() => onRemove(choice.id)} />
+      <CloseButton onClick={() => onRemove(choice.id)} size="sm" />
       {closestEdge && <BaseDropEdgeIndicator edge={closestEdge} />}
     </Group>
   );
@@ -623,23 +708,23 @@ function ColorDot({
 
   return (
     <Popover
-      opened={opened}
       onChange={setOpened}
+      opened={opened}
+      portalProps={{ target: dropdownPortalTarget ?? undefined }}
       position="bottom"
       shadow="sm"
       withinPortal
-      portalProps={{ target: dropdownPortalTarget ?? undefined }}
     >
       <Popover.Target>
         <UnstyledButton
           onClick={() => setOpened((o) => !o)}
           style={{
-            width: 20,
-            height: 20,
-            borderRadius: "50%",
             backgroundColor: colors.backgroundColor as string,
             border: `2px solid ${colors.color as string}`,
+            borderRadius: "50%",
             flexShrink: 0,
+            height: 20,
+            width: 20,
           }}
         />
       </Popover.Target>
@@ -655,13 +740,14 @@ function ColorDot({
                   setOpened(false);
                 }}
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
                   backgroundColor: dotColors.backgroundColor as string,
-                  border: c === color
-                    ? `2px solid ${dotColors.color as string}`
-                    : "2px solid transparent",
+                  border:
+                    c === color
+                      ? `2px solid ${dotColors.color as string}`
+                      : "2px solid transparent",
+                  borderRadius: "50%",
+                  height: 24,
+                  width: 24,
                 }}
               />
             );

@@ -1,23 +1,23 @@
 import {
-  Text,
-  Group,
-  UnstyledButton,
   Badge,
-  Table,
   Button,
+  Group,
+  Table,
+  Text,
+  UnstyledButton,
 } from "@mantine/core";
-import { Link } from "react-router-dom";
-import PageListSkeleton from "@/components/ui/page-list-skeleton";
-import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
-import { formattedDate } from "@/lib/time";
-import { useFavoritesQuery } from "@/features/favorite/queries/favorite-query";
-import { PageListIcon } from "@/components/common/page-list-icon";
 import { IconStar } from "@tabler/icons-react";
-import { EmptyState } from "@/components/ui/empty-state";
-import { getSpaceUrl } from "@/lib/config";
 import { useTranslation } from "react-i18next";
-import { getInitialsColor } from "@/lib/get-initials-color";
+import { Link } from "react-router-dom";
+import { PageListIcon } from "@/components/common/page-list-icon";
 import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import { EmptyState } from "@/components/ui/empty-state";
+import PageListSkeleton from "@/components/ui/page-list-skeleton";
+import { useFavoritesQuery } from "@/features/favorite/queries/favorite-query";
+import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
+import { getSpaceUrl } from "@/lib/config";
+import { getInitialsColor } from "@/lib/get-initials-color";
+import { formattedDate } from "@/lib/time";
 
 interface Props {
   spaceId?: string;
@@ -51,7 +51,7 @@ export default function FavoritesPages({ spaceId }: Props) {
           <Table.Tbody>
             {favorites.map((fav) =>
               fav.page ? (
-                <Table.Tr key={fav.id} className={rowClasses.row}>
+                <Table.Tr className={rowClasses.row} key={fav.id}>
                   <Table.Td>
                     <UnstyledButton
                       className={rowClasses.link}
@@ -59,7 +59,7 @@ export default function FavoritesPages({ spaceId }: Props) {
                       to={buildPageUrl(
                         fav.space?.slug,
                         fav.page.slugId,
-                        fav.page.title,
+                        fav.page.title
                       )}
                     >
                       <Group wrap="nowrap">
@@ -67,7 +67,7 @@ export default function FavoritesPages({ spaceId }: Props) {
                           icon={fav.page.icon}
                           isBase={fav.page.isBase}
                         />
-                        <Text fw={500} size="md" lineClamp={1}>
+                        <Text fw={500} lineClamp={1} size="md">
                           {getPageTitle(fav.page.title, fav.page.isBase, t)}
                         </Text>
                       </Group>
@@ -78,10 +78,10 @@ export default function FavoritesPages({ spaceId }: Props) {
                       {fav.space && (
                         <Badge
                           color={getInitialsColor(fav.space.name)}
-                          variant="light"
                           component={Link}
-                          to={getSpaceUrl(fav.space.slug)}
                           style={{ cursor: "pointer" }}
+                          to={getSpaceUrl(fav.space.slug)}
+                          variant="light"
                         >
                           {fav.space.name}
                         </Badge>
@@ -91,27 +91,27 @@ export default function FavoritesPages({ spaceId }: Props) {
                   <Table.Td>
                     <Text
                       c="dimmed"
-                      style={{ whiteSpace: "nowrap" }}
-                      size="xs"
                       fw={500}
+                      size="xs"
+                      style={{ whiteSpace: "nowrap" }}
                     >
                       {formattedDate(new Date(fav.createdAt))}
                     </Text>
                   </Table.Td>
                 </Table.Tr>
-              ) : null,
+              ) : null
             )}
           </Table.Tbody>
         </Table>
       </Table.ScrollContainer>
       {hasNextPage && (
         <Button
-          variant="subtle"
           fullWidth
-          mt="sm"
-          mb="xl"
-          onClick={() => fetchNextPage()}
           loading={isFetchingNextPage}
+          mb="xl"
+          mt="sm"
+          onClick={() => fetchNextPage()}
+          variant="subtle"
         >
           {t("Load more")}
         </Button>
@@ -119,9 +119,9 @@ export default function FavoritesPages({ spaceId }: Props) {
     </>
   ) : (
     <EmptyState
+      description={t("Pages you star will show up here.")}
       icon={IconStar}
       title={t("No favorites yet")}
-      description={t("Pages you star will show up here.")}
     />
   );
 }

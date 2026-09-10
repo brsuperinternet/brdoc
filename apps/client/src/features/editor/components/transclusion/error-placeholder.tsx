@@ -7,9 +7,9 @@ export default function ErrorPlaceholder() {
   return (
     <div className={classes.placeholder}>
       <IconAlertTriangle
+        className={classes.placeholderIcon}
         size={18}
         stroke={1.6}
-        className={classes.placeholderIcon}
       />
       <span>{t("Failed to load this synced block")}</span>
     </div>

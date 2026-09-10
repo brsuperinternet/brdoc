@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
 import type { useEditor } from "@tiptap/react";
+import { useEffect, useRef } from "react";
 
 interface UseSearchNavigationParamsProps {
   editor: ReturnType<typeof useEditor>;
@@ -41,7 +41,7 @@ export function useSearchNavigationParams({
     document.dispatchEvent(
       new CustomEvent("openSearchNavigationDialog", {
         detail: { searchTerms: searchQueries, wholeWord: match === "whole" },
-      }),
+      })
     );
   }, [editor, isSynced, searchKey, searchParams, showStatic]);
 }

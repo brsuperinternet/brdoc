@@ -1,7 +1,7 @@
 import { Alert } from "@mantine/core";
 import { useBillingQuery } from "@/ee/billing/queries/billing-query.ts";
 import useTrial from "@/ee/hooks/use-trial.tsx";
-import { getBillingTrialDays } from '@/lib/config.ts';
+import { getBillingTrialDays } from "@/lib/config.ts";
 
 export default function BillingTrial() {
   const { data: billing, isLoading } = useBillingQuery();
@@ -14,17 +14,17 @@ export default function BillingTrial() {
   return (
     <>
       {trialDaysLeft > 0 && !billing && (
-        <Alert title="Your Trial is Active 🎉" color="blue" radius="md">
+        <Alert color="blue" radius="md" title="Your Trial is Active 🎉">
           You have {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left
-          in your {getBillingTrialDays()}-day free trial. Please subscribe to a paid plan before your trial
-          ends.
+          in your {getBillingTrialDays()}-day free trial. Please subscribe to a
+          paid plan before your trial ends.
         </Alert>
       )}
 
       {trialDaysLeft === 0 && (
-        <Alert title="Your Trial has ended" color="red" radius="md">
-          Your {getBillingTrialDays()}-day free trial has come to an end. Please subscribe to a paid plan to
-          continue using this service.
+        <Alert color="red" radius="md" title="Your Trial has ended">
+          Your {getBillingTrialDays()}-day free trial has come to an end. Please
+          subscribe to a paid plan to continue using this service.
         </Alert>
       )}
     </>

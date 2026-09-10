@@ -28,8 +28,8 @@ export interface AiContentResponse {
 }
 
 export interface AiConfigResponse {
-  configured: boolean;
   availableActions: AiAction[];
+  configured: boolean;
 }
 
 export interface AiStreamChunk {

@@ -1,4 +1,3 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Group,
   ScrollArea,
@@ -7,16 +6,17 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { IconFileDescription, IconLink, IconWorld } from "@tabler/icons-react";
-import { useLinkEditorState } from "@/features/editor/components/link/use-link-editor-state.tsx";
-import { LinkEditorPanelProps } from "@/features/editor/components/link/types.ts";
+import clsx from "clsx";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query.ts";
-import { useSpaceQuery } from "@/features/space/queries/space-query.ts";
 import { useParams } from "react-router-dom";
+import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
+import { LinkEditorPanelProps } from "@/features/editor/components/link/types.ts";
+import { useLinkEditorState } from "@/features/editor/components/link/use-link-editor-state.tsx";
 import { buildPageUrl, getPageTitle } from "@/features/page/page.utils.ts";
 import { IPage } from "@/features/page/types/page.types.ts";
-import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
-import clsx from "clsx";
+import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query.ts";
+import { useSpaceQuery } from "@/features/space/queries/space-query.ts";
 import classes from "./link.module.css";
 
 export const LinkEditorPanel = ({
@@ -27,17 +27,17 @@ export const LinkEditorPanel = ({
   const { t } = useTranslation();
   const { spaceSlug } = useParams();
   const { data: space } = useSpaceQuery(spaceSlug);
-  const state = useLinkEditorState({ onSetLink, initialUrl });
+  const state = useLinkEditorState({ initialUrl, onSetLink });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   const { data: suggestion } = useSearchSuggestionsQuery({
-    query: state.isSearchQuery ? state.url : "",
-    includeUsers: false,
     includePages: true,
-    spaceId: space?.id,
+    includeUsers: false,
     limit: state.isSearchQuery ? 10 : 3,
     preload: true,
+    query: state.isSearchQuery ? state.url : "",
+    spaceId: space?.id,
   });
 
   const pages: Partial<IPage>[] = suggestion?.pages ?? [];
@@ -51,18 +51,22 @@ export const LinkEditorPanel = ({
       const url = buildPageUrl(
         page.space?.slug || spaceSlug,
         page.slugId,
-        page.title,
+        page.title
       );
       onSetLink(url, true);
     },
-    [onSetLink, spaceSlug],
+    [onSetLink, spaceSlug]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      const hasUrlItem = state.url.length > 0 && (state.isValidUrl || state.isSearchQuery);
-      const total = (hasUrlItem ? 1 : 0) + (state.isValidUrl ? 0 : pages.length);
-      if (total === 0) return;
+      const hasUrlItem =
+        state.url.length > 0 && (state.isValidUrl || state.isSearchQuery);
+      const total =
+        (hasUrlItem ? 1 : 0) + (state.isValidUrl ? 0 : pages.length);
+      if (total === 0) {
+        return;
+      }
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -82,7 +86,15 @@ export const LinkEditorPanel = ({
         }
       }
     },
-    [pages, selectedIndex, selectPage, state.isValidUrl, state.isSearchQuery, state.url, onSetLink],
+    [
+      pages,
+      selectedIndex,
+      selectPage,
+      state.isValidUrl,
+      state.isSearchQuery,
+      state.url,
+      onSetLink,
+    ]
   );
 
   useEffect(() => {
@@ -92,72 +104,79 @@ export const LinkEditorPanel = ({
   }, [selectedIndex]);
 
   const showPages = pages.length > 0 && !state.isValidUrl;
-  const showUrlItem = state.url.length > 0 && (state.isValidUrl || state.isSearchQuery);
+  const showUrlItem =
+    state.url.length > 0 && (state.isValidUrl || state.isSearchQuery);
   const showDropdown = showPages || showUrlItem;
 
   return (
     <div>
       <form onSubmit={state.handleSubmit}>
         <TextInput
-          leftSection={<IconLink size={16} stroke={1.5} color="var(--mantine-color-dimmed)" />}
-          classNames={{ input: classes.linkInput }}
-          placeholder={t("Paste link or search pages")}
-          aria-label={t("Paste link or search pages")}
-          role="combobox"
-          aria-expanded={showDropdown}
-          aria-controls="link-editor-results"
-          aria-autocomplete="list"
           aria-activedescendant={
             showDropdown ? `link-editor-option-${selectedIndex}` : undefined
           }
-          value={state.url}
+          aria-autocomplete="list"
+          aria-controls="link-editor-results"
+          aria-expanded={showDropdown}
+          aria-label={t("Paste link or search pages")}
+          autoFocus
+          classNames={{ input: classes.linkInput }}
+          data-autofocus
+          leftSection={
+            <IconLink
+              color="var(--mantine-color-dimmed)"
+              size={16}
+              stroke={1.5}
+            />
+          }
           onChange={state.onChange}
           onKeyDown={handleKeyDown}
-          data-autofocus
-          autoFocus
+          placeholder={t("Paste link or search pages")}
+          role="combobox"
+          value={state.url}
         />
       </form>
 
       {showDropdown && (
         <>
-          {!state.isSearchQuery && !state.isValidUrl && (
-            <Text c="dimmed" size="xs" fw={600} px="sm" pt={10} pb={4}>
+          {!(state.isSearchQuery || state.isValidUrl) && (
+            <Text c="dimmed" fw={600} pb={4} pt={10} px="sm" size="xs">
               {t("Recents")}
             </Text>
           )}
 
           <ScrollArea.Autosize
-            viewportRef={viewportRef}
-            mah={300}
-            scrollbars="y"
-            scrollbarSize={6}
-            mt={state.url.length > 0 ? 8 : 0}
-            styles={{ content: { minWidth: 0 } }}
-            id="link-editor-results"
-            role="listbox"
             aria-label={t("Link suggestions")}
+            id="link-editor-results"
+            mah={300}
+            mt={state.url.length > 0 ? 8 : 0}
+            role="listbox"
+            scrollbarSize={6}
+            scrollbars="y"
+            styles={{ content: { minWidth: 0 } }}
+            viewportRef={viewportRef}
           >
             {showUrlItem && (
               <UnstyledButton
-                data-item-index={0}
-                id="link-editor-option-0"
-                role="option"
                 aria-selected={selectedIndex === 0}
-                onClick={() => onSetLink(state.url, false)}
                 className={clsx(classes.searchItem, {
                   [classes.selectedSearchItem]: selectedIndex === 0,
                 })}
+                data-item-index={0}
+                id="link-editor-option-0"
+                onClick={() => onSetLink(state.url, false)}
+                role="option"
               >
-                <Group gap={10} wrap="nowrap" align="flex-start">
+                <Group align="flex-start" gap={10} wrap="nowrap">
                   <span className={classes.pageIcon}>
                     <IconWorld size={18} stroke={1.5} />
                   </span>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text size="sm" fw={500} truncate lh={1.3}>
+                    <Text fw={500} lh={1.3} size="sm" truncate>
                       {state.url}
                     </Text>
-                    <Text size="xs" c="dimmed" lh={1.4}>
+                    <Text c="dimmed" lh={1.4} size="xs">
                       {t("Link to web page")}
                     </Text>
                   </div>
@@ -165,49 +184,54 @@ export const LinkEditorPanel = ({
               </UnstyledButton>
             )}
 
-            {!state.isValidUrl && pages.map((page, index) => {
-              const itemIndex = showUrlItem ? index + 1 : index;
-              return (
-                <UnstyledButton
-                  data-item-index={itemIndex}
-                  id={`link-editor-option-${itemIndex}`}
-                  role="option"
-                  aria-selected={itemIndex === selectedIndex}
-                  key={page.id || index}
-                  onClick={() => selectPage(page)}
-                  className={clsx(classes.searchItem, {
-                    [classes.selectedSearchItem]: itemIndex === selectedIndex,
-                  })}
-                >
-                  <Group gap={10} wrap="nowrap" align="flex-start">
-                    <span className={classes.pageIcon}>
-                      {page.icon || <IconFileDescription size={18} stroke={1.5} />}
-                    </span>
+            {!state.isValidUrl &&
+              pages.map((page, index) => {
+                const itemIndex = showUrlItem ? index + 1 : index;
+                return (
+                  <UnstyledButton
+                    aria-selected={itemIndex === selectedIndex}
+                    className={clsx(classes.searchItem, {
+                      [classes.selectedSearchItem]: itemIndex === selectedIndex,
+                    })}
+                    data-item-index={itemIndex}
+                    id={`link-editor-option-${itemIndex}`}
+                    key={page.id || index}
+                    onClick={() => selectPage(page)}
+                    role="option"
+                  >
+                    <Group align="flex-start" gap={10} wrap="nowrap">
+                      <span className={classes.pageIcon}>
+                        {page.icon || (
+                          <IconFileDescription size={18} stroke={1.5} />
+                        )}
+                      </span>
 
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <AutoTooltipText size="sm" fw={500} truncate lh={1.3}>
-                        {getPageTitle(page.title, page.isBase, t)}
-                      </AutoTooltipText>
-                      {page.space?.name && (
-                        <AutoTooltipText size="xs" c="dimmed" truncate lh={1.4}>
-                          {page.space.name}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <AutoTooltipText fw={500} lh={1.3} size="sm" truncate>
+                          {getPageTitle(page.title, page.isBase, t)}
                         </AutoTooltipText>
-                      )}
-                    </div>
-                  </Group>
-                </UnstyledButton>
-              );
-            })}
+                        {page.space?.name && (
+                          <AutoTooltipText
+                            c="dimmed"
+                            lh={1.4}
+                            size="xs"
+                            truncate
+                          >
+                            {page.space.name}
+                          </AutoTooltipText>
+                        )}
+                      </div>
+                    </Group>
+                  </UnstyledButton>
+                );
+              })}
           </ScrollArea.Autosize>
         </>
       )}
 
       {onUnsetLink && (
-        <UnstyledButton
-          onClick={onUnsetLink}
-          className={classes.removeLink}
-        >
-          <Text size="sm" c="red">
+        <UnstyledButton className={classes.removeLink} onClick={onUnsetLink}>
+          <Text c="red" size="sm">
             {t("Remove link")}
           </Text>
         </UnstyledButton>

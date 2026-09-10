@@ -1,11 +1,12 @@
-import { IPagination, QueryParams } from "@/lib/types.ts";
+import { notifications } from "@mantine/notifications";
 import {
   keepPreviousData,
+  UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   createApiKey,
   getApiKeys,
@@ -15,18 +16,17 @@ import {
   revokeApiKey,
   updateApiKey,
 } from "@/ee/api-key";
-import { notifications } from "@mantine/notifications";
-import { useTranslation } from "react-i18next";
+import { IPagination, QueryParams } from "@/lib/types.ts";
 
 export function useGetApiKeysQuery(
-  params?: QueryParams,
+  params?: QueryParams
 ): UseQueryResult<IPagination<IApiKey>, Error> {
   return useQuery({
-    queryKey: ["api-key-list", params],
-    queryFn: () => getApiKeys(params),
-    staleTime: 0,
     gcTime: 0,
     placeholderData: keepPreviousData,
+    queryFn: () => getApiKeys(params),
+    queryKey: ["api-key-list", params],
+    staleTime: 0,
   });
 }
 
@@ -42,16 +42,16 @@ export function useRevokeApiKeyMutation() {
     }
   >({
     mutationFn: (data) => revokeApiKey(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: t("Revoked successfully") });
       queryClient.invalidateQueries({
         predicate: (item) =>
           ["api-key-list"].includes(item.queryKey[0] as string),
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }
@@ -62,6 +62,10 @@ export function useCreateApiKeyMutation() {
 
   return useMutation<IApiKey, Error, ICreateApiKeyRequest>({
     mutationFn: (data) => createApiKey(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: () => {
       notifications.show({
         message: t("{{credential}} created successfully", {
@@ -73,10 +77,6 @@ export function useCreateApiKeyMutation() {
           ["api-key-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
-    },
   });
 }
 
@@ -86,16 +86,16 @@ export function useUpdateApiKeyMutation() {
 
   return useMutation<IApiKey, Error, IUpdateApiKeyRequest>({
     mutationFn: (data) => updateApiKey(data),
+    onError: (error) => {
+      const errorMessage = error["response"]?.data?.message;
+      notifications.show({ color: "red", message: errorMessage });
+    },
     onSuccess: (data, variables) => {
       notifications.show({ message: t("Updated successfully") });
       queryClient.invalidateQueries({
         predicate: (item) =>
           ["api-key-list"].includes(item.queryKey[0] as string),
       });
-    },
-    onError: (error) => {
-      const errorMessage = error["response"]?.data?.message;
-      notifications.show({ message: errorMessage, color: "red" });
     },
   });
 }

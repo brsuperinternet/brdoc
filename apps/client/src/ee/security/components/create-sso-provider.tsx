@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import { Button, Group, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Button, Menu, Group } from "@mantine/core";
 import { IconChevronDown, IconLock, IconServer } from "@tabler/icons-react";
-import { useCreateSsoProviderMutation } from "@/ee/security/queries/security-query.ts";
-import { SSO_PROVIDER } from "@/ee/security/contants.ts";
-import { IAuthProvider } from "@/ee/security/types/security.types.ts";
-import SsoProviderModal from "@/ee/security/components/sso-provider-modal.tsx";
+import { useState } from "react";
 import { OpenIdIcon } from "@/components/icons/openid-icon.tsx";
+import SsoProviderModal from "@/ee/security/components/sso-provider-modal.tsx";
+import { SSO_PROVIDER } from "@/ee/security/contants.ts";
+import { useCreateSsoProviderMutation } from "@/ee/security/queries/security-query.ts";
+import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 
 export default function CreateSsoProvider() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -17,8 +17,8 @@ export default function CreateSsoProvider() {
   const handleCreateSAML = async () => {
     try {
       const newProvider = await createSsoProviderMutation.mutateAsync({
-        type: SSO_PROVIDER.SAML,
         name: "SAML",
+        type: SSO_PROVIDER.SAML,
       });
       setProvider(newProvider);
       open();
@@ -30,8 +30,8 @@ export default function CreateSsoProvider() {
   const handleCreateOIDC = async () => {
     try {
       const newProvider = await createSsoProviderMutation.mutateAsync({
-        type: SSO_PROVIDER.OIDC,
         name: "OIDC",
+        type: SSO_PROVIDER.OIDC,
       });
       setProvider(newProvider);
       open();
@@ -43,8 +43,8 @@ export default function CreateSsoProvider() {
   const handleCreateLDAP = async () => {
     try {
       const newProvider = await createSsoProviderMutation.mutateAsync({
-        type: SSO_PROVIDER.LDAP,
         name: "LDAP",
+        type: SSO_PROVIDER.LDAP,
       });
       setProvider(newProvider);
       open();
@@ -55,39 +55,39 @@ export default function CreateSsoProvider() {
 
   return (
     <>
-      <SsoProviderModal opened={opened} onClose={close} provider={provider} />
+      <SsoProviderModal onClose={close} opened={opened} provider={provider} />
 
       <Group justify="flex-end">
         <Menu
-          transitionProps={{ transition: "pop-top-right" }}
           position="bottom"
+          transitionProps={{ transition: "pop-top-right" }}
           width={220}
           withinPortal
         >
           <Menu.Target>
-            <Button rightSection={<IconChevronDown size={16} />} pr={12}>
+            <Button pr={12} rightSection={<IconChevronDown size={16} />}>
               Create SSO
             </Button>
           </Menu.Target>
 
           <Menu.Dropdown>
             <Menu.Item
-              onClick={handleCreateSAML}
               leftSection={<IconLock size={16} />}
+              onClick={handleCreateSAML}
             >
               SAML
             </Menu.Item>
 
             <Menu.Item
-              onClick={handleCreateOIDC}
               leftSection={<OpenIdIcon size={16} />}
+              onClick={handleCreateOIDC}
             >
               OpenID (OIDC)
             </Menu.Item>
 
             <Menu.Item
-              onClick={handleCreateLDAP}
               leftSection={<IconServer size={16} />}
+              onClick={handleCreateLDAP}
             >
               LDAP / Active Directory
             </Menu.Item>

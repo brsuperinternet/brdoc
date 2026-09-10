@@ -1,9 +1,9 @@
 import { handlePdfUpload } from "@docmost/editor-ext";
-import { uploadFile } from "@/features/page/services/page-service.ts";
 import { notifications } from "@mantine/notifications";
-import { getFileUploadSizeLimit } from "@/lib/config.ts";
-import { formatBytes } from "@/lib";
+import { uploadFile } from "@/features/page/services/page-service.ts";
 import i18n from "@/i18n.ts";
+import { formatBytes } from "@/lib";
+import { getFileUploadSizeLimit } from "@/lib/config.ts";
 
 export const uploadPdfAction = handlePdfUpload({
   onUpload: async (file: File, pageId: string): Promise<any> => {

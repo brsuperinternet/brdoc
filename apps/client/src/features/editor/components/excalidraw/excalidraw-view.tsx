@@ -1,4 +1,3 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import {
   ActionIcon,
   Button,
@@ -7,6 +6,8 @@ import {
   Text,
   useComputedColorScheme,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import {
   lazy,
   Suspense,
@@ -17,22 +18,21 @@ import {
 } from "react";
 import { uploadFile } from "@/features/page/services/page-service.ts";
 import { svgStringToFile } from "@/lib";
-import { useDisclosure } from "@mantine/hooks";
 import "@excalidraw/excalidraw/index.css";
-import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
-import { IAttachment } from "@/features/attachments/types/attachment.types";
-import ReactClearModal from "react-clear-modal";
-import clsx from "clsx";
-import { IconEdit } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
 import { useHandleLibrary } from "@excalidraw/excalidraw";
-import { localStorageLibraryAdapter } from "@/features/editor/components/excalidraw/excalidraw-utils.ts";
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { modals } from "@mantine/modals";
+import { IconEdit } from "@tabler/icons-react";
+import clsx from "clsx";
+import ReactClearModal from "react-clear-modal";
+import { useTranslation } from "react-i18next";
+import { IAttachment } from "@/features/attachments/types/attachment.types";
+import { localStorageLibraryAdapter } from "@/features/editor/components/excalidraw/excalidraw-utils.ts";
 
 const ExcalidrawComponent = lazy(() =>
   import("@excalidraw/excalidraw").then((module) => ({
     default: module.Excalidraw,
-  })),
+  }))
 );
 
 export default function ExcalidrawView(props: NodeViewProps) {
@@ -43,8 +43,8 @@ export default function ExcalidrawView(props: NodeViewProps) {
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI>(null);
   useHandleLibrary({
-    excalidrawAPI,
     adapter: localStorageLibraryAdapter,
+    excalidrawAPI,
   });
   const [excalidrawData, setExcalidrawData] = useState<any>(null);
   const [opened, { open, close }] = useDisclosure(false);
@@ -65,66 +65,73 @@ export default function ExcalidrawView(props: NodeViewProps) {
     open();
   };
 
-  const saveData = useCallback(async (updateSrc = true) => {
-    if (!excalidrawAPI || isSavingRef.current) {
-      return;
-    }
-
-    isSavingRef.current = true;
-    setIsSaving(true);
-
-    try {
-      const { exportToSvg } = await import("@excalidraw/excalidraw");
-
-      const svg = await exportToSvg({
-        elements: excalidrawAPI?.getSceneElements(),
-        appState: {
-          exportEmbedScene: true,
-          exportWithDarkMode: false,
-        },
-        files: excalidrawAPI?.getFiles(),
-      });
-
-      const serializer = new XMLSerializer();
-      let svgString = serializer.serializeToString(svg);
-
-      svgString = svgString.replace(
-        /https:\/\/unpkg\.com\/@excalidraw\/excalidraw@undefined/g,
-        "https://unpkg.com/@excalidraw/excalidraw@latest",
-      );
-
-      const fileName = "diagram.excalidraw.svg";
-      const excalidrawSvgFile = await svgStringToFile(svgString, fileName);
-
-      // @ts-ignore
-      const pageId = editor.storage?.pageId;
-
-      let attachment: IAttachment = null;
-      if (attachmentId) {
-        attachment = await uploadFile(excalidrawSvgFile, pageId, attachmentId);
-      } else {
-        attachment = await uploadFile(excalidrawSvgFile, pageId);
+  const saveData = useCallback(
+    async (updateSrc = true) => {
+      if (!excalidrawAPI || isSavingRef.current) {
+        return;
       }
 
-      if (updateSrc) {
-        updateAttributes({
-          src: `/api/files/${attachment.id}/${attachment.fileName}?t=${new Date(attachment.updatedAt).getTime()}`,
-          title: attachment.fileName,
-          size: attachment.fileSize,
-          attachmentId: attachment.id,
-        });
-      } else {
-        updateAttributes({
-          attachmentId: attachment.id,
-        });
-      }
+      isSavingRef.current = true;
+      setIsSaving(true);
 
-      isDirtyRef.current = false;
-    } finally {
-      isSavingRef.current = false;
-      setIsSaving(false);
-    }
-  }, [excalidrawAPI, editor, attachmentId, updateAttributes]);
+      try {
+        const { exportToSvg } = await import("@excalidraw/excalidraw");
+
+        const svg = await exportToSvg({
+          appState: {
+            exportEmbedScene: true,
+            exportWithDarkMode: false,
+          },
+          elements: excalidrawAPI?.getSceneElements(),
+          files: excalidrawAPI?.getFiles(),
+        });
+
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(svg);
+
+        svgString = svgString.replace(
+          /https:\/\/unpkg\.com\/@excalidraw\/excalidraw@undefined/g,
+          "https://unpkg.com/@excalidraw/excalidraw@latest"
+        );
+
+        const fileName = "diagram.excalidraw.svg";
+        const excalidrawSvgFile = await svgStringToFile(svgString, fileName);
+
+        // @ts-expect-error
+        const pageId = editor.storage?.pageId;
+
+        let attachment: IAttachment = null;
+        if (attachmentId) {
+          attachment = await uploadFile(
+            excalidrawSvgFile,
+            pageId,
+            attachmentId
+          );
+        } else {
+          attachment = await uploadFile(excalidrawSvgFile, pageId);
+        }
+
+        if (updateSrc) {
+          updateAttributes({
+            attachmentId: attachment.id,
+            size: attachment.fileSize,
+            src: `/api/files/${attachment.id}/${attachment.fileName}?t=${new Date(attachment.updatedAt).getTime()}`,
+            title: attachment.fileName,
+          });
+        } else {
+          updateAttributes({
+            attachmentId: attachment.id,
+          });
+        }
+
+        isDirtyRef.current = false;
+      } finally {
+        isSavingRef.current = false;
+        setIsSaving(false);
+      }
+    },
+    [excalidrawAPI, editor, attachmentId, updateAttributes]
+  );
 
   const handleSaveAndExit = useCallback(async () => {
     try {
@@ -142,24 +149,26 @@ export default function ExcalidrawView(props: NodeViewProps) {
     }
 
     modals.openConfirmModal({
-      title: t("Unsaved changes"),
+      centered: true,
       children: (
         <Text size="sm">
           {t("You have unsaved changes that will be lost.")}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Discard"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Discard") },
       onConfirm: () => {
         isDirtyRef.current = false;
         close();
       },
+      title: t("Unsaved changes"),
     });
   }, [close, t]);
 
   useEffect(() => {
-    if (!opened) return;
+    if (!opened) {
+      return;
+    }
 
     const interval = setInterval(() => {
       if (isDirtyRef.current && !isSavingRef.current) {
@@ -173,31 +182,35 @@ export default function ExcalidrawView(props: NodeViewProps) {
   return (
     <NodeViewWrapper data-drag-handle>
       <ReactClearModal
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          padding: 0,
-          zIndex: 200,
-        }}
-        isOpen={opened}
-        onRequestClose={handleClose}
-        disableCloseOnBgClick={true}
         contentProps={{
           style: {
             padding: 0,
             width: "90vw",
           },
         }}
+        disableCloseOnBgClick={true}
+        isOpen={opened}
+        onRequestClose={handleClose}
+        style={{
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          padding: 0,
+          zIndex: 200,
+        }}
       >
         <Group
-          justify="flex-end"
-          wrap="nowrap"
           bg="var(--mantine-color-body)"
+          justify="flex-end"
           p="xs"
+          wrap="nowrap"
         >
-          <Button onClick={handleSaveAndExit} size={"compact-sm"} loading={isSaving}>
+          <Button
+            loading={isSaving}
+            onClick={handleSaveAndExit}
+            size={"compact-sm"}
+          >
             {t("Save & Exit")}
           </Button>
-          <Button onClick={handleClose} color="red" size={"compact-sm"}>
+          <Button color="red" onClick={handleClose} size={"compact-sm"}>
             {t("Exit")}
           </Button>
         </Group>
@@ -205,6 +218,10 @@ export default function ExcalidrawView(props: NodeViewProps) {
           <Suspense fallback={null}>
             <ExcalidrawComponent
               excalidrawAPI={(api) => setExcalidrawAPI(api)}
+              initialData={{
+                ...excalidrawData,
+                scrollToContent: true,
+              }}
               onChange={(elements, _appState, files) => {
                 const fingerprint = `${elements.length}:${elements.reduce((s, e) => s + (e.version || 0), 0)}:${Object.keys(files).length}`;
                 if (isInitialLoadRef.current) {
@@ -217,10 +234,6 @@ export default function ExcalidrawView(props: NodeViewProps) {
                   isDirtyRef.current = true;
                 }
               }}
-              initialData={{
-                ...excalidrawData,
-                scrollToContent: true,
-              }}
               theme={computedColorScheme}
             />
           </Suspense>
@@ -228,27 +241,27 @@ export default function ExcalidrawView(props: NodeViewProps) {
       </ReactClearModal>
 
       <Card
-        radius="md"
+        className={clsx(selected ? "ProseMirror-selectednode" : "")}
         onClick={(e) => e.detail === 2 && handleOpen()}
         p="xs"
+        radius="md"
         style={{
+          alignItems: "center",
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",
         }}
         withBorder
-        className={clsx(selected ? "ProseMirror-selectednode" : "")}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ alignItems: "center", display: "flex" }}>
           <ActionIcon
-            variant="transparent"
-            color="gray"
             aria-label={t("Edit drawing")}
+            color="gray"
+            variant="transparent"
           >
             <IconEdit size={18} />
           </ActionIcon>
 
-          <Text component="span" size="lg" c="dimmed">
+          <Text c="dimmed" component="span" size="lg">
             {t("Double-click to edit Excalidraw diagram")}
           </Text>
         </div>

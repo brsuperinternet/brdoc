@@ -20,7 +20,7 @@ export function getStatusColor(status: VerificationStatus): string {
 
 export function getStatusLabel(
   status: VerificationStatus,
-  t: (key: string) => string,
+  t: (key: string) => string
 ): string {
   switch (status) {
     case "verified":

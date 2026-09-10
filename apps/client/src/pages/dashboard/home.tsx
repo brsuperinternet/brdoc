@@ -1,9 +1,9 @@
 import { Container, Space } from "@mantine/core";
-import HomeTabs from "@/features/home/components/home-tabs";
-import HomeAiPrompt from "@/features/home/components/home-ai-prompt";
-import SpaceCarousel from "@/features/space/components/space-carousel.tsx";
 import { useTranslation } from "react-i18next";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import HomeAiPrompt from "@/features/home/components/home-ai-prompt";
+import HomeTabs from "@/features/home/components/home-tabs";
+import SpaceCarousel from "@/features/space/components/space-carousel.tsx";
 
 export default function Home() {
   const { t } = useTranslation();
@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <>
       <DocumentTitle title={t("Home")} />
-      <Container size={"900"} pt="xl">
+      <Container pt="xl" size={"900"}>
         <HomeAiPrompt />
 
         <Space h="xl" />

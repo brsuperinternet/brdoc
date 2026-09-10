@@ -1,13 +1,18 @@
-import { useCallback, useState } from "react";
 import { Popover } from "@mantine/core";
-import { Choice, SelectTypeOptions } from "@/ee/base/types/base.types";
+import { useCallback, useState } from "react";
 import { choiceColor } from "@/ee/base/components/cells/choice-color";
 import { ChoicePicker } from "@/ee/base/components/cells/choice-picker";
-import { FieldProps, FieldShell } from "./detail-field";
-import classes from "@/ee/base/styles/row-detail-modal.module.css";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { Choice, SelectTypeOptions } from "@/ee/base/types/base.types";
+import { FieldProps, FieldShell } from "./detail-field";
 
-export function FieldChoice({ property, value, readOnly, onChange }: FieldProps) {
+export function FieldChoice({
+  property,
+  value,
+  readOnly,
+  onChange,
+}: FieldProps) {
   const [opened, setOpened] = useState(false);
   const multiple = property.type === "multiSelect";
   const choices =
@@ -34,13 +39,13 @@ export function FieldChoice({ property, value, readOnly, onChange }: FieldProps)
         setOpened(false);
       }
     },
-    [multiple, selectedIds, onChange],
+    [multiple, selectedIds, onChange]
   );
 
   const chips = selectedChoices.map((choice) => (
     <span
-      key={choice.id}
       className={cellClasses.badge}
+      key={choice.id}
       style={choiceColor(choice.color)}
     >
       {choice.name}
@@ -57,24 +62,22 @@ export function FieldChoice({ property, value, readOnly, onChange }: FieldProps)
 
   return (
     <Popover
-      opened={opened}
-      onChange={setOpened}
-      position="bottom-start"
-      width="target"
-      shadow="md"
-      withinPortal
-      trapFocus
       closeOnClickOutside
       closeOnEscape={false}
       hideDetached={false}
+      onChange={setOpened}
+      opened={opened}
+      position="bottom-start"
+      shadow="md"
+      trapFocus
+      width="target"
+      withinPortal
     >
       <Popover.Target>
         <FieldShell
-          cursor="pointer"
           active={opened}
-          role="button"
-          tabIndex={0}
           aria-label={property.name}
+          cursor="pointer"
           onClick={() => setOpened((o) => !o)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -82,6 +85,8 @@ export function FieldChoice({ property, value, readOnly, onChange }: FieldProps)
               setOpened((o) => !o);
             }
           }}
+          role="button"
+          tabIndex={0}
         >
           <div className={classes.fieldChips}>{chips}</div>
         </FieldShell>
@@ -89,13 +94,13 @@ export function FieldChoice({ property, value, readOnly, onChange }: FieldProps)
       <Popover.Dropdown p={4}>
         {opened && (
           <ChoicePicker
+            allowCreate={property.type !== "status"}
+            grouped={property.type === "status"}
+            multiple={multiple}
+            onEscape={() => setOpened(false)}
+            onToggle={handleToggle}
             property={property}
             selectedIds={selectedIds}
-            multiple={multiple}
-            grouped={property.type === "status"}
-            allowCreate={property.type !== "status"}
-            onToggle={handleToggle}
-            onEscape={() => setOpened(false)}
           />
         )}
       </Popover.Dropdown>

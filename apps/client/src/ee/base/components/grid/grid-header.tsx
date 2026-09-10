@@ -1,10 +1,14 @@
+import {
+  ColumnOrderState,
+  Table,
+  VisibilityState,
+} from "@tanstack/react-table";
 import { memo, useMemo } from "react";
-import { Table, ColumnOrderState, VisibilityState } from "@tanstack/react-table";
-import { IBaseRow, IBaseProperty } from "@/ee/base/types/base.types";
-import { GridHeaderCell } from "./grid-header-cell";
 import { CreatePropertyPopover } from "@/ee/base/components/property/create-property-popover";
 import { useBaseEditable } from "@/ee/base/context/base-editable";
 import classes from "@/ee/base/styles/grid.module.css";
+import { IBaseProperty, IBaseRow } from "@/ee/base/types/base.types";
+import { GridHeaderCell } from "./grid-header-cell";
 
 type GridHeaderProps = {
   table: Table<IBaseRow>;
@@ -35,7 +39,9 @@ export const GridHeader = memo(function GridHeader({
   const editable = useBaseEditable();
   const propertyById = useMemo(() => {
     const map = new Map<string, IBaseProperty>();
-    for (const p of properties) map.set(p.id, p);
+    for (const p of properties) {
+      map.set(p.id, p);
+    }
     return map;
   }, [properties]);
 
@@ -43,20 +49,20 @@ export const GridHeader = memo(function GridHeader({
     <div className={classes.headerRow} role="row">
       {headerGroups[0]?.headers.map((header) => (
         <GridHeaderCell
-          key={header.id}
-          header={header}
-          property={propertyById.get(header.column.id)}
-          loadedRowIds={loadedRowIds}
-          pageId={pageId}
           getColumnOrder={getColumnOrder}
+          header={header}
+          key={header.id}
+          loadedRowIds={loadedRowIds}
           onColumnReorder={onColumnReorder}
+          pageId={pageId}
+          property={propertyById.get(header.column.id)}
         />
       ))}
       {editable && (
         <CreatePropertyPopover
+          onPropertyCreated={onPropertyCreated}
           pageId={pageId}
           properties={properties}
-          onPropertyCreated={onPropertyCreated}
         />
       )}
     </div>

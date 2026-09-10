@@ -1,15 +1,15 @@
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { Button, TextInput } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 import { useAtom } from "jotai";
-import { z } from "zod/v4";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 import { IWorkspace } from "@/features/workspace/types/workspace.types.ts";
-import { TextInput, Button } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
-import { notifications } from "@mantine/notifications";
 import useUserRole from "@/hooks/use-user-role.tsx";
-import { useTranslation } from "react-i18next";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -24,10 +24,10 @@ export default function WorkspaceNameForm() {
   const { isAdmin } = useUserRole();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       name: workspace?.name,
     },
+    validate: zod4Resolver(formSchema),
   });
 
   async function handleSubmit(data: Partial<IWorkspace>) {
@@ -40,8 +40,8 @@ export default function WorkspaceNameForm() {
     } catch (err) {
       console.log(err);
       notifications.show({
-        message: t("Failed to update data"),
         color: "red",
+        message: t("Failed to update data"),
       });
     }
     setIsLoading(false);
@@ -54,17 +54,17 @@ export default function WorkspaceNameForm() {
         id="name"
         label={t("Name")}
         placeholder={t("e.g ACME")}
-        variant="filled"
         readOnly={!isAdmin}
+        variant="filled"
         {...form.getInputProps("name")}
       />
 
       {isAdmin && (
         <Button
-          mt="sm"
-          type="submit"
           disabled={isLoading || !form.isDirty()}
           loading={isLoading}
+          mt="sm"
+          type="submit"
         >
           {t("Save")}
         </Button>

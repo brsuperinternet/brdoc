@@ -1,5 +1,3 @@
-import { FC } from "react";
-import type { Editor } from "@tiptap/react";
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
 import {
   IconFileTypePdf,
@@ -8,12 +6,14 @@ import {
   IconPaperclip,
   IconPhoto,
 } from "@tabler/icons-react";
+import type { Editor } from "@tiptap/react";
+import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { uploadImageAction } from "@/features/editor/components/image/upload-image-action";
-import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action";
-import { uploadAudioAction } from "@/features/editor/components/audio/upload-audio-action";
 import { uploadAttachmentAction } from "@/features/editor/components/attachment/upload-attachment-action";
+import { uploadAudioAction } from "@/features/editor/components/audio/upload-audio-action";
+import { uploadImageAction } from "@/features/editor/components/image/upload-image-action";
 import { uploadPdfAction } from "@/features/editor/components/pdf/upload-pdf-action";
+import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action";
 
 interface Props {
   editor: Editor;
@@ -33,11 +33,13 @@ function pickFile(
   accept: string,
   multiple: boolean,
   upload: UploadFn,
-  extra?: boolean,
+  extra?: boolean
 ) {
-  // @ts-ignore — editor.storage.pageId is set by PageEditor.onCreate
+  // @ts-expect-error — editor.storage.pageId is set by PageEditor.onCreate
   const pageId = editor.storage?.pageId as string | undefined;
-  if (!pageId) return;
+  if (!pageId) {
+    return;
+  }
 
   const input = document.createElement("input");
   input.type = "file";
@@ -49,10 +51,10 @@ function pickFile(
     if (input.files?.length) {
       for (const file of input.files) {
         const pos = editor.view.state.selection.from;
-        if (extra !== undefined) {
-          upload(file, editor, pos, pageId, extra);
-        } else {
+        if (extra === undefined) {
           upload(file, editor, pos, pageId);
+        } else {
+          upload(file, editor, pos, pageId, extra);
         }
       }
     }
@@ -65,14 +67,14 @@ export const MediaGroup: FC<Props> = ({ editor, templateMode }) => {
   const { t } = useTranslation();
 
   return (
-    <Menu shadow="md" position="bottom-start" withArrow={false}>
+    <Menu position="bottom-start" shadow="md" withArrow={false}>
       <Menu.Target>
         <Tooltip label={t("Insert media")} withArrow>
           <ActionIcon
-            variant="subtle"
+            aria-label={t("Insert media")}
             color="dark"
             size="md"
-            aria-label={t("Insert media")}
+            variant="subtle"
           >
             <IconPhoto size={16} />
           </ActionIcon>

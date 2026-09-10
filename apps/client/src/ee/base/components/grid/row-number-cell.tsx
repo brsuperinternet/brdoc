@@ -1,14 +1,14 @@
-import { memo, useCallback, useMemo } from "react";
 import { Checkbox } from "@mantine/core";
 import { IconGripVertical } from "@tabler/icons-react";
-import { useAtomValue, useSetAtom, type PrimitiveAtom } from "jotai";
+import { type PrimitiveAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
-import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
+import { memo, useCallback, useMemo } from "react";
 import { focusedCellAtomFamily } from "@/ee/base/atoms/base-atoms";
-import { FocusedCell } from "@/ee/base/types/base.types";
 import { useBaseEditable } from "@/ee/base/context/base-editable";
 import { useGridRowOrder } from "@/ee/base/context/grid-row-order";
+import { useRowSelection } from "@/ee/base/hooks/use-row-selection";
 import classes from "@/ee/base/styles/grid.module.css";
+import { FocusedCell } from "@/ee/base/types/base.types";
 
 type RowNumberCellProps = {
   rowId: string;
@@ -31,75 +31,77 @@ export const RowNumberCell = memo(function RowNumberCell({
   const getOrderedRowIds = useGridRowOrder();
 
   const setFocusedCell = useSetAtom(
-    focusedCellAtomFamily(pageId) as PrimitiveAtom<FocusedCell>,
+    focusedCellAtomFamily(pageId) as PrimitiveAtom<FocusedCell>
   );
   const isFocused = useAtomValue(
     useMemo(
       () =>
         selectAtom(
           focusedCellAtomFamily(pageId),
-          (fc) => fc?.rowId === rowId && fc?.propertyId === "__row_number",
+          (fc) => fc?.rowId === rowId && fc?.propertyId === "__row_number"
         ),
-      [pageId, rowId],
-    ),
+      [pageId, rowId]
+    )
   );
 
   const handleCellMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.button !== 0) return;
-      setFocusedCell({ rowId, propertyId: "__row_number" });
+      if (e.button !== 0) {
+        return;
+      }
+      setFocusedCell({ propertyId: "__row_number", rowId });
     },
-    [rowId, setFocusedCell],
+    [rowId, setFocusedCell]
   );
 
   const handleCellClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      setFocusedCell({ rowId, propertyId: "__row_number" });
+      setFocusedCell({ propertyId: "__row_number", rowId });
       (e.currentTarget.closest('[role="grid"]') as HTMLElement | null)?.focus({
         preventScroll: true,
       });
     },
-    [rowId, setFocusedCell],
+    [rowId, setFocusedCell]
   );
 
   const handleCheckboxChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const nativeEvent = e.nativeEvent as MouseEvent;
       toggle(rowId, {
-        shiftKey: nativeEvent.shiftKey === true,
-        rowIndex,
         orderedRowIds: getOrderedRowIds(),
+        rowIndex,
+        shiftKey: nativeEvent.shiftKey === true,
       });
     },
-    [rowId, rowIndex, getOrderedRowIds, toggle],
+    [rowId, rowIndex, getOrderedRowIds, toggle]
   );
 
   return (
     <div
-      id={`base-cell-${rowId}-__row_number`}
-      role="gridcell"
       className={`${classes.cell} ${classes.rowNumberCell} ${isPinned ? classes.cellPinned : ""} ${isFocused ? classes.cellFocused : ""}`}
+      id={`base-cell-${rowId}-__row_number`}
+      onClick={handleCellClick}
+      onMouseDown={handleCellMouseDown}
+      role="gridcell"
       style={
         isPinned
           ? ({ "--pin-offset": `${pinOffset ?? 0}px` } as React.CSSProperties)
           : undefined
       }
-      onClick={handleCellClick}
-      onMouseDown={handleCellMouseDown}
     >
       <div className={classes.rowNumberCellInner}>
         {editable && (
-          <span className={classes.rowNumberDragHandle} aria-label="Drag row">
+          <span aria-label="Drag row" className={classes.rowNumberDragHandle}>
             <IconGripVertical size={12} />
           </span>
         )}
         {editable && (
           <span className={classes.rowNumberCheckbox}>
             <Checkbox
-              size="xs"
+              aria-label="Select row"
               checked={selected}
               onChange={handleCheckboxChange}
-              aria-label="Select row"
+              size="xs"
               tabIndex={-1}
             />
           </span>

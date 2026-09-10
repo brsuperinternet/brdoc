@@ -1,27 +1,27 @@
-import api from "@/lib/api-client";
 import {
   IApproveAuthorizationPayload,
   IAuthorizeParams,
   IOAuthAuthorizeInfo,
   IOAuthGrant,
 } from "@/ee/oauth/types/oauth.types";
+import api from "@/lib/api-client";
 
 export async function getOAuthAuthorizeInfo(
-  params: IAuthorizeParams,
+  params: IAuthorizeParams
 ): Promise<IOAuthAuthorizeInfo> {
   const req = await api.post<IOAuthAuthorizeInfo>(
     "/oauth/authorize-info",
-    params,
+    params
   );
   return req.data;
 }
 
 export async function approveOAuthAuthorization(
-  payload: IApproveAuthorizationPayload,
+  payload: IApproveAuthorizationPayload
 ): Promise<{ redirectUrl: string }> {
   const req = await api.post<{ redirectUrl: string }>(
     "/oauth/authorize",
-    payload,
+    payload
   );
   return req.data;
 }

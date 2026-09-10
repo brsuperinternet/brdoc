@@ -1,9 +1,9 @@
-import { Link, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { IconPencil } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
+import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { useAuthenticatedUser } from "@/features/public-space/hooks/use-authenticated-user.ts";
 import { useDocsCurrentPage } from "@/features/public-space/hooks/use-docs-current-page.ts";
-import { buildPageUrl } from "@/features/page/page.utils.ts";
 import styles from "./docs.module.css";
 
 export default function DocsEditPage() {
@@ -13,18 +13,18 @@ export default function DocsEditPage() {
 
   const { data: currentUser } = useAuthenticatedUser();
 
-  if (!currentUser?.user || !page) {
+  if (!(currentUser?.user && page)) {
     return null;
   }
 
   return (
     <Link
       className={styles.editPageLink}
-      to={buildPageUrl(spaceSlug, page.slugId, page.name)}
-      target="_blank"
       rel="noopener"
+      target="_blank"
+      to={buildPageUrl(spaceSlug, page.slugId, page.name)}
     >
-      <IconPencil size={14} stroke={1.8} aria-hidden />
+      <IconPencil aria-hidden size={14} stroke={1.8} />
       {t("Edit page")}
     </Link>
   );

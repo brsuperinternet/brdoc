@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo } from "react";
 import { Table } from "@tanstack/react-table";
+import { useCallback, useEffect, useMemo } from "react";
 import {
-  IBaseRow,
-  IBaseProperty,
+  CellCoord,
   EditingCell,
   FocusedCell,
-  CellCoord,
+  IBaseProperty,
+  IBaseRow,
 } from "@/ee/base/types/base.types";
 import { computeNextCell } from "@/ee/base/utils/grid-cell-nav";
 
@@ -63,27 +63,27 @@ export function useGridKeyboardNav({
         .getVisibleLeafColumns()
         .filter((col) => col.id !== "__row_number")
         .map((col) => col.id),
-    [table],
+    [table]
   );
 
   const getNavColIds = useCallback(
     () => table.getVisibleLeafColumns().map((col) => col.id),
-    [table],
+    [table]
   );
 
   const getRowIds = useCallback(
     () => table.getRowModel().rows.map((row) => row.id),
-    [table],
+    [table]
   );
 
   const propertyType = useCallback(
     (propertyId: string) => properties.find((p) => p.id === propertyId)?.type,
-    [properties],
+    [properties]
   );
 
   const primaryPropertyId = useMemo(
     () => properties.find((p) => p.isPrimary)?.id,
-    [properties],
+    [properties]
   );
 
   const goEditing = useCallback(
@@ -93,7 +93,7 @@ export function useGridKeyboardNav({
       setFocusedCell(next);
       scrollCellIntoView(next, getRowIds().indexOf(next.rowId));
     },
-    [setEditingCell, setFocusedCell, scrollCellIntoView, getRowIds],
+    [setEditingCell, setFocusedCell, scrollCellIntoView, getRowIds]
   );
 
   const goFocused = useCallback(
@@ -101,7 +101,7 @@ export function useGridKeyboardNav({
       setFocusedCell(next);
       scrollCellIntoView(next, getRowIds().indexOf(next.rowId));
     },
-    [setFocusedCell, scrollCellIntoView, getRowIds],
+    [setFocusedCell, scrollCellIntoView, getRowIds]
   );
 
   const handleKeyDown = useCallback(
@@ -113,7 +113,9 @@ export function useGridKeyboardNav({
           case "ArrowDown":
           case "ArrowLeft":
           case "ArrowRight": {
-            if (inInput) return;
+            if (inInput) {
+              return;
+            }
             e.preventDefault();
             const d =
               e.key === "ArrowUp"
@@ -129,9 +131,11 @@ export function useGridKeyboardNav({
               editingCell,
               d[0],
               d[1],
-              false,
+              false
             );
-            if (next) goEditing(next);
+            if (next) {
+              goEditing(next);
+            }
             break;
           }
           case "Tab": {
@@ -142,9 +146,11 @@ export function useGridKeyboardNav({
               editingCell,
               0,
               e.shiftKey ? -1 : 1,
-              true,
+              true
             );
-            if (next) goEditing(next);
+            if (next) {
+              goEditing(next);
+            }
             break;
           }
           case "Enter": {
@@ -161,12 +167,15 @@ export function useGridKeyboardNav({
               editingCell,
               1,
               0,
-              false,
+              false
             );
             (document.activeElement as HTMLElement | null)?.blur();
             setEditingCell(null);
-            if (next) goFocused(next);
-            else setFocusedCell(editingCell);
+            if (next) {
+              goFocused(next);
+            } else {
+              setFocusedCell(editingCell);
+            }
             break;
           }
           case "Escape": {
@@ -179,9 +188,13 @@ export function useGridKeyboardNav({
         return;
       }
 
-      if (e.target !== containerRef.current) return;
+      if (e.target !== containerRef.current) {
+        return;
+      }
 
-      if (isTextEntry(document.activeElement)) return;
+      if (isTextEntry(document.activeElement)) {
+        return;
+      }
 
       if (e.key === "Escape") {
         if (selectionCount > 0) {
@@ -205,35 +218,73 @@ export function useGridKeyboardNav({
         return;
       }
 
-      if (!focusedCell) return;
+      if (!focusedCell) {
+        return;
+      }
 
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
           {
-            const next = computeNextCell(getRowIds(), getNavColIds(), focusedCell, -1, 0, false);
-            if (next) goFocused(next);
+            const next = computeNextCell(
+              getRowIds(),
+              getNavColIds(),
+              focusedCell,
+              -1,
+              0,
+              false
+            );
+            if (next) {
+              goFocused(next);
+            }
           }
           break;
         case "ArrowDown":
           e.preventDefault();
           {
-            const next = computeNextCell(getRowIds(), getNavColIds(), focusedCell, 1, 0, false);
-            if (next) goFocused(next);
+            const next = computeNextCell(
+              getRowIds(),
+              getNavColIds(),
+              focusedCell,
+              1,
+              0,
+              false
+            );
+            if (next) {
+              goFocused(next);
+            }
           }
           break;
         case "ArrowLeft":
           e.preventDefault();
           {
-            const next = computeNextCell(getRowIds(), getNavColIds(), focusedCell, 0, -1, false);
-            if (next) goFocused(next);
+            const next = computeNextCell(
+              getRowIds(),
+              getNavColIds(),
+              focusedCell,
+              0,
+              -1,
+              false
+            );
+            if (next) {
+              goFocused(next);
+            }
           }
           break;
         case "ArrowRight":
           e.preventDefault();
           {
-            const next = computeNextCell(getRowIds(), getNavColIds(), focusedCell, 0, 1, false);
-            if (next) goFocused(next);
+            const next = computeNextCell(
+              getRowIds(),
+              getNavColIds(),
+              focusedCell,
+              0,
+              1,
+              false
+            );
+            if (next) {
+              goFocused(next);
+            }
           }
           break;
         case "Tab": {
@@ -243,7 +294,7 @@ export function useGridKeyboardNav({
             focusedCell,
             0,
             e.shiftKey ? -1 : 1,
-            true,
+            true
           );
           if (next) {
             e.preventDefault();
@@ -305,12 +356,14 @@ export function useGridKeyboardNav({
       expandRow,
       primaryPropertyId,
       addRow,
-    ],
+    ]
   );
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     el.addEventListener("keydown", handleKeyDown);
     return () => el.removeEventListener("keydown", handleKeyDown);
   }, [containerRef, handleKeyDown]);

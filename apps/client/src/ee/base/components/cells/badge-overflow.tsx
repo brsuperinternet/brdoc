@@ -1,22 +1,28 @@
-import { ReactElement, useLayoutEffect, useRef, useState } from "react";
 import { Tooltip } from "@mantine/core";
+import { ReactElement, useLayoutEffect, useRef, useState } from "react";
 import cellClasses from "@/ee/base/styles/cells.module.css";
 
 export function computeVisibleBadgeCount(
   itemWidths: number[],
   gap: number,
   available: number,
-  badgeWidth: number,
+  badgeWidth: number
 ): number {
   const count = itemWidths.length;
-  if (count === 0) return 0;
-  if (available <= 0) return count;
+  if (count === 0) {
+    return 0;
+  }
+  if (available <= 0) {
+    return count;
+  }
 
   let lineWidth = 0;
   for (let i = 0; i < count; i++) {
     lineWidth += itemWidths[i] + (i > 0 ? gap : 0);
   }
-  if (lineWidth <= available) return count;
+  if (lineWidth <= available) {
+    return count;
+  }
 
   let used = 0;
   let fit = 0;
@@ -52,7 +58,9 @@ export function BadgeOverflowList({
   useLayoutEffect(() => {
     const container = containerRef.current;
     const measure = measureRef.current;
-    if (!container || !measure) return;
+    if (!(container && measure)) {
+      return;
+    }
 
     const recompute = () => {
       const nodes = Array.from(measure.children) as HTMLElement[];
@@ -63,8 +71,8 @@ export function BadgeOverflowList({
           chipWidths,
           BADGE_GAP,
           container.clientWidth,
-          badgeWidth,
-        ),
+          badgeWidth
+        )
       );
     };
 
@@ -79,14 +87,14 @@ export function BadgeOverflowList({
 
   return (
     <Tooltip
+      disabled={!tooltipLabel || overflow <= 0}
       label={tooltipLabel}
       multiline
-      withinPortal
       openDelay={400}
-      disabled={!tooltipLabel || overflow <= 0}
+      withinPortal
     >
       <div className={cellClasses.badgeGroup} ref={containerRef}>
-        <div className={cellClasses.badgeMeasure} ref={measureRef} aria-hidden>
+        <div aria-hidden className={cellClasses.badgeMeasure} ref={measureRef}>
           {chips}
           <span className={cellClasses.overflowCount}>+{chips.length}</span>
         </div>

@@ -1,28 +1,32 @@
-import { Editor } from "@tiptap/react";
+import {
+  copyToClipboard,
+  htmlToMarkdown,
+  isEditorReady,
+} from "@docmost/editor-ext";
 import { ActionIcon, TextInput } from "@mantine/core";
 import { useDebouncedCallback, useMediaQuery } from "@mantine/hooks";
+import { IconArrowUp } from "@tabler/icons-react";
+import { DOMSerializer } from "@tiptap/pm/model";
+import { Editor } from "@tiptap/react";
+import { useAtom } from "jotai";
+import { marked } from "marked";
 import {
+  type JSX,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type JSX,
 } from "react";
 import { createPortal } from "react-dom";
-import { useAtom } from "jotai";
-import { IconArrowUp } from "@tabler/icons-react";
-import { showAiMenuAtom } from "@/features/editor/atoms/editor-atoms.ts";
+import { useLocation } from "react-router-dom";
 import { useAiGenerateStreamMutation } from "@/ee/ai/queries/ai-query.ts";
 import { AiAction } from "@/ee/ai/types/ai.types.ts";
-import { CommandItem, commandItems, CommandSet } from "./command-items.ts";
+import { showAiMenuAtom } from "@/features/editor/atoms/editor-atoms.ts";
+import classes from "./ai-menu.module.css";
+import { CommandItem, CommandSet, commandItems } from "./command-items.ts";
 import { CommandSelector } from "./command-selector.tsx";
 import { ResultPreview } from "./result-preview.tsx";
-import classes from "./ai-menu.module.css";
-import { marked } from "marked";
-import { DOMSerializer } from "@tiptap/pm/model";
-import { copyToClipboard, htmlToMarkdown, isEditorReady } from "@docmost/editor-ext";
-import { useLocation } from "react-router-dom";
 
 interface EditorAiMenuProps {
   editor: Editor | null;
@@ -46,17 +50,21 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
     left: number;
     width: number;
   }>({
-    top: 0,
     left: 0,
+    top: 0,
     width: 0,
   });
-  const currentItems = useMemo(() => {
-    return commandItems[activeCommandSet].filter((item) => {
-      return item.name.toLowerCase().includes(prompt.toLowerCase());
-    });
-  }, [prompt, output, activeCommandSet]);
+  const currentItems = useMemo(
+    () =>
+      commandItems[activeCommandSet].filter((item) =>
+        item.name.toLowerCase().includes(prompt.toLowerCase())
+      ),
+    [prompt, output, activeCommandSet]
+  );
   const updateMenuPlacement = useCallback(() => {
-    if (!isEditorReady(editor) || !showAiMenu) return;
+    if (!(isEditorReady(editor) && showAiMenu)) {
+      return;
+    }
 
     const { view } = editor;
     const { from, to } = editor.state.selection;
@@ -84,8 +92,8 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
     menuLeft = Math.max(editorLeft, menuLeft);
 
     setMenuPlacement({
-      top: anchorBottom + topOffset + window.scrollY,
       left: menuLeft + window.scrollX,
+      top: anchorBottom + topOffset + window.scrollY,
       width: menuWidth,
     });
   }, [editor, showAiMenu, isSmBreakpoint]);
@@ -98,21 +106,25 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
   }, [aiGenerateStreamMutation.reset]);
   const debouncedUpdateMenuPlacement = useDebouncedCallback(
     updateMenuPlacement,
-    60,
+    60
   );
   const handleGenerate = useCallback(
     (item?: CommandItem) => {
-      if (!isEditorReady(editor) || isLoading) return;
+      if (!isEditorReady(editor) || isLoading) {
+        return;
+      }
 
       let command: CommandItem | null = item || null;
 
       if (!command) {
-        if (!prompt) return;
+        if (!prompt) {
+          return;
+        }
 
         command = {
+          action: AiAction.CUSTOM,
           id: "custom",
           name: "Custom",
-          action: AiAction.CUSTOM,
           prompt,
         };
       }
@@ -129,7 +141,6 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
       setIsLoading(true);
       aiGenerateStreamMutation.mutate({
         action: command.action,
-        prompt: command.prompt,
         content,
         onChunk: (chunk) => {
           setOutput((output) => output + chunk.content);
@@ -143,16 +154,11 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
           setIsLoading(false);
           resetMenu();
         },
+        prompt: command.prompt,
       });
       setLastAction(command);
     },
-    [
-      editor,
-      prompt,
-      isLoading,
-      aiGenerateStreamMutation.mutateAsync,
-      resetMenu,
-    ],
+    [editor, prompt, isLoading, aiGenerateStreamMutation.mutateAsync, resetMenu]
   );
   const handleCommand = useCallback(
     (item?: CommandItem) => {
@@ -165,7 +171,9 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
         return setActiveCommandSet("main");
       }
       if (item.id === "result-replace") {
-        if (!isEditorReady(editor)) return setShowAiMenu(false);
+        if (!isEditorReady(editor)) {
+          return setShowAiMenu(false);
+        }
         const chain = editor.chain().focus();
 
         if (lastAction.action === AiAction.CONTINUE_WRITING) {
@@ -182,8 +190,8 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
         // then decode HTML entities via DOMParser since TipTap would otherwise
         // treat the tagless string as plain text and insert entities literally.
         const content = isSingleParagraph
-          ? new DOMParser().parseFromString(html.slice(3, -4), "text/html")
-              .body.innerHTML
+          ? new DOMParser().parseFromString(html.slice(3, -4), "text/html").body
+              .innerHTML
           : html;
 
         chain.insertContent(content).run();
@@ -191,7 +199,9 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
         return setShowAiMenu(false);
       }
       if (item.id === "result-insert-below") {
-        if (!isEditorReady(editor)) return setShowAiMenu(false);
+        if (!isEditorReady(editor)) {
+          return setShowAiMenu(false);
+        }
         editor
           .chain()
           .focus()
@@ -220,7 +230,7 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
 
       return handleGenerate(item);
     },
-    [editor, output, lastAction, handleGenerate, resetMenu],
+    [editor, output, lastAction, handleGenerate, resetMenu]
   );
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -238,8 +248,12 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
           const direction = event.key === "ArrowDown" ? 1 : -1;
           const newIndex = selectedIndex + direction;
 
-          if (newIndex < -1) return cycleSize - 1;
-          if (newIndex >= cycleSize) return 0;
+          if (newIndex < -1) {
+            return cycleSize - 1;
+          }
+          if (newIndex >= cycleSize) {
+            return 0;
+          }
 
           return newIndex;
         });
@@ -251,11 +265,13 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
         return handleCommand(currentItems[selectedIndex]);
       }
     },
-    [currentItems, selectedIndex],
+    [currentItems, selectedIndex]
   );
 
   useEffect(() => {
-    if (!isEditorReady(editor)) return;
+    if (!isEditorReady(editor)) {
+      return;
+    }
 
     const handleClose = () => setShowAiMenu(false);
     const observer = new ResizeObserver(() => {
@@ -299,59 +315,61 @@ const EditorAiMenu = ({ editor }: EditorAiMenuProps): JSX.Element | null => {
     setSelectedIndex(prompt || activeCommandSet !== "main" ? 0 : -1);
   }, [prompt, activeCommandSet, currentItems]);
 
-  if (!showAiMenu) return null;
+  if (!showAiMenu) {
+    return null;
+  }
 
   return createPortal(
     <div
       style={{
-        zIndex: 199,
+        left: menuPlacement.left,
+        pointerEvents: "none",
         position: "absolute",
         top: menuPlacement.top,
-        left: menuPlacement.left,
         width: menuPlacement.width,
-        pointerEvents: "none",
+        zIndex: 199,
       }}
     >
       <div
         className={classes.aiMenu}
+        ref={containerRef}
         style={{ pointerEvents: "auto" }}
         tabIndex={0}
-        ref={containerRef}
       >
-        <ResultPreview output={output} isLoading={isLoading} />
+        <ResultPreview isLoading={isLoading} output={output} />
         <CommandSelector
-          selectedIndex={selectedIndex}
-          isLoading={isLoading}
-          output={output}
           currentItems={currentItems}
           handleCommand={handleCommand}
+          isLoading={isLoading}
+          output={output}
+          selectedIndex={selectedIndex}
         >
           <TextInput
-            ref={inputRef}
             className={classes.aiInput}
-            placeholder="Ask AI..."
             data-autofocus
-            value={prompt}
             disabled={isLoading}
             onChange={(e) => setPrompt(e.currentTarget.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask AI..."
+            ref={inputRef}
             rightSection={
               <ActionIcon
-                disabled={!prompt || isLoading}
-                variant="filled"
                 color="blue"
+                disabled={!prompt || isLoading}
+                onClick={() => handleGenerate()}
                 radius="xl"
                 size="sm"
-                onClick={() => handleGenerate()}
+                variant="filled"
               >
                 <IconArrowUp size={14} stroke={2.5} />
               </ActionIcon>
             }
-            onKeyDown={handleKeyDown}
+            value={prompt}
           />
         </CommandSelector>
       </div>
     </div>,
-    document.body,
+    document.body
   );
 };
 

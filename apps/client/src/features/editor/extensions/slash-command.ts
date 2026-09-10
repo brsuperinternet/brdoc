@@ -1,29 +1,27 @@
-import { Extension } from '@tiptap/core';
-import { PluginKey } from '@tiptap/pm/state';
-import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
-import renderItems from '@/features/editor/components/slash-menu/render-items';
-import getSuggestionItems from '@/features/editor/components/slash-menu/menu-items';
+import { Extension } from "@tiptap/core";
+import { PluginKey } from "@tiptap/pm/state";
+import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
+import getSuggestionItems from "@/features/editor/components/slash-menu/menu-items";
+import renderItems from "@/features/editor/components/slash-menu/render-items";
 
-export const slashMenuPluginKey = new PluginKey('slash-command');
+export const slashMenuPluginKey = new PluginKey("slash-command");
 
-// @ts-ignore
+// @ts-expect-error
 const Command = Extension.create({
-  name: 'slash-command',
-
   addOptions() {
     return {
       suggestion: {
-        char: '/',
-        command: ({ editor, range, props }) => {
-          props.command({ editor, range, props });
-        },
         allow: ({ state, range }) => {
           const $from = state.doc.resolve(range.from);
           // Disable slash menu inside code blocks
-          if ($from.parent.type.name === 'codeBlock') {
+          if ($from.parent.type.name === "codeBlock") {
             return false;
           }
           return true;
+        },
+        char: "/",
+        command: ({ editor, range, props }) => {
+          props.command({ editor, props, range });
         },
       } as Partial<SuggestionOptions>,
     };
@@ -38,6 +36,7 @@ const Command = Extension.create({
       }),
     ];
   },
+  name: "slash-command",
 });
 
 const SlashCommand = Command.configure({

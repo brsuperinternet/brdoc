@@ -1,20 +1,19 @@
-import { Group, Table, Text, Badge, Menu, ActionIcon } from "@mantine/core";
+import { ActionIcon, Badge, Group, Menu, Table, Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { IconDots } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
+import NoTableResults from "@/components/common/no-table-results.tsx";
+import Paginate from "@/components/common/paginate.tsx";
+import { SearchInput } from "@/components/common/search-input.tsx";
+import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import {
   useGroupMembersQuery,
   useRemoveGroupMemberMutation,
 } from "@/features/group/queries/group-query";
-import { useParams } from "react-router-dom";
-import React from "react";
-import { IconDots } from "@tabler/icons-react";
-import { modals } from "@mantine/modals";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import useUserRole from "@/hooks/use-user-role.tsx";
-import { useTranslation } from "react-i18next";
 import { IUser } from "@/features/user/types/user.types.ts";
-import Paginate from "@/components/common/paginate.tsx";
-import { SearchInput } from "@/components/common/search-input.tsx";
-import NoTableResults from "@/components/common/no-table-results.tsx";
 import { usePaginateAndSearch } from "@/hooks/use-paginate-and-search.tsx";
+import useUserRole from "@/hooks/use-user-role.tsx";
 
 export default function GroupMembersList() {
   const { t } = useTranslation();
@@ -30,26 +29,26 @@ export default function GroupMembersList() {
 
   const onRemove = async (userId: string) => {
     const memberToRemove = {
-      groupId: groupId,
-      userId: userId,
+      groupId,
+      userId,
     };
     await removeGroupMember.mutateAsync(memberToRemove);
   };
 
   const openRemoveModal = (userId: string) =>
     modals.openConfirmModal({
-      title: t("Remove group member"),
+      centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Are you sure you want to remove this user from the group? The user will lose access to resources this group has access to.",
+            "Are you sure you want to remove this user from the group? The user will lose access to resources this group has access to."
           )}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Delete"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Delete") },
       onConfirm: () => onRemove(userId),
+      title: t("Remove group member"),
     });
 
   return (
@@ -76,10 +75,10 @@ export default function GroupMembersList() {
                         name={user.name}
                       />
                       <div>
-                        <Text fz="sm" fw={500} lineClamp={1}>
+                        <Text fw={500} fz="sm" lineClamp={1}>
                           {user.name}
                         </Text>
-                        <Text fz="xs" c="dimmed">
+                        <Text c="dimmed" fz="xs">
                           {user.email}
                         </Text>
                       </div>
@@ -91,20 +90,20 @@ export default function GroupMembersList() {
                   <Table.Td>
                     {isAdmin && (
                       <Menu
-                        shadow="xl"
-                        position="bottom-end"
+                        arrowPosition="center"
                         offset={20}
+                        position="bottom-end"
+                        shadow="xl"
                         width={200}
                         withArrow
-                        arrowPosition="center"
                       >
                         <Menu.Target>
                           <ActionIcon
-                            variant="subtle"
-                            c="gray"
                             aria-label={t("Member actions for {{name}}", {
                               name: user.name,
                             })}
+                            c="gray"
+                            variant="subtle"
                           >
                             <IconDots size={20} stroke={2} />
                           </ActionIcon>
@@ -128,8 +127,8 @@ export default function GroupMembersList() {
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
           hasNextPage={data?.meta?.hasNextPage}
+          hasPrevPage={data?.meta?.hasPrevPage}
           onNext={() => goNext(data?.meta?.nextCursor)}
           onPrev={goPrev}
         />

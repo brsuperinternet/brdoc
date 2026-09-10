@@ -1,26 +1,35 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Popover, TextInput } from "@mantine/core";
 import clsx from "clsx";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChoiceBadge } from "@/ee/base/components/cells/choice-badge";
+import { choiceColor } from "@/ee/base/components/cells/choice-color";
+import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
+import { useUpdatePropertyMutation } from "@/ee/base/queries/base-property-query";
+import cellClasses from "@/ee/base/styles/cells.module.css";
 import {
+  Choice,
   IBaseProperty,
   SelectTypeOptions,
-  Choice,
 } from "@/ee/base/types/base.types";
-import { choiceColor } from "@/ee/base/components/cells/choice-color";
-import { ChoiceBadge } from "@/ee/base/components/cells/choice-badge";
-import { useUpdatePropertyMutation } from "@/ee/base/queries/base-property-query";
 import { generateBaseChoiceId } from "@/ee/base/utils/generate-base-id";
-import cellClasses from "@/ee/base/styles/cells.module.css";
-import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
 
 const CHOICE_COLORS = [
-  "gray", "red", "pink", "grape", "violet", "indigo",
-  "blue", "cyan", "teal", "green", "lime", "yellow", "orange",
+  "gray",
+  "red",
+  "pink",
+  "grape",
+  "violet",
+  "indigo",
+  "blue",
+  "cyan",
+  "teal",
+  "green",
+  "lime",
+  "yellow",
+  "orange",
 ];
 
-type NavItem =
-  | { kind: "choice"; choice: Choice }
-  | { kind: "add" };
+type NavItem = { kind: "choice"; choice: Choice } | { kind: "add" };
 
 type CellSelectProps = {
   value: unknown;
@@ -54,16 +63,14 @@ export function CellSelect({
   }, [isEditing]);
 
   const filteredChoices = search
-    ? choices.filter((c) =>
-        c.name.toLowerCase().includes(search.toLowerCase()),
-      )
+    ? choices.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
     : choices;
 
   const handleSelect = useCallback(
     (choice: Choice) => {
       onCommit(choice.id === selectedId ? null : choice.id);
     },
-    [selectedId, onCommit],
+    [selectedId, onCommit]
   );
 
   const updatePropertyMutation = useUpdatePropertyMutation();
@@ -73,45 +80,55 @@ export function CellSelect({
     () =>
       trimmedSearch.length > 0 &&
       choices.some((c) => c.name.toLowerCase() === trimmedSearch.toLowerCase()),
-    [choices, trimmedSearch],
+    [choices, trimmedSearch]
   );
   const showAddOption = trimmedSearch.length > 0 && !hasExactMatch;
 
   const addOptionColor = useMemo(
     () => CHOICE_COLORS[choices.length % CHOICE_COLORS.length],
-    [choices.length],
+    [choices.length]
   );
 
   const navItems = useMemo<NavItem[]>(
     () => [
-      ...filteredChoices.map((c) => ({ kind: "choice" as const, choice: c })),
+      ...filteredChoices.map((c) => ({ choice: c, kind: "choice" as const })),
       ...(showAddOption ? [{ kind: "add" as const }] : []),
     ],
-    [filteredChoices, showAddOption],
+    [filteredChoices, showAddOption]
   );
 
   const { activeIndex, setActiveIndex, handleNavKey, setOptionRef } =
     useListKeyboardNav(navItems.length, [search, isEditing, showAddOption]);
 
   const handleAddOption = useCallback(() => {
-    if (!trimmedSearch) return;
+    if (!trimmedSearch) {
+      return;
+    }
     const newChoice: Choice = {
+      color: addOptionColor,
       id: generateBaseChoiceId(),
       name: trimmedSearch,
-      color: addOptionColor,
     };
     const newChoices = [...choices, newChoice];
     updatePropertyMutation.mutate({
-      propertyId: property.id,
       pageId: property.pageId,
+      propertyId: property.id,
       typeOptions: {
         ...typeOptions,
-        choices: newChoices,
         choiceOrder: newChoices.map((c) => c.id),
+        choices: newChoices,
       },
     });
     onCommit(newChoice.id);
-  }, [trimmedSearch, addOptionColor, choices, typeOptions, property, updatePropertyMutation, onCommit]);
+  }, [
+    trimmedSearch,
+    addOptionColor,
+    choices,
+    typeOptions,
+    property,
+    updatePropertyMutation,
+    onCommit,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -120,13 +137,18 @@ export function CellSelect({
         onCancel();
         return;
       }
-      if (handleNavKey(e)) return;
+      if (handleNavKey(e)) {
+        return;
+      }
       if (e.key === "Enter") {
         if (activeIndex >= 0 && activeIndex < navItems.length) {
           e.preventDefault();
           const item = navItems[activeIndex];
-          if (item.kind === "choice") handleSelect(item.choice);
-          else handleAddOption();
+          if (item.kind === "choice") {
+            handleSelect(item.choice);
+          } else {
+            handleAddOption();
+          }
           return;
         }
         if (showAddOption) {
@@ -135,23 +157,33 @@ export function CellSelect({
         }
       }
     },
-    [onCancel, handleNavKey, activeIndex, navItems, handleSelect, handleAddOption, showAddOption],
+    [
+      onCancel,
+      handleNavKey,
+      activeIndex,
+      navItems,
+      handleSelect,
+      handleAddOption,
+      showAddOption,
+    ]
   );
 
   if (isEditing) {
     const addOptionIdx = filteredChoices.length;
     return (
       <Popover
-        opened
-        onChange={(o) => {
-          if (!o) onCancel();
-        }}
-        onClose={onCancel}
-        position="bottom-start"
-        width={220}
-        trapFocus
         closeOnClickOutside
         closeOnEscape
+        onChange={(o) => {
+          if (!o) {
+            onCancel();
+          }
+        }}
+        onClose={onCancel}
+        opened
+        position="bottom-start"
+        trapFocus
+        width={220}
       >
         <Popover.Target>
           <div className={cellClasses.popoverTarget}>
@@ -169,28 +201,29 @@ export function CellSelect({
         </Popover.Target>
         <Popover.Dropdown p={4}>
           <TextInput
-            ref={searchRef}
-            size="xs"
-            placeholder="Search..."
-            value={search}
+            mb={4}
             onChange={(e) => setSearch(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
-            mb={4}
+            placeholder="Search..."
+            ref={searchRef}
+            size="xs"
+            value={search}
           />
           <div className={cellClasses.selectDropdown}>
             {filteredChoices.map((choice, idx) => {
               const isSelected = choice.id === selectedId;
               return (
                 <div
-                  key={choice.id}
-                  ref={setOptionRef(idx)}
                   className={clsx(
                     cellClasses.selectOption,
                     isSelected && cellClasses.selectOptionActive,
-                    idx === activeIndex && cellClasses.selectOptionKeyboardActive,
+                    idx === activeIndex &&
+                      cellClasses.selectOptionKeyboardActive
                   )}
-                  onMouseEnter={() => setActiveIndex(idx)}
+                  key={choice.id}
                   onClick={() => handleSelect(choice)}
+                  onMouseEnter={() => setActiveIndex(idx)}
+                  ref={setOptionRef(idx)}
                 >
                   <span
                     className={cellClasses.badge}
@@ -203,13 +236,14 @@ export function CellSelect({
             })}
             {showAddOption && (
               <div
-                ref={setOptionRef(addOptionIdx)}
                 className={clsx(
                   cellClasses.addOptionRow,
-                  addOptionIdx === activeIndex && cellClasses.selectOptionKeyboardActive,
+                  addOptionIdx === activeIndex &&
+                    cellClasses.selectOptionKeyboardActive
                 )}
-                onMouseEnter={() => setActiveIndex(addOptionIdx)}
                 onClick={handleAddOption}
+                onMouseEnter={() => setActiveIndex(addOptionIdx)}
+                ref={setOptionRef(addOptionIdx)}
               >
                 <span className={cellClasses.addOptionLabel}>Add option:</span>
                 <span

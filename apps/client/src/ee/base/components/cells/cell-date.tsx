@@ -1,11 +1,8 @@
-import { useCallback } from "react";
 import { Popover } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
-import {
-  IBaseProperty,
-  DateTypeOptions,
-} from "@/ee/base/types/base.types";
+import { useCallback } from "react";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { DateTypeOptions, IBaseProperty } from "@/ee/base/types/base.types";
 
 type CellDateProps = {
   value: unknown;
@@ -18,16 +15,30 @@ type CellDateProps = {
 
 export function formatDateDisplay(
   dateStr: string | null | undefined,
-  options: DateTypeOptions | undefined,
+  options: DateTypeOptions | undefined
 ): string {
-  if (!dateStr) return "";
+  if (!dateStr) {
+    return "";
+  }
   try {
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return "";
+    if (isNaN(date.getTime())) {
+      return "";
+    }
 
     const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     const month = months[date.getMonth()];
     const day = date.getDate();
@@ -56,10 +67,14 @@ export function formatDateDisplay(
 }
 
 function toISODateString(dateStr: string | null): string | null {
-  if (!dateStr) return null;
+  if (!dateStr) {
+    return null;
+  }
   try {
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return null;
+    if (isNaN(date.getTime())) {
+      return null;
+    }
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -89,7 +104,7 @@ export function CellDate({
         onCommit(null);
       }
     },
-    [onCommit],
+    [onCommit]
   );
 
   const handleKeyDown = useCallback(
@@ -99,22 +114,24 @@ export function CellDate({
         onCancel();
       }
     },
-    [onCancel],
+    [onCancel]
   );
 
   if (isEditing) {
     return (
       <Popover
-        opened
-        onChange={(o) => {
-          if (!o) onCancel();
-        }}
-        onClose={onCancel}
-        position="bottom-start"
-        width="auto"
-        trapFocus
         closeOnClickOutside
         closeOnEscape
+        onChange={(o) => {
+          if (!o) {
+            onCancel();
+          }
+        }}
+        onClose={onCancel}
+        opened
+        position="bottom-start"
+        trapFocus
+        width="auto"
       >
         <Popover.Target>
           <div className={cellClasses.popoverTarget}>
@@ -123,12 +140,8 @@ export function CellDate({
             </span>
           </div>
         </Popover.Target>
-        <Popover.Dropdown p="xs" onKeyDown={handleKeyDown}>
-          <DatePicker
-            value={pickerValue}
-            onChange={handleChange}
-            size="sm"
-          />
+        <Popover.Dropdown onKeyDown={handleKeyDown} p="xs">
+          <DatePicker onChange={handleChange} size="sm" value={pickerValue} />
         </Popover.Dropdown>
       </Popover>
     );

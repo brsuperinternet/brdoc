@@ -1,6 +1,6 @@
-import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import * as path from "path";
+import { defineConfig, loadEnv } from "vite";
 
 const envPath = path.resolve(process.cwd(), "..", "..");
 
@@ -21,24 +21,6 @@ export default defineConfig(({ mode }) => {
   } = loadEnv(mode, envPath, "");
 
   return {
-    define: {
-      "process.env": {
-        APP_URL,
-        FILE_UPLOAD_SIZE_LIMIT,
-        FILE_IMPORT_SIZE_LIMIT,
-        DRAWIO_URL,
-        CLOUD,
-        SUBDOMAIN_HOST,
-        COLLAB_URL,
-        BILLING_TRIAL_DAYS,
-        POSTHOG_HOST,
-        POSTHOG_KEY,
-        AI_VECTOR_DRIVER,
-        BETA_PUBLIC_SPACES,
-      },
-      APP_VERSION: JSON.stringify(process.env.npm_package_version),
-    },
-    plugins: [react()],
     build: {
       rolldownOptions: {
         output: {
@@ -53,6 +35,24 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    define: {
+      APP_VERSION: JSON.stringify(process.env.npm_package_version),
+      "process.env": {
+        AI_VECTOR_DRIVER,
+        APP_URL,
+        BETA_PUBLIC_SPACES,
+        BILLING_TRIAL_DAYS,
+        CLOUD,
+        COLLAB_URL,
+        DRAWIO_URL,
+        FILE_IMPORT_SIZE_LIMIT,
+        FILE_UPLOAD_SIZE_LIMIT,
+        POSTHOG_HOST,
+        POSTHOG_KEY,
+        SUBDOMAIN_HOST,
+      },
+    },
+    plugins: [react()],
     resolve: {
       alias: {
         "@": "/src",
@@ -61,18 +61,18 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         "/api": {
-          target: APP_URL,
           changeOrigin: false,
-        },
-        "/socket.io": {
           target: APP_URL,
-          ws: true,
-          rewriteWsOrigin: true,
         },
         "/collab": {
+          rewriteWsOrigin: true,
           target: APP_URL,
           ws: true,
+        },
+        "/socket.io": {
           rewriteWsOrigin: true,
+          target: APP_URL,
+          ws: true,
         },
       },
     },

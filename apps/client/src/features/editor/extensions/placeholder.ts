@@ -1,7 +1,7 @@
 import { isNodeEmpty } from "@tiptap/core";
+import { Placeholder as TiptapPlaceholder } from "@tiptap/extensions";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
-import { Placeholder as TiptapPlaceholder } from "@tiptap/extensions";
 
 export const Placeholder = TiptapPlaceholder.extend({
   addProseMirrorPlugins() {
@@ -34,7 +34,7 @@ export const Placeholder = TiptapPlaceholder.extend({
               if ((hasAnchor || !options.showOnlyCurrent) && isEmpty) {
                 const emptyNodeClass =
                   typeof options.emptyNodeClass === "function"
-                    ? options.emptyNodeClass({ editor, node, pos, hasAnchor })
+                    ? options.emptyNodeClass({ editor, hasAnchor, node, pos })
                     : options.emptyNodeClass;
                 const classes = [emptyNodeClass];
                 if (isEmptyDoc) {
@@ -46,9 +46,9 @@ export const Placeholder = TiptapPlaceholder.extend({
                     class: classes.join(" "),
                     [dataAttribute]:
                       typeof options.placeholder === "function"
-                        ? options.placeholder({ editor, node, pos, hasAnchor })
+                        ? options.placeholder({ editor, hasAnchor, node, pos })
                         : options.placeholder,
-                  }),
+                  })
                 );
               }
 

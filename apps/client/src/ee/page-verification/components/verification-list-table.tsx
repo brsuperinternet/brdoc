@@ -1,25 +1,25 @@
 import {
-  Table,
-  Text,
+  Anchor,
+  Avatar,
+  Badge,
   Group,
   Skeleton,
-  Anchor,
-  Badge,
-  Avatar,
+  Table,
+  Text,
   Tooltip,
 } from "@mantine/core";
-import { Link } from "react-router-dom";
+import type { Locale } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import NoTableResults from "@/components/common/no-table-results";
+import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import { CustomAvatar } from "@/components/ui/custom-avatar";
 import {
   IVerificationListItem,
   VerificationStatus,
 } from "@/ee/page-verification/types/page-verification.types";
-import { CustomAvatar } from "@/components/ui/custom-avatar";
 import { buildPageUrl } from "@/features/page/page.utils";
-import NoTableResults from "@/components/common/no-table-results";
-import rowClasses from "@/components/ui/clickable-table-row.module.css";
 import { formatLocalized, useDateFnsLocale } from "@/lib/date-locale.ts";
-import type { Locale } from "date-fns";
 
 const MAX_VISIBLE_VERIFIERS = 5;
 
@@ -28,22 +28,53 @@ type VerificationListTableProps = {
   isLoading: boolean;
 };
 
-function statusBadge(status: VerificationStatus | null, t: (s: string) => string) {
+function statusBadge(
+  status: VerificationStatus | null,
+  t: (s: string) => string
+) {
   switch (status) {
     case "verified":
-      return <Badge color="green" variant="light" size="sm">{t("Verified")}</Badge>;
+      return (
+        <Badge color="green" size="sm" variant="light">
+          {t("Verified")}
+        </Badge>
+      );
     case "expiring":
-      return <Badge color="orange" variant="light" size="sm">{t("Expiring")}</Badge>;
+      return (
+        <Badge color="orange" size="sm" variant="light">
+          {t("Expiring")}
+        </Badge>
+      );
     case "expired":
-      return <Badge color="red" variant="light" size="sm">{t("Expired")}</Badge>;
+      return (
+        <Badge color="red" size="sm" variant="light">
+          {t("Expired")}
+        </Badge>
+      );
     case "approved":
-      return <Badge color="green" variant="light" size="sm">{t("Approved")}</Badge>;
+      return (
+        <Badge color="green" size="sm" variant="light">
+          {t("Approved")}
+        </Badge>
+      );
     case "draft":
-      return <Badge color="gray" variant="light" size="sm">{t("Draft")}</Badge>;
+      return (
+        <Badge color="gray" size="sm" variant="light">
+          {t("Draft")}
+        </Badge>
+      );
     case "in_approval":
-      return <Badge color="blue" variant="light" size="sm">{t("In approval")}</Badge>;
+      return (
+        <Badge color="blue" size="sm" variant="light">
+          {t("In approval")}
+        </Badge>
+      );
     case "obsolete":
-      return <Badge color="red" variant="light" size="sm">{t("Obsolete")}</Badge>;
+      return (
+        <Badge color="red" size="sm" variant="light">
+          {t("Obsolete")}
+        </Badge>
+      );
     default:
       return null;
   }
@@ -52,19 +83,25 @@ function statusBadge(status: VerificationStatus | null, t: (s: string) => string
 function verifiedUntilText(
   item: IVerificationListItem,
   t: (s: string) => string,
-  locale: Locale,
+  locale: Locale
 ): string {
   if (item.type === "qms") {
-    if (item.status === "approved") return t("Indefinitely");
+    if (item.status === "approved") {
+      return t("Indefinitely");
+    }
     return "—";
   }
 
-  if (!item.expiresAt) return t("Indefinitely");
+  if (!item.expiresAt) {
+    return t("Indefinitely");
+  }
 
   const expires = new Date(item.expiresAt);
   const now = new Date();
 
-  if (expires <= now) return t("Expired");
+  if (expires <= now) {
+    return t("Expired");
+  }
   return formatLocalized(expires, "MMM d, yyyy", "PP", locale);
 }
 
@@ -75,7 +112,7 @@ function TableSkeleton() {
         <Table.Tr key={i}>
           <Table.Td>
             <div>
-              <Skeleton height={14} width={160} mb={4} />
+              <Skeleton height={14} mb={4} width={160} />
               <Skeleton height={10} width={100} />
             </div>
           </Table.Td>
@@ -127,26 +164,26 @@ export default function VerificationListTable({
               const pageUrl = buildPageUrl(
                 item.spaceSlug,
                 item.pageSlugId,
-                item.pageTitle ?? undefined,
+                item.pageTitle ?? undefined
               );
 
               return (
-                <Table.Tr key={item.id} className={rowClasses.row}>
+                <Table.Tr className={rowClasses.row} key={item.id}>
                   <Table.Td>
                     <Anchor
-                      size="sm"
-                      underline="never"
-                      style={{ color: "var(--mantine-color-text)" }}
                       className={rowClasses.link}
                       component={Link}
+                      size="sm"
+                      style={{ color: "var(--mantine-color-text)" }}
                       to={pageUrl}
+                      underline="never"
                     >
-                      <Text fz="sm" fw={500} lineClamp={1}>
+                      <Text fw={500} fz="sm" lineClamp={1}>
                         {item.pageIcon ? `${item.pageIcon} ` : ""}
                         {item.pageTitle || t("Untitled")}
                       </Text>
                     </Anchor>
-                    <Text fz="xs" c="dimmed" lineClamp={1}>
+                    <Text c="dimmed" fz="xs" lineClamp={1}>
                       {item.spaceName}
                     </Text>
                   </Table.Td>
@@ -155,16 +192,16 @@ export default function VerificationListTable({
                     {verifiers.length === 1 ? (
                       <Group gap={8} wrap="nowrap">
                         <CustomAvatar
-                          size="sm"
                           avatarUrl={verifiers[0].avatarUrl}
                           name={verifiers[0].name}
+                          size="sm"
                         />
                         <Text fz="sm" lineClamp={1}>
                           {verifiers[0].name}
                         </Text>
                       </Group>
                     ) : verifiers.length > 1 ? (
-                      <Tooltip.Group openDelay={300} closeDelay={100}>
+                      <Tooltip.Group closeDelay={100} openDelay={300}>
                         <Avatar.Group spacing={8}>
                           {verifiers
                             .slice(0, MAX_VISIBLE_VERIFIERS)
@@ -175,22 +212,20 @@ export default function VerificationListTable({
                                 withArrow
                               >
                                 <CustomAvatar
-                                  size="sm"
                                   avatarUrl={verifier.avatarUrl}
                                   name={verifier.name}
+                                  size="sm"
                                 />
                               </Tooltip>
                             ))}
                           {verifiers.length > MAX_VISIBLE_VERIFIERS && (
                             <Tooltip
-                              withArrow
                               label={verifiers
                                 .slice(MAX_VISIBLE_VERIFIERS)
-                                .map((v) => (
-                                  <div key={v.id}>{v.name}</div>
-                                ))}
+                                .map((v) => <div key={v.id}>{v.name}</div>)}
+                              withArrow
                             >
-                              <Avatar size="sm" color="gray">
+                              <Avatar color="gray" size="sm">
                                 +{verifiers.length - MAX_VISIBLE_VERIFIERS}
                               </Avatar>
                             </Tooltip>
@@ -198,7 +233,7 @@ export default function VerificationListTable({
                         </Avatar.Group>
                       </Tooltip.Group>
                     ) : (
-                      <Text fz="sm" c="dimmed">
+                      <Text c="dimmed" fz="sm">
                         —
                       </Text>
                     )}

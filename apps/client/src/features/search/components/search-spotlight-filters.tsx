@@ -1,41 +1,41 @@
-import React, { useState, useEffect } from "react";
-import cx from "clsx";
 import {
-  Button,
-  Menu,
-  Text,
   Badge,
+  Button,
   Group,
-  Switch,
   getDefaultZIndex,
+  Menu,
+  Switch,
+  Text,
 } from "@mantine/core";
 import {
-  IconChevronDown,
   IconBuilding,
-  IconPlus,
-  IconFileDescription,
   IconCheck,
-  IconUser,
-  IconTag,
+  IconChevronDown,
+  IconFileDescription,
   IconLetterCase,
+  IconPlus,
+  IconTag,
+  IconUser,
 } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-import { useGetSpacesQuery } from "@/features/space/queries/space-query";
-import { SpaceFilterMenu } from "@/features/space/components/space-filter-menu";
-import { CreatorFilterMenu } from "@/features/search/components/creator-filter-menu";
-import { RadioMenuItem } from "@/components/ui/radio-menu-item";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { Feature } from "@/ee/features";
-import classes from "./search-spotlight-filters.module.css";
+import cx from "clsx";
 import { useAtom } from "jotai";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { RadioMenuItem } from "@/components/ui/radio-menu-item";
+import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
+import { CreatorFilterMenu } from "@/features/search/components/creator-filter-menu";
+import { SpaceFilterMenu } from "@/features/space/components/space-filter-menu";
+import { useGetSpacesQuery } from "@/features/space/queries/space-query";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { LabelFilterMenu } from "./label-filter-menu";
+import classes from "./search-spotlight-filters.module.css";
 
 interface SearchSpotlightFiltersProps {
-  onFiltersChange?: (filters: any) => void;
-  onAskClick?: () => void;
-  spaceId?: string;
   isAiMode?: boolean;
+  onAskClick?: () => void;
+  onFiltersChange?: (filters: any) => void;
+  spaceId?: string;
 }
 
 export function SearchSpotlightFilters({
@@ -50,7 +50,9 @@ export function SearchSpotlightFilters({
     spaceId || null
   );
   const [contentType, setContentType] = useState<string | null>("page");
-  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(
+    null
+  );
   const [selectedCreatorName, setSelectedCreatorName] = useState<string | null>(
     null
   );
@@ -66,20 +68,20 @@ export function SearchSpotlightFilters({
     : null;
 
   const contentTypeOptions = [
-    { value: "page", label: t("Pages") },
+    { label: t("Pages"), value: "page" },
     {
-      value: "attachment",
-      label: t("Attachments"),
       disabled: !hasAttachmentIndexing,
+      label: t("Attachments"),
+      value: "attachment",
     },
   ];
 
   useEffect(() => {
     onFiltersChange?.({
-      spaceId: selectedSpaceId,
       contentType,
       creatorId: selectedCreatorId,
       labelIds: selectedLabelIds,
+      spaceId: selectedSpaceId,
       titleOnly,
     });
   }, [
@@ -113,26 +115,31 @@ export function SearchSpotlightFilters({
   };
 
   const onDemandFilters = [
-    { key: "creator", label: t("Created by"), icon: IconUser, available: true },
+    { available: true, icon: IconUser, key: "creator", label: t("Created by") },
     {
+      available: contentType !== "attachment",
+      icon: IconTag,
       key: "labels",
       label: t("Labels"),
-      icon: IconTag,
-      available: contentType !== "attachment",
     },
   ];
 
   const isFilterVisible = (key: string) => {
-    if (openedFilter === key) return true;
-    if (key === "creator") return !!selectedCreatorId;
-    if (key === "labels")
+    if (openedFilter === key) {
+      return true;
+    }
+    if (key === "creator") {
+      return !!selectedCreatorId;
+    }
+    if (key === "labels") {
       return contentType !== "attachment" && selectedLabelIds.length > 0;
+    }
     return false;
   };
 
   const orderedVisibleFilters = visibleFilters.filter(isFilterVisible);
   const addableFilters = onDemandFilters.filter(
-    (filter) => filter.available && !isFilterVisible(filter.key),
+    (filter) => filter.available && !isFilterVisible(filter.key)
   );
 
   const revealFilter = (key: string) => {
@@ -145,8 +152,8 @@ export function SearchSpotlightFilters({
       {workspace?.settings?.ai?.search === true && (
         <div
           style={{
-            display: "flex",
             alignItems: "center",
+            display: "flex",
             height: "32px",
             paddingLeft: "8px",
             paddingRight: "8px",
@@ -154,22 +161,22 @@ export function SearchSpotlightFilters({
         >
           <Switch
             checked={isAiMode}
-            onChange={(event) => onAskClick()}
-            label={t("AI Answers")}
-            size="sm"
             color="blue"
+            label={t("AI Answers")}
             labelPosition="left"
+            onChange={(event) => onAskClick()}
+            size="sm"
             styles={{
-              root: {
-                display: "flex",
-                alignItems: "center",
-                flexShrink: 0,
-              },
               label: {
-                whiteSpace: "nowrap",
-                paddingRight: "8px",
                 fontSize: "13px",
                 fontWeight: 500,
+                paddingRight: "8px",
+                whiteSpace: "nowrap",
+              },
+              root: {
+                alignItems: "center",
+                display: "flex",
+                flexShrink: 0,
               },
             }}
           />
@@ -177,20 +184,20 @@ export function SearchSpotlightFilters({
       )}
 
       <SpaceFilterMenu
-        value={selectedSpaceId}
         onChange={handleSpaceSelect}
         position="bottom-start"
+        value={selectedSpaceId}
         width={250}
         zIndex={getDefaultZIndex("max")}
       >
         <Button
-          variant="subtle"
-          color="gray"
-          size="sm"
-          rightSection={<IconChevronDown size={14} />}
-          leftSection={<IconBuilding size={16} />}
           className={classes.filterButton}
+          color="gray"
           fw={500}
+          leftSection={<IconBuilding size={16} />}
+          rightSection={<IconChevronDown size={14} />}
+          size="sm"
+          variant="subtle"
         >
           {selectedSpaceId
             ? `${t("Space")}: ${selectedSpaceData?.name || t("Unknown")}`
@@ -199,20 +206,20 @@ export function SearchSpotlightFilters({
       </SpaceFilterMenu>
 
       <Menu
+        position="bottom-start"
         shadow="md"
         width={220}
-        position="bottom-start"
         zIndex={getDefaultZIndex("max")}
       >
         <Menu.Target>
           <Button
-            variant="subtle"
-            color="gray"
-            size="sm"
-            rightSection={<IconChevronDown size={14} />}
-            leftSection={<IconFileDescription size={16} />}
             className={classes.filterButton}
+            color="gray"
             fw={500}
+            leftSection={<IconFileDescription size={16} />}
+            rightSection={<IconChevronDown size={14} />}
+            size="sm"
+            variant="subtle"
           >
             {contentType
               ? `${t("Type")}: ${contentTypeOptions.find((opt) => opt.value === contentType)?.label || t(contentType === "page" ? "Pages" : "Attachments")}`
@@ -222,33 +229,37 @@ export function SearchSpotlightFilters({
         <Menu.Dropdown>
           {contentTypeOptions.map((option) => (
             <Menu.Item
-              key={option.value}
-              component={RadioMenuItem}
               aria-checked={contentType === option.value}
+              component={RadioMenuItem}
+              disabled={
+                option.disabled || (isAiMode && option.value === "attachment")
+              }
+              key={option.value}
               onClick={() =>
                 !option.disabled &&
                 contentType !== option.value &&
                 handleChangeContentType(option.value)
-              }
-              disabled={
-                option.disabled || (isAiMode && option.value === "attachment")
               }
             >
               <Group flex="1" gap="xs">
                 <div>
                   <Text size="sm">{option.label}</Text>
                   {option.disabled && (
-                    <Badge size="xs" mt={4}>
+                    <Badge mt={4} size="xs">
                       {t("Enterprise")}
                     </Badge>
                   )}
-                  {!option.disabled && isAiMode && option.value === "attachment" && (
-                    <Text size="xs" mt={4}>
-                      {t("AI Answers not available for attachments")}
-                    </Text>
-                  )}
+                  {!option.disabled &&
+                    isAiMode &&
+                    option.value === "attachment" && (
+                      <Text mt={4} size="xs">
+                        {t("AI Answers not available for attachments")}
+                      </Text>
+                    )}
                 </div>
-                {contentType === option.value && <IconCheck size={20} aria-hidden />}
+                {contentType === option.value && (
+                  <IconCheck aria-hidden size={20} />
+                )}
               </Group>
             </Menu.Item>
           ))}
@@ -257,18 +268,18 @@ export function SearchSpotlightFilters({
 
       {!isAiMode && (
         <Button
-          variant={titleOnly ? "light" : "subtle"}
-          color={titleOnly ? "blue" : "gray"}
-          size="sm"
-          radius="xl"
-          leftSection={<IconLetterCase size={16} />}
+          aria-pressed={titleOnly}
           className={cx(
             classes.filterButton,
-            titleOnly && classes.filterButtonActive,
+            titleOnly && classes.filterButtonActive
           )}
+          color={titleOnly ? "blue" : "gray"}
           fw={500}
-          aria-pressed={titleOnly}
+          leftSection={<IconLetterCase size={16} />}
           onClick={() => setTitleOnly(!titleOnly)}
+          radius="xl"
+          size="sm"
+          variant={titleOnly ? "light" : "subtle"}
         >
           {t("Title only")}
         </Button>
@@ -276,87 +287,87 @@ export function SearchSpotlightFilters({
 
       {!isAiMode &&
         orderedVisibleFilters.map((filterKey) => {
-        if (filterKey === "creator") {
-          return (
-            <CreatorFilterMenu
-              key="creator"
-              value={selectedCreatorId}
-              onChange={handleCreatorSelect}
-              position="bottom-start"
-              width={250}
-              zIndex={getDefaultZIndex("max")}
-              opened={openedFilter === "creator"}
-              onOpenChange={(opened) =>
-                setOpenedFilter(opened ? "creator" : null)
-              }
-            >
-              <Button
-                variant="subtle"
-                color="gray"
-                size="sm"
-                rightSection={<IconChevronDown size={14} />}
-                leftSection={<IconUser size={16} />}
-                className={classes.filterButton}
-                fw={500}
+          if (filterKey === "creator") {
+            return (
+              <CreatorFilterMenu
+                key="creator"
+                onChange={handleCreatorSelect}
+                onOpenChange={(opened) =>
+                  setOpenedFilter(opened ? "creator" : null)
+                }
+                opened={openedFilter === "creator"}
+                position="bottom-start"
+                value={selectedCreatorId}
+                width={250}
+                zIndex={getDefaultZIndex("max")}
               >
-                {selectedCreatorId
-                  ? `${t("Created by")}: ${selectedCreatorName || t("Unknown")}`
-                  : `${t("Created by")}: ${t("Anyone")}`}
-              </Button>
-            </CreatorFilterMenu>
-          );
-        }
+                <Button
+                  className={classes.filterButton}
+                  color="gray"
+                  fw={500}
+                  leftSection={<IconUser size={16} />}
+                  rightSection={<IconChevronDown size={14} />}
+                  size="sm"
+                  variant="subtle"
+                >
+                  {selectedCreatorId
+                    ? `${t("Created by")}: ${selectedCreatorName || t("Unknown")}`
+                    : `${t("Created by")}: ${t("Anyone")}`}
+                </Button>
+              </CreatorFilterMenu>
+            );
+          }
 
-        if (filterKey === "labels") {
-          return (
-            <LabelFilterMenu
-              key="labels"
-              value={selectedLabelIds}
-              onChange={handleLabelsSelect}
-              position="bottom-start"
-              width={250}
-              zIndex={getDefaultZIndex("max")}
-              opened={openedFilter === "labels"}
-              onOpenChange={(opened) =>
-                setOpenedFilter(opened ? "labels" : null)
-              }
-            >
-              <Button
-                variant="subtle"
-                color="gray"
-                size="sm"
-                rightSection={<IconChevronDown size={14} />}
-                leftSection={<IconTag size={16} />}
-                className={classes.filterButton}
-                fw={500}
+          if (filterKey === "labels") {
+            return (
+              <LabelFilterMenu
+                key="labels"
+                onChange={handleLabelsSelect}
+                onOpenChange={(opened) =>
+                  setOpenedFilter(opened ? "labels" : null)
+                }
+                opened={openedFilter === "labels"}
+                position="bottom-start"
+                value={selectedLabelIds}
+                width={250}
+                zIndex={getDefaultZIndex("max")}
               >
-                {selectedLabelIds.length > 0
-                  ? `${t("Labels")} (${selectedLabelIds.length})`
-                  : t("Labels")}
-              </Button>
-            </LabelFilterMenu>
-          );
-        }
+                <Button
+                  className={classes.filterButton}
+                  color="gray"
+                  fw={500}
+                  leftSection={<IconTag size={16} />}
+                  rightSection={<IconChevronDown size={14} />}
+                  size="sm"
+                  variant="subtle"
+                >
+                  {selectedLabelIds.length > 0
+                    ? `${t("Labels")} (${selectedLabelIds.length})`
+                    : t("Labels")}
+                </Button>
+              </LabelFilterMenu>
+            );
+          }
 
-        return null;
-      })}
+          return null;
+        })}
 
       {!isAiMode && addableFilters.length > 0 && (
         <Menu
+          position="bottom-end"
           shadow="md"
           width={200}
-          position="bottom-end"
           zIndex={getDefaultZIndex("max")}
         >
           <Menu.Target>
             <Button
-              variant="subtle"
-              color="gray"
-              size="sm"
-              leftSection={<IconPlus size={16} />}
               className={classes.filterButton}
-              style={{ marginLeft: "auto" }}
+              color="gray"
               fw={500}
+              leftSection={<IconPlus size={16} />}
+              size="sm"
+              style={{ marginLeft: "auto" }}
+              variant="subtle"
             >
               {t("Filter")}
             </Button>

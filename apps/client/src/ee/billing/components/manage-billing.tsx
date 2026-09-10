@@ -1,5 +1,4 @@
 import { Button, Group, Text } from "@mantine/core";
-import React from "react";
 import { getBillingPortalLink } from "@/ee/billing/services/billing-service.ts";
 
 export default function ManageBilling() {
@@ -14,18 +13,18 @@ export default function ManageBilling() {
 
   return (
     <>
-      <Group justify="space-between" wrap="wrap" gap="xl">
+      <Group gap="xl" justify="space-between" wrap="wrap">
         <div style={{ flex: 1, minWidth: "200px" }}>
-          <Text size="md" fw={500}>
+          <Text fw={500} size="md">
             Manage subscription
           </Text>
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             Manage your your subscription, invoices, update payment details, and
             more.
           </Text>
         </div>
 
-        <Button style={{ flexShrink: 0 }} onClick={handleBillingPortal}>
+        <Button onClick={handleBillingPortal} style={{ flexShrink: 0 }}>
           Manage
         </Button>
       </Group>

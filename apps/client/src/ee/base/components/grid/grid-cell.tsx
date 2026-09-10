@@ -1,29 +1,29 @@
-import { memo, useCallback, useMemo } from "react";
-import { flushSync } from "react-dom";
-import { Cell } from "@tanstack/react-table";
 import { Popover, Tooltip } from "@mantine/core";
 import { IconArrowsDiagonal } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
-import { useAtom, useAtomValue, useSetAtom, type PrimitiveAtom } from "jotai";
+import { Cell } from "@tanstack/react-table";
+import { type PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
-import { IBaseRow, EditingCell, FocusedCell } from "@/ee/base/types/base.types";
+import { memo, useCallback, useMemo } from "react";
+import { flushSync } from "react-dom";
+import { useTranslation } from "react-i18next";
 import {
-  editingCellAtomFamily,
-  focusedCellAtomFamily,
   activeFormulaEditorAtomFamily,
+  editingCellAtomFamily,
   FormulaEditorTarget,
+  focusedCellAtomFamily,
 } from "@/ee/base/atoms/base-atoms";
-import { FormulaPropertyEditor } from "@/ee/base/components/formula/formula-property-editor";
-import {
-  isSystemPropertyType,
-  getDescriptor,
-} from "@/ee/base/property-types/property-type.registry";
 import { cellValuesEqual } from "@/ee/base/components/cells/cell-value-equal";
-import { computeNextCell } from "@/ee/base/utils/grid-cell-nav";
+import { FormulaPropertyEditor } from "@/ee/base/components/formula/formula-property-editor";
 import { useBaseEditable } from "@/ee/base/context/base-editable";
 import { useRowExpand } from "@/ee/base/context/row-expand";
-import { RowNumberCell } from "./row-number-cell";
+import {
+  getDescriptor,
+  isSystemPropertyType,
+} from "@/ee/base/property-types/property-type.registry";
 import classes from "@/ee/base/styles/grid.module.css";
+import { EditingCell, FocusedCell, IBaseRow } from "@/ee/base/types/base.types";
+import { computeNextCell } from "@/ee/base/utils/grid-cell-nav";
+import { RowNumberCell } from "./row-number-cell";
 
 type GridCellProps = {
   cell: Cell<IBaseRow, unknown>;
@@ -45,21 +45,25 @@ export const GridCell = memo(function GridCell({
   const isPinned = cell.column.getIsPinned();
   const pinOffset = isPinned ? cell.column.getStart("left") : undefined;
 
-  const [editingCell, setEditingCell] = useAtom(editingCellAtomFamily(pageId)) as unknown as [EditingCell, (val: EditingCell) => void];
+  const [editingCell, setEditingCell] = useAtom(
+    editingCellAtomFamily(pageId)
+  ) as unknown as [EditingCell, (val: EditingCell) => void];
   const [activeFormulaEditor, setActiveFormulaEditor] = useAtom(
-    activeFormulaEditorAtomFamily(pageId),
+    activeFormulaEditorAtomFamily(pageId)
   ) as unknown as [FormulaEditorTarget, (val: FormulaEditorTarget) => void];
 
-  const setFocusedCell = useSetAtom(focusedCellAtomFamily(pageId) as PrimitiveAtom<FocusedCell>);
+  const setFocusedCell = useSetAtom(
+    focusedCellAtomFamily(pageId) as PrimitiveAtom<FocusedCell>
+  );
   const isFocused = useAtomValue(
     useMemo(
       () =>
         selectAtom(
           focusedCellAtomFamily(pageId),
-          (fc) => fc?.rowId === cell.row.id && fc?.propertyId === property?.id,
+          (fc) => fc?.rowId === cell.row.id && fc?.propertyId === property?.id
         ),
-      [pageId, cell.row.id, property?.id],
-    ),
+      [pageId, cell.row.id, property?.id]
+    )
   );
 
   const { t } = useTranslation();
@@ -74,13 +78,17 @@ export const GridCell = memo(function GridCell({
     (editable || property?.type === "file");
 
   const handleEdit = useCallback(() => {
-    if (!property || isRowNumber) return;
-    if (property.type === "checkbox") return;
+    if (!property || isRowNumber) {
+      return;
+    }
+    if (property.type === "checkbox") {
+      return;
+    }
     if (readOnly) {
       // Read-only: only the file cell opens (a download-only popover) so
       // attachments stay reachable.
       if (property.type === "file") {
-        flushSync(() => setEditingCell({ rowId, propertyId: property.id }));
+        flushSync(() => setEditingCell({ propertyId: property.id, rowId }));
       }
       return;
     }
@@ -88,27 +96,40 @@ export const GridCell = memo(function GridCell({
       setActiveFormulaEditor({ propertyId: property.id, rowId });
       return;
     }
-    if (isSystemPropertyType(property.type)) return;
-    flushSync(() => setEditingCell({ rowId, propertyId: property.id }));
-  }, [property, isRowNumber, rowId, readOnly, setEditingCell, setActiveFormulaEditor]);
+    if (isSystemPropertyType(property.type)) {
+      return;
+    }
+    flushSync(() => setEditingCell({ propertyId: property.id, rowId }));
+  }, [
+    property,
+    isRowNumber,
+    rowId,
+    readOnly,
+    setEditingCell,
+    setActiveFormulaEditor,
+  ]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!property || e.button !== 0 || isEditing) return;
-      setFocusedCell({ rowId, propertyId: property.id });
+      if (!property || e.button !== 0 || isEditing) {
+        return;
+      }
+      setFocusedCell({ propertyId: property.id, rowId });
     },
-    [property, rowId, setFocusedCell, isEditing],
+    [property, rowId, setFocusedCell, isEditing]
   );
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!property || isEditing) return;
-      setFocusedCell({ rowId, propertyId: property.id });
+      if (!property || isEditing) {
+        return;
+      }
+      setFocusedCell({ propertyId: property.id, rowId });
       (e.currentTarget.closest('[role="grid"]') as HTMLElement | null)?.focus({
         preventScroll: true,
       });
     },
-    [property, rowId, setFocusedCell, isEditing],
+    [property, rowId, setFocusedCell, isEditing]
   );
 
   const cellReadOnly = property
@@ -117,17 +138,19 @@ export const GridCell = memo(function GridCell({
 
   const closeFormulaEditor = useCallback(
     () => setActiveFormulaEditor(null),
-    [setActiveFormulaEditor],
+    [setActiveFormulaEditor]
   );
 
   const handleValueChange = useCallback(
     (value: unknown) => {
-      if (!property) return;
+      if (!property) {
+        return;
+      }
       if (!cellValuesEqual(value, cell.getValue())) {
         onCellUpdate(rowId, property.id, value);
       }
     },
-    [property, rowId, cell, onCellUpdate],
+    [property, rowId, cell, onCellUpdate]
   );
 
   const handleCommit = useCallback(
@@ -135,7 +158,7 @@ export const GridCell = memo(function GridCell({
       handleValueChange(value);
       setEditingCell(null);
     },
-    [handleValueChange, setEditingCell],
+    [handleValueChange, setEditingCell]
   );
 
   const handleCancel = useCallback(() => {
@@ -144,7 +167,9 @@ export const GridCell = memo(function GridCell({
 
   const handleTabNavigate = useCallback(
     (shiftKey: boolean) => {
-      if (!property) return;
+      if (!property) {
+        return;
+      }
       const tableInstance = cell.getContext().table;
       const colIds = tableInstance
         .getVisibleLeafColumns()
@@ -154,76 +179,80 @@ export const GridCell = memo(function GridCell({
       const next = computeNextCell(
         rowIds,
         colIds,
-        { rowId, propertyId: property.id },
+        { propertyId: property.id, rowId },
         0,
         shiftKey ? -1 : 1,
-        true,
+        true
       );
       if (next) {
         setEditingCell(next);
         setFocusedCell(next);
       }
     },
-    [cell, rowId, property, setEditingCell, setFocusedCell],
+    [cell, rowId, property, setEditingCell, setFocusedCell]
   );
 
   if (isRowNumber) {
     return (
       <RowNumberCell
+        isPinned={Boolean(isPinned)}
+        pageId={pageId}
+        pinOffset={pinOffset}
         rowId={rowId}
         rowIndex={rowIndex}
-        isPinned={Boolean(isPinned)}
-        pinOffset={pinOffset}
-        pageId={pageId}
       />
     );
   }
 
-  if (!property) return null;
+  if (!property) {
+    return null;
+  }
 
   const CellComponent = getDescriptor(property.type)?.cellComponent;
-  if (!CellComponent) return null;
+  if (!CellComponent) {
+    return null;
+  }
 
   const value = cell.getValue();
 
   const cellInner = (
     <div
-      id={`base-cell-${rowId}-${property.id}`}
-      role="gridcell"
-      aria-colindex={colIndex != null ? colIndex + 1 : undefined}
+      aria-colindex={colIndex == null ? undefined : colIndex + 1}
       aria-readonly={cellReadOnly || undefined}
       className={`${classes.cell} ${isPinned ? classes.cellPinned : ""} ${isEditing ? classes.cellEditing : ""} ${isFocused && !isEditing ? classes.cellFocused : ""} ${property.isPrimary ? classes.primaryCell : ""}`}
+      id={`base-cell-${rowId}-${property.id}`}
+      onClick={handleClick}
+      onDoubleClick={handleEdit}
+      onMouseDown={handleMouseDown}
+      role="gridcell"
       style={
         isPinned
           ? ({ "--pin-offset": `${pinOffset}px` } as React.CSSProperties)
           : undefined
       }
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onDoubleClick={handleEdit}
     >
       <CellComponent
-        value={value}
-        property={property}
-        rowId={rowId}
         isEditing={isEditing}
-        readOnly={readOnly}
-        onCommit={handleCommit}
-        onValueChange={handleValueChange}
         onCancel={handleCancel}
+        onCommit={handleCommit}
         onTabNavigate={handleTabNavigate}
+        onValueChange={handleValueChange}
+        property={property}
+        readOnly={readOnly}
+        rowId={rowId}
+        value={value}
       />
       {property.isPrimary && onExpandRow && !isEditing && (
         <span className={classes.rowExpandAnchor}>
-          <Tooltip label={t("Expand")} position="bottom" openDelay={400}>
+          <Tooltip label={t("Expand")} openDelay={400} position="bottom">
             <button
-              type="button"
-              tabIndex={-1}
-              data-base-row-expand=""
+              aria-label={t("Expand row {{number}}", { number: rowIndex + 1 })}
               className={classes.rowExpandButton}
+              data-base-row-expand=""
               onClick={() => onExpandRow(rowId)}
               onDoubleClick={(e) => e.stopPropagation()}
-              aria-label={t("Expand row {{number}}", { number: rowIndex + 1 })}
+              tabIndex={-1}
+              type="button"
             >
               <IconArrowsDiagonal size={13} />
             </button>
@@ -233,7 +262,9 @@ export const GridCell = memo(function GridCell({
     </div>
   );
 
-  if (property.type !== "formula") return cellInner;
+  if (property.type !== "formula") {
+    return cellInner;
+  }
 
   const formulaEditorOpen =
     activeFormulaEditor?.propertyId === property.id &&
@@ -241,21 +272,22 @@ export const GridCell = memo(function GridCell({
 
   return (
     <Popover
-      opened={formulaEditorOpen}
-      onChange={(o) => {
-        if (!o) closeFormulaEditor();
-      }}
-      position="bottom-start"
-      width={460}
-      shadow="md"
-      withinPortal
       closeOnClickOutside
       closeOnEscape={false}
+      onChange={(o) => {
+        if (!o) {
+          closeFormulaEditor();
+        }
+      }}
+      opened={formulaEditorOpen}
+      position="bottom-start"
+      shadow="md"
       trapFocus
+      width={460}
+      withinPortal
     >
       <Popover.Target>{cellInner}</Popover.Target>
       <Popover.Dropdown
-        p={0}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           e.stopPropagation();
@@ -264,20 +296,20 @@ export const GridCell = memo(function GridCell({
             closeFormulaEditor();
           }
         }}
+        p={0}
         style={{ maxWidth: "calc(100vw - 32px)" }}
       >
         {formulaEditorOpen && (
           <FormulaPropertyEditor
-            property={property}
-            pageId={pageId}
             onClose={closeFormulaEditor}
+            pageId={pageId}
+            property={property}
           />
         )}
       </Popover.Dropdown>
     </Popover>
   );
-},
-gridCellPropsEqual);
+}, gridCellPropsEqual);
 
 // Cell instances are re-created whenever the table data identity changes;
 // compare by coordinates + value so unchanged cells skip re-rendering.
@@ -290,7 +322,9 @@ function gridCellPropsEqual(prev: GridCellProps, next: GridCellProps) {
   ) {
     return false;
   }
-  if (prev.cell === next.cell) return true;
+  if (prev.cell === next.cell) {
+    return true;
+  }
   return (
     prev.cell.row.id === next.cell.row.id &&
     prev.cell.column.id === next.cell.column.id &&

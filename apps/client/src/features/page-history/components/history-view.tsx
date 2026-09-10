@@ -1,11 +1,11 @@
-import { usePageHistoryQuery } from "@/features/page-history/queries/page-history-query";
-import { HistoryEditor } from "@/features/page-history/components/history-editor";
-import { useTranslation } from "react-i18next";
 import { useAtomValue } from "jotai";
+import { useTranslation } from "react-i18next";
 import {
   activeHistoryIdAtom,
   activeHistoryPrevIdAtom,
 } from "@/features/page-history/atoms/history-atoms";
+import { HistoryEditor } from "@/features/page-history/components/history-editor";
+import { usePageHistoryQuery } from "@/features/page-history/queries/page-history-query";
 
 interface Props {
   historyId?: string;
@@ -43,8 +43,8 @@ function HistoryView({ historyId, prevHistoryId }: Props) {
     <div>
       <HistoryEditor
         content={data.content}
+        previousContent={isErrorPrev ? undefined : prevData?.content}
         title={data.title}
-        previousContent={!isErrorPrev ? prevData?.content : undefined}
       />
     </div>
   );

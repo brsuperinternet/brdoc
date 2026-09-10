@@ -1,15 +1,15 @@
-import WorkspaceInviteModal from "@/features/workspace/components/members/components/workspace-invite-modal";
-import { Group, SegmentedControl, Space, Text } from "@mantine/core";
-import WorkspaceMembersTable from "@/features/workspace/components/members/components/workspace-members-table";
-import SettingsTitle from "@/components/settings/settings-title.tsx";
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import WorkspaceInvitesTable from "@/features/workspace/components/members/components/workspace-invites-table.tsx";
-import useUserRole from "@/hooks/use-user-role.tsx";
-import { useTranslation } from "react-i18next";
+import { Group, SegmentedControl, Space } from "@mantine/core";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import SettingsTitle from "@/components/settings/settings-title.tsx";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import WorkspaceInviteModal from "@/features/workspace/components/members/components/workspace-invite-modal";
+import WorkspaceInvitesTable from "@/features/workspace/components/members/components/workspace-invites-table.tsx";
+import WorkspaceMembersTable from "@/features/workspace/components/members/components/workspace-members-table";
+import useUserRole from "@/hooks/use-user-role.tsx";
 
 export default function WorkspaceMembers() {
   const { t } = useTranslation();
@@ -45,8 +45,6 @@ export default function WorkspaceMembers() {
 
       <Group justify="space-between">
         <SegmentedControl
-          value={segmentValue}
-          onChange={handleSegmentChange}
           data={[
             {
               label: t("Members") + ` (${workspace?.memberCount})`,
@@ -54,6 +52,8 @@ export default function WorkspaceMembers() {
             },
             { label: t("Pending"), value: "invites" },
           ]}
+          onChange={handleSegmentChange}
+          value={segmentValue}
           withItemsBorders={false}
         />
 

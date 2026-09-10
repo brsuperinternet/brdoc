@@ -1,10 +1,3 @@
-import React, { FC } from "react";
-import {
-  IconAlignCenter,
-  IconAlignLeft,
-  IconAlignRight,
-  IconCheck,
-} from "@tabler/icons-react";
 import {
   ActionIcon,
   Button,
@@ -12,8 +5,15 @@ import {
   ScrollArea,
   Tooltip,
 } from "@mantine/core";
+import {
+  IconAlignCenter,
+  IconAlignLeft,
+  IconAlignRight,
+  IconCheck,
+} from "@tabler/icons-react";
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
+import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
 
 interface TableTextAlignmentProps {
@@ -21,10 +21,10 @@ interface TableTextAlignmentProps {
 }
 
 interface AlignmentItem {
-  name: string;
-  icon: React.ElementType;
   command: () => void;
+  icon: React.ElementType;
   isActive: () => boolean;
+  name: string;
   value: string;
 }
 
@@ -40,38 +40,38 @@ export const TableTextAlignment: FC<TableTextAlignmentProps> = ({ editor }) => {
       }
 
       return {
-        isAlignLeft: ctx.editor.isActive({ textAlign: "left" }),
         isAlignCenter: ctx.editor.isActive({ textAlign: "center" }),
+        isAlignLeft: ctx.editor.isActive({ textAlign: "left" }),
         isAlignRight: ctx.editor.isActive({ textAlign: "right" }),
       };
     },
   });
 
-  if (!editor || !editorState) {
+  if (!(editor && editorState)) {
     return null;
   }
 
   const items: AlignmentItem[] = [
     {
-      name: "Align left",
-      value: "left",
-      isActive: () => editorState?.isAlignLeft,
       command: () => editor.chain().focus().setTextAlign("left").run(),
       icon: IconAlignLeft,
+      isActive: () => editorState?.isAlignLeft,
+      name: "Align left",
+      value: "left",
     },
     {
-      name: "Align center",
-      value: "center",
-      isActive: () => editorState?.isAlignCenter,
       command: () => editor.chain().focus().setTextAlign("center").run(),
       icon: IconAlignCenter,
+      isActive: () => editorState?.isAlignCenter,
+      name: "Align center",
+      value: "center",
     },
     {
-      name: "Align right",
-      value: "right",
-      isActive: () => editorState?.isAlignRight,
       command: () => editor.chain().focus().setTextAlign("right").run(),
       icon: IconAlignRight,
+      isActive: () => editorState?.isAlignRight,
+      name: "Align right",
+      value: "right",
     },
   ];
 
@@ -79,19 +79,19 @@ export const TableTextAlignment: FC<TableTextAlignmentProps> = ({ editor }) => {
 
   return (
     <Popover
-      opened={opened}
       onChange={setOpened}
+      opened={opened}
       position="bottom"
-      withArrow
       transitionProps={{ transition: "pop" }}
+      withArrow
     >
       <Popover.Target>
         <Tooltip label={t("Text align")} withArrow>
           <ActionIcon
-            variant="subtle"
-            size="lg"
             aria-label={t("Text align")}
             onClick={() => setOpened(!opened)}
+            size="lg"
+            variant="subtle"
           >
             <activeItem.icon size={18} />
           </ActionIcon>
@@ -99,21 +99,21 @@ export const TableTextAlignment: FC<TableTextAlignmentProps> = ({ editor }) => {
       </Popover.Target>
 
       <Popover.Dropdown>
-        <ScrollArea.Autosize type="scroll" mah={300}>
+        <ScrollArea.Autosize mah={300} type="scroll">
           <Button.Group orientation="vertical">
             {items.map((item, index) => (
               <Button
-                key={index}
-                variant="default"
-                leftSection={<item.icon size={16} />}
-                rightSection={item.isActive() && <IconCheck size={16} />}
-                justify="left"
                 fullWidth
+                justify="left"
+                key={index}
+                leftSection={<item.icon size={16} />}
                 onClick={() => {
                   item.command();
                   setOpened(false);
                 }}
+                rightSection={item.isActive() && <IconCheck size={16} />}
                 style={{ border: "none" }}
+                variant="default"
               >
                 {t(item.name)}
               </Button>

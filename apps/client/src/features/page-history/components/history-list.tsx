@@ -1,8 +1,14 @@
 import {
-  usePageHistoryListQuery,
-  prefetchPageHistory,
-} from "@/features/page-history/queries/page-history-query";
-import HistoryItem from "@/features/page-history/components/history-item";
+  Button,
+  Center,
+  Divider,
+  Group,
+  Loader,
+  ScrollArea,
+} from "@mantine/core";
+import { useAtom, useSetAtom } from "jotai";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   activeHistoryIdAtom,
   activeHistoryPrevIdAtom,
@@ -11,19 +17,13 @@ import {
   compareSelectionAtom,
   historyAtoms,
 } from "@/features/page-history/atoms/history-atoms";
-import { resolveComparePair } from "@/features/page-history/utils/resolve-compare-pair";
-import { useAtom, useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import {
-  Button,
-  ScrollArea,
-  Group,
-  Divider,
-  Loader,
-  Center,
-} from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import HistoryItem from "@/features/page-history/components/history-item";
 import { useHistoryRestore } from "@/features/page-history/hooks";
+import {
+  prefetchPageHistory,
+  usePageHistoryListQuery,
+} from "@/features/page-history/queries/page-history-query";
+import { resolveComparePair } from "@/features/page-history/utils/resolve-compare-pair";
 
 const PREFETCH_DELAY_MS = 150;
 
@@ -51,7 +51,7 @@ function HistoryList({ pageId }: Props) {
 
   const historyItems = useMemo(
     () => pageHistoryData?.pages.flatMap((page) => page.items) ?? [],
-    [pageHistoryData],
+    [pageHistoryData]
   );
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -77,12 +77,10 @@ function HistoryList({ pageId }: Props) {
         }
       }, PREFETCH_DELAY_MS);
     },
-    [clearPrefetchTimeout, historyItems],
+    [clearPrefetchTimeout, historyItems]
   );
 
-  useEffect(() => {
-    return clearPrefetchTimeout;
-  }, [clearPrefetchTimeout]);
+  useEffect(() => clearPrefetchTimeout, [clearPrefetchTimeout]);
 
   const handleSelect = useCallback(
     (id: string, index: number) => {
@@ -90,18 +88,22 @@ function HistoryList({ pageId }: Props) {
       setActiveHistoryId(id);
       setActiveHistoryPrevId(historyItems[index + 1]?.id ?? "");
     },
-    [historyItems, setActiveHistoryId, setActiveHistoryPrevId, setComparePair],
+    [historyItems, setActiveHistoryId, setActiveHistoryPrevId, setComparePair]
   );
 
   const handleToggleCompare = useCallback(
     (id: string) => {
       setCompareSelection((prev) => {
-        if (prev.includes(id)) return prev.filter((item) => item !== id);
-        if (prev.length >= 2) return prev;
+        if (prev.includes(id)) {
+          return prev.filter((item) => item !== id);
+        }
+        if (prev.length >= 2) {
+          return prev;
+        }
         return [...prev, id];
       });
     },
-    [setCompareSelection],
+    [setCompareSelection]
   );
 
   const handleStartCompare = useCallback(
@@ -110,7 +112,7 @@ function HistoryList({ pageId }: Props) {
       setCompareMode(true);
       setCompareSelection([id]);
     },
-    [setComparePair, setCompareMode, setCompareSelection],
+    [setComparePair, setCompareMode, setCompareSelection]
   );
 
   const handleCancelCompare = useCallback(() => {
@@ -120,7 +122,9 @@ function HistoryList({ pageId }: Props) {
 
   const handleConfirmCompare = useCallback(() => {
     const pair = resolveComparePair(historyItems, compareSelection);
-    if (!pair) return;
+    if (!pair) {
+      return;
+    }
     setComparePair(pair);
     setCompareMode(false);
     setCompareSelection([]);
@@ -137,7 +141,7 @@ function HistoryList({ pageId }: Props) {
       handleSelect(id, index);
       confirmRestore(id);
     },
-    [handleSelect, confirmRestore],
+    [handleSelect, confirmRestore]
   );
 
   useEffect(() => {
@@ -154,7 +158,9 @@ function HistoryList({ pageId }: Props) {
 
   useEffect(() => {
     const sentinel = loadMoreRef.current;
-    if (!sentinel || !hasNextPage) return;
+    if (!(sentinel && hasNextPage)) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -162,7 +168,7 @@ function HistoryList({ pageId }: Props) {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
 
     observer.observe(sentinel);
@@ -183,26 +189,26 @@ function HistoryList({ pageId }: Props) {
 
   return (
     <div>
-      <ScrollArea h={620} w="100%" type="scroll" scrollbarSize={5}>
+      <ScrollArea h={620} scrollbarSize={5} type="scroll" w="100%">
         {historyItems.map((historyItem, index) => (
           <HistoryItem
-            key={historyItem.id}
+            canCompare={historyItems.length >= 2}
+            compareMode={compareMode}
             historyItem={historyItem}
             index={index}
-            onSelect={handleSelect}
-            onHover={handleHover}
-            onHoverEnd={clearPrefetchTimeout}
             isActive={historyItem.id === activeHistoryId}
-            compareMode={compareMode}
-            isChecked={compareSelection.includes(historyItem.id)}
             isCheckboxDisabled={
               !compareSelection.includes(historyItem.id) &&
               compareSelection.length >= 2
             }
-            canCompare={historyItems.length >= 2}
-            onToggleCompare={handleToggleCompare}
-            onStartCompare={handleStartCompare}
+            isChecked={compareSelection.includes(historyItem.id)}
+            key={historyItem.id}
+            onHover={handleHover}
+            onHoverEnd={clearPrefetchTimeout}
             onRestore={canRestore ? handleRestoreItem : undefined}
+            onSelect={handleSelect}
+            onStartCompare={handleStartCompare}
+            onToggleCompare={handleToggleCompare}
           />
         ))}
         {hasNextPage && <div ref={loadMoreRef} style={{ height: 1 }} />}
@@ -218,16 +224,16 @@ function HistoryList({ pageId }: Props) {
           <Divider />
           <Group p="xs" wrap="nowrap">
             <Button
-              variant="default"
-              size="compact-md"
               onClick={handleCancelCompare}
+              size="compact-md"
+              variant="default"
             >
               {t("Cancel")}
             </Button>
             <Button
-              size="compact-md"
               disabled={compareSelection.length !== 2}
               onClick={handleConfirmCompare}
+              size="compact-md"
             >
               {t("Compare")}
             </Button>
@@ -239,13 +245,13 @@ function HistoryList({ pageId }: Props) {
             <Divider />
             <Group p="xs" wrap="nowrap">
               <Button
-                variant="default"
-                size="compact-md"
                 onClick={() => setHistoryModalOpen(false)}
+                size="compact-md"
+                variant="default"
               >
                 {t("Cancel")}
               </Button>
-              <Button size="compact-md" onClick={() => confirmRestore()}>
+              <Button onClick={() => confirmRestore()} size="compact-md">
                 {t("Restore")}
               </Button>
             </Group>

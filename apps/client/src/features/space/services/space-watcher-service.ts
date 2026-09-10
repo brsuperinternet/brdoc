@@ -2,7 +2,7 @@ import api from "@/lib/api-client";
 import { IPagination } from "@/lib/types";
 
 export async function watchSpace(
-  spaceId: string,
+  spaceId: string
 ): Promise<{ watching: boolean }> {
   const req = await api.post<{ watching: boolean }>("/spaces/watch", {
     spaceId,
@@ -11,7 +11,7 @@ export async function watchSpace(
 }
 
 export async function unwatchSpace(
-  spaceId: string,
+  spaceId: string
 ): Promise<{ watching: boolean }> {
   const req = await api.post<{ watching: boolean }>("/spaces/unwatch", {
     spaceId,
@@ -25,7 +25,7 @@ export async function getWatchedSpaceIds(): Promise<IPagination<string>> {
 }
 
 export async function getSpaceWatchStatus(
-  spaceId: string,
+  spaceId: string
 ): Promise<{ watching: boolean }> {
   const req = await api.post<{ watching: boolean }>("/spaces/watch-status", {
     spaceId,

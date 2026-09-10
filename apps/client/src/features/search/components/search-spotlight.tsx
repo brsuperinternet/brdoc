@@ -1,22 +1,22 @@
+import { Button, Group, Text, VisuallyHidden } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { Spotlight } from "@mantine/spotlight";
 import { IconSearch, IconSparkles } from "@tabler/icons-react";
-import { Group, Button, VisuallyHidden, Text } from "@mantine/core";
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useDebouncedValue } from "@mantine/hooks";
-import { useTranslation } from "react-i18next";
-import { notifications } from "@mantine/notifications";
-import { searchSpotlightStore } from "../constants.ts";
-import { SearchSpotlightFilters } from "./search-spotlight-filters.tsx";
-import { useUnifiedSearch } from "../hooks/use-unified-search.ts";
-import { useAiSearch } from "../../../ee/ai/hooks/use-ai-search.ts";
-import { SearchResultItem } from "./search-result-item.tsx";
-import { AiSearchResult } from "../../../ee/ai/components/ai-search-result.tsx";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { Feature } from "@/ee/features";
 import { useAtomValue } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { hintVectorCache } from "@/ee/ai/services/ai-search-service.ts";
+import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { getAiVectorDriver } from "@/lib/config.ts";
+import { AiSearchResult } from "../../../ee/ai/components/ai-search-result.tsx";
+import { useAiSearch } from "../../../ee/ai/hooks/use-ai-search.ts";
+import { searchSpotlightStore } from "../constants.ts";
+import { useUnifiedSearch } from "../hooks/use-unified-search.ts";
+import { SearchResultItem } from "./search-result-item.tsx";
+import { SearchSpotlightFilters } from "./search-spotlight-filters.tsx";
 
 interface SearchSpotlightProps {
   spaceId?: string;
@@ -42,8 +42,8 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
   // Build unified search params
   const searchParams = useMemo(() => {
     const params: any = {
-      query: debouncedSearchQuery,
       contentType: filters.contentType || "page", // Only used for frontend routing
+      query: debouncedSearchQuery,
     };
 
     // Handle space filtering - only pass spaceId if a specific space is selected
@@ -66,23 +66,20 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
     return params;
   }, [debouncedSearchQuery, filters]);
 
-  const {
-    data: searchResults,
-    isFetching,
-  } = useUnifiedSearch(
+  const { data: searchResults, isFetching } = useUnifiedSearch(
     searchParams,
     !isAiMode // Disable regular search when in AI mode
   );
   const {
-    //@ts-ignore
+    //@ts-expect-error
     data: aiSearchResult,
-    //@ts-ignore
+    //@ts-expect-error
     isPending: isAiLoading,
-    //@ts-ignore
+    //@ts-expect-error
     mutate: triggerAiSearchMutation,
-    //@ts-ignore
+    //@ts-expect-error
     reset: resetAiMutation,
-    //@ts-ignore
+    //@ts-expect-error
     error: aiSearchError,
     streamingAnswer,
     streamingSources,
@@ -99,9 +96,10 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
   useEffect(() => {
     if (aiSearchError) {
       notifications.show({
-        message: aiSearchError.message || t("AI search failed. Please try again."),
         color: "red",
-        position: "top-center"
+        message:
+          aiSearchError.message || t("AI search failed. Please try again."),
+        position: "top-center",
       });
     }
   }, [aiSearchError, t]);
@@ -117,9 +115,9 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
 
   const resultItems = (searchResults || []).map((result) => (
     <SearchResultItem
+      isAttachmentResult={isAttachmentSearch}
       key={result.id}
       result={result}
-      isAttachmentResult={isAttachmentSearch}
       showSpace={!filters.spaceId}
     />
   ));
@@ -133,9 +131,12 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
     }
   };
 
-  const handleFiltersChange = useCallback((newFilters: any) => {
-    setFilters(newFilters);
-  }, [setFilters]);
+  const handleFiltersChange = useCallback(
+    (newFilters: any) => {
+      setFilters(newFilters);
+    },
+    [setFilters]
+  );
 
   const handleAskClick = () => {
     setIsAiMode(!isAiMode);
@@ -150,37 +151,42 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
   return (
     <>
       <Spotlight.Root
-        size="xl"
         maxHeight={600}
-        onSpotlightOpen={handleSpotlightOpen}
-        store={searchSpotlightStore}
-        query={query}
         onQueryChange={setQuery}
-        scrollable
+        onSpotlightOpen={handleSpotlightOpen}
         overlayProps={{
           backgroundOpacity: 0.55,
         }}
+        query={query}
+        scrollable
+        size="xl"
+        store={searchSpotlightStore}
       >
-        <Group gap="xs" px="sm" pt="sm" pb="xs">
+        <Group gap="xs" pb="xs" pt="sm" px="sm">
           <Spotlight.Search
-            placeholder={isAiMode ? t("Ask a question...") : t("Search...")}
             aria-label={isAiMode ? t("Ask a question...") : t("Search")}
             leftSection={<IconSearch size={20} stroke={1.5} />}
-            style={{ flex: 1 }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && isAiMode && query.trim() && !isAiLoading) {
+              if (
+                e.key === "Enter" &&
+                isAiMode &&
+                query.trim() &&
+                !isAiLoading
+              ) {
                 e.preventDefault();
                 handleAiSearchTrigger();
               }
             }}
+            placeholder={isAiMode ? t("Ask a question...") : t("Search...")}
+            style={{ flex: 1 }}
           />
           {isAiMode && hasAiFeature && (
             <Button
-              size="xs"
-              leftSection={<IconSparkles size={16} />}
-              onClick={handleAiSearchTrigger}
               disabled={!query.trim()}
+              leftSection={<IconSparkles size={16} />}
               loading={isAiLoading}
+              onClick={handleAiSearchTrigger}
+              size="xs"
             >
               Ask
             </Button>
@@ -193,14 +199,14 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
           }}
         >
           <SearchSpotlightFilters
-            onFiltersChange={handleFiltersChange}
-            onAskClick={handleAskClick}
-            spaceId={spaceId}
             isAiMode={isAiMode}
+            onAskClick={handleAskClick}
+            onFiltersChange={handleFiltersChange}
+            spaceId={spaceId}
           />
         </div>
 
-        <VisuallyHidden role="status" aria-live="polite">
+        <VisuallyHidden aria-live="polite" role="status">
           {isAiMode
             ? query.length > 0 && !isAiLoading && !aiSearchResult
               ? t("No answer available")
@@ -218,23 +224,28 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
               {query.length === 0 && (
                 <Spotlight.Empty>{t("Ask a question...")}</Spotlight.Empty>
               )}
-              {query.length > 0 && (isAiLoading || aiSearchResult || streamingAnswer) && (
-                <AiSearchResult
-                  result={aiSearchResult}
-                  isLoading={isAiLoading}
-                  streamingAnswer={streamingAnswer}
-                  streamingSources={streamingSources}
-                />
-              )}
+              {query.length > 0 &&
+                (isAiLoading || aiSearchResult || streamingAnswer) && (
+                  <AiSearchResult
+                    isLoading={isAiLoading}
+                    result={aiSearchResult}
+                    streamingAnswer={streamingAnswer}
+                    streamingSources={streamingSources}
+                  />
+                )}
               {query.length > 0 && !isAiLoading && !aiSearchResult && (
                 <Spotlight.Empty>{t("No answer available")}</Spotlight.Empty>
               )}
             </>
           ) : (
             <>
-              {query.length === 0 && !isFilterBrowse && resultItems.length === 0 && (
-                <Spotlight.Empty>{t("Start typing to search...")}</Spotlight.Empty>
-              )}
+              {query.length === 0 &&
+                !isFilterBrowse &&
+                resultItems.length === 0 && (
+                  <Spotlight.Empty>
+                    {t("Start typing to search...")}
+                  </Spotlight.Empty>
+                )}
 
               {(query.length > 0 || isFilterBrowse) &&
                 !isFetching &&
@@ -248,12 +259,12 @@ export function SearchSpotlight({ spaceId }: SearchSpotlightProps) {
               {(query.length > 0 || isFilterBrowse) &&
                 isFetching &&
                 resultItems.length === 0 && (
-                <Spotlight.Empty>
-                  <Text size="sm" style={{ marginTop: 10 }}>
-                    {t("Searching...")}
-                  </Text>
-                </Spotlight.Empty>
-              )}
+                  <Spotlight.Empty>
+                    <Text size="sm" style={{ marginTop: 10 }}>
+                      {t("Searching...")}
+                    </Text>
+                  </Spotlight.Empty>
+                )}
             </>
           )}
         </Spotlight.ActionsList>

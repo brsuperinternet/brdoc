@@ -1,5 +1,3 @@
-import { isCloud } from "@/lib/config.ts";
-import SettingsTitle from "@/components/settings/settings-title.tsx";
 import {
   Alert,
   Button,
@@ -11,32 +9,34 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
-import React, { useState } from "react";
-import useUserRole from "@/hooks/use-user-role.tsx";
-import SsoProviderList from "@/ee/security/components/sso-provider-list.tsx";
-import CreateSsoProvider from "@/ee/security/components/create-sso-provider.tsx";
-import EnforceSso from "@/ee/security/components/enforce-sso.tsx";
-import AllowedDomains from "@/ee/security/components/allowed-domains.tsx";
-import { useTranslation } from "react-i18next";
-import EnforceMfa from "@/ee/security/components/enforce-mfa.tsx";
-import DisablePublicSharing from "@/ee/security/components/disable-public-sharing.tsx";
-import TrashRetention from "@/ee/security/components/trash-retention.tsx";
 import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { Feature } from "@/ee/features";
-import { useGetScimTokensQuery } from "@/ee/scim/queries/scim-token-query";
-import { ScimUrlPanel } from "@/ee/scim/components/scim-url-panel";
-import { ScimTokenTable } from "@/ee/scim/components/scim-token-table";
-import { CreateScimTokenModal } from "@/ee/scim/components/create-scim-token-modal";
-import { ScimTokenCreatedModal } from "@/ee/scim/components/scim-token-created-modal";
-import { RevokeScimTokenModal } from "@/ee/scim/components/revoke-scim-token-modal";
-import { UpdateScimTokenModal } from "@/ee/scim/components/update-scim-token-modal";
-import EnableScim from "@/ee/scim/components/enable-scim";
-import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Paginate from "@/components/common/paginate";
-import { IScimToken } from "@/ee/scim/types/scim-token.types";
+import SettingsTitle from "@/components/settings/settings-title.tsx";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
+import { CreateScimTokenModal } from "@/ee/scim/components/create-scim-token-modal";
+import EnableScim from "@/ee/scim/components/enable-scim";
+import { RevokeScimTokenModal } from "@/ee/scim/components/revoke-scim-token-modal";
+import { ScimTokenCreatedModal } from "@/ee/scim/components/scim-token-created-modal";
+import { ScimTokenTable } from "@/ee/scim/components/scim-token-table";
+import { ScimUrlPanel } from "@/ee/scim/components/scim-url-panel";
+import { UpdateScimTokenModal } from "@/ee/scim/components/update-scim-token-modal";
+import { useGetScimTokensQuery } from "@/ee/scim/queries/scim-token-query";
+import { IScimToken } from "@/ee/scim/types/scim-token.types";
+import AllowedDomains from "@/ee/security/components/allowed-domains.tsx";
+import CreateSsoProvider from "@/ee/security/components/create-sso-provider.tsx";
+import DisablePublicSharing from "@/ee/security/components/disable-public-sharing.tsx";
+import EnforceMfa from "@/ee/security/components/enforce-mfa.tsx";
+import EnforceSso from "@/ee/security/components/enforce-sso.tsx";
+import SsoProviderList from "@/ee/security/components/sso-provider-list.tsx";
+import TrashRetention from "@/ee/security/components/trash-retention.tsx";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { isCloud } from "@/lib/config.ts";
 
 const SCIM_TOKEN_LIMIT = 5;
 
@@ -50,7 +50,7 @@ export default function Security() {
 
   const { cursor, goNext, goPrev } = useCursorPaginate();
   const { data: scimData, isLoading: scimLoading } = useGetScimTokensQuery(
-    hasScim && isScimEnabled ? { cursor } : undefined,
+    hasScim && isScimEnabled ? { cursor } : undefined
   );
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -77,7 +77,7 @@ export default function Security() {
       <TrashRetention />
       <Divider my="lg" />
 
-      <Title order={4} my="lg">
+      <Title my="lg" order={4}>
         {t("Single sign-on (SSO)")}
       </Title>
 
@@ -94,7 +94,7 @@ export default function Security() {
       {hasCustomSso && (
         <>
           <CreateSsoProvider />
-          <Divider size={0} my="lg" />
+          <Divider my="lg" size={0} />
         </>
       )}
 
@@ -104,15 +104,15 @@ export default function Security() {
         <>
           <Divider my="xl" />
 
-          <Title order={4} my="lg">
+          <Title my="lg" order={4}>
             {t("SCIM provisioning")}
           </Title>
 
           <Alert
-            icon={<IconInfoCircle size={16} />}
             color="blue"
-            variant="light"
+            icon={<IconInfoCircle size={16} />}
             mb="md"
+            variant="light"
           >
             {t("SCIM takes precedence over SSO group sync while enabled.")}
           </Alert>
@@ -130,15 +130,15 @@ export default function Security() {
               <Group justify="space-between" mb="md">
                 <Title order={5}>{t("SCIM tokens")}</Title>
                 <Tooltip
+                  disabled={(scimData?.items.length ?? 0) < SCIM_TOKEN_LIMIT}
                   label={t(
                     "You have reached the maximum of {{max}} SCIM tokens. Delete an existing token to create a new one.",
-                    { max: SCIM_TOKEN_LIMIT },
+                    { max: SCIM_TOKEN_LIMIT }
                   )}
-                  disabled={(scimData?.items.length ?? 0) < SCIM_TOKEN_LIMIT}
                 >
                   <Button
-                    onClick={() => setCreateOpen(true)}
                     disabled={(scimData?.items.length ?? 0) >= SCIM_TOKEN_LIMIT}
+                    onClick={() => setCreateOpen(true)}
                   >
                     {t("Create {{credential}}", {
                       credential: t("SCIM token"),
@@ -147,12 +147,12 @@ export default function Security() {
                 </Tooltip>
               </Group>
 
-              <Card shadow="sm" radius="sm">
+              <Card radius="sm" shadow="sm">
                 <ScimTokenTable
-                  tokens={scimData?.items}
                   isLoading={scimLoading}
-                  onUpdate={setUpdateTarget}
                   onRevoke={setRevokeTarget}
+                  onUpdate={setUpdateTarget}
+                  tokens={scimData?.items}
                 />
               </Card>
 
@@ -160,34 +160,34 @@ export default function Security() {
 
               {scimData?.items.length > 0 && (
                 <Paginate
-                  hasPrevPage={scimData?.meta?.hasPrevPage}
                   hasNextPage={scimData?.meta?.hasNextPage}
+                  hasPrevPage={scimData?.meta?.hasPrevPage}
                   onNext={() => goNext(scimData?.meta?.nextCursor)}
                   onPrev={goPrev}
                 />
               )}
 
               <CreateScimTokenModal
-                opened={createOpen}
                 onClose={() => setCreateOpen(false)}
                 onSuccess={setCreatedToken}
+                opened={createOpen}
               />
 
               <ScimTokenCreatedModal
-                opened={!!createdToken}
                 onClose={() => setCreatedToken(null)}
+                opened={!!createdToken}
                 scimToken={createdToken}
               />
 
               <UpdateScimTokenModal
-                opened={!!updateTarget}
                 onClose={() => setUpdateTarget(null)}
+                opened={!!updateTarget}
                 scimToken={updateTarget}
               />
 
               <RevokeScimTokenModal
-                opened={!!revokeTarget}
                 onClose={() => setRevokeTarget(null)}
+                opened={!!revokeTarget}
                 scimToken={revokeTarget}
               />
             </>

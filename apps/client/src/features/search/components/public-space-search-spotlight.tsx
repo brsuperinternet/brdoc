@@ -1,15 +1,15 @@
-import { Group, Center, Text, Button } from "@mantine/core";
+import { Button, Center, Group, Text } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { Spotlight } from "@mantine/spotlight";
 import { IconLetterCase, IconSearch } from "@tabler/icons-react";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useDebouncedValue } from "@mantine/hooks";
-import { usePublicSpaceSearchQuery } from "@/features/search/queries/search-query";
-import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
-import { getPageIcon } from "@/lib";
-import { useTranslation } from "react-i18next";
-import { publicSpaceSearchSpotlightStore } from "@/features/search/constants.ts";
 import DOMPurify from "dompurify";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
+import { publicSpaceSearchSpotlightStore } from "@/features/search/constants.ts";
+import { usePublicSpaceSearchQuery } from "@/features/search/queries/search-query";
+import { getPageIcon } from "@/lib";
 
 interface PublicSpaceSearchSpotlightProps {
   spaceSlug: string;
@@ -32,17 +32,17 @@ export function PublicSpaceSearchSpotlight({
     searchResults && searchResults.length > 0 ? searchResults : []
   ).map((page) => (
     <Spotlight.Action
-      key={page.id}
       component={Link}
-      //@ts-ignore
-      to={buildPublicSpaceUrl({
-        spaceSlug: spaceSlug,
-        pageTitle: page.title,
-        pageSlugId: page.slugId,
-      })}
+      key={page.id}
       style={{ userSelect: "none" }}
+      //@ts-expect-error
+      to={buildPublicSpaceUrl({
+        pageSlugId: page.slugId,
+        pageTitle: page.title,
+        spaceSlug,
+      })}
     >
-      <Group wrap="nowrap" w="100%">
+      <Group w="100%" wrap="nowrap">
         <Center>{getPageIcon(page?.icon)}</Center>
 
         <div style={{ flex: 1 }}>
@@ -50,14 +50,14 @@ export function PublicSpaceSearchSpotlight({
 
           {page?.highlight && (
             <Text
-              opacity={0.6}
-              size="xs"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(page.highlight, {
-                  ALLOWED_TAGS: ["mark", "em", "strong", "b"],
                   ALLOWED_ATTR: [],
+                  ALLOWED_TAGS: ["mark", "em", "strong", "b"],
                 }),
               }}
+              opacity={0.6}
+              size="xs"
             />
           )}
         </div>
@@ -68,29 +68,29 @@ export function PublicSpaceSearchSpotlight({
   return (
     <>
       <Spotlight.Root
-        store={publicSpaceSearchSpotlightStore}
-        query={query}
         onQueryChange={setQuery}
-        scrollable
         overlayProps={{
           backgroundOpacity: 0.55,
         }}
+        query={query}
+        scrollable
+        store={publicSpaceSearchSpotlightStore}
       >
         <Spotlight.Search
-          placeholder={t("Search...")}
           aria-label={t("Search")}
           leftSection={<IconSearch size={20} stroke={1.5} />}
+          placeholder={t("Search...")}
         />
         <Group px="sm" py={6}>
           <Button
-            variant={titleOnly ? "light" : "subtle"}
+            aria-pressed={titleOnly}
             color={titleOnly ? undefined : "gray"}
-            size="compact-sm"
-            radius="xl"
             fw={500}
             leftSection={<IconLetterCase size={15} />}
-            aria-pressed={titleOnly}
             onClick={() => setTitleOnly((value) => !value)}
+            radius="xl"
+            size="compact-sm"
+            variant={titleOnly ? "light" : "subtle"}
           >
             {t("Title only")}
           </Button>

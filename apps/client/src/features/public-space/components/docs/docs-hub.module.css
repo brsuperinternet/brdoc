@@ -30,8 +30,8 @@
 
 .root {
   min-height: 100dvh;
-  background-color: var(--docs-hub-bg);
   color: var(--docs-hub-fg);
+  background-color: var(--docs-hub-bg);
 }
 
 .container {
@@ -42,8 +42,8 @@
 /* ---------- Top bar ---------- */
 
 .topBar {
-  border-bottom: 1px solid var(--docs-hub-border);
   padding: 0 rem(48px);
+  border-bottom: 1px solid var(--docs-hub-border);
 
   @media (max-width: $mantine-breakpoint-sm) {
     padding: 0 rem(20px);
@@ -51,10 +51,10 @@
 }
 
 .topBarInner {
-  height: rem(64px);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: rem(64px);
 
   @media (max-width: $mantine-breakpoint-sm) {
     height: rem(56px);
@@ -63,13 +63,13 @@
 
 .brand {
   display: flex;
-  align-items: center;
   gap: rem(10px);
+  align-items: center;
   min-width: 0;
-  color: var(--docs-hub-fg);
-  text-decoration: none;
   font-size: rem(16px);
   font-weight: 600;
+  color: var(--docs-hub-fg);
+  text-decoration: none;
   border-radius: rem(8px);
 
   &:focus-visible {
@@ -84,29 +84,29 @@
 }
 
 .brandTile {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
   width: rem(28px);
   height: rem(28px);
-  border-radius: rem(8px);
-  background-color: var(--docs-hub-brand);
-  color: var(--docs-hub-brand-fg);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  font-weight: 700;
   font-size: rem(13px);
+  font-weight: 700;
+  color: var(--docs-hub-brand-fg);
+  background-color: var(--docs-hub-brand);
+  border-radius: rem(8px);
 
   @media (max-width: $mantine-breakpoint-sm) {
     width: rem(26px);
     height: rem(26px);
-    border-radius: rem(7px);
     font-size: rem(12px);
+    border-radius: rem(7px);
   }
 }
 
 .topActions {
   display: flex;
-  align-items: center;
   gap: rem(24px);
+  align-items: center;
   font-size: rem(14px);
   color: var(--docs-hub-nav-fg);
 }
@@ -114,12 +114,12 @@
 .signIn {
   display: inline-block;
   padding: rem(8px) rem(14px);
-  border-radius: rem(8px);
-  background-color: var(--docs-hub-brand);
-  color: var(--docs-hub-brand-fg);
-  text-decoration: none;
   font-weight: 500;
+  color: var(--docs-hub-brand-fg);
   white-space: nowrap;
+  text-decoration: none;
+  background-color: var(--docs-hub-brand);
+  border-radius: rem(8px);
 
   @media (hover: hover) {
     &:hover {
@@ -141,9 +141,9 @@
 /* ---------- Hero band ---------- */
 
 .hero {
-  background-color: var(--docs-hub-hero-bg);
-  color: var(--docs-hub-hero-fg);
   padding: rem(72px) rem(48px) rem(80px);
+  color: var(--docs-hub-hero-fg);
+  background-color: var(--docs-hub-hero-bg);
 
   @media (max-width: $mantine-breakpoint-sm) {
     padding: rem(40px) rem(20px) rem(44px);
@@ -153,9 +153,9 @@
 .heroInner {
   display: flex;
   flex-direction: column;
+  gap: rem(16px);
   align-items: center;
   text-align: center;
-  gap: rem(16px);
 
   @media (max-width: $mantine-breakpoint-sm) {
     gap: rem(10px);
@@ -164,11 +164,11 @@
 
 .heading {
   margin: 0;
-  color: var(--docs-hub-hero-fg);
   font-size: rem(48px);
   font-weight: 700;
-  letter-spacing: -0.02em;
   line-height: 1.15;
+  color: var(--docs-hub-hero-fg);
+  letter-spacing: -0.02em;
 
   @media (max-width: $mantine-breakpoint-sm) {
     font-size: rem(30px);
@@ -177,8 +177,8 @@
 
 .subtitle {
   margin: 0;
-  color: var(--docs-hub-hero-muted);
   font-size: rem(18px);
+  color: var(--docs-hub-hero-muted);
 
   @media (max-width: $mantine-breakpoint-sm) {
     font-size: rem(15px);
@@ -187,15 +187,15 @@
 }
 
 .search {
-  margin-top: rem(16px);
+  display: flex;
+  align-items: center;
   width: rem(640px);
   max-width: 100%;
   height: rem(56px);
-  display: flex;
-  align-items: center;
   padding: 0 rem(6px) 0 rem(22px);
-  border-radius: 999px;
+  margin-top: rem(16px);
   background-color: var(--docs-hub-search-bg);
+  border-radius: 999px;
   box-shadow: var(--docs-hub-search-shadow);
 
   &:focus-within {
@@ -204,10 +204,10 @@
   }
 
   @media (max-width: $mantine-breakpoint-sm) {
-    margin-top: rem(10px);
     width: 100%;
     height: rem(48px);
     padding: 0 rem(5px) 0 rem(18px);
+    margin-top: rem(10px);
     box-shadow: none;
   }
 }
@@ -216,13 +216,13 @@
   flex: 1;
   min-width: 0;
   height: 100%;
-  border: 0;
-  background: transparent;
   font: inherit;
   font-size: rem(16px);
   color: var(--docs-hub-search-fg);
   text-align: left;
   outline: none;
+  background: transparent;
+  border: 0;
 
   &::placeholder {
     color: var(--docs-hub-search-placeholder);
@@ -234,16 +234,16 @@
 }
 
 .searchButton {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
   width: rem(44px);
   height: rem(44px);
-  flex-shrink: 0;
+  color: var(--docs-hub-brand-fg);
+  cursor: pointer;
+  background-color: var(--docs-hub-brand);
   border: 0;
   border-radius: 999px;
-  background-color: var(--docs-hub-brand);
-  color: var(--docs-hub-brand-fg);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
 
   &:focus-visible {
     outline: 2px solid var(--docs-hub-search-fg);
@@ -278,11 +278,11 @@
 
 .sectionHeader {
   display: flex;
+  gap: rem(16px);
   align-items: baseline;
   justify-content: space-between;
-  gap: rem(16px);
-  border-bottom: 1px solid var(--docs-hub-border);
   padding-bottom: rem(14px);
+  border-bottom: 1px solid var(--docs-hub-border);
 
   @media (max-width: $mantine-breakpoint-sm) {
     padding-bottom: rem(10px);
@@ -293,9 +293,9 @@
   margin: 0;
   font-size: rem(13px);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--docs-hub-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 
   @media (max-width: $mantine-breakpoint-sm) {
     font-size: rem(12px);
@@ -332,12 +332,12 @@
   flex-direction: column;
   gap: rem(14px);
   padding: rem(24px) rem(24px) rem(26px);
+  color: inherit;
+  text-decoration: none;
   background-color: var(--docs-hub-card-bg);
   border: 1px solid var(--docs-hub-card-border);
   border-radius: var(--docs-hub-card-radius);
   box-shadow: var(--docs-hub-card-shadow);
-  color: inherit;
-  text-decoration: none;
   transition:
     border-color 120ms ease,
     box-shadow 160ms ease;
@@ -363,8 +363,8 @@
 /* Tile and title share a row so titles get the card's full width. */
 .cardHeader {
   display: flex;
-  align-items: center;
   gap: rem(14px);
+  align-items: center;
   min-width: 0;
 
   @media (max-width: $mantine-breakpoint-sm) {
@@ -373,16 +373,16 @@
 }
 
 .cardTile {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
   width: rem(40px);
   height: rem(40px);
-  flex-shrink: 0;
-  border-radius: rem(10px);
-  display: grid;
-  place-items: center;
   overflow: hidden;
-  color: var(--docs-hub-tile-fg);
-  font-weight: 700;
   font-size: rem(15px);
+  font-weight: 700;
+  color: var(--docs-hub-tile-fg);
+  border-radius: rem(10px);
 
   img {
     width: 100%;
@@ -393,8 +393,8 @@
   @media (max-width: $mantine-breakpoint-sm) {
     width: rem(36px);
     height: rem(36px);
-    border-radius: rem(9px);
     font-size: rem(14px);
+    border-radius: rem(9px);
   }
 }
 
@@ -412,14 +412,14 @@
 }
 
 .cardDescription {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
   font-size: rem(15px);
   line-height: 1.5;
   color: var(--docs-hub-muted);
   text-wrap: pretty;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 
   @media (max-width: $mantine-breakpoint-sm) {
     font-size: rem(14px);
@@ -427,19 +427,19 @@
 }
 
 .empty {
-  margin: 0;
   padding: rem(48px) 0;
-  text-align: center;
+  margin: 0;
   color: var(--docs-hub-muted);
+  text-align: center;
 }
 
 /* ---------- Footer ---------- */
 
 .footer {
-  border-top: 1px solid var(--docs-hub-border);
   padding: rem(24px) rem(48px);
   font-size: rem(14px);
   color: var(--docs-hub-footer-fg);
+  border-top: 1px solid var(--docs-hub-border);
 
   @media (max-width: $mantine-breakpoint-sm) {
     padding: rem(20px);
@@ -454,15 +454,15 @@
 
   @media (max-width: $mantine-breakpoint-sm) {
     flex-direction: column;
+    gap: rem(12px);
     align-items: center;
     justify-content: center;
-    gap: rem(12px);
   }
 }
 
 .footerBranding {
-  color: var(--docs-hub-fg);
   font-weight: 600;
+  color: var(--docs-hub-fg);
   text-decoration: none;
 
   @media (hover: hover) {

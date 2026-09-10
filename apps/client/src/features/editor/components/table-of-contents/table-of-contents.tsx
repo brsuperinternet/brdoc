@@ -1,10 +1,10 @@
-import { NodePos, useEditor } from "@tiptap/react";
-import { TextSelection } from "@tiptap/pm/state";
-import React, { FC, useEffect, useRef, useState } from "react";
-import classes from "./table-of-contents.module.css";
-import clsx from "clsx";
 import { Box, Text, Title } from "@mantine/core";
+import { TextSelection } from "@tiptap/pm/state";
+import { NodePos, useEditor } from "@tiptap/react";
+import clsx from "clsx";
+import { FC, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import classes from "./table-of-contents.module.css";
 
 type TableOfContentsProps = {
   editor: ReturnType<typeof useEditor>;
@@ -27,17 +27,17 @@ export const recalculateLinks = (nodePos: NodePos[]) => {
       const level = Number(item.node.attrs.level);
       if (label.length && level <= 6) {
         acc.push({
+          element: item.element,
           label,
           level,
-          element: item.element,
-          //@ts-ignore
+          //@ts-expect-error
           position: item.resolvedPos.pos,
         });
         nodes.push(item.element);
       }
       return acc;
     },
-    [],
+    []
   );
   return { links, nodes };
 };
@@ -50,11 +50,13 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
   const headerPaddingRef = useRef<HTMLDivElement | null>(null);
 
   const handleScrollToHeading = (position: number) => {
-    if (!props.editor || props.editor.isDestroyed) return;
+    if (!props.editor || props.editor.isDestroyed) {
+      return;
+    }
     const { view } = props.editor;
 
-    const headerOffset = parseInt(
-      window.getComputedStyle(headerPaddingRef.current).getPropertyValue("top"),
+    const headerOffset = Number.parseInt(
+      window.getComputedStyle(headerPaddingRef.current).getPropertyValue("top")
     );
 
     const { node } = view.domAtPos(position);
@@ -63,8 +65,8 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
       element.getBoundingClientRect().top + window.scrollY - headerOffset;
 
     window.scrollTo({
-      top: scrollPosition,
       behavior: "smooth",
+      top: scrollPosition,
     });
 
     const tr = view.state.tr;
@@ -74,7 +76,9 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
   };
 
   const handleUpdate = () => {
-    if (!props.editor || props.editor.isDestroyed) return;
+    if (!props.editor || props.editor.isDestroyed) {
+      return;
+    }
 
     const result = recalculateLinks(props.editor.$nodes("heading"));
 
@@ -97,7 +101,7 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
     () => {
       handleUpdate();
     },
-    props.isShare ? [props.editor] : [],
+    props.isShare ? [props.editor] : []
   );
 
   useEffect(() => {
@@ -112,20 +116,20 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
 
       let headerOffset = 0;
       if (headerPaddingRef.current) {
-        headerOffset = parseInt(
+        headerOffset = Number.parseInt(
           window
             .getComputedStyle(headerPaddingRef.current)
-            .getPropertyValue("top"),
+            .getPropertyValue("top")
         );
       }
       const observerOptions: IntersectionObserverInit = {
+        root: null,
         rootMargin: `-${headerOffset}px 0px -85% 0px`,
         threshold: 0,
-        root: null,
       };
       const observer = new IntersectionObserver(
         observeHandler,
-        observerOptions,
+        observerOptions
       );
 
       headingDOMNodes.forEach((heading) => {
@@ -151,7 +155,7 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
         )}
 
         {props.isShare && (
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             {t("No table of contents.")}
           </Text>
         )}
@@ -162,19 +166,19 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
   return (
     <>
       {props.isShare && (
-        <Title order={2} size="h6" mb="md" fw={500}>
+        <Title fw={500} mb="md" order={2} size="h6">
           {t("Table of contents")}
         </Title>
       )}
       <div className={props.isShare ? classes.leftBorder : ""}>
         {links.map((item, idx) => (
           <Box<"button">
-            component="button"
-            onClick={() => handleScrollToHeading(item.position)}
-            key={idx}
             className={clsx(classes.link, {
               [classes.linkActive]: item.element === activeElement,
             })}
+            component="button"
+            key={idx}
+            onClick={() => handleScrollToHeading(item.position)}
             style={{
               paddingLeft: `calc(${item.level} * var(--mantine-spacing-md))`,
             }}
@@ -183,7 +187,7 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
           </Box>
         ))}
       </div>
-      <div ref={headerPaddingRef} className={classes.headerPadding} />
+      <div className={classes.headerPadding} ref={headerPaddingRef} />
     </>
   );
 };

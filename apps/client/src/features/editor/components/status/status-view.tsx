@@ -1,28 +1,28 @@
-import { useState, useRef, useEffect } from "react";
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { Popover, TextInput, Group, Box } from "@mantine/core";
+import type { StatusColor } from "@docmost/editor-ext";
+import { Box, Group, Popover, TextInput } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { IconCheck } from "@tabler/icons-react";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import clsx from "clsx";
+import { useEffect, useRef, useState } from "react";
 import classes from "./status.module.css";
-import type { StatusColor } from "@docmost/editor-ext";
 
 const STATUS_COLORS: { name: StatusColor; bg: string }[] = [
-  { name: "gray", bg: "var(--mantine-color-gray-4)" },
-  { name: "blue", bg: "var(--mantine-color-blue-4)" },
-  { name: "green", bg: "var(--mantine-color-green-4)" },
-  { name: "yellow", bg: "var(--mantine-color-yellow-4)" },
-  { name: "red", bg: "var(--mantine-color-red-4)" },
-  { name: "purple", bg: "var(--mantine-color-violet-4)" },
+  { bg: "var(--mantine-color-gray-4)", name: "gray" },
+  { bg: "var(--mantine-color-blue-4)", name: "blue" },
+  { bg: "var(--mantine-color-green-4)", name: "green" },
+  { bg: "var(--mantine-color-yellow-4)", name: "yellow" },
+  { bg: "var(--mantine-color-red-4)", name: "red" },
+  { bg: "var(--mantine-color-violet-4)", name: "purple" },
 ];
 
 const colorClassMap: Record<StatusColor, string> = {
-  gray: classes.colorGray,
   blue: classes.colorBlue,
+  gray: classes.colorGray,
   green: classes.colorGreen,
-  yellow: classes.colorYellow,
-  red: classes.colorRed,
   purple: classes.colorPurple,
+  red: classes.colorRed,
+  yellow: classes.colorYellow,
 };
 
 export default function StatusView(props: NodeViewProps) {
@@ -53,7 +53,7 @@ export default function StatusView(props: NodeViewProps) {
 
   const debouncedUpdateAttributes = useDebouncedCallback(
     (val: string) => updateAttributes({ text: val }),
-    100,
+    100
   );
 
   const handleTextChange = (val: string) => {
@@ -68,28 +68,31 @@ export default function StatusView(props: NodeViewProps) {
   const isEditable = editor.isEditable;
 
   return (
-    <NodeViewWrapper style={{ display: "inline" }} data-drag-handle>
+    <NodeViewWrapper data-drag-handle style={{ display: "inline" }}>
       <Popover
-        opened={opened}
         onChange={(open) => {
-          if (!open && !text) {
+          if (!(open || text)) {
             deleteNode();
             return;
           }
           setOpened(open);
         }}
-        width={220}
+        opened={opened}
         position="bottom"
-        withArrow
         shadow="md"
         trapFocus
+        width={220}
+        withArrow
       >
         <Popover.Target>
           <span
+            aria-expanded={opened}
+            aria-haspopup="dialog"
+            aria-label={text || "SET STATUS"}
             className={clsx(
               "status-badge",
               classes.status,
-              colorClassMap[color],
+              colorClassMap[color]
             )}
             onClick={() => isEditable && setOpened(true)}
             onKeyDown={(e) => {
@@ -100,9 +103,6 @@ export default function StatusView(props: NodeViewProps) {
             }}
             role="button"
             tabIndex={0}
-            aria-label={text || "SET STATUS"}
-            aria-haspopup="dialog"
-            aria-expanded={opened}
           >
             {text || "SET STATUS"}
           </span>
@@ -110,8 +110,7 @@ export default function StatusView(props: NodeViewProps) {
 
         <Popover.Dropdown>
           <TextInput
-            ref={inputRef}
-            value={inputValue}
+            mb="xs"
             onChange={(e) =>
               handleTextChange(e.currentTarget.value.toUpperCase())
             }
@@ -122,19 +121,21 @@ export default function StatusView(props: NodeViewProps) {
               }
             }}
             placeholder="Status text"
+            ref={inputRef}
             size="sm"
-            mb="xs"
+            value={inputValue}
           />
 
           <Group gap={6} justify="center">
             {STATUS_COLORS.map(({ name, bg }) => (
               <Box
-                key={name}
+                aria-label={name}
+                aria-pressed={color === name}
                 className={clsx(
                   classes.swatch,
-                  color === name && classes.swatchActive,
+                  color === name && classes.swatchActive
                 )}
-                style={{ backgroundColor: bg }}
+                key={name}
                 onClick={() => handleColorChange(name)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -143,9 +144,8 @@ export default function StatusView(props: NodeViewProps) {
                   }
                 }}
                 role="button"
+                style={{ backgroundColor: bg }}
                 tabIndex={0}
-                aria-label={name}
-                aria-pressed={color === name}
               >
                 {color === name && <IconCheck size={14} />}
               </Box>

@@ -1,15 +1,15 @@
-import { Modal, TextInput, Button, Group, Stack } from "@mantine/core";
+import { Button, Group, Modal, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { z } from "zod/v4";
 import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
 import { useCreateScimTokenMutation } from "@/ee/scim/queries/scim-token-query";
 import { IScimToken } from "@/ee/scim/types/scim-token.types";
 
 interface CreateScimTokenModalProps {
-  opened: boolean;
   onClose: () => void;
   onSuccess: (response: IScimToken) => void;
+  opened: boolean;
 }
 
 const formSchema = z.object({
@@ -26,8 +26,8 @@ export function CreateScimTokenModal({
   const createMutation = useCreateScimTokenMutation();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: { name: "" },
+    validate: zod4Resolver(formSchema),
   });
 
   const handleSubmit = async (data: FormValues) => {
@@ -48,27 +48,27 @@ export function CreateScimTokenModal({
 
   return (
     <Modal
-      opened={opened}
-      onClose={handleClose}
-      title={t("Create {{credential}}", { credential: t("SCIM token") })}
-      size="md"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={handleClose}
+      opened={opened}
+      size="md"
+      title={t("Create {{credential}}", { credential: t("SCIM token") })}
     >
       <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
         <Stack gap="md">
           <TextInput
+            data-autofocus
             label={t("Name")}
             placeholder={t("Enter a descriptive name")}
-            data-autofocus
             required
             {...form.getInputProps("name")}
           />
 
           <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>
+            <Button onClick={handleClose} variant="default">
               {t("Cancel")}
             </Button>
-            <Button type="submit" loading={createMutation.isPending}>
+            <Button loading={createMutation.isPending} type="submit">
               {t("Create")}
             </Button>
           </Group>

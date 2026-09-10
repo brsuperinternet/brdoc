@@ -20,7 +20,7 @@ const enterpriseFeatures = [
   "Bases",
   "Kanban",
   "Templates",
-  "Personal Spaces"
+  "Personal Spaces",
 ];
 
 export default function OssDetails() {
@@ -28,9 +28,9 @@ export default function OssDetails() {
     <Stack gap="lg">
       <Table.ScrollContainer minWidth={500} py="md">
         <Table
+          layout="fixed"
           variant="vertical"
           verticalSpacing="sm"
-          layout="fixed"
           withTableBorder
         >
           <Table.Tbody>
@@ -42,9 +42,9 @@ export default function OssDetails() {
                   <div>
                     <ThemeIcon
                       color="green"
-                      variant="light"
-                      size={24}
                       radius="xl"
+                      size={24}
+                      variant="light"
                     >
                       <IconCheck size={16} />
                     </ThemeIcon>
@@ -60,43 +60,43 @@ export default function OssDetails() {
         <Text fw={500}>Upgrade to the Enterprise Edition to unlock:</Text>
 
         <List
-          spacing={4}
-          size="sm"
           icon={
-            <ThemeIcon size={20} color={"gray"} radius="xl">
+            <ThemeIcon color={"gray"} radius="xl" size={20}>
               <IconCheck size={14} />
             </ThemeIcon>
           }
+          size="sm"
+          spacing={4}
         >
           {enterpriseFeatures.map((feature) => (
             <List.Item key={feature}>{feature}</List.Item>
           ))}
         </List>
 
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           Get an enterprise trial key at{" "}
           <a
             href="https://customers.docmost.com/"
-            target="_blank"
             rel="noopener noreferrer"
+            target="_blank"
           >
             customers.docmost.com
           </a>
           .
         </Text>
 
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           Visit{" "}
           <a
             href="https://docmost.com/pricing"
-            target="_blank"
             rel="noopener noreferrer"
+            target="_blank"
           >
             docmost.com/pricing
           </a>{" "}
           to purchase an enterprise license.
         </Text>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           For inquiries, contact{" "}
           <a href="mailto:sales@docmost.com">sales@docmost.com</a>
         </Text>

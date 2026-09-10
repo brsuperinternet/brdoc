@@ -17,71 +17,71 @@ export interface ITlsOptions {
 }
 
 export interface IHttpConfig {
-  url: string;
   authHeaderName: string;
   authHeaderPrefix: string;
   format: "json" | "ndjson";
   tls?: ITlsOptions;
+  url: string;
 }
 
 export interface ISplunkHecConfig {
-  url: string;
+  channelId: string;
+  host?: string;
   index?: string;
   source: string;
   sourcetype: string;
-  host?: string;
-  channelId: string;
   tls?: ITlsOptions;
+  url: string;
 }
 
 export interface IDatadogConfig {
-  site: string;
   service: string;
+  site: string;
   tags?: string;
 }
 
 export type ISiemConfig = IHttpConfig | ISplunkHecConfig | IDatadogConfig;
 
 export interface ISiemDestination {
-  id: string;
-  name: string;
-  type: SiemDestinationType;
-  enabled: boolean;
-  status: SiemDestinationStatus;
   config: ISiemConfig;
-  hasSecrets: Record<string, boolean>;
+  consecutiveFailures: number;
+  createdAt: string;
   cursorCreatedAt: string;
+  enabled: boolean;
+  failingSince: string | null;
+  hasSecrets: Record<string, boolean>;
+  id: string;
   lastDeliveredAt: string | null;
   lastError: string | null;
   lastErrorAt: string | null;
-  consecutiveFailures: number;
+  name: string;
   nextAttemptAt: string | null;
-  failingSince: string | null;
-  createdAt: string;
+  status: SiemDestinationStatus;
+  type: SiemDestinationType;
   updatedAt: string;
 }
 
 export interface ISiemDestinationInput {
-  name: string;
-  type: SiemDestinationType;
   config: Record<string, unknown>;
-  secrets?: Record<string, string>;
   enabled?: boolean;
+  name: string;
+  secrets?: Record<string, string>;
+  type: SiemDestinationType;
 }
 
 export interface IUpdateSiemDestinationInput {
-  destinationId: string;
-  name?: string;
   config?: Record<string, unknown>;
-  secrets?: Record<string, string>;
+  destinationId: string;
   enabled?: boolean;
+  name?: string;
+  secrets?: Record<string, string>;
 }
 
 export interface ITestSiemDestinationInput {
-  type: SiemDestinationType;
   config: Record<string, unknown>;
-  secrets?: Record<string, string>;
   destinationId?: string;
+  secrets?: Record<string, string>;
+  type: SiemDestinationType;
 }
 
 export interface ISiemTestResult {

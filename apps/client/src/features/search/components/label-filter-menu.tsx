@@ -1,4 +1,3 @@
-import { ReactNode, useMemo, useState } from "react";
 import {
   Group,
   Menu,
@@ -9,10 +8,11 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { IconCheck, IconSearch } from "@tabler/icons-react";
+import { ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CheckboxMenuItem } from "@/components/ui/checkbox-menu-item";
 import { useWorkspaceLabelsQuery } from "@/features/label/queries/label-query.ts";
 import { getLabelColor } from "@/features/label/utils/label-colors.ts";
-import { CheckboxMenuItem } from "@/components/ui/checkbox-menu-item";
 
 type LabelFilterMenuProps = {
   value: string[];
@@ -61,32 +61,32 @@ export function LabelFilterMenu({
 
   return (
     <Menu
+      closeOnItemClick={false}
+      onChange={onOpenChange}
+      opened={opened}
+      position={position}
       shadow="md"
       width={width}
-      position={position}
       zIndex={zIndex}
-      opened={opened}
-      onChange={onOpenChange}
-      closeOnItemClick={false}
     >
       <Menu.Target>{children}</Menu.Target>
       <Menu.Dropdown>
         <TextInput
-          placeholder={t("Find a label")}
-          data-autofocus
           autoFocus
+          data-autofocus
           leftSection={<IconSearch size={16} />}
-          value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          size="sm"
-          variant="filled"
+          placeholder={t("Find a label")}
           radius="sm"
+          size="sm"
           styles={{ input: { marginBottom: 8 } }}
+          value={searchQuery}
+          variant="filled"
         />
 
         <ScrollArea.Autosize mah={280}>
           {labels.length === 0 && (
-            <Text size="xs" c="dimmed" px="xs" py="sm">
+            <Text c="dimmed" px="xs" py="sm" size="xs">
               {isLoading ? t("Loading...") : t("No labels found")}
             </Text>
           )}
@@ -96,26 +96,26 @@ export function LabelFilterMenu({
             const color = getLabelColor(label.name, scheme);
             return (
               <Menu.Item
-                key={label.id}
-                type="button"
-                component={CheckboxMenuItem}
                 aria-checked={isChecked}
+                component={CheckboxMenuItem}
+                key={label.id}
                 onClick={() => toggleLabel(label.id)}
+                type="button"
               >
                 <Group flex="1" gap="xs">
                   <span
                     style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
                       background: color.dot,
+                      borderRadius: "50%",
                       flexShrink: 0,
+                      height: 8,
+                      width: 8,
                     }}
                   />
-                  <Text size="sm" fw={500} style={{ flex: 1 }} truncate>
+                  <Text fw={500} size="sm" style={{ flex: 1 }} truncate>
                     {label.name}
                   </Text>
-                  {isChecked && <IconCheck size={20} aria-hidden />}
+                  {isChecked && <IconCheck aria-hidden size={20} />}
                 </Group>
               </Menu.Item>
             );

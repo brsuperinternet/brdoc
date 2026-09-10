@@ -1,6 +1,6 @@
-import { useEffect } from "react";
-import { useAtom } from "jotai";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import { useEffect } from "react";
 import { socketAtom } from "@/features/websocket/atoms/socket-atom";
 import { NOTIFICATION_KEY } from "../queries/notification-query";
 
@@ -9,7 +9,9 @@ export function useNotificationSocket() {
   const [socket] = useAtom(socketAtom);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      return;
+    }
 
     const handler = () => {
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEY });

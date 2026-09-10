@@ -1,25 +1,25 @@
-import React, { Dispatch, FC, SetStateAction } from "react";
-import { IconCheck, IconChevronDown } from "@tabler/icons-react";
+import { isEditorReady } from "@docmost/editor-ext";
 import {
+  Box,
   Button,
   Popover,
   rem,
+  SimpleGrid,
+  Stack,
   Text,
   Tooltip,
-  SimpleGrid,
-  Box,
-  Stack,
 } from "@mantine/core";
+import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
-import { useTranslation } from "react-i18next";
-import { isEditorReady } from "@docmost/editor-ext";
 import clsx from "clsx";
+import React, { Dispatch, FC, SetStateAction } from "react";
+import { useTranslation } from "react-i18next";
 import classes from "./bubble-menu.module.css";
 
 export interface BubbleColorMenuItem {
-  name: string;
   color: string;
+  name: string;
 }
 
 interface ColorSelectorProps {
@@ -30,87 +30,87 @@ interface ColorSelectorProps {
 
 const TEXT_COLORS: BubbleColorMenuItem[] = [
   {
-    name: "Default",
     color: "",
+    name: "Default",
   },
   {
-    name: "Blue",
     color: "#2563EB",
+    name: "Blue",
   },
   {
-    name: "Green",
     color: "#008A00",
+    name: "Green",
   },
   {
-    name: "Purple",
     color: "#9333EA",
+    name: "Purple",
   },
   {
-    name: "Red",
     color: "#E00000",
+    name: "Red",
   },
   {
-    name: "Yellow",
     color: "#EAB308",
+    name: "Yellow",
   },
   {
-    name: "Orange",
     color: "#FFA500",
+    name: "Orange",
   },
   {
-    name: "Pink",
     color: "#BA4081",
+    name: "Pink",
   },
   {
-    name: "Gray",
     color: "#A8A29E",
+    name: "Gray",
   },
   {
-    name: "Brown",
     color: "#92400E",
+    name: "Brown",
   },
 ];
 
 const HIGHLIGHT_COLORS: BubbleColorMenuItem[] = [
   {
-    name: "Default",
     color: "",
+    name: "Default",
   },
   {
-    name: "Blue",
     color: "#98d8f2",
+    name: "Blue",
   },
   {
-    name: "Green",
     color: "#7edb6c",
+    name: "Green",
   },
   {
-    name: "Purple",
     color: "#e0d6ed",
+    name: "Purple",
   },
   {
-    name: "Red",
     color: "#ffc6c2",
+    name: "Red",
   },
   {
-    name: "Yellow",
     color: "#faf594",
+    name: "Yellow",
   },
   {
-    name: "Orange",
     color: "#f5c8a9",
+    name: "Orange",
   },
   {
-    name: "Pink",
     color: "#f5cfe0",
+    name: "Pink",
   },
   {
-    name: "Gray",
     color: "#dfdfd7",
+    name: "Gray",
   },
   {
-    name: "Brown",
     color: "#d7c4b7",
+    name: "Brown",
   },
 ];
 
@@ -118,7 +118,7 @@ const COLOR_GRID_COLS = 5;
 
 function focusSwatch(grid: "text" | "highlight", index: number) {
   const el = document.querySelector<HTMLElement>(
-    `[data-color-grid="${grid}"][data-color-index="${index}"]`,
+    `[data-color-grid="${grid}"][data-color-index="${index}"]`
   );
   el?.focus();
 }
@@ -126,7 +126,7 @@ function focusSwatch(grid: "text" | "highlight", index: number) {
 function handleColorKeyNav(
   e: React.KeyboardEvent<HTMLDivElement>,
   index: number,
-  grid: "text" | "highlight",
+  grid: "text" | "highlight"
 ) {
   const cols = COLOR_GRID_COLS;
   const total = grid === "text" ? TEXT_COLORS.length : HIGHLIGHT_COLORS.length;
@@ -134,12 +134,16 @@ function handleColorKeyNav(
 
   if (e.key === "ArrowRight") {
     e.preventDefault();
-    if (index < total - 1) focusSwatch(grid, index + 1);
+    if (index < total - 1) {
+      focusSwatch(grid, index + 1);
+    }
     return;
   }
   if (e.key === "ArrowLeft") {
     e.preventDefault();
-    if (index > 0) focusSwatch(grid, index - 1);
+    if (index > 0) {
+      focusSwatch(grid, index - 1);
+    }
     return;
   }
   if (e.key === "ArrowDown") {
@@ -165,7 +169,6 @@ function handleColorKeyNav(
       const lastRowStart = Math.floor((TEXT_COLORS.length - 1) / cols) * cols;
       focusSwatch("text", Math.min(lastRowStart + col, TEXT_COLORS.length - 1));
     }
-    return;
   }
 }
 
@@ -199,44 +202,44 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
     },
   });
 
-  if (!editor || !editorState) {
+  if (!(editor && editorState)) {
     return null;
   }
 
   const activeColorItem = TEXT_COLORS.find(
-    ({ color }) => editorState[`text_${color}`],
+    ({ color }) => editorState[`text_${color}`]
   );
 
   const activeHighlightItem = HIGHLIGHT_COLORS.find(
-    ({ color }) => editorState[`highlight_${color}`],
+    ({ color }) => editorState[`highlight_${color}`]
   );
 
   return (
     <Popover
-      width={220}
-      opened={isOpen}
       onChange={setIsOpen}
+      opened={isOpen}
       trapFocus
+      width={220}
       withArrow
     >
       <Popover.Target>
         <Tooltip label={t("Text color")} withArrow withinPortal={false}>
           <Button
-            variant="default"
+            aria-expanded={isOpen}
+            aria-haspopup="dialog"
+            aria-label={t("Text color")}
+            className={clsx(["color-selector-trigger", classes.buttonRoot])}
+            data-highlight-color={activeHighlightItem?.color || ""}
+            data-text-color={activeColorItem?.color || ""}
+            onClick={() => setIsOpen(!isOpen)}
+            onMouseDown={(e) => e.preventDefault()}
             radius="0"
             rightSection={<IconChevronDown size={16} />}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setIsOpen(!isOpen)}
-            data-text-color={activeColorItem?.color || ""}
-            data-highlight-color={activeHighlightItem?.color || ""}
-            className={clsx(["color-selector-trigger", classes.buttonRoot])}
             style={{
-              fontWeight: 500,
               fontSize: rem(16),
+              fontWeight: 500,
             }}
-            aria-label={t("Text color")}
-            aria-haspopup="dialog"
-            aria-expanded={isOpen}
+            variant="default"
           >
             A
           </Button>
@@ -246,13 +249,15 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
       <Popover.Dropdown onMouseDown={(e) => e.preventDefault()}>
         <Stack gap="md" p="2px">
           <Box>
-            <Text size="sm" fw={600} mb="xs">
+            <Text fw={600} mb="xs" size="sm">
               {t("Text color")}
             </Text>
             <SimpleGrid cols={5} spacing="xs">
               {TEXT_COLORS.map(({ name, color }, index) => {
                 const applyTextColor = () => {
-                  if (!isEditorReady(editor)) return;
+                  if (!isEditorReady(editor)) {
+                    return;
+                  }
                   if (name === "Default") {
                     editor.commands.unsetColor();
                   } else {
@@ -267,14 +272,12 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
                 return (
                   <Tooltip key={index} label={t(name)} withArrow>
                     <Box
-                      role="button"
-                      tabIndex={0}
+                      aria-label={t(name)}
+                      aria-pressed={!!editorState[`text_${color}`]}
+                      className={classes.colorSwatch}
                       data-autofocus={index === 0 ? true : undefined}
                       data-color-grid="text"
                       data-color-index={index}
-                      className={classes.colorSwatch}
-                      aria-label={t(name)}
-                      aria-pressed={!!editorState[`text_${color}`]}
                       onClick={applyTextColor}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
@@ -284,22 +287,24 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
                         }
                         handleColorKeyNav(e, index, "text");
                       }}
+                      role="button"
                       style={{
-                        width: rem(28),
-                        height: rem(28),
-                        borderRadius: rem(6),
+                        alignItems: "center",
                         border: editorState[`text_${color}`]
                           ? "2px solid var(--mantine-color-gray-8)"
                           : "1px solid var(--mantine-color-gray-4)",
+                        borderRadius: rem(6),
+                        color: color || "var(--mantine-color-gray-8)",
                         cursor: "pointer",
-                        position: "relative",
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
                         fontSize: rem(16),
                         fontWeight: 600,
-                        color: color || "var(--mantine-color-gray-8)",
+                        height: rem(28),
+                        justifyContent: "center",
+                        position: "relative",
+                        width: rem(28),
                       }}
+                      tabIndex={0}
                     >
                       A
                     </Box>
@@ -310,13 +315,15 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
           </Box>
 
           <Box>
-            <Text size="sm" fw={600} mb="xs">
+            <Text fw={600} mb="xs" size="sm">
               {t("Highlight color")}
             </Text>
             <SimpleGrid cols={5} spacing="xs">
               {HIGHLIGHT_COLORS.map(({ name, color }, index) => {
                 const applyHighlight = () => {
-                  if (!isEditorReady(editor)) return;
+                  if (!isEditorReady(editor)) {
+                    return;
+                  }
                   if (name === "Default") {
                     editor.commands.unsetHighlight();
                   } else {
@@ -334,13 +341,11 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
                 return (
                   <Tooltip key={index} label={t(name)} withArrow>
                     <Box
-                      role="button"
-                      tabIndex={0}
-                      data-color-grid="highlight"
-                      data-color-index={index}
-                      className={classes.colorSwatch}
                       aria-label={t(name)}
                       aria-pressed={!!editorState[`highlight_${color}`]}
+                      className={classes.colorSwatch}
+                      data-color-grid="highlight"
+                      data-color-index={index}
                       onClick={applyHighlight}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
@@ -350,26 +355,28 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
                         }
                         handleColorKeyNav(e, index, "highlight");
                       }}
+                      role="button"
                       style={{
-                        width: rem(28),
-                        height: rem(28),
-                        borderRadius: rem(4),
+                        alignItems: "center",
                         backgroundColor: color || "var(--mantine-color-gray-2)",
                         border: "1px solid var(--mantine-color-gray-4)",
+                        borderRadius: rem(4),
+                        color: "var(--mantine-color-gray-8)",
                         cursor: "pointer",
-                        position: "relative",
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
                         fontSize: rem(16),
                         fontWeight: 600,
-                        color: "var(--mantine-color-gray-8)",
+                        height: rem(28),
+                        justifyContent: "center",
+                        position: "relative",
+                        width: rem(28),
                       }}
+                      tabIndex={0}
                     >
                       {editorState[`highlight_${color}`] ? (
                         <IconCheck
-                          size={16}
                           color="var(--mantine-color-green-7)"
+                          size={16}
                         />
                       ) : (
                         "A"
@@ -382,10 +389,9 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
           </Box>
 
           <Button
-            variant="default"
-            fullWidth
-            data-color-grid="remove"
             className={classes.removeColor}
+            data-color-grid="remove"
+            fullWidth
             onClick={() => {
               if (isEditorReady(editor)) {
                 editor.commands.unsetColor();
@@ -402,6 +408,7 @@ export const ColorSelector: FC<ColorSelectorProps> = ({
                 focusSwatch("highlight", lastRowStart);
               }
             }}
+            variant="default"
           >
             {t("Remove color")}
           </Button>

@@ -7,37 +7,32 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import classes from "./app-header.module.css";
-import React from "react";
-import TopMenu from "@/components/layouts/global/top-menu.tsx";
-import { Link, useLocation } from "react-router-dom";
 import { IconSparkles } from "@tabler/icons-react";
-import useToggleAside from "@/hooks/use-toggle-aside.tsx";
-import APP_ROUTE from "@/lib/app-route.ts";
 import { useAtom } from "jotai";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router-dom";
 import {
   desktopSidebarAtom,
   mobileSidebarAtom,
 } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
 import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar.ts";
+import TopMenu from "@/components/layouts/global/top-menu.tsx";
 import SidebarToggle from "@/components/ui/sidebar-toggle-button.tsx";
-import { useTranslation } from "react-i18next";
 import useTrial from "@/ee/hooks/use-trial.tsx";
-import { isCloud } from "@/lib/config.ts";
+import { NotificationPopover } from "@/features/notification/components/notification-popover.tsx";
 import {
   SearchControl,
   SearchMobileControl,
 } from "@/features/search/components/search-control.tsx";
-import {
-  searchSpotlight,
-  shareSearchSpotlight,
-} from "@/features/search/constants.ts";
-import { NotificationPopover } from "@/features/notification/components/notification-popover.tsx";
+import { searchSpotlight } from "@/features/search/constants.ts";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import useToggleAside from "@/hooks/use-toggle-aside.tsx";
+import APP_ROUTE from "@/lib/app-route.ts";
+import { isCloud } from "@/lib/config.ts";
+import classes from "./app-header.module.css";
 
-const links = [
-  { link: APP_ROUTE.HOME, label: "Home" },
-];
+const links = [{ label: "Home", link: APP_ROUTE.HOME }];
 
 export function AppHeader() {
   const { t } = useTranslation();
@@ -55,21 +50,21 @@ export function AppHeader() {
   const isPageRoute = location.pathname.includes("/p/");
 
   const items = links.map((link) => (
-    <Link key={link.label} to={link.link} className={classes.link}>
+    <Link className={classes.link} key={link.label} to={link.link}>
       {t(link.label)}
     </Link>
   ));
 
   return (
     <>
-      <Group h="100%" px="md" justify="space-between" wrap={"nowrap"}>
+      <Group h="100%" justify="space-between" px="md" wrap={"nowrap"}>
         <Group wrap="nowrap">
           <Tooltip label={t("Sidebar toggle")}>
             <SidebarToggle
               aria-label={t("Sidebar toggle")}
-              opened={mobileOpened}
-              onClick={toggleMobile}
               hiddenFrom="sm"
+              onClick={toggleMobile}
+              opened={mobileOpened}
               size="sm"
             />
           </Tooltip>
@@ -77,25 +72,25 @@ export function AppHeader() {
           <Tooltip label={t("Sidebar toggle")}>
             <SidebarToggle
               aria-label={t("Sidebar toggle")}
-              opened={desktopOpened}
               onClick={toggleDesktop}
-              visibleFrom="sm"
+              opened={desktopOpened}
               size="sm"
+              visibleFrom="sm"
             />
           </Tooltip>
 
-          <Link to="/home" className={classes.brand} aria-label="Docmost">
-            <Box hiddenFrom="sm" className={classes.brandIcon}>
+          <Link aria-label="Docmost" className={classes.brand} to="/home">
+            <Box className={classes.brandIcon} hiddenFrom="sm">
               <img
-                src="/icons/favicon-32x32.png"
                 alt="Docmost"
-                width={22}
                 height={22}
+                src="/icons/favicon-32x32.png"
+                width={22}
               />
             </Box>
             <Text
-              size="lg"
               fw={600}
+              size="lg"
               style={{ userSelect: "none" }}
               visibleFrom="sm"
             >
@@ -103,7 +98,7 @@ export function AppHeader() {
             </Text>
           </Link>
 
-          <Group ml={50} gap={5} className={classes.links} visibleFrom="sm">
+          <Group className={classes.links} gap={5} ml={50} visibleFrom="sm">
             {items}
           </Group>
         </Group>
@@ -121,10 +116,8 @@ export function AppHeader() {
           {aiChatEnabled && (
             <>
               <UnstyledButton
-                component={Link}
-                to="/ai"
                 className={classes.link}
-                visibleFrom="sm"
+                component={Link}
                 onClick={(e: React.MouseEvent) => {
                   if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
                     return;
@@ -134,20 +127,24 @@ export function AppHeader() {
                     toggleAside("chat");
                   }
                 }}
+                to="/ai"
+                visibleFrom="sm"
               >
                 {t("AI Chat")}
               </UnstyledButton>
               <Tooltip label={t("AI Chat")} openDelay={250} withArrow>
                 <ActionIcon
-                  component={Link}
-                  to="/ai"
-                  variant="subtle"
-                  color="dark"
-                  size="sm"
-                  hiddenFrom="sm"
                   aria-label={t("AI Chat")}
+                  color="dark"
+                  component={Link}
+                  hiddenFrom="sm"
                   onClick={(e: React.MouseEvent) => {
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+                    if (
+                      e.metaKey ||
+                      e.ctrlKey ||
+                      e.shiftKey ||
+                      e.button === 1
+                    ) {
                       return;
                     }
                     if (isPageRoute) {
@@ -155,6 +152,9 @@ export function AppHeader() {
                       toggleAside("chat");
                     }
                   }}
+                  size="sm"
+                  to="/ai"
+                  variant="subtle"
                 >
                   <IconSparkles size={20} stroke={2} />
                 </ActionIcon>
@@ -164,10 +164,10 @@ export function AppHeader() {
           <NotificationPopover />
           {isCloud() && isTrial && trialDaysLeft !== 0 && (
             <Badge
-              variant="light"
-              style={{ cursor: "pointer" }}
               component={Link}
+              style={{ cursor: "pointer" }}
               to={APP_ROUTE.SETTINGS.WORKSPACE.BILLING}
+              variant="light"
               visibleFrom="xs"
             >
               {trialDaysLeft === 1

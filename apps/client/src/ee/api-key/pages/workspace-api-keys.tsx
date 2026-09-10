@@ -1,19 +1,19 @@
-import React, { useState } from "react";
 import { Anchor, Button, Divider, Group, Space, Text } from "@mantine/core";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import Paginate from "@/components/common/paginate";
 import SettingsTitle from "@/components/settings/settings-title";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { IApiKey } from "@/ee/api-key";
+import { ApiKeyCreatedModal } from "@/ee/api-key/components/api-key-created-modal";
 import { ApiKeyTable } from "@/ee/api-key/components/api-key-table";
 import { CreateApiKeyModal } from "@/ee/api-key/components/create-api-key-modal";
-import { ApiKeyCreatedModal } from "@/ee/api-key/components/api-key-created-modal";
-import { UpdateApiKeyModal } from "@/ee/api-key/components/update-api-key-modal";
-import { RevokeApiKeyModal } from "@/ee/api-key/components/revoke-api-key-modal";
-import Paginate from "@/components/common/paginate";
-import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
-import { useGetApiKeysQuery } from "@/ee/api-key/queries/api-key-query.ts";
-import { IApiKey } from "@/ee/api-key";
-import useUserRole from '@/hooks/use-user-role.tsx';
 import RestrictApiToAdmins from "@/ee/api-key/components/restrict-api-to-admins";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import { RevokeApiKeyModal } from "@/ee/api-key/components/revoke-api-key-modal";
+import { UpdateApiKeyModal } from "@/ee/api-key/components/update-api-key-modal";
+import { useGetApiKeysQuery } from "@/ee/api-key/queries/api-key-query.ts";
+import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
+import useUserRole from "@/hooks/use-user-role.tsx";
 
 export default function WorkspaceApiKeys() {
   const { t } = useTranslation();
@@ -23,7 +23,7 @@ export default function WorkspaceApiKeys() {
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [revokeModalOpened, setRevokeModalOpened] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<IApiKey | null>(null);
-  const { data, isLoading } = useGetApiKeysQuery({ cursor, adminView: true });
+  const { data, isLoading } = useGetApiKeysQuery({ adminView: true, cursor });
   const { isAdmin } = useUserRole();
 
   if (!isAdmin) {
@@ -50,12 +50,18 @@ export default function WorkspaceApiKeys() {
 
       <SettingsTitle title={t("API management")} />
 
-      <Text size="sm" c="dimmed" mb="md">
+      <Text c="dimmed" mb="md" size="sm">
         <Trans
-          i18nKey="Manage API keys for all users in the workspace. View the <anchor>API documentation</anchor> for usage details."
           components={{
-            anchor: <Anchor href="https://docmost.com/api-docs" target="_blank" size="sm" />,
+            anchor: (
+              <Anchor
+                href="https://docmost.com/api-docs"
+                size="sm"
+                target="_blank"
+              />
+            ),
           }}
+          i18nKey="Manage API keys for all users in the workspace. View the <anchor>API documentation</anchor> for usage details."
         />
       </Text>
 
@@ -71,50 +77,50 @@ export default function WorkspaceApiKeys() {
       <ApiKeyTable
         apiKeys={data?.items}
         isLoading={isLoading}
-        showUserColumn
-        onUpdate={handleUpdate}
         onRevoke={handleRevoke}
+        onUpdate={handleUpdate}
+        showUserColumn
       />
 
       <Space h="md" />
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
           hasNextPage={data?.meta?.hasNextPage}
+          hasPrevPage={data?.meta?.hasPrevPage}
           onNext={() => goNext(data?.meta?.nextCursor)}
           onPrev={goPrev}
         />
       )}
 
       <CreateApiKeyModal
-        opened={createModalOpened}
         onClose={() => setCreateModalOpened(false)}
         onSuccess={handleCreateSuccess}
+        opened={createModalOpened}
       />
 
       <ApiKeyCreatedModal
-        opened={!!createdApiKey}
-        onClose={() => setCreatedApiKey(null)}
         apiKey={createdApiKey}
+        onClose={() => setCreatedApiKey(null)}
+        opened={!!createdApiKey}
       />
 
       <UpdateApiKeyModal
-        opened={updateModalOpened}
+        apiKey={selectedApiKey}
         onClose={() => {
           setUpdateModalOpened(false);
           setSelectedApiKey(null);
         }}
-        apiKey={selectedApiKey}
+        opened={updateModalOpened}
       />
 
       <RevokeApiKeyModal
-        opened={revokeModalOpened}
+        apiKey={selectedApiKey}
         onClose={() => {
           setRevokeModalOpened(false);
           setSelectedApiKey(null);
         }}
-        apiKey={selectedApiKey}
+        opened={revokeModalOpened}
       />
     </>
   );

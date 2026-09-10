@@ -1,20 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from "react";
 import { Popover } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import clsx from "clsx";
-import {
-  IBaseProperty,
-  PersonTypeOptions,
-} from "@/ee/base/types/base.types";
-import {
-  useReferenceStore,
-  useHydrateUsers,
-} from "@/ee/base/reference/reference-store";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CustomAvatar } from "@/components/ui/custom-avatar";
 import { PersonReadList } from "@/ee/base/components/cells/person-read-list";
-import cellClasses from "@/ee/base/styles/cells.module.css";
 import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
 import { usePersonSearch } from "@/ee/base/hooks/use-person-search";
+import {
+  useHydrateUsers,
+  useReferenceStore,
+} from "@/ee/base/reference/reference-store";
+import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty, PersonTypeOptions } from "@/ee/base/types/base.types";
 
 type CellPersonProps = {
   value: unknown;
@@ -73,10 +70,11 @@ export function CellPerson({
   const handleSelect = useCallback(
     (memberId: string) => {
       const picked = suggestions.find((s) => s.id === memberId);
-      if (picked)
+      if (picked) {
         hydrateUsers([
-          { id: picked.id, name: picked.name, avatarUrl: picked.avatarUrl },
+          { avatarUrl: picked.avatarUrl, id: picked.id, name: picked.name },
         ]);
+      }
       if (allowMultiple) {
         if (personIds.includes(memberId)) {
           const newIds = personIds.filter((id) => id !== memberId);
@@ -84,15 +82,20 @@ export function CellPerson({
         } else {
           onValueChange([...personIds, memberId]);
         }
+      } else if (personIds.includes(memberId)) {
+        onCommit(null);
       } else {
-        if (personIds.includes(memberId)) {
-          onCommit(null);
-        } else {
-          onCommit(memberId);
-        }
+        onCommit(memberId);
       }
     },
-    [suggestions, hydrateUsers, allowMultiple, personIds, onCommit, onValueChange],
+    [
+      suggestions,
+      hydrateUsers,
+      allowMultiple,
+      personIds,
+      onCommit,
+      onValueChange,
+    ]
   );
 
   const handleRemove = useCallback(
@@ -104,7 +107,7 @@ export function CellPerson({
         onCommit(null);
       }
     },
-    [allowMultiple, personIds, onCommit, onValueChange],
+    [allowMultiple, personIds, onCommit, onValueChange]
   );
 
   const handleKeyDown = useCallback(
@@ -114,9 +117,13 @@ export function CellPerson({
         onCancel();
         return;
       }
-      if (handleNavKey(e)) return;
+      if (handleNavKey(e)) {
+        return;
+      }
       if (e.key === "Enter") {
-        if (activeIndex < 0 || activeIndex >= filteredMembers.length) return;
+        if (activeIndex < 0 || activeIndex >= filteredMembers.length) {
+          return;
+        }
         e.preventDefault();
         handleSelect(filteredMembers[activeIndex].id);
         return;
@@ -126,23 +133,34 @@ export function CellPerson({
         handleRemove(personIds[personIds.length - 1]);
       }
     },
-    [onCancel, handleNavKey, activeIndex, filteredMembers, handleSelect, search, personIds, handleRemove],
+    [
+      onCancel,
+      handleNavKey,
+      activeIndex,
+      filteredMembers,
+      handleSelect,
+      search,
+      personIds,
+      handleRemove,
+    ]
   );
 
   if (isEditing) {
     return (
       <Popover
-        opened
-        onChange={(o) => {
-          if (!o) onCancel();
-        }}
-        onClose={onCancel}
-        position="bottom-start"
-        width={300}
-        trapFocus
         closeOnClickOutside
         closeOnEscape
         hideDetached={false}
+        onChange={(o) => {
+          if (!o) {
+            onCancel();
+          }
+        }}
+        onClose={onCancel}
+        opened
+        position="bottom-start"
+        trapFocus
+        width={300}
       >
         <Popover.Target>
           <div className={cellClasses.popoverTarget}>
@@ -155,21 +173,21 @@ export function CellPerson({
               const member = store.users[id];
               const name = member?.name ?? id.substring(0, 8);
               return (
-                <span key={id} className={cellClasses.personTag}>
+                <span className={cellClasses.personTag} key={id}>
                   <CustomAvatar
                     avatarUrl={member?.avatarUrl ?? ""}
                     name={name}
-                    size={18}
                     radius="xl"
+                    size={18}
                   />
                   <span className={cellClasses.personTagName}>{name}</span>
                   <button
-                    type="button"
                     className={cellClasses.personTagRemove}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemove(id);
                     }}
+                    type="button"
                   >
                     <IconX size={10} />
                   </button>
@@ -177,13 +195,15 @@ export function CellPerson({
               );
             })}
             <input
-              ref={searchRef}
               className={cellClasses.personTagInput}
-              placeholder={personIds.length === 0 ? "Search for a person..." : ""}
-              value={search}
+              data-autofocus
               onChange={(e) => setSearch(e.currentTarget.value)}
               onKeyDown={handleKeyDown}
-              data-autofocus
+              placeholder={
+                personIds.length === 0 ? "Search for a person..." : ""
+              }
+              ref={searchRef}
+              value={search}
             />
           </div>
 
@@ -198,21 +218,22 @@ export function CellPerson({
               const isSelected = selectedSet.has(member.id);
               return (
                 <div
-                  key={member.id}
-                  ref={setOptionRef(idx)}
                   className={clsx(
                     cellClasses.selectOption,
                     isSelected && cellClasses.selectOptionActive,
-                    idx === activeIndex && cellClasses.selectOptionKeyboardActive,
+                    idx === activeIndex &&
+                      cellClasses.selectOptionKeyboardActive
                   )}
-                  onMouseEnter={() => setActiveIndex(idx)}
+                  key={member.id}
                   onClick={() => handleSelect(member.id)}
+                  onMouseEnter={() => setActiveIndex(idx)}
+                  ref={setOptionRef(idx)}
                 >
                   <CustomAvatar
                     avatarUrl={member.avatarUrl ?? ""}
                     name={member.name ?? ""}
-                    size={24}
                     radius="xl"
+                    size={24}
                   />
                   <div className={cellClasses.personOptionText}>
                     <span className={cellClasses.personOptionName}>
@@ -244,4 +265,3 @@ export function CellPerson({
 
   return <PersonReadList personIds={personIds} users={store.users} />;
 }
-

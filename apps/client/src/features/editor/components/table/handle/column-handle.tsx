@@ -1,20 +1,20 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import type { Editor } from "@tiptap/react";
-import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { useFloating, offset, autoUpdate, hide } from "@floating-ui/react";
-import { Menu } from "@mantine/core";
-import clsx from "clsx";
-import { useTranslation } from "react-i18next";
-import { useTableHandleDrag } from "./hooks/use-table-handle-drag";
-import { useColumnRowMenuLifecycle } from "./hooks/use-column-row-menu-lifecycle";
-import { ColumnHandleMenu } from "./menus/column-handle-menu";
 import { isEditorReady } from "@docmost/editor-ext";
+import { autoUpdate, hide, offset, useFloating } from "@floating-ui/react";
+import { Menu } from "@mantine/core";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Editor } from "@tiptap/react";
+import clsx from "clsx";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import classes from "./handle.module.css";
+import { useColumnRowMenuLifecycle } from "./hooks/use-column-row-menu-lifecycle";
+import { useTableHandleDrag } from "./hooks/use-table-handle-drag";
+import { ColumnHandleMenu } from "./menus/column-handle-menu";
 
 interface ColumnHandleProps {
+  anchorPos: number;
   editor: Editor;
   index: number;
-  anchorPos: number;
   tableNode: ProseMirrorNode;
   tablePos: number;
 }
@@ -52,8 +52,8 @@ export const ColumnHandle = React.memo(function ColumnHandle({
   const [handleEl, setHandleEl] = useState<HTMLDivElement | null>(null);
 
   const { refs, floatingStyles, middlewareData } = useFloating({
-    placement: "top",
     middleware: [offset(-4), hide()],
+    placement: "top",
     whileElementsMounted: autoUpdate,
   });
   const isReferenceHidden = !!middlewareData.hide?.referenceHidden;
@@ -73,40 +73,42 @@ export const ColumnHandle = React.memo(function ColumnHandle({
 
   const { onOpen, onClose } = useColumnRowMenuLifecycle({
     editor,
-    orientation: "col",
     index,
+    orientation: "col",
     tableNode,
     tablePos,
   });
 
-  if (!cellDom) return null;
+  if (!cellDom) {
+    return null;
+  }
 
   return (
     <Menu
-      opened={menuOpened}
       onChange={setMenuOpened}
-      position="bottom-start"
-      onOpen={onOpen}
       onClose={onClose}
-      withinPortal
+      onOpen={onOpen}
+      opened={menuOpened}
+      position="bottom-start"
       shadow="md"
+      withinPortal
     >
       <Menu.Target>
         <div
+          aria-label={t("Column actions")}
+          className={clsx(classes.handle, classes.columnHandle)}
           ref={(node) => {
             refs.setFloating(node);
             setHandleEl(node);
           }}
+          role="button"
           style={{
             ...floatingStyles,
             ...(isReferenceHidden ? { visibility: "hidden" as const } : {}),
           }}
-          className={clsx(classes.handle, classes.columnHandle)}
-          role="button"
           tabIndex={0}
-          aria-label={t("Column actions")}
         >
-          <span style={{ pointerEvents: "none", display: "inline-flex" }}>
+          <span style={{ display: "inline-flex", pointerEvents: "none" }}>
             <GripIcon />
           </span>
         </div>
@@ -125,10 +127,10 @@ export const ColumnHandle = React.memo(function ColumnHandle({
 
 function GripIcon() {
   return (
-    <svg viewBox="0 0 10 10" width="14" height="14" aria-hidden>
+    <svg aria-hidden height="14" viewBox="0 0 10 10" width="14">
       <path
-        fill="currentColor"
         d="M3,2 A1,1 0 1 1 3,0 A1,1 0 0 1 3,2 Z M3,6 A1,1 0 1 1 3,4 A1,1 0 0 1 3,6 Z M3,10 A1,1 0 1 1 3,8 A1,1 0 0 1 3,10 Z M7,2 A1,1 0 1 1 7,0 A1,1 0 0 1 7,2 Z M7,6 A1,1 0 1 1 7,4 A1,1 0 0 1 7,6 Z M7,10 A1,1 0 1 1 7,8 A1,1 0 0 1 7,10 Z"
+        fill="currentColor"
       />
     </svg>
   );

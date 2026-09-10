@@ -2,21 +2,21 @@ import { IUser } from "@/features/user/types/user.types";
 import { QueryParams } from "@/lib/types.ts";
 
 export interface IComment {
-  id: string;
   content: string;
-  selection?: string;
-  type?: string;
+  createdAt: Date;
+  creator: IUser;
   creatorId: string;
+  deletedAt?: Date;
+  editedAt?: Date;
+  id: string;
   pageId: string;
   parentCommentId?: string;
-  resolvedById?: string;
   resolvedAt?: Date;
-  workspaceId: string;
-  createdAt: Date;
-  editedAt?: Date;
-  deletedAt?: Date;
-  creator: IUser;
   resolvedBy?: IUser;
+  resolvedById?: string;
+  selection?: string;
+  type?: string;
+  workspaceId: string;
   yjsSelection?: {
     anchor: any;
     head: any;
@@ -24,10 +24,10 @@ export interface IComment {
 }
 
 export interface ICommentData {
+  content: any;
   id: string;
   pageId: string;
   parentCommentId?: string;
-  content: any;
   selection?: string;
 }
 

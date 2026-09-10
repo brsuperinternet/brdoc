@@ -1,5 +1,3 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Editor } from "@tiptap/react";
 import {
   ActionIcon,
   Button,
@@ -10,13 +8,15 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconAlt } from "@tabler/icons-react";
+import { Editor } from "@tiptap/react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const ALT_MAX_LENGTH = 300;
 
 function sanitizeAlt(value: string): string {
   return value
-    .replace(/[\\\[\]!]/g, "")
+    .replace(/[\\[\]!]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -76,15 +76,15 @@ export function useAltTextControl({
         cancel();
       }
     },
-    [save, cancel],
+    [save, cancel]
   );
 
   const button = (
-    <Tooltip position="top" label={t("Alt text")} withinPortal={false}>
+    <Tooltip label={t("Alt text")} position="top" withinPortal={false}>
       <ActionIcon
+        aria-label={t("Alt text")}
         onClick={open}
         size="lg"
-        aria-label={t("Alt text")}
         variant="subtle"
       >
         <IconAlt size={18} />
@@ -94,40 +94,40 @@ export function useAltTextControl({
 
   const panel = showInput ? (
     <Paper
-      withBorder
-      shadow="md"
-      radius={6}
       p="sm"
-      w={320}
+      radius={6}
+      shadow="md"
       style={{ position: "relative", zIndex: 100 }}
+      w={320}
+      withBorder
     >
-      <Text size="sm" fw={600} mb={2}>
+      <Text fw={600} mb={2} size="sm">
         {t("Alt text")}
       </Text>
-      <Text size="xs" c="dimmed" mb="xs">
+      <Text c="dimmed" mb="xs" size="xs">
         {t("Describe this for accessibility.")}
       </Text>
       <Textarea
-        size="xs"
-        placeholder={t("Add a description")}
-        value={draft}
-        onChange={(e) => setDraft(e.currentTarget.value)}
-        onKeyDown={onKeyDown}
         autoFocus
         autosize
-        minRows={2}
-        maxRows={5}
         maxLength={ALT_MAX_LENGTH}
+        maxRows={5}
+        minRows={2}
+        onChange={(e) => setDraft(e.currentTarget.value)}
+        onKeyDown={onKeyDown}
+        placeholder={t("Add a description")}
+        size="xs"
+        value={draft}
       />
-      <Group justify="space-between" align="center" mt="xs" wrap="nowrap">
-        <Text size="xs" c="dimmed">
+      <Group align="center" justify="space-between" mt="xs" wrap="nowrap">
+        <Text c="dimmed" size="xs">
           {draft.length}/{ALT_MAX_LENGTH}
         </Text>
         <Group gap="xs">
-          <Button size="compact-xs" variant="default" onClick={cancel}>
+          <Button onClick={cancel} size="compact-xs" variant="default">
             {t("Cancel")}
           </Button>
-          <Button size="compact-xs" onClick={save}>
+          <Button onClick={save} size="compact-xs">
             {t("Save")}
           </Button>
         </Group>
@@ -135,5 +135,5 @@ export function useAltTextControl({
     </Paper>
   ) : null;
 
-  return { button, panel, isEditing: showInput };
+  return { button, isEditing: showInput, panel };
 }

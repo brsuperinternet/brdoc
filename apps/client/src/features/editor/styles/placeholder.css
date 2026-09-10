@@ -1,9 +1,9 @@
 .ProseMirror .is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
   float: left;
+  height: 0;
   color: var(--mantine-color-placeholder);
   pointer-events: none;
-  height: 0;
+  content: attr(data-placeholder);
 
   @media print {
     display: none;
@@ -11,11 +11,11 @@
 }
 
 .ProseMirror .is-empty::before {
-  content: attr(data-placeholder);
   float: left;
+  height: 0;
   color: var(--mantine-color-placeholder);
   pointer-events: none;
-  height: 0;
+  content: attr(data-placeholder);
 
   @media print {
     display: none;

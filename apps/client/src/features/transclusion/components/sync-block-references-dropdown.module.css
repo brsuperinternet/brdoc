@@ -1,20 +1,17 @@
 .trigger {
   display: inline-flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   padding: 3px 6px 3px 6px;
-  border-radius: 999px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
   font: inherit;
   font-size: var(--mantine-font-size-xs);
-  color: light-dark(
-    var(--mantine-color-gray-7),
-    var(--mantine-color-dark-1)
-  );
-  transition: background 120ms ease;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  cursor: pointer;
   user-select: none;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  transition: background 120ms ease;
 }
 
 .trigger:hover {
@@ -25,20 +22,14 @@
 }
 
 .triggerIcon {
-  color: light-dark(
-    var(--mantine-color-gray-5),
-    var(--mantine-color-dark-2)
-  );
   display: inline-flex;
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2));
 }
 
 .triggerChev {
-  color: light-dark(
-    var(--mantine-color-gray-5),
-    var(--mantine-color-dark-2)
-  );
   display: inline-flex;
   margin-left: 2px;
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2));
 }
 
 .dropdown {
@@ -49,39 +40,30 @@
   display: flex;
   gap: 10px;
   padding: 10px 14px;
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.5;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
   background: light-dark(
     var(--mantine-color-gray-0),
     var(--mantine-color-dark-6)
   );
   border-bottom: 1px solid
     light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
-  color: light-dark(
-    var(--mantine-color-gray-7),
-    var(--mantine-color-dark-1)
-  );
-  font-size: var(--mantine-font-size-xs);
-  line-height: 1.5;
 }
 
 .bannerIcon {
-  color: light-dark(
-    var(--mantine-color-gray-6),
-    var(--mantine-color-dark-2)
-  );
-  flex: none;
   display: inline-flex;
+  flex: none;
   margin-top: 1px;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
 }
 
 .bannerLink {
-  color: light-dark(
-    var(--mantine-color-gray-9),
-    var(--mantine-color-dark-0)
-  );
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-thickness: 1px;
   font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 .bannerLink:hover {
@@ -93,35 +75,29 @@
 }
 
 .sectionLabel {
+  padding: 0 4px;
+  margin: 0 0 6px;
   font-size: var(--mantine-font-size-xs);
   font-weight: 500;
-  color: light-dark(
-    var(--mantine-color-gray-6),
-    var(--mantine-color-dark-2)
-  );
-  margin: 0 0 6px;
-  padding: 0 4px;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
 }
 
 .list {
-  list-style: none;
-  margin: 0;
   padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
 .row {
   display: flex;
-  align-items: center;
   gap: 10px;
+  align-items: center;
   padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: light-dark(
-    var(--mantine-color-gray-9),
-    var(--mantine-color-dark-0)
-  );
   font-size: var(--mantine-font-size-sm);
+  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
   text-decoration: none;
+  cursor: pointer;
+  border-radius: 6px;
   transition: background 100ms ease;
 }
 
@@ -133,69 +109,57 @@
 }
 
 .rowIcon {
-  color: light-dark(
-    var(--mantine-color-gray-5),
-    var(--mantine-color-dark-2)
-  );
-  flex: none;
   display: inline-flex;
+  flex: none;
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2));
 }
 
 .rowEmoji {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  width: 18px;
   font-size: 14px;
   line-height: 1;
-  flex: none;
-  display: inline-flex;
-  width: 18px;
-  justify-content: center;
 }
 
 .rowTitle {
-  font-weight: 500;
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .badge {
+  flex: none;
+  padding: 2px 7px;
   font-size: 10px;
   font-weight: 600;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 2px 7px;
-  border-radius: 999px;
   background: light-dark(
     var(--mantine-color-gray-1),
     var(--mantine-color-dark-5)
   );
-  color: light-dark(
-    var(--mantine-color-gray-7),
-    var(--mantine-color-dark-1)
-  );
-  text-transform: uppercase;
-  flex: none;
+  border-radius: 999px;
 }
 
 .badgeAccent {
+  color: light-dark(var(--mantine-color-blue-7), var(--mantine-color-blue-2));
   background: light-dark(
     var(--mantine-color-blue-0),
     var(--mantine-color-blue-9)
-  );
-  color: light-dark(
-    var(--mantine-color-blue-7),
-    var(--mantine-color-blue-2)
   );
 }
 
 .empty {
   padding: 18px 14px;
-  text-align: center;
-  color: light-dark(
-    var(--mantine-color-gray-6),
-    var(--mantine-color-dark-2)
-  );
   font-size: var(--mantine-font-size-xs);
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  text-align: center;
 }
 
 .loading {

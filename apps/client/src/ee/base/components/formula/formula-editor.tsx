@@ -1,24 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Button,
-  Divider,
-  Group,
-  Paper,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { registry } from "@docmost/base-formula/client";
+import { Button, Divider, Group, Paper, Stack, Text } from "@mantine/core";
 import {
   IconAlertTriangle,
   IconMathFunction,
   IconPointFilled,
 } from "@tabler/icons-react";
-import { registry } from "@docmost/base-formula/client";
-import { FormulaInput } from "./formula-input";
-import { PropertyChipRow } from "./property-chip-row";
-import { FunctionPalette } from "./function-palette";
+import { useEffect, useRef, useState } from "react";
 import { useFormulaParser } from "@/ee/base/hooks/use-formula-parser";
-import type { IBaseProperty } from "@/ee/base/types/base.types";
 import classes from "@/ee/base/styles/formula.module.css";
+import type { IBaseProperty } from "@/ee/base/types/base.types";
+import { FormulaInput } from "./formula-input";
+import { FunctionPalette } from "./function-palette";
+import { PropertyChipRow } from "./property-chip-row";
 
 type Props = {
   properties: IBaseProperty[];
@@ -30,7 +23,7 @@ type Props = {
     source: string,
     ast: unknown,
     resultType: string,
-    dependencies: string[],
+    dependencies: string[]
   ) => void;
   onCancel: () => void;
 };
@@ -51,17 +44,21 @@ export function FormulaEditor({
     source,
     properties,
     editingPropertyId,
-    registry,
+    registry
   );
   const canSave = parseState.state === "ok" && !disabled;
 
   // useEffect (not RAF) ensures the DOM update ran before restoring cursor.
   useEffect(() => {
-    if (pendingCursorRef.current === null) return;
+    if (pendingCursorRef.current === null) {
+      return;
+    }
     const pos = pendingCursorRef.current;
     pendingCursorRef.current = null;
     const ta = textareaRef.current;
-    if (!ta) return;
+    if (!ta) {
+      return;
+    }
     ta.focus();
     ta.setSelectionRange(pos, pos);
   }, [source]);
@@ -83,80 +80,85 @@ export function FormulaEditor({
 
   return (
     <Paper
-      withBorder
+      p={0}
       radius="md"
       shadow="sm"
-      p={0}
       style={{ overflow: "hidden" }}
+      withBorder
     >
       <Stack gap={0}>
         <Group
+          className={classes.formulaHeaderRow}
           justify="space-between"
-          wrap="nowrap"
           px="md"
           py={12}
-          className={classes.formulaHeaderRow}
+          wrap="nowrap"
         >
-          <Group gap={10} wrap="nowrap" style={{ minWidth: 0 }}>
+          <Group gap={10} style={{ minWidth: 0 }} wrap="nowrap">
             <div className={classes.formulaIconBadge}>
               <IconMathFunction size={14} />
             </div>
-            <Text size="sm" fw={600}>
+            <Text fw={600} size="sm">
               Formula
             </Text>
             {name && (
-              <Text size="sm" c="dimmed" truncate>
+              <Text c="dimmed" size="sm" truncate>
                 · {name}
               </Text>
             )}
           </Group>
-          <Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
-            <Button variant="subtle" size="xs" onClick={onCancel}>
+          <Group gap={8} style={{ flexShrink: 0 }} wrap="nowrap">
+            <Button onClick={onCancel} size="xs" variant="subtle">
               Cancel
             </Button>
             <Button
-              size="xs"
               disabled={!canSave}
               onClick={() => {
-                if (parseState.state !== "ok") return;
+                if (parseState.state !== "ok") {
+                  return;
+                }
                 onSave(
                   source,
                   parseState.ast,
                   parseState.resultType,
-                  parseState.dependencies,
+                  parseState.dependencies
                 );
               }}
+              size="xs"
             >
               Save
             </Button>
           </Group>
         </Group>
 
-        <Stack gap={6} px={14} pt={10} pb={8}>
+        <Stack gap={6} pb={8} pt={10} px={14}>
           <FormulaInput
+            hasError={parseState.state === "error"}
+            onChange={setSource}
             ref={textareaRef}
             value={source}
-            onChange={setSource}
-            hasError={parseState.state === "error"}
           />
-          <Group justify="space-between" gap={8} mih={16}>
+          <Group gap={8} justify="space-between" mih={16}>
             {parseState.state === "error" ? (
-              <Group gap={6} c="red.7">
+              <Group c="red.7" gap={6}>
                 <IconAlertTriangle size={12} />
                 <Text size="xs">{parseState.message}</Text>
               </Group>
             ) : parseState.state === "ok" ? (
-              <Group gap={6} c="dimmed">
-                <IconPointFilled size={10} color="var(--mantine-color-teal-6)" />
+              <Group c="dimmed" gap={6}>
+                <IconPointFilled
+                  color="var(--mantine-color-teal-6)"
+                  size={10}
+                />
                 <Text size="xs">
                   Returns{" "}
-                  <Text span fw={600} c="gray.8">
+                  <Text c="gray.8" fw={600} span>
                     {parseState.resultType}
                   </Text>
                 </Text>
               </Group>
             ) : (
-              <Text size="xs" c="dimmed">
+              <Text c="dimmed" size="xs">
                 Click a property or function below to insert.
               </Text>
             )}
@@ -165,22 +167,22 @@ export function FormulaEditor({
 
         <Divider />
 
-        <Stack gap={8} px={14} pt={10} pb={10}>
+        <Stack gap={8} pb={10} pt={10} px={14}>
           <PropertyChipRow
-            properties={properties.filter((p) => p.id !== editingPropertyId)}
             onInsert={(name) => insertAtCursor(`prop("${name}")`)}
+            properties={properties.filter((p) => p.id !== editingPropertyId)}
           />
         </Stack>
 
         <Divider />
 
-        <Stack gap={6} px={14} pt={10} pb={10}>
-          <Text size="xs" fw={600} c="gray.7">
+        <Stack gap={6} pb={10} pt={10} px={14}>
+          <Text c="gray.7" fw={600} size="xs">
             Functions
           </Text>
           <FunctionPalette
-            registry={registry}
             onInsert={(name) => insertAtCursor(`${name}()`, 1)}
+            registry={registry}
           />
         </Stack>
       </Stack>

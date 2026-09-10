@@ -1,16 +1,16 @@
 import { IUser } from "@/features/user/types/user.types.ts";
 
 export interface IScimToken {
+  createdAt: string;
+  creator?: Partial<IUser>;
+  creatorId: string;
   id: string;
+  isEnabled: boolean;
+  lastUsedAt: string | null;
   name: string;
   token?: string;
   tokenLastFour: string;
-  isEnabled: boolean;
-  creatorId: string;
   workspaceId: string;
-  lastUsedAt: string | null;
-  createdAt: string;
-  creator?: Partial<IUser>;
 }
 
 export interface ICreateScimTokenRequest {
@@ -18,8 +18,8 @@ export interface ICreateScimTokenRequest {
 }
 
 export interface IUpdateScimTokenRequest {
-  tokenId: string;
   name: string;
+  tokenId: string;
 }
 
 export interface IRevokeScimTokenRequest {

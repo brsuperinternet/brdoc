@@ -6,7 +6,7 @@ export const MAIN_CONTENT_ID = "main-content";
 export function SkipToMain() {
   const { t } = useTranslation();
   return (
-    <a href={`#${MAIN_CONTENT_ID}`} className={classes.skipLink}>
+    <a className={classes.skipLink} href={`#${MAIN_CONTENT_ID}`}>
       {t("Skip to main content")}
     </a>
   );

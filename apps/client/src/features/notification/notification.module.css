@@ -1,9 +1,9 @@
 .notificationItem {
   display: block;
   padding: 8px 12px;
-  border-radius: 4px;
   cursor: pointer;
   user-select: none;
+  border-radius: 4px;
 }
 
 .notificationItem:hover {
@@ -11,6 +11,8 @@
 }
 
 .divider {
-  border-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+  border-color: light-dark(
+    var(--mantine-color-gray-2),
+    var(--mantine-color-dark-5)
+  );
 }
-

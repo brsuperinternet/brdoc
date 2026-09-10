@@ -1,51 +1,59 @@
-import { MarkViewContent, MarkViewProps } from "@tiptap/react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
-  IconFileDescription,
-  IconCopy,
-  IconExternalLink,
-  IconLinkOff,
-  IconPencil,
-  IconWorld,
-} from "@tabler/icons-react";
-import { useState, useCallback, useRef, useEffect } from "react";
-import { notifications } from "@mantine/notifications";
+  copyToClipboard,
+  isEditorReady,
+  sanitizeUrl,
+} from "@docmost/editor-ext";
 import {
+  ActionIcon,
   Divider,
   Group,
   Popover,
   Text,
   TextInput,
-  ActionIcon,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import classes from "./link.module.css";
+import { notifications } from "@mantine/notifications";
+import {
+  IconCopy,
+  IconExternalLink,
+  IconFileDescription,
+  IconLinkOff,
+  IconPencil,
+  IconWorld,
+} from "@tabler/icons-react";
+import { MarkViewContent, MarkViewProps } from "@tiptap/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { INTERNAL_LINK_REGEX } from "@/lib/constants";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LinkEditorPanel } from "@/features/editor/components/link/link-editor-panel.tsx";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
-import { useSharePageQuery } from "@/features/share/queries/share-query.ts";
-import { usePublicSpacePageQuery } from "@/features/public-space/queries/public-space-query.ts";
 import {
   buildPageUrl,
   buildPublicSpaceUrl,
   buildSharedPageUrl,
 } from "@/features/page/page.utils.ts";
+import { usePageQuery } from "@/features/page/queries/page-query.ts";
+import { usePublicSpacePageQuery } from "@/features/public-space/queries/public-space-query.ts";
+import { useSharePageQuery } from "@/features/share/queries/share-query.ts";
 import { extractPageSlugId } from "@/lib";
-import { sanitizeUrl, copyToClipboard, isEditorReady } from "@docmost/editor-ext";
+import { INTERNAL_LINK_REGEX } from "@/lib/constants";
 import { normalizeUrl } from "@/lib/utils";
+import classes from "./link.module.css";
 
 const parseInternalLink = (
   href: string,
-  internalAttr?: boolean,
+  internalAttr?: boolean
 ): { isInternal: boolean; slugId: string | null; label: string } => {
-  if (!href) return { isInternal: !!internalAttr, slugId: null, label: "" };
+  if (!href) {
+    return { isInternal: !!internalAttr, label: "", slugId: null };
+  }
 
   const match = INTERNAL_LINK_REGEX.exec(href);
   if (!match) {
-    if (internalAttr) return { isInternal: true, slugId: null, label: href };
-    return { isInternal: false, slugId: null, label: href };
+    if (internalAttr) {
+      return { isInternal: true, label: href, slugId: null };
+    }
+    return { isInternal: false, label: href, slugId: null };
   }
 
   const isExternal = match[2] && match[2] !== window.location.host;
@@ -55,8 +63,8 @@ const parseInternalLink = (
 
   return {
     isInternal: !isExternal,
-    slugId,
     label: namePart || slug,
+    slugId,
   };
 };
 
@@ -103,9 +111,9 @@ export default function LinkView(props: MarkViewProps) {
   // Resolved eagerly (not gated on the popover): an unresolvable target must
   // render as inert text rather than a link that dead-ends at /login.
   const { data: publicSpacePageData } = usePublicSpacePageQuery({
-    spaceSlug: isPublicSpaceRoute && slugId ? spaceSlug : undefined,
-    pageSlugId: slugId,
     contentless: true,
+    pageSlugId: slugId,
+    spaceSlug: isPublicSpaceRoute && slugId ? spaceSlug : undefined,
   });
 
   const isUnresolvedPublicLink =
@@ -122,7 +130,9 @@ export default function LinkView(props: MarkViewProps) {
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const getLinkPos = useCallback((): number | null => {
-    if (!wrapperRef.current) return null;
+    if (!wrapperRef.current) {
+      return null;
+    }
     try {
       return editor.view.posAtDOM(wrapperRef.current, 0);
     } catch {
@@ -132,20 +142,28 @@ export default function LinkView(props: MarkViewProps) {
 
   const handleUpdateLinkTitle = useCallback(
     (newTitle: string) => {
-      if (!newTitle) return;
+      if (!newTitle) {
+        return;
+      }
 
       const pos = getLinkPos();
-      if (pos === null) return;
+      if (pos === null) {
+        return;
+      }
 
       const { state } = editor;
       const resolved = state.doc.resolve(pos);
       const node = resolved.nodeAfter;
-      if (!node?.isText) return;
+      if (!node?.isText) {
+        return;
+      }
 
       const linkMark = node.marks.find(
-        (m) => m.type.name === "link" && m.attrs.href === href,
+        (m) => m.type.name === "link" && m.attrs.href === href
       );
-      if (!linkMark || node.text === newTitle) return;
+      if (!linkMark || node.text === newTitle) {
+        return;
+      }
 
       const from = pos;
       const to = pos + node.nodeSize;
@@ -154,7 +172,7 @@ export default function LinkView(props: MarkViewProps) {
       tr.addMark(from, from + newTitle.length, linkMark);
       editor.view.dispatch(tr);
     },
-    [editor, href, getLinkPos],
+    [editor, href, getLinkPos]
   );
 
   const handleEditLink = useCallback(
@@ -176,7 +194,7 @@ export default function LinkView(props: MarkViewProps) {
       }
 
       const linkMark = node.marks.find(
-        (m) => m.type.name === "link" && m.attrs.href === href,
+        (m) => m.type.name === "link" && m.attrs.href === href
       );
       if (linkMark) {
         const from = pos;
@@ -186,14 +204,14 @@ export default function LinkView(props: MarkViewProps) {
         tr.addMark(
           from,
           to,
-          linkMark.type.create({ href: normalizedUrl, internal: !!internal }),
+          linkMark.type.create({ href: normalizedUrl, internal: !!internal })
         );
         editor.view.dispatch(tr);
       }
 
       setPopoverState("closed");
     },
-    [editor, href, getLinkPos],
+    [editor, href, getLinkPos]
   );
 
   useEffect(() => {
@@ -220,7 +238,9 @@ export default function LinkView(props: MarkViewProps) {
   }, [popoverState]);
 
   useEffect(() => {
-    if (!isPopoverVisible) return;
+    if (!isPopoverVisible) {
+      return;
+    }
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
       if (
@@ -245,7 +265,9 @@ export default function LinkView(props: MarkViewProps) {
   }, [isPopoverVisible]);
 
   const handleNavigate = useCallback(() => {
-    if (!href) return;
+    if (!href) {
+      return;
+    }
 
     if (isInternal) {
       let targetPath = href;
@@ -277,22 +299,22 @@ export default function LinkView(props: MarkViewProps) {
 
       if (isShareRoute && slugId) {
         const sharedUrl = buildSharedPageUrl({
-          shareId,
-          pageSlugId: slugId,
-          pageTitle: pageTitle,
           anchorId: anchor || undefined,
+          pageSlugId: slugId,
+          pageTitle,
+          shareId,
         });
         navigate(sharedUrl);
       } else if (isPublicSpaceRoute) {
         if (slugId && publicSpacePageData?.page) {
           navigate(
             buildPublicSpaceUrl({
+              anchorId: anchor || undefined,
+              pageSlugId: slugId,
+              pageTitle,
               // cross-space targets resolve to their own space's public URL
               spaceSlug: publicSpacePageData.space?.slug ?? spaceSlug,
-              pageSlugId: slugId,
-              pageTitle: pageTitle,
-              anchorId: anchor || undefined,
-            }),
+            })
           );
         } else if (slugId) {
           // no public URL: the /p/ resolver redirects members straight to the
@@ -301,7 +323,7 @@ export default function LinkView(props: MarkViewProps) {
           window.open(
             buildPageUrl(undefined, slugId, pageTitle, anchor || undefined),
             "_blank",
-            "noopener,noreferrer",
+            "noopener,noreferrer"
           );
         }
       } else {
@@ -311,7 +333,7 @@ export default function LinkView(props: MarkViewProps) {
       window.open(
         sanitizeUrl(normalizeUrl(href)),
         "_blank",
-        "noopener,noreferrer",
+        "noopener,noreferrer"
       );
     }
   }, [
@@ -339,7 +361,7 @@ export default function LinkView(props: MarkViewProps) {
         handleNavigate();
       }
     },
-    [handleNavigate, isEditable],
+    [handleNavigate, isEditable]
   );
 
   const handleCopy = useCallback(
@@ -348,7 +370,7 @@ export default function LinkView(props: MarkViewProps) {
       e.stopPropagation();
 
       const fullUrl = sanitizeUrl(
-        isInternal ? `${window.location.origin}${href}` : href,
+        isInternal ? `${window.location.origin}${href}` : href
       );
       copyToClipboard(fullUrl);
       notifications.show({
@@ -356,7 +378,7 @@ export default function LinkView(props: MarkViewProps) {
       });
       setPopoverState("closed");
     },
-    [href, isInternal, t],
+    [href, isInternal, t]
   );
 
   const handleRemoveLink = useCallback(() => {
@@ -368,27 +390,31 @@ export default function LinkView(props: MarkViewProps) {
 
   const internalHref = () => {
     if (isShareRoute && slugId) {
-      return buildSharedPageUrl({ shareId, pageSlugId: slugId, pageTitle });
+      return buildSharedPageUrl({ pageSlugId: slugId, pageTitle, shareId });
     }
     if (isPublicSpaceRoute && slugId && publicSpacePageData?.page) {
-      return buildPublicSpaceUrl({ spaceSlug, pageSlugId: slugId, pageTitle });
+      return buildPublicSpaceUrl({ pageSlugId: slugId, pageTitle, spaceSlug });
     }
     return href;
   };
 
   const displayHref = sanitizeUrl(
-    isInternal ? internalHref() : normalizeUrl(href),
+    isInternal ? internalHref() : normalizeUrl(href)
   );
 
   const linkTitleInput = (
     <>
-      <Text size="xs" fw={600} c="dimmed" mt="sm" mb={4}>
+      <Text c="dimmed" fw={600} mb={4} mt="sm" size="xs">
         {t("Link title")}
       </Text>
       <TextInput
-        ref={titleInputRef}
         classNames={{ input: classes.linkInput }}
-        value={linkTitle}
+        onBlur={() => {
+          if (pendingTitleRef.current !== null) {
+            handleUpdateLinkTitle(pendingTitleRef.current);
+            pendingTitleRef.current = null;
+          }
+        }}
         onChange={(e) => {
           const val = e.currentTarget.value;
           setLinkTitle(val);
@@ -397,7 +423,7 @@ export default function LinkView(props: MarkViewProps) {
           if (anchor && val) {
             const walker = document.createTreeWalker(
               anchor,
-              NodeFilter.SHOW_TEXT,
+              NodeFilter.SHOW_TEXT
             );
             const textNode = walker.nextNode();
             if (textNode && isEditorReady(editor)) {
@@ -408,12 +434,6 @@ export default function LinkView(props: MarkViewProps) {
             }
           }
         }}
-        onBlur={() => {
-          if (pendingTitleRef.current !== null) {
-            handleUpdateLinkTitle(pendingTitleRef.current);
-            pendingTitleRef.current = null;
-          }
-        }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -422,7 +442,9 @@ export default function LinkView(props: MarkViewProps) {
             setPopoverState("closed");
           }
         }}
+        ref={titleInputRef}
         size="sm"
+        value={linkTitle}
       />
     </>
   );
@@ -431,7 +453,7 @@ export default function LinkView(props: MarkViewProps) {
   // rendered as inert text instead of a link that dead-ends at /login.
   if (isUnresolvedPublicLink) {
     return (
-      <span ref={wrapperRef} className={classes.linkWrapper}>
+      <span className={classes.linkWrapper} ref={wrapperRef}>
         <MarkViewContent />
       </span>
     );
@@ -439,26 +461,26 @@ export default function LinkView(props: MarkViewProps) {
 
   return (
     <Popover
+      closeOnClickOutside={false}
       opened={isPopoverVisible}
-      width={activeView === "edit" ? 320 : undefined}
       position="bottom"
-      withArrow
       shadow="md"
       trapFocus={false}
-      closeOnClickOutside={false}
+      width={activeView === "edit" ? 320 : undefined}
+      withArrow
     >
       <Popover.Target>
         <span
-          ref={wrapperRef}
           className={classes.linkWrapper}
           onClick={handleClick}
+          ref={wrapperRef}
         >
           <a
             href={displayHref}
-            spellCheck={false}
             onClick={(e) => e.preventDefault()}
-            target={isInternal ? undefined : "_blank"}
             rel={isInternal ? undefined : "noopener noreferrer"}
+            spellCheck={false}
+            target={isInternal ? undefined : "_blank"}
           >
             <MarkViewContent />
           </a>
@@ -466,30 +488,35 @@ export default function LinkView(props: MarkViewProps) {
       </Popover.Target>
 
       <Popover.Dropdown
-        ref={dropdownRef}
-        p={activeView === "edit" ? "sm" : 6}
         onMouseDown={(e) => e.stopPropagation()}
+        p={activeView === "edit" ? "sm" : 6}
+        ref={dropdownRef}
       >
         {activeView === "edit" ? (
           <>
-            <Text size="xs" fw={600} c="dimmed" mb={4}>
+            <Text c="dimmed" fw={600} mb={4} size="xs">
               {t("Page or URL")}
             </Text>
 
             {isInternal ? (
-              !showSearch ? (
+              showSearch ? (
+                <LinkEditorPanel
+                  onSetLink={handleEditLink}
+                  onUnsetLink={handleRemoveLink}
+                />
+              ) : (
                 <>
                   <UnstyledButton
                     className={classes.linkChip}
                     onClick={() => setShowSearch(true)}
                   >
                     <IconFileDescription
+                      color="var(--mantine-color-dimmed)"
                       size={16}
                       stroke={1.5}
-                      color="var(--mantine-color-dimmed)"
                       style={{ flexShrink: 0 }}
                     />
-                    <Text size="sm" fw={500} truncate>
+                    <Text fw={500} size="sm" truncate>
                       {pageTitle || linkTitle}
                     </Text>
                   </UnstyledButton>
@@ -499,8 +526,8 @@ export default function LinkView(props: MarkViewProps) {
                   <Divider my="xs" />
 
                   <UnstyledButton
-                    onClick={handleRemoveLink}
                     className={classes.removeLink}
+                    onClick={handleRemoveLink}
                   >
                     <Group gap={8}>
                       <IconLinkOff size={16} stroke={1.5} />
@@ -508,30 +535,24 @@ export default function LinkView(props: MarkViewProps) {
                     </Group>
                   </UnstyledButton>
                 </>
-              ) : (
-                <LinkEditorPanel
-                  onSetLink={handleEditLink}
-                  onUnsetLink={handleRemoveLink}
-                />
               )
             ) : (
               <>
                 <TextInput
+                  classNames={{ input: classes.linkInput }}
                   leftSection={
                     <IconWorld
+                      color="var(--mantine-color-dimmed)"
                       size={16}
                       stroke={1.5}
-                      color="var(--mantine-color-dimmed)"
                     />
                   }
-                  classNames={{ input: classes.linkInput }}
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.currentTarget.value)}
                   onBlur={() => {
                     if (linkUrl && linkUrl !== href) {
                       handleEditLink(linkUrl, false);
                     }
                   }}
+                  onChange={(e) => setLinkUrl(e.currentTarget.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -541,6 +562,7 @@ export default function LinkView(props: MarkViewProps) {
                     }
                   }}
                   size="sm"
+                  value={linkUrl}
                 />
 
                 {linkTitleInput}
@@ -548,8 +570,8 @@ export default function LinkView(props: MarkViewProps) {
                 <Divider my="xs" />
 
                 <UnstyledButton
-                  onClick={handleRemoveLink}
                   className={classes.removeLink}
+                  onClick={handleRemoveLink}
                 >
                   <Group gap={8}>
                     <IconLinkOff size={16} stroke={1.5} />
@@ -563,30 +585,30 @@ export default function LinkView(props: MarkViewProps) {
           <Group gap={4} wrap="nowrap">
             <Group
               component="a"
-              //@ts-ignore
-              href={displayHref}
-              target={isInternal ? undefined : "_blank"}
-              rel={isInternal ? undefined : "noopener noreferrer"}
               gap={6}
-              wrap="nowrap"
-              style={{
-                cursor: "pointer",
-                maxWidth: 250,
-                textDecoration: "none",
-                color: "inherit",
-                userSelect: "none",
-              }}
+              //@ts-expect-error
+              href={displayHref}
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 handleNavigate();
               }}
+              rel={isInternal ? undefined : "noopener noreferrer"}
+              style={{
+                color: "inherit",
+                cursor: "pointer",
+                maxWidth: 250,
+                textDecoration: "none",
+                userSelect: "none",
+              }}
+              target={isInternal ? undefined : "_blank"}
+              wrap="nowrap"
             >
               {isInternal ? (
-                <IconFileDescription size={18} color="gray" />
+                <IconFileDescription color="gray" size={18} />
               ) : (
-                <IconExternalLink size={18} color="gray" />
+                <IconExternalLink color="gray" size={18} />
               )}
-              <Text size="sm" truncate fw={500}>
+              <Text fw={500} size="sm" truncate>
                 {isInternal ? pageTitle || linkLabel : href}
               </Text>
             </Group>
@@ -595,7 +617,6 @@ export default function LinkView(props: MarkViewProps) {
 
             <Tooltip label={t("Edit link")} withArrow withinPortal={false}>
               <ActionIcon
-                variant="subtle"
                 color="gray"
                 onMouseDown={(e) => {
                   e.preventDefault();
@@ -603,6 +624,7 @@ export default function LinkView(props: MarkViewProps) {
                   setShowSearch(false);
                   setPopoverState("edit");
                 }}
+                variant="subtle"
               >
                 <IconPencil size={18} />
               </ActionIcon>
@@ -610,13 +632,13 @@ export default function LinkView(props: MarkViewProps) {
 
             <Tooltip label={t("Copy link")} withArrow withinPortal={false}>
               <ActionIcon
-                variant="subtle"
                 color="gray"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleCopy(e);
                 }}
+                variant="subtle"
               >
                 <IconCopy size={18} />
               </ActionIcon>
@@ -624,13 +646,13 @@ export default function LinkView(props: MarkViewProps) {
 
             <Tooltip label={t("Remove link")} withArrow withinPortal={false}>
               <ActionIcon
-                variant="subtle"
                 color="gray"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleRemoveLink();
                 }}
+                variant="subtle"
               >
                 <IconLinkOff size={18} />
               </ActionIcon>

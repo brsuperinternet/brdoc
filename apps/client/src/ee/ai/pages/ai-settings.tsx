@@ -1,23 +1,22 @@
-import SettingsTitle from "@/components/settings/settings-title.tsx";
-import React from "react";
-import useUserRole from "@/hooks/use-user-role.tsx";
-import { useTranslation } from "react-i18next";
-import EnableAiSearch from "@/ee/ai/components/enable-ai-search.tsx";
-import EnableGenerativeAi from "@/ee/ai/components/enable-generative-ai.tsx";
-import EnableAiChat from "@/ee/ai-chat/components/enable-ai-chat.tsx";
-import AiChatReadOnly from "@/ee/ai-chat/components/ai-chat-read-only.tsx";
-import AiChatWorkspaceKnowledgeOnly from "@/ee/ai-chat/components/ai-chat-workspace-knowledge-only.tsx";
-import McpSettings from "@/ee/ai/components/mcp-settings.tsx";
 import { Alert, Collapse, Stack, Tabs } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { Feature } from "@/ee/features";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
-import { isCloud } from "@/lib/config.ts";
-import { useLocation, useNavigate } from "react-router-dom";
-import { DocumentTitle } from "@/components/ui/document-title.tsx";
 import { useAtomValue } from "jotai";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
+import SettingsTitle from "@/components/settings/settings-title.tsx";
+import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import EnableAiSearch from "@/ee/ai/components/enable-ai-search.tsx";
+import EnableGenerativeAi from "@/ee/ai/components/enable-generative-ai.tsx";
+import McpSettings from "@/ee/ai/components/mcp-settings.tsx";
+import AiChatReadOnly from "@/ee/ai-chat/components/ai-chat-read-only.tsx";
+import AiChatWorkspaceKnowledgeOnly from "@/ee/ai-chat/components/ai-chat-workspace-knowledge-only.tsx";
+import EnableAiChat from "@/ee/ai-chat/components/enable-ai-chat.tsx";
+import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
+import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { isCloud } from "@/lib/config.ts";
 
 export default function AiSettings() {
   const { t } = useTranslation();
@@ -48,7 +47,7 @@ export default function AiSettings() {
       <DocumentTitle title="AI settings" />
       <SettingsTitle title={t("AI settings")} />
 
-      <Tabs color="dark" value={activeTab} onChange={handleTabChange}>
+      <Tabs color="dark" onChange={handleTabChange} value={activeTab}>
         <Tabs.List>
           <Tabs.Tab fw={500} value="ai">
             {t("AI")}
@@ -58,16 +57,16 @@ export default function AiSettings() {
           </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="ai" pt="md">
+        <Tabs.Panel pt="md" value="ai">
           {!hasAccess && (
             <Alert
-              icon={<IconInfoCircle />}
-              title={upgradeLabel}
               color="blue"
+              icon={<IconInfoCircle />}
               mb="lg"
+              title={upgradeLabel}
             >
               {t(
-                "AI is available in the Docmost paid editions. Contact sales@docmost.com.",
+                "AI is available in the Docmost paid editions. Contact sales@docmost.com."
               )}
             </Alert>
           )}
@@ -79,8 +78,8 @@ export default function AiSettings() {
             <Collapse expanded={aiChatEnabled}>
               <Stack
                 gap="md"
-                pl="md"
                 ml="xs"
+                pl="md"
                 style={{
                   borderLeft:
                     "2px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))",
@@ -93,7 +92,7 @@ export default function AiSettings() {
           </Stack>
         </Tabs.Panel>
 
-        <Tabs.Panel value="mcp" pt="md">
+        <Tabs.Panel pt="md" value="mcp">
           <McpSettings />
         </Tabs.Panel>
       </Tabs>

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Button,
   Center,
@@ -11,8 +10,8 @@ import {
   Textarea,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import i18n from "@/i18n.ts";
 import {
   useMarkObsoleteMutation,
   usePageVerificationInfoQuery,
@@ -28,15 +27,16 @@ import {
   PeriodUnit,
 } from "@/ee/page-verification/types/page-verification.types";
 import { useTimeAgo } from "@/hooks/use-time-ago";
-import { VerifierList } from "./verifier-list";
+import i18n from "@/i18n.ts";
 import {
   ExpirationFields,
   PERIOD_AMOUNT_MIN,
   PERIOD_UNIT_MAX_AMOUNT,
   toLocalDateString,
 } from "./expiration-fields";
-import { VerifierPicker } from "./verifier-picker";
 import { MAX_VERIFIERS } from "./user-option";
+import { VerifierList } from "./verifier-list";
+import { VerifierPicker } from "./verifier-picker";
 
 type ManageVerificationFormProps = {
   pageId: string;
@@ -58,11 +58,11 @@ export function ManageVerificationForm({
   }
 
   if (info.type === "qms") {
-    return <QmsManageContent pageId={pageId} info={info} onClose={onClose} />;
+    return <QmsManageContent info={info} onClose={onClose} pageId={pageId} />;
   }
 
   return (
-    <ExpiringManageContent pageId={pageId} info={info} onClose={onClose} />
+    <ExpiringManageContent info={info} onClose={onClose} pageId={pageId} />
   );
 }
 
@@ -110,7 +110,8 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
   const fixedDateValid =
     mode !== "fixed" ||
     (!!fixedDate && new Date(fixedDate).getTime() > Date.now());
-  const canSaveExpiration = hasExpirationChange && periodValid && fixedDateValid;
+  const canSaveExpiration =
+    hasExpirationChange && periodValid && fixedDateValid;
 
   const storedFixedExpired =
     info.mode === "fixed" &&
@@ -130,23 +131,25 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
 
   const handleRemove = () => {
     modals.openConfirmModal({
-      title: t("Remove verification"),
       children: (
         <Text size="sm">
           {t("Are you sure you want to remove verification from this page?")}
         </Text>
       ),
-      labels: { confirm: t("Remove"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Remove") },
       onConfirm: () => removeMutation.mutate(pageId, { onSuccess: onClose }),
+      title: t("Remove verification"),
     });
   };
 
   const handleSaveExpiration = () => {
-    if (!canSaveExpiration) return;
+    if (!canSaveExpiration) {
+      return;
+    }
     updateMutation.mutate({
-      pageId,
       mode,
+      pageId,
       ...(mode === "period" && {
         periodAmount,
         periodUnit,
@@ -159,7 +162,9 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
   };
 
   const handleRemoveVerifier = (userId: string) => {
-    if (!info.verifiers) return;
+    if (!info.verifiers) {
+      return;
+    }
     const remaining = info.verifiers
       .filter((v) => v.id !== userId)
       .map((v) => v.id);
@@ -167,8 +172,12 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
   };
 
   const handleAddVerifier = (userId: string) => {
-    if (!info.verifiers) return;
-    if (info.verifiers.some((v) => v.id === userId)) return;
+    if (!info.verifiers) {
+      return;
+    }
+    if (info.verifiers.some((v) => v.id === userId)) {
+      return;
+    }
     const verifierIds = [...info.verifiers.map((v) => v.id), userId];
     updateMutation.mutate({ pageId, verifierIds });
   };
@@ -177,7 +186,7 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
 
   return (
     <Stack>
-      <Text size="sm" c="dimmed">
+      <Text c="dimmed" size="sm">
         {t("Assigned verifiers must periodically re-verify this page.")}
       </Text>
 
@@ -196,17 +205,22 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
                   })}
             </Text>
             {info.expiresAt && (
-              <Text size="xs" c="dimmed">
-                {t(status === "expired" ? "Expired {{date}}" : "Expires {{date}}", {
-                  date: new Date(info.expiresAt).toLocaleDateString(
-                    i18n.language,
-                    {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    },
-                  ),
-                })}
+              <Text c="dimmed" size="xs">
+                {t(
+                  status === "expired"
+                    ? "Expired {{date}}"
+                    : "Expires {{date}}",
+                  {
+                    date: new Date(info.expiresAt).toLocaleDateString(
+                      i18n.language,
+                      {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      }
+                    ),
+                  }
+                )}
               </Text>
             )}
           </div>
@@ -218,15 +232,15 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
       {info.verifiers && info.verifiers.length > 0 && (
         <>
           <div>
-            <Text size="sm" fw={600} tt="uppercase" c="dimmed" mb={4}>
+            <Text c="dimmed" fw={600} mb={4} size="sm" tt="uppercase">
               {t("Verifiers")}
             </Text>
             <VerifierList
-              verifiers={info.verifiers}
               canManage={info.permissions?.canManage}
               onRemove={
                 info.permissions?.canManage ? handleRemoveVerifier : undefined
               }
+              verifiers={info.verifiers}
             />
             {info.permissions?.canManage &&
               info.verifiers.length < MAX_VERIFIERS && (
@@ -245,30 +259,28 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
       {info.permissions?.canManage && (
         <>
           <div>
-            <Text size="sm" fw={600} mb={6}>
+            <Text fw={600} mb={6} size="sm">
               {t("Expiration")}
             </Text>
             <ExpirationFields
-              mode={mode}
-              periodAmount={periodAmount}
-              periodUnit={periodUnit}
+              baseDate={info.verifiedAt ? new Date(info.verifiedAt) : undefined}
               fixedDate={fixedDate}
+              mode={mode}
+              onFixedDateChange={setFixedDate}
               onModeChange={setMode}
               onPeriodAmountChange={setPeriodAmount}
               onPeriodUnitChange={setPeriodUnit}
-              onFixedDateChange={setFixedDate}
-              baseDate={
-                info.verifiedAt ? new Date(info.verifiedAt) : undefined
-              }
+              periodAmount={periodAmount}
+              periodUnit={periodUnit}
             />
             {hasExpirationChange && (
               <Button
-                size="compact-sm"
-                mt="xs"
                 color="dark"
-                onClick={handleSaveExpiration}
-                loading={updateMutation.isPending}
                 disabled={!canSaveExpiration}
+                loading={updateMutation.isPending}
+                mt="xs"
+                onClick={handleSaveExpiration}
+                size="compact-sm"
               >
                 {t("Save")}
               </Button>
@@ -280,17 +292,17 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
 
       {info.permissions?.canVerify && (
         <div>
-          <Text size="sm" fw={600} mb={4}>
+          <Text fw={600} mb={4} size="sm">
             {t("Confirm")}
           </Text>
           <Checkbox
-            label={t("I've reviewed this page for accuracy")}
             checked={confirmed}
-            onChange={(event) => setConfirmed(event.currentTarget.checked)}
             color="dark"
+            label={t("I've reviewed this page for accuracy")}
+            onChange={(event) => setConfirmed(event.currentTarget.checked)}
           />
           {storedFixedExpired && (
-            <Text size="xs" c="red" mt={6}>
+            <Text c="red" mt={6} size="xs">
               {t("The fixed expiration date has passed.")}
             </Text>
           )}
@@ -300,11 +312,11 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
       <Group justify="space-between">
         {info.permissions?.canManage && (
           <Button
-            variant="subtle"
             color="red"
-            size="compact-sm"
-            onClick={handleRemove}
             loading={removeMutation.isPending}
+            onClick={handleRemove}
+            size="compact-sm"
+            variant="subtle"
           >
             {t("Remove verification")}
           </Button>
@@ -312,11 +324,11 @@ function ExpiringManageContent({ pageId, info, onClose }: ManageContentProps) {
 
         {info.permissions?.canVerify && (
           <Button
-            onClick={handleVerify}
+            color={status === "expired" ? "red" : "dark"}
             disabled={!confirmed || storedFixedExpired}
             loading={verifyMutation.isPending}
-            color={status === "expired" ? "red" : "dark"}
             ml="auto"
+            onClick={handleVerify}
           >
             {t("Verify")}
           </Button>
@@ -339,7 +351,7 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
   const [rejectComment, setRejectComment] = useState("");
   const verifiedAtAgo = useTimeAgo(info.verifiedAt ?? new Date().toISOString());
   const requestedAtAgo = useTimeAgo(
-    info.requestedAt ?? new Date().toISOString(),
+    info.requestedAt ?? new Date().toISOString()
   );
   const rejectedAtAgo = useTimeAgo(info.rejectedAt ?? new Date().toISOString());
 
@@ -362,57 +374,58 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
 
   const handleReject = () => {
     rejectMutation.mutate(
-      { pageId, comment: rejectComment || undefined },
+      { comment: rejectComment || undefined, pageId },
       {
         onSuccess: () => {
           setShowRejectForm(false);
           setRejectComment("");
           onClose();
         },
-      },
+      }
     );
   };
 
   const handleMarkObsolete = () => {
     modals.openConfirmModal({
-      title: t("Mark as obsolete"),
       children: (
         <Stack gap="xs">
           <Text size="sm">
             {t(
-              "Are you sure you want to mark this page as obsolete? This action cannot be undone.",
+              "Are you sure you want to mark this page as obsolete? This action cannot be undone."
             )}
           </Text>
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             {t(
-              "To restore this page, you will need to remove verification and set it up again.",
+              "To restore this page, you will need to remove verification and set it up again."
             )}
           </Text>
         </Stack>
       ),
-      labels: { confirm: t("Mark obsolete"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
-      onConfirm: () =>
-        obsoleteMutation.mutate(pageId, { onSuccess: onClose }),
+      labels: { cancel: t("Cancel"), confirm: t("Mark obsolete") },
+      onConfirm: () => obsoleteMutation.mutate(pageId, { onSuccess: onClose }),
+      title: t("Mark as obsolete"),
     });
   };
 
   const handleRemove = () => {
     modals.openConfirmModal({
-      title: t("Remove verification"),
       children: (
         <Text size="sm">
           {t("Are you sure you want to remove verification from this page?")}
         </Text>
       ),
-      labels: { confirm: t("Remove"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Remove") },
       onConfirm: () => removeMutation.mutate(pageId, { onSuccess: onClose }),
+      title: t("Remove verification"),
     });
   };
 
   const handleRemoveVerifier = (userId: string) => {
-    if (!info.verifiers) return;
+    if (!info.verifiers) {
+      return;
+    }
     const remaining = info.verifiers
       .filter((v) => v.id !== userId)
       .map((v) => v.id);
@@ -420,8 +433,12 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
   };
 
   const handleAddVerifier = (userId: string) => {
-    if (!info.verifiers) return;
-    if (info.verifiers.some((v) => v.id === userId)) return;
+    if (!info.verifiers) {
+      return;
+    }
+    if (info.verifiers.some((v) => v.id === userId)) {
+      return;
+    }
     const verifierIds = [...info.verifiers.map((v) => v.id), userId];
     updateMutation.mutate({ pageId, verifierIds });
   };
@@ -431,7 +448,7 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
 
   return (
     <Stack>
-      <Text size="sm" c="dimmed">
+      <Text c="dimmed" size="sm">
         {t("Pages move through draft, approval, and approved stages.")}
       </Text>
 
@@ -439,14 +456,14 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
         <>
           {info.rejectedBy && info.rejectedAt && (
             <div>
-              <Text size="sm" c="red">
+              <Text c="red" size="sm">
                 {t("Returned by {{name}} {{time}}", {
                   name: info.rejectedBy.name,
                   time: rejectedAtAgo,
                 })}
               </Text>
               {info.rejectionComment && (
-                <Text size="sm" c="dimmed" mt={4} fs="italic">
+                <Text c="dimmed" fs="italic" mt={4} size="sm">
                   &ldquo;{info.rejectionComment}&rdquo;
                 </Text>
               )}
@@ -481,7 +498,7 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
       )}
 
       {status === "obsolete" && (
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t("This document has been marked as obsolete.")}
         </Text>
       )}
@@ -491,13 +508,13 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
       {info.verifiers && info.verifiers.length > 0 && (
         <>
           <div>
-            <Text size="sm" fw={600} tt="uppercase" c="dimmed" mb={4}>
+            <Text c="dimmed" fw={600} mb={4} size="sm" tt="uppercase">
               {t("Verifiers")}
             </Text>
             <VerifierList
-              verifiers={info.verifiers}
               canManage={canManageVerifiers}
               onRemove={canManageVerifiers ? handleRemoveVerifier : undefined}
+              verifiers={info.verifiers}
             />
             {canManageVerifiers && info.verifiers.length < MAX_VERIFIERS && (
               <div style={{ marginTop: "var(--mantine-spacing-xs)" }}>
@@ -516,33 +533,33 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
         <>
           {showRejectForm ? (
             <div>
-              <Text size="sm" fw={600} mb={4}>
+              <Text fw={600} mb={4} size="sm">
                 {t("Rejection comment")}
               </Text>
               <Textarea
-                value={rejectComment}
+                maxLength={500}
+                minRows={2}
                 onChange={(e) => setRejectComment(e.currentTarget.value)}
                 placeholder={t("Reason for returning this document...")}
-                minRows={2}
+                value={rejectComment}
                 variant="filled"
-                maxLength={500}
               />
-              <Group justify="flex-end" mt="sm" gap="xs">
+              <Group gap="xs" justify="flex-end" mt="sm">
                 <Button
-                  variant="subtle"
                   color="gray"
-                  size="compact-sm"
                   onClick={() => {
                     setShowRejectForm(false);
                     setRejectComment("");
                   }}
+                  size="compact-sm"
+                  variant="subtle"
                 >
                   {t("Cancel")}
                 </Button>
                 <Button
                   color="red"
-                  onClick={handleReject}
                   loading={rejectMutation.isPending}
+                  onClick={handleReject}
                 >
                   {t("Confirm rejection")}
                 </Button>
@@ -551,10 +568,10 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
           ) : (
             <div>
               <Checkbox
-                label={t("I've reviewed this page for accuracy")}
                 checked={confirmed}
-                onChange={(event) => setConfirmed(event.currentTarget.checked)}
                 color="dark"
+                label={t("I've reviewed this page for accuracy")}
+                onChange={(event) => setConfirmed(event.currentTarget.checked)}
               />
             </div>
           )}
@@ -564,11 +581,11 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
       <Group justify="space-between">
         {info.permissions?.canManage && (
           <Button
-            variant="subtle"
             color="red"
-            size="compact-sm"
-            onClick={handleRemove}
             loading={removeMutation.isPending}
+            onClick={handleRemove}
+            size="compact-sm"
+            variant="subtle"
           >
             {t("Remove verification")}
           </Button>
@@ -577,9 +594,9 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
         <Group gap="xs" ml="auto">
           {status === "draft" && info.permissions?.canSubmitForApproval && (
             <Button
-              onClick={handleSubmitForApproval}
-              loading={submitMutation.isPending}
               color="dark"
+              loading={submitMutation.isPending}
+              onClick={handleSubmitForApproval}
             >
               {t("Submit for approval")}
             </Button>
@@ -590,17 +607,17 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
             !showRejectForm && (
               <>
                 <Button
-                  variant="light"
                   color="red"
                   onClick={() => setShowRejectForm(true)}
+                  variant="light"
                 >
                   {t("Reject")}
                 </Button>
                 <Button
-                  onClick={handleVerify}
+                  color="dark"
                   disabled={!confirmed}
                   loading={verifyMutation.isPending}
-                  color="dark"
+                  onClick={handleVerify}
                 >
                   {t("Approve")}
                 </Button>
@@ -611,19 +628,19 @@ function QmsManageContent({ pageId, info, onClose }: ManageContentProps) {
             <>
               {info.permissions?.canSubmitForApproval && (
                 <Button
-                  variant="light"
-                  onClick={handleSubmitForApproval}
                   loading={submitMutation.isPending}
+                  onClick={handleSubmitForApproval}
+                  variant="light"
                 >
                   {t("Re-submit for approval")}
                 </Button>
               )}
               {info.permissions?.canMarkObsolete && (
                 <Button
-                  variant="light"
                   color="gray"
-                  onClick={handleMarkObsolete}
                   loading={obsoleteMutation.isPending}
+                  onClick={handleMarkObsolete}
+                  variant="light"
                 >
                   {t("Mark obsolete")}
                 </Button>

@@ -1,20 +1,20 @@
 import "@fontsource-variable/inter";
 import "@/styles/public-typography.css";
+import { useSetAtom } from "jotai";
 import { useEffect, useMemo } from "react";
 import { Outlet, useParams } from "react-router-dom";
-import { useSetAtom } from "jotai";
-import { usePublicSpaceTreeQuery } from "@/features/public-space/queries/public-space-query.ts";
-import { buildSharedPageTree } from "@/features/share/utils.ts";
+import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
 import {
   publicSpaceTreeAtom,
   publicSpaceTreeDataAtom,
 } from "@/features/public-space/atoms/public-space-atoms.ts";
-import { useDocsAccent } from "@/features/public-space/theme/docs-theme.ts";
 import DocsShell from "@/features/public-space/components/docs/docs-shell.tsx";
 import { DocsSurface } from "@/features/public-space/components/docs/docs-surface-context.tsx";
-import { buildPublicSpaceUrl } from "@/features/page/page.utils.ts";
+import { usePublicSpaceTreeQuery } from "@/features/public-space/queries/public-space-query.ts";
+import { useDocsAccent } from "@/features/public-space/theme/docs-theme.ts";
 import { PublicSpaceSearchSpotlight } from "@/features/search/components/public-space-search-spotlight.tsx";
 import { publicSpaceSearchSpotlight } from "@/features/search/constants";
+import { buildSharedPageTree } from "@/features/share/utils.ts";
 
 export default function PublicSpaceLayout() {
   const { spaceSlug } = useParams();
@@ -26,7 +26,9 @@ export default function PublicSpaceLayout() {
   const setPublicSpaceTreeData = useSetAtom(publicSpaceTreeDataAtom);
 
   const treeData = useMemo(() => {
-    if (!data?.pageTree) return null;
+    if (!data?.pageTree) {
+      return null;
+    }
     return buildSharedPageTree(data.pageTree);
   }, [data?.pageTree]);
 
@@ -40,28 +42,28 @@ export default function PublicSpaceLayout() {
     // The first root page is the space home, served at the bare space URL.
     const firstRootSlugId = treeData?.[0]?.slugId;
     return {
-      treeData,
-      hasSidebar: (data?.pageTree?.length ?? 0) > 1,
-      siteName: data?.space?.name,
-      homeUrl,
       getNodeUrl: (node) =>
         node.slugId === firstRootSlugId
           ? homeUrl
           : buildPublicSpaceUrl({
-              spaceSlug,
               pageSlugId: node.slugId,
               pageTitle: node.name,
+              spaceSlug,
             }),
+      hasSidebar: (data?.pageTree?.length ?? 0) > 1,
+      homeUrl,
       showBranding: Boolean(data),
       showEditPage: true,
+      siteName: data?.space?.name,
+      treeData,
     };
   }, [data, treeData, spaceSlug]);
 
   return (
     <DocsShell
-      surface={surface}
       onSearchOpen={publicSpaceSearchSpotlight.open}
       searchSpotlight={<PublicSpaceSearchSpotlight spaceSlug={spaceSlug} />}
+      surface={surface}
     >
       <Outlet />
     </DocsShell>

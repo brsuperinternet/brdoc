@@ -1,11 +1,11 @@
-import { Group, Box, Button, TagsInput, Select } from "@mantine/core";
-import React, { useState } from "react";
-import { MultiGroupSelect } from "@/features/group/components/multi-group-select.tsx";
-import { UserRole } from "@/lib/types.ts";
-import { userRoleData } from "@/features/workspace/types/user-role-data.ts";
-import { useCreateInvitationMutation } from "@/features/workspace/queries/workspace-query.ts";
-import { useNavigate } from "react-router-dom";
+import { Box, Button, Group, Select, TagsInput } from "@mantine/core";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { MultiGroupSelect } from "@/features/group/components/multi-group-select.tsx";
+import { useCreateInvitationMutation } from "@/features/workspace/queries/workspace-query.ts";
+import { userRoleData } from "@/features/workspace/types/user-role-data.ts";
+import { UserRole } from "@/lib/types.ts";
 
 interface Props {
   onClose: () => void;
@@ -25,9 +25,9 @@ export function WorkspaceInviteForm({ onClose }: Props) {
     });
 
     await createInvitationMutation.mutateAsync({
-      role: role.toLowerCase(),
       emails: validEmails,
-      groupIds: groupIds,
+      groupIds,
+      role: role.toLowerCase(),
     });
 
     onClose();
@@ -45,57 +45,57 @@ export function WorkspaceInviteForm({ onClose }: Props) {
         {/*<WorkspaceInviteSection /> */}
 
         <TagsInput
-          mt="sm"
-          description={t(
-            "Enter valid email addresses separated by comma or space max_50",
-          )}
-          label={t("Invite by email")}
-          placeholder={t("enter valid emails addresses")}
-          variant="filled"
-          splitChars={[",", " "]}
-          maxDropdownHeight={200}
-          maxTags={50}
-          onChange={setEmails}
-          data-autofocus
           autoComplete="off"
           data-1p-ignore
-          data-lpignore="true"
+          data-autofocus
           data-bwignore
           data-form-type="other"
+          data-lpignore="true"
+          description={t(
+            "Enter valid email addresses separated by comma or space max_50"
+          )}
+          label={t("Invite by email")}
+          maxDropdownHeight={200}
+          maxTags={50}
+          mt="sm"
+          onChange={setEmails}
+          placeholder={t("enter valid emails addresses")}
+          splitChars={[",", " "]}
+          variant="filled"
         />
 
         <Select
-          mt="sm"
-          description={t("Select role to assign to all invited members")}
-          label={t("Select role")}
-          placeholder={t("Choose a role")}
-          variant="filled"
+          allowDeselect={false}
+          checkIconPosition="right"
           data={userRoleData
             .filter((role) => role.value !== UserRole.OWNER)
             .map((role) => ({
               ...role,
-              label: t(`${role.label}`),
               description: t(`${role.description}`),
+              label: t(`${role.label}`),
             }))}
           defaultValue={UserRole.MEMBER}
-          allowDeselect={false}
-          checkIconPosition="right"
+          description={t("Select role to assign to all invited members")}
+          label={t("Select role")}
+          mt="sm"
           onChange={(value) => setRole(value)}
+          placeholder={t("Choose a role")}
+          variant="filled"
         />
 
         <MultiGroupSelect
-          mt="sm"
           description={t(
-            "Invited members will be granted access to spaces the groups can access",
+            "Invited members will be granted access to spaces the groups can access"
           )}
           label={t("Add to groups")}
+          mt="sm"
           onChange={handleGroupSelect}
         />
 
         <Group justify="flex-end" mt="md">
           <Button
-            onClick={handleSubmit}
             loading={createInvitationMutation.isPending}
+            onClick={handleSubmit}
           >
             {t("Send invitation")}
           </Button>

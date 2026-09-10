@@ -1,8 +1,8 @@
-import { IBaseProperty } from "@/ee/base/types/base.types";
-import { useEditableTextCell } from "@/ee/base/hooks/use-editable-text-cell";
 import { AutoTooltipText } from "@/components/ui/auto-tooltip-text";
+import { useEditableTextCell } from "@/ee/base/hooks/use-editable-text-cell";
 import cellClasses from "@/ee/base/styles/cells.module.css";
 import gridClasses from "@/ee/base/styles/grid.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 
 type CellTextProps = {
   value: unknown;
@@ -16,30 +16,37 @@ type CellTextProps = {
 const toDraft = (value: unknown) => (typeof value === "string" ? value : "");
 const parse = (draft: string) => draft;
 
-export function CellText({ value, property, rowId, isEditing, onCommit, onCancel }: CellTextProps) {
+export function CellText({
+  value,
+  property,
+  rowId,
+  isEditing,
+  onCommit,
+  onCancel,
+}: CellTextProps) {
   const { draft, setDraft, inputRef, handleKeyDown, handleBlur } =
     useEditableTextCell({
-      value,
       isEditing,
-      onCommit,
       onCancel,
-      toDraft,
+      onCommit,
       parse,
-      rowId,
       propertyId: property.id,
+      rowId,
+      toDraft,
+      value,
     });
 
   if (isEditing) {
     return (
       <input
-        ref={inputRef}
-        type="text"
         className={cellClasses.cellInput}
-        value={draft}
         maxLength={1000}
+        onBlur={handleBlur}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
+        ref={inputRef}
+        type="text"
+        value={draft}
       />
     );
   }

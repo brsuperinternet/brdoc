@@ -1,9 +1,9 @@
+import type { ComboboxItem } from "@mantine/core";
 import { Group, MultiSelect, Select, Text } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
-import { Choice } from "@/ee/base/types/base.types";
-import { choiceColor } from "@/ee/base/components/cells/choice-color";
 import { useTranslation } from "react-i18next";
-import type { ComboboxItem } from "@mantine/core";
+import { choiceColor } from "@/ee/base/components/cells/choice-color";
+import { Choice } from "@/ee/base/types/base.types";
 
 type DefaultValuePickerProps = {
   choices: Choice[];
@@ -21,7 +21,7 @@ export function DefaultValuePicker({
   dropdownPortalTarget,
 }: DefaultValuePickerProps) {
   const { t } = useTranslation();
-  const data = choices.map((c) => ({ value: c.id, label: c.name }));
+  const data = choices.map((c) => ({ label: c.name, value: c.id }));
   const comboboxProps = {
     portalProps: { target: dropdownPortalTarget ?? undefined },
   };
@@ -36,25 +36,23 @@ export function DefaultValuePicker({
     const choice = choices.find((c) => c.id === option.value);
     const colors = choice ? choiceColor(choice.color) : undefined;
     return (
-      <Group gap={6} wrap="nowrap" justify="space-between" style={{ flex: 1 }}>
+      <Group gap={6} justify="space-between" style={{ flex: 1 }} wrap="nowrap">
         <Group gap={6} wrap="nowrap">
           {colors && (
             <span
               style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
                 backgroundColor: colors.backgroundColor as string,
                 border: `2px solid ${colors.color as string}`,
+                borderRadius: "50%",
                 flexShrink: 0,
+                height: 10,
+                width: 10,
               }}
             />
           )}
           <Text size="xs">{option.label}</Text>
         </Group>
-        {checked && (
-          <IconCheck size={14} color="var(--mantine-color-dimmed)" />
-        )}
+        {checked && <IconCheck color="var(--mantine-color-dimmed)" size={14} />}
       </Group>
     );
   };
@@ -65,15 +63,15 @@ export function DefaultValuePicker({
     ).filter((id) => choices.some((c) => c.id === id));
     return (
       <MultiSelect
-        size="xs"
-        label={t("Default value")}
-        placeholder={selected.length ? undefined : t("None")}
-        data={data}
-        value={selected}
-        onChange={(vals) => onChange(vals.length ? vals : null)}
         clearable
         comboboxProps={comboboxProps}
+        data={data}
+        label={t("Default value")}
+        onChange={(vals) => onChange(vals.length ? vals : null)}
+        placeholder={selected.length ? undefined : t("None")}
         renderOption={renderOption}
+        size="xs"
+        value={selected}
       />
     );
   }
@@ -84,15 +82,15 @@ export function DefaultValuePicker({
       : null;
   return (
     <Select
-      size="xs"
-      label={t("Default value")}
-      placeholder={t("None")}
-      data={data}
-      value={single}
-      onChange={(val) => onChange(val)}
       clearable
       comboboxProps={comboboxProps}
+      data={data}
+      label={t("Default value")}
+      onChange={(val) => onChange(val)}
+      placeholder={t("None")}
       renderOption={renderOption}
+      size="xs"
+      value={single}
     />
   );
 }

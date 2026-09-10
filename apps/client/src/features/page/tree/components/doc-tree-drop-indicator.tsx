@@ -1,5 +1,5 @@
-import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import styles from '../styles/tree.module.css';
+import type { Instruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
+import styles from "../styles/tree.module.css";
 
 type Props = {
   instruction: Instruction;
@@ -7,29 +7,29 @@ type Props = {
 };
 
 export function DocTreeDropIndicator({ instruction, indentPx }: Props) {
-  const blocked = instruction.type === 'instruction-blocked';
+  const blocked = instruction.type === "instruction-blocked";
   const inst = blocked ? instruction.desired : instruction;
 
   const style = {
-    ['--drop-line-indent' as never]: `${indentPx}px`,
+    ["--drop-line-indent" as never]: `${indentPx}px`,
   } as React.CSSProperties;
 
-  if (inst.type === 'reorder-above') {
+  if (inst.type === "reorder-above") {
     return (
       <div
         className={styles.dropLine}
-        data-edge="top"
         data-blocked={blocked || undefined}
+        data-edge="top"
         style={style}
       />
     );
   }
-  if (inst.type === 'reorder-below') {
+  if (inst.type === "reorder-below") {
     return (
       <div
         className={styles.dropLine}
-        data-edge="bottom"
         data-blocked={blocked || undefined}
+        data-edge="bottom"
         style={style}
       />
     );

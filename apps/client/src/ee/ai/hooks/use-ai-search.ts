@@ -1,13 +1,17 @@
-import { useMutation, UseMutationResult } from "@tanstack/react-query";
-import { useState, useCallback } from "react";
-import { aiAnswers, IAiSearchResponse } from "@/ee/ai/services/ai-search-service.ts";
+import { UseMutationResult, useMutation } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
+import {
+  aiAnswers,
+  IAiSearchResponse,
+} from "@/ee/ai/services/ai-search-service.ts";
 import { IPageSearchParams } from "@/features/search/types/search.types.ts";
 
-// @ts-ignore
-interface UseAiSearchResult extends UseMutationResult<IAiSearchResponse, Error, IPageSearchParams> {
+// @ts-expect-error
+interface UseAiSearchResult
+  extends UseMutationResult<IAiSearchResponse, Error, IPageSearchParams> {
+  clearStreaming: () => void;
   streamingAnswer: string;
   streamingSources: any[];
-  clearStreaming: () => void;
 }
 
 export function useAiSearch(): UseAiSearchResult {
@@ -20,7 +24,9 @@ export function useAiSearch(): UseAiSearchResult {
   }, []);
 
   const mutation = useMutation({
-    mutationFn: async (params: IPageSearchParams & { contentType?: string }) => {
+    mutationFn: async (
+      params: IPageSearchParams & { contentType?: string }
+    ) => {
       setStreamingAnswer("");
       setStreamingSources([]);
 
@@ -39,8 +45,8 @@ export function useAiSearch(): UseAiSearchResult {
 
   return {
     ...mutation,
+    clearStreaming,
     streamingAnswer,
     streamingSources,
-    clearStreaming,
   };
 }

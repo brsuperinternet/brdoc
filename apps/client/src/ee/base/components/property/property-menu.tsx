@@ -1,50 +1,50 @@
-import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  UnstyledButton,
-  TextInput,
+  ActionIcon,
   Button,
+  Divider,
+  Group,
+  Loader,
+  ScrollArea,
   Stack,
   Text,
-  Group,
-  ActionIcon,
-  Divider,
-  ScrollArea,
-  Loader,
+  TextInput,
+  UnstyledButton,
 } from "@mantine/core";
 import {
-  IconTrash,
-  IconPencil,
   IconChevronRight,
-  IconSettings,
   IconMathFunction,
+  IconPencil,
+  IconSettings,
+  IconTrash,
 } from "@tabler/icons-react";
-import {
-  IBaseProperty,
-  BasePropertyType,
-  TypeOptions,
-  SelectTypeOptions,
-} from "@/ee/base/types/base.types";
 import { useAtom } from "jotai";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { propertyMenuCloseRequestAtomFamily } from "@/ee/base/atoms/base-atoms";
 import {
-  useUpdatePropertyMutation,
+  defaultTypeOptionsFor,
+  isSystemPropertyType,
+  propertyTypes,
+} from "@/ee/base/property-types/property-type.registry";
+import {
   useDeletePropertyMutation,
+  useUpdatePropertyMutation,
 } from "@/ee/base/queries/base-property-query";
-import { PropertyTypePicker } from "./property-type-picker";
-import { PropertyOptions } from "./property-options";
+import cellClasses from "@/ee/base/styles/cells.module.css";
+import classes from "@/ee/base/styles/property.module.css";
+import {
+  BasePropertyType,
+  IBaseProperty,
+  SelectTypeOptions,
+  TypeOptions,
+} from "@/ee/base/types/base.types";
 import {
   conversionWarning,
   isLossyConversion,
   NON_USER_TARGET_TYPES,
 } from "./conversion-warning";
-import { useTranslation } from "react-i18next";
-import {
-  isSystemPropertyType,
-  propertyTypes,
-  defaultTypeOptionsFor,
-} from "@/ee/base/property-types/property-type.registry";
-import cellClasses from "@/ee/base/styles/cells.module.css";
-import classes from "@/ee/base/styles/property.module.css";
+import { PropertyOptions } from "./property-options";
+import { PropertyTypePicker } from "./property-type-picker";
 
 type PropertyMenuContentProps = {
   property: IBaseProperty;
@@ -73,9 +73,9 @@ const CHOICE_TYPES = new Set<BasePropertyType>([
 
 function typeOptionsForConversion(
   source: IBaseProperty,
-  target: BasePropertyType,
+  target: BasePropertyType
 ): TypeOptions {
-  if (!CHOICE_TYPES.has(source.type) || !CHOICE_TYPES.has(target)) {
+  if (!(CHOICE_TYPES.has(source.type) && CHOICE_TYPES.has(target))) {
     return defaultTypeOptionsFor(target);
   }
   const opts = source.typeOptions as SelectTypeOptions | undefined;
@@ -83,7 +83,7 @@ function typeOptionsForConversion(
   const choiceOrder = opts?.choiceOrder?.length
     ? opts.choiceOrder
     : choices.map((c) => c.id);
-  const carried: SelectTypeOptions = { choices, choiceOrder };
+  const carried: SelectTypeOptions = { choiceOrder, choices };
   if (target === "status") {
     carried.defaultValue = choices[0]?.id ?? null;
   }
@@ -105,11 +105,16 @@ export function PropertyMenuContent({
   const renameInputRef = useRef<HTMLInputElement>(null);
   const [optionsDirty, setOptionsDirty] = useState(false);
   // Portal target for nested Select dropdowns to avoid triggering closeOnClickOutside.
-  const [optionsAnchor, setOptionsAnchor] = useState<HTMLDivElement | null>(null);
-  const [pendingTargetType, setPendingTargetType] = useState<BasePropertyType | null>(null);
+  const [optionsAnchor, setOptionsAnchor] = useState<HTMLDivElement | null>(
+    null
+  );
+  const [pendingTargetType, setPendingTargetType] =
+    useState<BasePropertyType | null>(null);
   const pendingActionRef = useRef<"back" | "close" | null>(null);
   const sourcePanelRef = useRef<"rename" | "options" | null>(null);
-  const [closeRequest] = useAtom(propertyMenuCloseRequestAtomFamily(pageId)) as unknown as [number];
+  const [closeRequest] = useAtom(
+    propertyMenuCloseRequestAtomFamily(pageId)
+  ) as unknown as [number];
   const closeRequestRef = useRef(closeRequest);
 
   const renameDirty = renameValue !== property.name;
@@ -147,9 +152,9 @@ export function PropertyMenuContent({
     const trimmed = renameValue.trim();
     if (trimmed && trimmed !== property.name) {
       updatePropertyMutation.mutate({
-        propertyId: property.id,
-        pageId: property.pageId,
         name: trimmed,
+        pageId: property.pageId,
+        propertyId: property.id,
       });
     }
   }, [renameValue, property, updatePropertyMutation]);
@@ -185,19 +190,19 @@ export function PropertyMenuContent({
         requestClose();
       }
     },
-    [handleRenameAndClose, requestClose],
+    [handleRenameAndClose, requestClose]
   );
 
   const handleOptionsUpdate = useCallback(
     (typeOptions: Record<string, unknown>) => {
       updatePropertyMutation.mutate({
-        propertyId: property.id,
         pageId: property.pageId,
+        propertyId: property.id,
         typeOptions,
       });
       setOptionsDirty(false);
     },
-    [property, updatePropertyMutation],
+    [property, updatePropertyMutation]
   );
 
   const handleTypeSelect = useCallback(
@@ -209,14 +214,16 @@ export function PropertyMenuContent({
       setPendingTargetType(type);
       setPanel("confirmTypeChange");
     },
-    [property.type, onClose],
+    [property.type, onClose]
   );
 
   const handleApplyTypeChange = useCallback(() => {
-    if (!pendingTargetType) return;
+    if (!pendingTargetType) {
+      return;
+    }
     updatePropertyMutation.mutate({
-      propertyId: property.id,
       pageId: property.pageId,
+      propertyId: property.id,
       type: pendingTargetType,
       typeOptions: typeOptionsForConversion(property, pendingTargetType),
     });
@@ -225,8 +232,8 @@ export function PropertyMenuContent({
 
   const handleDelete = useCallback(() => {
     deletePropertyMutation.mutate({
-      propertyId: property.id,
       pageId: property.pageId,
+      propertyId: property.id,
     });
     onClose();
   }, [property, deletePropertyMutation, onClose]);
@@ -274,35 +281,37 @@ export function PropertyMenuContent({
     <>
       {panel === "main" && (
         <MainPanel
-          property={property}
-          onRename={() => setPanel("rename")}
           onChangeType={() => setPanel("changeType")}
-          onOptions={() => setPanel("options")}
           onDelete={() => setPanel("confirmDelete")}
           onEditFormula={onEditFormula}
+          onOptions={() => setPanel("options")}
+          onRename={() => setPanel("rename")}
+          property={property}
         />
       )}
       {panel === "rename" && (
         <Stack gap="xs" p="sm">
-          <Text size="xs" fw={600} c="dimmed">
+          <Text c="dimmed" fw={600} size="xs">
             {t("Rename property")}
           </Text>
           <TextInput
+            onChange={(e) => setRenameValue(e.currentTarget.value)}
+            onKeyDown={handleRenameKeyDown}
             ref={renameInputRef}
             size="xs"
             value={renameValue}
-            onChange={(e) => setRenameValue(e.currentTarget.value)}
-            onKeyDown={handleRenameKeyDown}
           />
           <Divider />
-          <Group justify="flex-end" gap="xs">
-            <Button variant="default" size="xs" onClick={requestClose}>
+          <Group gap="xs" justify="flex-end">
+            <Button onClick={requestClose} size="xs" variant="default">
               {t("Cancel")}
             </Button>
             <Button
-              size="xs"
+              disabled={
+                !renameValue.trim() || renameValue.trim() === property.name
+              }
               onClick={handleRenameAndClose}
-              disabled={!renameValue.trim() || renameValue.trim() === property.name}
+              size="xs"
             >
               {t("Save")}
             </Button>
@@ -313,25 +322,22 @@ export function PropertyMenuContent({
         <Stack gap={0} p={4}>
           <Group gap="xs" px="sm" py={6}>
             <ActionIcon
-              variant="subtle"
               color="gray"
-              size="xs"
               onClick={() => setPanel("main")}
+              size="xs"
+              variant="subtle"
             >
-              <IconChevronRight
-                size={14}
-                className={classes.chevronBack}
-              />
+              <IconChevronRight className={classes.chevronBack} size={14} />
             </ActionIcon>
-            <Text size="xs" fw={600} c="dimmed">
+            <Text c="dimmed" fw={600} size="xs">
               {t("Change type")}
             </Text>
           </Group>
-          <ScrollArea.Autosize mah={300} scrollbarSize={6} offsetScrollbars>
+          <ScrollArea.Autosize mah={300} offsetScrollbars scrollbarSize={6}>
             <PropertyTypePicker
-              onSelect={handleTypeSelect}
               currentType={property.type}
               excludeTypes={NON_USER_TARGET_TYPES}
+              onSelect={handleTypeSelect}
               showSearch
             />
           </ScrollArea.Autosize>
@@ -339,33 +345,33 @@ export function PropertyMenuContent({
       )}
       {panel === "confirmTypeChange" && pendingTargetType && (
         <Stack gap="xs" p="sm">
-          <Text size="sm" fw={600}>
+          <Text fw={600} size="sm">
             {t("Change type to {{label}}?", {
               label: t(
                 propertyTypes.find((pt) => pt.type === pendingTargetType)
-                  ?.labelKey ?? pendingTargetType,
+                  ?.labelKey ?? pendingTargetType
               ),
             })}
           </Text>
-          <Text size="xs" c="dimmed">
+          <Text c="dimmed" size="xs">
             {t(conversionWarning(property.type, pendingTargetType))}
           </Text>
           <Group gap="xs" justify="flex-end">
             <Button
-              variant="default"
-              size="xs"
               onClick={() => setPanel("main")}
+              size="xs"
+              variant="default"
             >
               {t("Cancel")}
             </Button>
             <Button
-              size="xs"
               color={
                 isLossyConversion(property.type, pendingTargetType)
                   ? "red"
                   : undefined
               }
               onClick={handleApplyTypeChange}
+              size="xs"
             >
               {t("Apply")}
             </Button>
@@ -374,60 +380,53 @@ export function PropertyMenuContent({
       )}
       {(panel === "options" || panel === "confirmDiscard") && (
         <Stack
-          ref={setOptionsAnchor}
           gap="xs"
           p="sm"
+          ref={setOptionsAnchor}
           style={panel === "confirmDiscard" ? { display: "none" } : undefined}
         >
           <Group gap="xs">
             <ActionIcon
-              variant="subtle"
               color="gray"
-              size="xs"
               onClick={handleOptionsBack}
+              size="xs"
+              variant="subtle"
             >
-              <IconChevronRight
-                size={14}
-                className={classes.chevronBack}
-              />
+              <IconChevronRight className={classes.chevronBack} size={14} />
             </ActionIcon>
-            <Text size="xs" fw={600} c="dimmed">
+            <Text c="dimmed" fw={600} size="xs">
               {t("Property options")}
             </Text>
           </Group>
-          <ScrollArea.Autosize mah={400} scrollbarSize={6} offsetScrollbars>
+          <ScrollArea.Autosize mah={400} offsetScrollbars scrollbarSize={6}>
             <PropertyOptions
-              property={property}
-              onUpdate={handleOptionsUpdate}
+              dropdownPortalTarget={optionsAnchor}
               onClose={onClose}
               onDirtyChange={handleOptionsDirtyChange}
-              dropdownPortalTarget={optionsAnchor}
+              onUpdate={handleOptionsUpdate}
+              property={property}
             />
           </ScrollArea.Autosize>
         </Stack>
       )}
       {panel === "confirmDelete" && (
         <Stack gap="xs" p="sm">
-          <Text size="sm" fw={600}>
+          <Text fw={600} size="sm">
             {t("Delete property")}
           </Text>
-          <Text size="xs" c="dimmed">
+          <Text c="dimmed" size="xs">
             {t("Are you sure you want to delete")} <b>{property.name}</b>?{" "}
             {t("All data in this column will be lost.")}
           </Text>
           <Group gap="xs" justify="flex-end">
             <Button
-              variant="default"
-              size="xs"
               onClick={() => setPanel("main")}
+              size="xs"
+              variant="default"
             >
               {t("Cancel")}
             </Button>
-            <Button
-              color="red"
-              size="xs"
-              onClick={handleDelete}
-            >
+            <Button color="red" onClick={handleDelete} size="xs">
               {t("Delete")}
             </Button>
           </Group>
@@ -435,25 +434,17 @@ export function PropertyMenuContent({
       )}
       {panel === "confirmDiscard" && (
         <Stack gap="xs" p="sm">
-          <Text size="sm" fw={600}>
+          <Text fw={600} size="sm">
             {t("Unsaved changes")}
           </Text>
-          <Text size="xs" c="dimmed">
+          <Text c="dimmed" size="xs">
             {t("You have unsaved changes. Do you want to discard them?")}
           </Text>
           <Group gap="xs" justify="flex-end">
-            <Button
-              variant="default"
-              size="xs"
-              onClick={handleCancelDiscard}
-            >
+            <Button onClick={handleCancelDiscard} size="xs" variant="default">
               {t("Keep editing")}
             </Button>
-            <Button
-              color="red"
-              size="xs"
-              onClick={handleConfirmDiscard}
-            >
+            <Button color="red" onClick={handleConfirmDiscard} size="xs">
               {t("Discard")}
             </Button>
           </Group>
@@ -484,7 +475,7 @@ export function MenuItem({
       onClick={onClick}
       style={{ color: color ? `var(--mantine-color-${color}-6)` : undefined }}
     >
-      <Group gap={8} wrap="nowrap" style={{ flex: 1 }}>
+      <Group gap={8} style={{ flex: 1 }} wrap="nowrap">
         {icon}
         <Text size="sm">{label}</Text>
       </Group>
@@ -514,8 +505,7 @@ function MainPanel({
   const isPending = property.pendingType != null;
 
   const hasOptions =
-    !isSystem &&
-    !isPending &&
+    !(isSystem || isPending) &&
     (property.type === "select" ||
       property.type === "multiSelect" ||
       property.type === "status" ||
@@ -547,17 +537,14 @@ function MainPanel({
       {isPending && (
         <Group gap={8} px="sm" py={8}>
           <Loader size={12} />
-          <Text size="sm" c="dimmed">
+          <Text c="dimmed" size="sm">
             {t("Converting…")}
           </Text>
         </Group>
       )}
-      {!isSystem && !isPending && !property.isPrimary && (
-        <UnstyledButton
-          className={cellClasses.menuItem}
-          onClick={onChangeType}
-        >
-          <Group gap={8} wrap="nowrap" style={{ flex: 1 }}>
+      {!(isSystem || isPending || property.isPrimary) && (
+        <UnstyledButton className={cellClasses.menuItem} onClick={onChangeType}>
+          <Group gap={8} style={{ flex: 1 }} wrap="nowrap">
             {TypeIcon ? <TypeIcon size={14} /> : null}
             <Text size="sm">
               {typeDef ? t(typeDef.labelKey) : property.type}
@@ -570,17 +557,17 @@ function MainPanel({
         <MenuItem
           icon={<IconSettings size={14} />}
           label={t("Options")}
-          rightIcon={<IconChevronRight size={14} />}
           onClick={onOptions}
+          rightIcon={<IconChevronRight size={14} />}
         />
       )}
-      {!property.isPrimary && !isPending && (
+      {!(property.isPrimary || isPending) && (
         <>
           <Divider my={4} />
           <MenuItem
+            color="red"
             icon={<IconTrash size={14} />}
             label={t("Delete property")}
-            color="red"
             onClick={onDelete}
           />
         </>
@@ -588,4 +575,3 @@ function MainPanel({
     </Stack>
   );
 }
-

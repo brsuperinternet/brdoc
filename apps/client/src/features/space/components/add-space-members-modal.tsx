@@ -1,11 +1,11 @@
 import { Button, Divider, Group, Modal, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import React, { useId, useState } from "react";
-import { useAddSpaceMemberMutation } from "@/features/space/queries/space-query.ts";
+import { useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MultiMemberSelect } from "@/features/space/components/multi-member-select.tsx";
 import { SpaceMemberRole } from "@/features/space/components/space-member-role.tsx";
+import { useAddSpaceMemberMutation } from "@/features/space/queries/space-query.ts";
 import { SpaceRole } from "@/lib/types.ts";
-import { useTranslation } from "react-i18next";
 
 interface AddSpaceMemberModalProps {
   spaceId: string;
@@ -39,10 +39,10 @@ export default function AddSpaceMembersModal({
       .filter((id) => id !== null);
 
     const addSpaceMember = {
-      spaceId: spaceId,
-      userIds: userIds,
-      groupIds: groupIds,
-      role: role,
+      groupIds,
+      role,
+      spaceId,
+      userIds,
     };
 
     await addSpaceMemberMutation.mutateAsync(addSpaceMember);
@@ -52,7 +52,7 @@ export default function AddSpaceMembersModal({
   return (
     <>
       <Button onClick={open}>{t("Add space members")}</Button>
-      <Modal.Root opened={opened} onClose={close}>
+      <Modal.Root onClose={close} opened={opened}>
         <Modal.Overlay />
         <Modal.Content aria-labelledby={titleId}>
           <Modal.Header>
@@ -60,14 +60,14 @@ export default function AddSpaceMembersModal({
             <Modal.CloseButton aria-label={t("Close")} />
           </Modal.Header>
           <Modal.Body>
-            <Divider size="xs" mb="xs" />
+            <Divider mb="xs" size="xs" />
 
             <Stack>
               <MultiMemberSelect onChange={handleMultiSelectChange} />
               <SpaceMemberRole
-                onSelect={handleRoleSelection}
                 defaultRole={role}
                 label={t("Select role")}
+                onSelect={handleRoleSelection}
               />
             </Stack>
 

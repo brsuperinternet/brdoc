@@ -10,16 +10,21 @@ type EmptyStateProps = {
   action?: ReactNode;
 };
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: EmptyStateProps) {
   return (
     <div className={classes.root}>
       <Stack align="center" gap="xs">
-        <Icon size={40} stroke={1.5} color="var(--mantine-color-dimmed)" />
-        <Text size="lg" fw={500}>
+        <Icon color="var(--mantine-color-dimmed)" size={40} stroke={1.5} />
+        <Text fw={500} size="lg">
           {title}
         </Text>
         {description && (
-          <Text size="sm" c="dimmed" maw={350}>
+          <Text c="dimmed" maw={350} size="sm">
             {description}
           </Text>
         )}

@@ -1,10 +1,6 @@
-import { GridContainer } from "@/ee/base/components/grid/grid-container";
 import { Table } from "@tanstack/react-table";
-import {
-  IBase,
-  IBaseRow,
-  IBaseView,
-} from "@/ee/base/types/base.types";
+import { GridContainer } from "@/ee/base/components/grid/grid-container";
+import { IBase, IBaseRow, IBaseView } from "@/ee/base/types/base.types";
 
 type BaseTableProps = {
   base: IBase;
@@ -24,7 +20,7 @@ type BaseTableProps = {
   onRowReorder: (
     rowId: string,
     targetRowId: string,
-    dropPosition: "above" | "below",
+    dropPosition: "above" | "below"
   ) => void;
   persistViewConfig: () => void;
   scrollportRef: React.RefObject<HTMLDivElement>;
@@ -51,20 +47,20 @@ export function BaseTable({
 }: BaseTableProps) {
   return (
     <GridContainer
-      table={table}
-      properties={base.properties}
-      onCellUpdate={onCellUpdate}
-      onAddRow={onAddRow}
-      pageId={pageId}
-      isFiltered={isFiltered}
-      onColumnReorder={onColumnReorder}
-      onResizeEnd={onResizeEnd}
-      onRowReorder={onRowReorder}
+      aboveBand={aboveBand ?? null}
       hasNextPage={hasNextPage}
       isFetchingNextPage={isFetchingNextPage}
+      isFiltered={isFiltered}
+      onAddRow={onAddRow}
+      onCellUpdate={onCellUpdate}
+      onColumnReorder={onColumnReorder}
       onFetchNextPage={onFetchNextPage}
+      onResizeEnd={onResizeEnd}
+      onRowReorder={onRowReorder}
+      pageId={pageId}
+      properties={base.properties}
       scrollElement={embedded ? window : scrollportRef.current}
-      aboveBand={aboveBand ?? null}
+      table={table}
     />
   );
 }

@@ -1,9 +1,12 @@
+import { notifications } from "@mantine/notifications";
 import {
+  InfiniteData,
   useInfiniteQuery,
   useMutation,
   useQueryClient,
-  InfiniteData,
 } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   createComment,
   deleteComment,
@@ -11,25 +14,22 @@ import {
   updateComment,
 } from "@/features/comment/services/comment-service";
 import {
-  ICommentParams,
   IComment,
+  ICommentParams,
 } from "@/features/comment/types/comment.types";
-import { notifications } from "@mantine/notifications";
 import { IPagination } from "@/lib/types.ts";
-import { useTranslation } from "react-i18next";
-import { useEffect, useMemo } from "react";
 
 export const RQ_KEY = (pageId: string) => ["comments", pageId];
 
 export function useCommentsQuery(params: ICommentParams) {
   const query = useInfiniteQuery({
-    queryKey: RQ_KEY(params.pageId),
-    queryFn: ({ pageParam }) =>
-      getPageComments({ pageId: params.pageId, cursor: pageParam, limit: 100 }),
-    initialPageParam: undefined as string | undefined,
+    enabled: !!params.pageId,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.nextCursor : undefined,
-    enabled: !!params.pageId,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      getPageComments({ cursor: pageParam, limit: 100, pageId: params.pageId }),
+    queryKey: RQ_KEY(params.pageId),
   });
 
   useEffect(() => {
@@ -39,7 +39,9 @@ export function useCommentsQuery(params: ICommentParams) {
   }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   const data = useMemo<IPagination<IComment> | undefined>(() => {
-    if (!query.data) return undefined;
+    if (!query.data) {
+      return;
+    }
     return {
       items: query.data.pages.flatMap((p) => p.items),
       meta: query.data.pages[query.data.pages.length - 1].meta,
@@ -48,8 +50,8 @@ export function useCommentsQuery(params: ICommentParams) {
 
   return {
     data,
-    isLoading: query.isLoading || query.hasNextPage,
     isError: query.isError,
+    isLoading: query.isLoading || query.hasNextPage,
   };
 }
 
@@ -59,16 +61,24 @@ export function useCreateCommentMutation() {
 
   return useMutation<IComment, Error, Partial<IComment>>({
     mutationFn: (data) => createComment(data),
+    onError: () => {
+      notifications.show({
+        color: "red",
+        message: t("Error creating comment"),
+      });
+    },
     onSuccess: (newComment) => {
-      const cache = queryClient.getQueryData(
-        RQ_KEY(newComment.pageId),
-      ) as InfiniteData<IPagination<IComment>> | undefined;
+      const cache = queryClient.getQueryData(RQ_KEY(newComment.pageId)) as
+        | InfiniteData<IPagination<IComment>>
+        | undefined;
 
       if (cache && cache.pages.length > 0) {
         const alreadyExists = cache.pages.some((page) =>
-          page.items.some((c) => c.id === newComment.id),
+          page.items.some((c) => c.id === newComment.id)
         );
-        if (alreadyExists) return;
+        if (alreadyExists) {
+          return;
+        }
 
         const lastIdx = cache.pages.length - 1;
         queryClient.setQueryData(RQ_KEY(newComment.pageId), {
@@ -76,18 +86,12 @@ export function useCreateCommentMutation() {
           pages: cache.pages.map((page, i) =>
             i === lastIdx
               ? { ...page, items: [...page.items, newComment] }
-              : page,
+              : page
           ),
         });
       }
 
       notifications.show({ message: t("Comment created successfully") });
-    },
-    onError: () => {
-      notifications.show({
-        message: t("Error creating comment"),
-        color: "red",
-      });
     },
   });
 }
@@ -98,10 +102,16 @@ export function useUpdateCommentMutation() {
 
   return useMutation<IComment, Error, Partial<IComment>>({
     mutationFn: (data) => updateComment(data),
+    onError: () => {
+      notifications.show({
+        color: "red",
+        message: t("Failed to update comment"),
+      });
+    },
     onSuccess: (updatedComment) => {
-      const cache = queryClient.getQueryData(
-        RQ_KEY(updatedComment.pageId),
-      ) as InfiniteData<IPagination<IComment>> | undefined;
+      const cache = queryClient.getQueryData(RQ_KEY(updatedComment.pageId)) as
+        | InfiniteData<IPagination<IComment>>
+        | undefined;
 
       if (cache) {
         queryClient.setQueryData(RQ_KEY(updatedComment.pageId), {
@@ -109,19 +119,13 @@ export function useUpdateCommentMutation() {
           pages: cache.pages.map((page) => ({
             ...page,
             items: page.items.map((comment) =>
-              comment.id === updatedComment.id ? updatedComment : comment,
+              comment.id === updatedComment.id ? updatedComment : comment
             ),
           })),
         });
       }
 
       notifications.show({ message: t("Comment updated successfully") });
-    },
-    onError: () => {
-      notifications.show({
-        message: t("Failed to update comment"),
-        color: "red",
-      });
     },
   });
 }
@@ -132,10 +136,16 @@ export function useDeleteCommentMutation(pageId?: string) {
 
   return useMutation({
     mutationFn: (commentId: string) => deleteComment(commentId),
+    onError: () => {
+      notifications.show({
+        color: "red",
+        message: t("Failed to delete comment"),
+      });
+    },
     onSuccess: (_data, commentId) => {
-      const cache = queryClient.getQueryData(
-        RQ_KEY(pageId),
-      ) as InfiniteData<IPagination<IComment>> | undefined;
+      const cache = queryClient.getQueryData(RQ_KEY(pageId)) as
+        | InfiniteData<IPagination<IComment>>
+        | undefined;
 
       if (cache) {
         queryClient.setQueryData(RQ_KEY(pageId), {
@@ -148,12 +158,6 @@ export function useDeleteCommentMutation(pageId?: string) {
       }
 
       notifications.show({ message: t("Comment deleted successfully") });
-    },
-    onError: () => {
-      notifications.show({
-        message: t("Failed to delete comment"),
-        color: "red",
-      });
     },
   });
 }

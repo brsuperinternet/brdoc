@@ -13,9 +13,9 @@ const BACKLINKS_PAGE_LIMIT = 100;
 
 export function useBacklinksCountQuery(pageId: string | undefined) {
   return useQuery<IBacklinkCount>({
-    queryKey: ["backlinks-count", pageId],
-    queryFn: () => getBacklinksCount(pageId as string),
     enabled: !!pageId,
+    queryFn: () => getBacklinksCount(pageId as string),
+    queryKey: ["backlinks-count", pageId],
     staleTime: BACKLINKS_STALE_TIME,
   });
 }
@@ -23,23 +23,23 @@ export function useBacklinksCountQuery(pageId: string | undefined) {
 export function useBacklinksQuery(
   pageId: string | undefined,
   direction: BacklinkDirection,
-  enabled: boolean,
+  enabled: boolean
 ) {
   return useInfiniteQuery({
-    queryKey: ["backlinks", pageId, direction],
-    queryFn: ({ pageParam }) =>
-      getBacklinks({
-        pageId: pageId as string,
-        direction,
-        cursor: pageParam,
-        limit: BACKLINKS_PAGE_LIMIT,
-      }),
     enabled: enabled && !!pageId,
-    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage
         ? (lastPage.meta.nextCursor ?? undefined)
         : undefined,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      getBacklinks({
+        cursor: pageParam,
+        direction,
+        limit: BACKLINKS_PAGE_LIMIT,
+        pageId: pageId as string,
+      }),
+    queryKey: ["backlinks", pageId, direction],
     staleTime: BACKLINKS_STALE_TIME,
   });
 }

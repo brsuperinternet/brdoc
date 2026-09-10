@@ -1,8 +1,8 @@
+import { htmlToMarkdown } from "@docmost/editor-ext";
 import { Button } from "@mantine/core";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useAtomValue } from "jotai";
 import { useTranslation } from "react-i18next";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
-import { htmlToMarkdown } from "@docmost/editor-ext";
 import { readOnlyEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import { useDocsCurrentPage } from "@/features/public-space/hooks/use-docs-current-page.ts";
 import { useClipboard } from "@/hooks/use-clipboard";
@@ -19,7 +19,9 @@ export default function DocsCopyPage() {
   }
 
   const handleCopy = () => {
-    if (editor.isDestroyed) return;
+    if (editor.isDestroyed) {
+      return;
+    }
     const markdown = htmlToMarkdown(editor.getHTML());
     const title = page?.name ? `# ${page.name}\n\n` : "";
     clipboard.copy(`${title}${markdown}`);
@@ -27,10 +29,7 @@ export default function DocsCopyPage() {
 
   return (
     <Button
-      variant="default"
-      size="compact-sm"
       className={styles.copyPageButton}
-      onClick={handleCopy}
       leftSection={
         clipboard.copied ? (
           <IconCheck size={14} stroke={1.8} />
@@ -38,6 +37,9 @@ export default function DocsCopyPage() {
           <IconCopy size={14} stroke={1.8} />
         )
       }
+      onClick={handleCopy}
+      size="compact-sm"
+      variant="default"
     >
       {clipboard.copied ? t("Copied") : t("Copy page")}
     </Button>

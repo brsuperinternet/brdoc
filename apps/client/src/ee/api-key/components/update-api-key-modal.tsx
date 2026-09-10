@@ -1,11 +1,11 @@
-import { Modal, TextInput, Button, Group, Stack } from "@mantine/core";
+import { Button, Group, Modal, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { z } from "zod/v4";
-import { useTranslation } from "react-i18next";
-import { useUpdateApiKeyMutation } from "@/ee/api-key/queries/api-key-query";
-import { IApiKey } from "@/ee/api-key";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import { IApiKey } from "@/ee/api-key";
+import { useUpdateApiKeyMutation } from "@/ee/api-key/queries/api-key-query";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -13,9 +13,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface UpdateApiKeyModalProps {
-  opened: boolean;
-  onClose: () => void;
   apiKey: IApiKey | null;
+  onClose: () => void;
+  opened: boolean;
 }
 
 export function UpdateApiKeyModal({
@@ -27,10 +27,10 @@ export function UpdateApiKeyModal({
   const updateApiKeyMutation = useUpdateApiKeyMutation();
 
   const form = useForm<FormValues>({
-    validate: zod4Resolver(formSchema),
     initialValues: {
       name: "",
     },
+    validate: zod4Resolver(formSchema),
   });
 
   useEffect(() => {
@@ -51,11 +51,11 @@ export function UpdateApiKeyModal({
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
-      title={t("Update {{credential}}", { credential: t("API key") })}
-      size="md"
       closeButtonProps={{ "aria-label": t("Close") }}
+      onClose={onClose}
+      opened={opened}
+      size="md"
+      title={t("Update {{credential}}", { credential: t("API key") })}
     >
       <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
         <Stack gap="md">
@@ -67,10 +67,10 @@ export function UpdateApiKeyModal({
           />
 
           <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>
+            <Button onClick={onClose} variant="default">
               {t("Cancel")}
             </Button>
-            <Button type="submit" loading={updateApiKeyMutation.isPending}>
+            <Button loading={updateApiKeyMutation.isPending} type="submit">
               {t("Update")}
             </Button>
           </Group>

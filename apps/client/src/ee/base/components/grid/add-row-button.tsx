@@ -1,5 +1,5 @@
-import { memo } from "react";
 import { IconPlus } from "@tabler/icons-react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import classes from "@/ee/base/styles/grid.module.css";
 

@@ -1,9 +1,9 @@
 import js from "@eslint/js";
-import globals from "globals";
+import pluginQuery from "@tanstack/eslint-plugin-query";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import globals from "globals";
 import tseslint from "typescript-eslint";
-import pluginQuery from "@tanstack/eslint-plugin-query";
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -15,22 +15,22 @@ export default tseslint.config(
       globals: globals.browser,
     },
     plugins: {
+      "@tanstack/query": pluginQuery,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      "@tanstack/query": pluginQuery,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-useless-escape": "off",
+      "react-hooks/exhaustive-deps": "off",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/ban-ts-comment": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "react-hooks/exhaustive-deps": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
-      "no-useless-escape": "off",
     },
-  },
+  }
 );

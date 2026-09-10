@@ -15,11 +15,11 @@ export function formattedDate(date: Date) {
     return i18n.t("Today, {{time}}", {
       time: formatLocalized(date, "h:mma", "p", locale),
     });
-  } else if (isYesterday(date)) {
+  }
+  if (isYesterday(date)) {
     return i18n.t("Yesterday, {{time}}", {
       time: formatLocalized(date, "h:mma", "p", locale),
     });
-  } else {
-    return formatLocalized(date, "MMM dd, yyyy, h:mma", "PPp", locale);
   }
+  return formatLocalized(date, "MMM dd, yyyy, h:mma", "PPp", locale);
 }

@@ -1,20 +1,20 @@
-import { userAtom } from "@/features/user/atoms/current-user-atom";
-import { updateUser } from "@/features/user/services/user-service";
 import { Badge, Group, Switch, Text } from "@mantine/core";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ResponsiveSettingsRow,
   ResponsiveSettingsContent,
   ResponsiveSettingsControl,
+  ResponsiveSettingsRow,
 } from "@/components/ui/responsive-settings-row";
+import { userAtom } from "@/features/user/atoms/current-user-atom";
+import { updateUser } from "@/features/user/services/user-service";
 
 export default function FixedToolbarPref() {
   const { t } = useTranslation();
   const [user, setUser] = useAtom(userAtom);
   const [checked, setChecked] = useState(
-    user.settings?.preferences?.editorToolbar ?? false,
+    user.settings?.preferences?.editorToolbar ?? false
   );
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,23 +33,23 @@ export default function FixedToolbarPref() {
       <ResponsiveSettingsContent>
         <Group gap="xs">
           <Text size="md">{t("Fixed editor toolbar")}</Text>
-          <Badge size="xs" color="gray" variant="light">
+          <Badge color="gray" size="xs" variant="light">
             {t("Experimental")}
           </Badge>
         </Group>
-        <Text size="sm" c="dimmed">
+        <Text c="dimmed" size="sm">
           {t(
-            "Show a formatting toolbar above the editor with quick access to common actions.",
+            "Show a formatting toolbar above the editor with quick access to common actions."
           )}
         </Text>
       </ResponsiveSettingsContent>
 
       <ResponsiveSettingsControl>
         <Switch
-          labelPosition="left"
-          defaultChecked={checked}
-          onChange={handleChange}
           aria-label={t("Toggle fixed editor toolbar")}
+          defaultChecked={checked}
+          labelPosition="left"
+          onChange={handleChange}
         />
       </ResponsiveSettingsControl>
     </ResponsiveSettingsRow>

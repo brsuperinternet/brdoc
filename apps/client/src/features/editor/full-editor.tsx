@@ -1,7 +1,3 @@
-import classes from "@/features/editor/styles/editor.module.css";
-import React, { useEffect } from "react";
-import { TitleEditor } from "@/features/editor/title-editor";
-import PageEditor from "@/features/editor/page-editor";
 import {
   ActionIcon,
   Container,
@@ -14,19 +10,23 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
+import clsx from "clsx";
 import { useAtom } from "jotai";
-import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
+import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { PageVerificationBadge } from "@/ee/page-verification";
-import { useTranslation } from "react-i18next";
-import { IContributor } from "@/features/page/types/page.types.ts";
-import { FixedToolbar } from "@/features/editor/components/fixed-toolbar/fixed-toolbar";
-import { PageEditMode } from "@/features/user/types/user.types.ts";
-import { useAsideTriggerProps } from "@/hooks/use-toggle-aside.tsx";
-import { DeletedPageBanner } from "@/features/page/trash/components/deleted-page-banner.tsx";
-import clsx from "clsx";
 import { currentPageEditModeAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import { EmptyPageGetStarted } from "@/features/editor/components/empty-page/empty-page-get-started";
+import { FixedToolbar } from "@/features/editor/components/fixed-toolbar/fixed-toolbar";
+import PageEditor from "@/features/editor/page-editor";
+import classes from "@/features/editor/styles/editor.module.css";
+import { TitleEditor } from "@/features/editor/title-editor";
+import { DeletedPageBanner } from "@/features/page/trash/components/deleted-page-banner.tsx";
+import { IContributor } from "@/features/page/types/page.types.ts";
+import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { PageEditMode } from "@/features/user/types/user.types.ts";
+import { useAsideTriggerProps } from "@/hooks/use-toggle-aside.tsx";
 
 const MemoizedTitleEditor = React.memo(TitleEditor);
 const MemoizedPageEditor = React.memo(PageEditor);
@@ -44,15 +44,15 @@ type PageUser = {
 let defaultEditModeApplied = false;
 
 export interface FullEditorProps {
+  canComment?: boolean;
+  content: string;
+  contributors?: IContributor[];
+  creator?: PageUser;
+  editable: boolean;
   pageId: string;
   slugId: string;
-  title: string;
-  content: string;
   spaceSlug: string;
-  editable: boolean;
-  creator?: PageUser;
-  contributors?: IContributor[];
-  canComment?: boolean;
+  title: string;
 }
 
 export function FullEditor({
@@ -71,7 +71,7 @@ export function FullEditor({
   const editorToolbarEnabled =
     user.settings?.preferences?.editorToolbar ?? false;
   const [currentPageEditMode, setCurrentPageEditMode] = useAtom(
-    currentPageEditModeAtom,
+    currentPageEditModeAtom
   );
   const userPageEditMode =
     user.settings?.preferences?.pageEditMode ?? PageEditMode.Edit;
@@ -88,9 +88,9 @@ export function FullEditor({
 
   return (
     <Container
+      className={classes.editor}
       fluid={fullPageWidth}
       size={!fullPageWidth && 900}
-      className={classes.editor}
       style={{ display: "flex", flexDirection: "column" }}
     >
       {editorToolbarEnabled && editable && isEditMode && (
@@ -98,24 +98,24 @@ export function FullEditor({
       )}
       <MemoizedDeletedPageBanner slugId={slugId} />
       <MemoizedTitleEditor
+        editable={editable}
         pageId={pageId}
         slugId={slugId}
-        title={title}
         spaceSlug={spaceSlug}
-        editable={editable}
+        title={title}
       />
       <PageByline
-        creator={creator}
         contributors={contributors}
+        creator={creator}
         readOnly={!editable}
       />
       <MemoizedPageEditor
-        pageId={pageId}
-        editable={editable}
-        content={content}
         canComment={canComment}
+        content={content}
+        editable={editable}
+        pageId={pageId}
       />
-      <EmptyPageGetStarted pageId={pageId} editable={editable} />
+      <EmptyPageGetStarted editable={editable} pageId={pageId} />
     </Container>
   );
 }
@@ -131,14 +131,14 @@ function PageByline({ creator, contributors, readOnly }: PageBylineProps) {
   const detailsTriggerProps = useAsideTriggerProps("details");
 
   const otherContributors = (contributors ?? []).filter(
-    (c) => c.id !== creator?.id,
+    (c) => c.id !== creator?.id
   );
 
   return (
     <Group
+      className={clsx("print-hide", classes.byline)}
       gap="sm"
       mb="md"
-      className={clsx("print-hide", classes.byline)}
       style={{ marginTop: "-0.5em" }}
     >
       {creator && (
@@ -153,7 +153,7 @@ function PageByline({ creator, contributors, readOnly }: PageBylineProps) {
                   name={creator.name}
                   size={22}
                 />
-                <Text size="sm" c="dimmed">
+                <Text c="dimmed" size="sm">
                   {t("By {{name}}", { name: creator.name })}
                 </Text>
               </Group>
@@ -168,10 +168,10 @@ function PageByline({ creator, contributors, readOnly }: PageBylineProps) {
                   size={36}
                 />
                 <div>
-                  <Text size="sm" fw={500}>
+                  <Text fw={500} size="sm">
                     {creator.name}
                   </Text>
-                  <Text size="xs" c="dimmed">
+                  <Text c="dimmed" size="xs">
                     {otherContributors.length === 0
                       ? t("Owner, no contributors")
                       : t("Owner")}
@@ -182,7 +182,7 @@ function PageByline({ creator, contributors, readOnly }: PageBylineProps) {
               {otherContributors.length > 0 && (
                 <>
                   <Divider />
-                  <Text size="xs" fw={500} c="dimmed" tt="uppercase">
+                  <Text c="dimmed" fw={500} size="xs" tt="uppercase">
                     {t("Contributors")}
                   </Text>
                   <Stack gap={6}>
@@ -203,11 +203,11 @@ function PageByline({ creator, contributors, readOnly }: PageBylineProps) {
           </Popover.Dropdown>
         </Popover>
       )}
-      <Tooltip label={t("Details")} withArrow openDelay={250}>
+      <Tooltip label={t("Details")} openDelay={250} withArrow>
         <ActionIcon
-          variant="subtle"
-          color="gray"
           aria-label={t("Details")}
+          color="gray"
+          variant="subtle"
           {...detailsTriggerProps}
         >
           <IconInfoCircle size={20} stroke={1.5} />

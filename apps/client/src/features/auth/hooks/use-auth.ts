@@ -1,4 +1,10 @@
+import { notifications } from "@mantine/notifications";
+import { useAtom } from "jotai";
+import { RESET } from "jotai/utils";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { exchangeTokenRedirectUrl, getHostnameUrl } from "@/ee/utils.ts";
 import {
   forgotPassword,
   login,
@@ -7,9 +13,6 @@ import {
   setupWorkspace,
   verifyUserToken,
 } from "@/features/auth/services/auth-service";
-import { useNavigate } from "react-router-dom";
-import { useAtom } from "jotai";
-import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
 import {
   IForgotPassword,
   ILogin,
@@ -17,17 +20,14 @@ import {
   ISetupWorkspace,
   IVerifyUserToken,
 } from "@/features/auth/types/auth.types";
-import { notifications } from "@mantine/notifications";
-import { IAcceptInvite } from "@/features/workspace/types/workspace.types.ts";
+import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
 import {
   acceptInvitation,
   createWorkspace,
 } from "@/features/workspace/services/workspace-service.ts";
+import { IAcceptInvite } from "@/features/workspace/types/workspace.types.ts";
 import APP_ROUTE, { getPostLoginRedirect } from "@/lib/app-route.ts";
-import { RESET } from "jotai/utils";
-import { useTranslation } from "react-i18next";
 import { isCloud } from "@/lib/config.ts";
-import { exchangeTokenRedirectUrl, getHostnameUrl } from "@/ee/utils.ts";
 
 export default function useAuth() {
   const { t } = useTranslation();
@@ -57,14 +57,14 @@ export default function useAuth() {
       if (isCloud() && message?.includes("verify your email")) {
         const sig = err.response?.data?.emailSignature;
         navigate(
-          `${APP_ROUTE.AUTH.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}${sig ? `&sig=${sig}` : ""}`,
+          `${APP_ROUTE.AUTH.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}${sig ? `&sig=${sig}` : ""}`
         );
         return;
       }
 
       notifications.show({
-        message,
         color: "red",
+        message,
       });
     }
   };
@@ -79,7 +79,7 @@ export default function useAuth() {
       if (response?.requiresLogin) {
         notifications.show({
           message: t(
-            "Account created successfully. Please log in to set up two-factor authentication.",
+            "Account created successfully. Please log in to set up two-factor authentication."
           ),
         });
         navigate(APP_ROUTE.AUTH.LOGIN);
@@ -89,8 +89,8 @@ export default function useAuth() {
     } catch (err) {
       setIsLoading(false);
       notifications.show({
-        message: err.response?.data.message,
         color: "red",
+        message: err.response?.data.message,
       });
     }
   };
@@ -117,7 +117,7 @@ export default function useAuth() {
         if (hostname && exchangeToken) {
           window.location.href = exchangeTokenRedirectUrl(
             hostname,
-            exchangeToken,
+            exchangeToken
           );
         }
       } else {
@@ -128,8 +128,8 @@ export default function useAuth() {
     } catch (err) {
       setIsLoading(false);
       notifications.show({
-        message: err.response?.data.message,
         color: "red",
+        message: err.response?.data.message,
       });
     }
   };
@@ -144,7 +144,7 @@ export default function useAuth() {
       if (response?.requiresLogin) {
         notifications.show({
           message: t(
-            "Password reset was successful. Please log in with your new password.",
+            "Password reset was successful. Please log in with your new password."
           ),
         });
         navigate(APP_ROUTE.AUTH.LOGIN);
@@ -157,8 +157,8 @@ export default function useAuth() {
     } catch (err) {
       setIsLoading(false);
       notifications.show({
-        message: err.response?.data.message,
         color: "red",
+        message: err.response?.data.message,
       });
     }
   };
@@ -181,8 +181,8 @@ export default function useAuth() {
       console.log(err);
       setIsLoading(false);
       notifications.show({
-        message: err.response?.data.message,
         color: "red",
+        message: err.response?.data.message,
       });
 
       return false;
@@ -199,20 +199,20 @@ export default function useAuth() {
       console.log(err);
       setIsLoading(false);
       notifications.show({
-        message: err.response?.data.message,
         color: "red",
+        message: err.response?.data.message,
       });
     }
   };
 
   return {
-    signIn: handleSignIn,
-    invitationSignup: handleInvitationSignUp,
-    setupWorkspace: handleSetupWorkspace,
     forgotPassword: handleForgotPassword,
-    passwordReset: handlePasswordReset,
-    verifyUserToken: handleVerifyUserToken,
-    logout: handleLogout,
+    invitationSignup: handleInvitationSignUp,
     isLoading,
+    logout: handleLogout,
+    passwordReset: handlePasswordReset,
+    setupWorkspace: handleSetupWorkspace,
+    signIn: handleSignIn,
+    verifyUserToken: handleVerifyUserToken,
   };
 }

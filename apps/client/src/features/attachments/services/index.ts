@@ -1,10 +1,10 @@
 export {
   getPageAttachments,
-  uploadIcon,
-  uploadUserAvatar,
-  uploadSpaceIcon,
-  uploadWorkspaceIcon,
   removeAvatar,
   removeSpaceIcon,
   removeWorkspaceIcon,
+  uploadIcon,
+  uploadSpaceIcon,
+  uploadUserAvatar,
+  uploadWorkspaceIcon,
 } from "./attachment-service.ts";

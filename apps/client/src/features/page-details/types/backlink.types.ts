@@ -6,18 +6,18 @@ export interface IBacklinkCount {
 }
 
 export interface IBacklinkPageItem {
+  icon: string | null;
   id: string;
   slugId: string;
-  title: string | null;
-  icon: string | null;
-  spaceId: string;
   space: { id: string; slug: string; name: string } | null;
+  spaceId: string;
+  title: string | null;
   updatedAt: string;
 }
 
 export interface IBacklinksListParams {
-  pageId: string;
-  direction: BacklinkDirection;
   cursor?: string;
+  direction: BacklinkDirection;
   limit?: number;
+  pageId: string;
 }

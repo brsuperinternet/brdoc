@@ -1,20 +1,20 @@
-import { useState, useEffect } from "react";
 import {
+  Button,
   Group,
-  Text,
   NumberInput,
   Select,
-  Button,
+  Text,
   Tooltip,
 } from "@mantine/core";
-import { useAtom } from "jotai";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { useTranslation } from "react-i18next";
-import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature";
+import { useAtom } from "jotai";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Feature } from "@/ee/features";
+import { useHasFeature } from "@/ee/hooks/use-feature";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label.ts";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 
 type RetentionUnit = "days" | "months" | "years";
 
@@ -34,8 +34,12 @@ function daysToRetention(days: number): {
 }
 
 function retentionToDays(amount: number, unit: RetentionUnit): number {
-  if (unit === "years") return amount * 365;
-  if (unit === "months") return amount * 30;
+  if (unit === "years") {
+    return amount * 365;
+  }
+  if (unit === "months") {
+    return amount * 30;
+  }
   return amount;
 }
 
@@ -49,10 +53,10 @@ export default function TrashRetention() {
   const parsed = daysToRetention(currentDays);
 
   const [retentionAmount, setRetentionAmount] = useState<number | string>(
-    parsed.amount,
+    parsed.amount
   );
   const [retentionUnit, setRetentionUnit] = useState<RetentionUnit>(
-    parsed.unit,
+    parsed.unit
   );
   const [saving, setSaving] = useState(false);
 
@@ -69,7 +73,9 @@ export default function TrashRetention() {
     setRetentionAmount(clamped);
     const days = retentionToDays(clamped, retentionUnit);
 
-    if (days === currentDays) return;
+    if (days === currentDays) {
+      return;
+    }
 
     setSaving(true);
     try {
@@ -82,9 +88,9 @@ export default function TrashRetention() {
       });
     } catch (err: any) {
       notifications.show({
+        color: "red",
         message:
           err?.response?.data?.message || t("Failed to update trash retention"),
-        color: "red",
       });
       const { amount, unit } = daysToRetention(currentDays);
       setRetentionAmount(amount);
@@ -97,34 +103,34 @@ export default function TrashRetention() {
   const isDirty =
     retentionToDays(
       typeof retentionAmount === "number" ? retentionAmount : 1,
-      retentionUnit,
+      retentionUnit
     ) !== currentDays;
 
   return (
     <div>
       <Text size="md">{t("Trash retention")}</Text>
-      <Text size="sm" c="dimmed" mb="sm">
+      <Text c="dimmed" mb="sm" size="sm">
         {t("Pages in trash will be permanently deleted after this period.")}
       </Text>
 
-      <Tooltip label={upgradeLabel} disabled={hasRetention}>
-        <Group gap="xs" wrap="nowrap" maw={320}>
+      <Tooltip disabled={hasRetention} label={upgradeLabel}>
+        <Group gap="xs" maw={320} wrap="nowrap">
           <NumberInput
-            value={retentionAmount}
-            onChange={(val) => setRetentionAmount(val)}
-            min={1}
-            hideControls
-            size="sm"
-            w={60}
             disabled={!hasRetention}
+            hideControls
+            min={1}
+            onChange={(val) => setRetentionAmount(val)}
+            size="sm"
+            value={retentionAmount}
+            w={60}
           />
           <Select
             data={[
-              { value: "days", label: t("days") },
-              { value: "months", label: t("months") },
-              { value: "years", label: t("years") },
+              { label: t("days"), value: "days" },
+              { label: t("months"), value: "months" },
+              { label: t("years"), value: "years" },
             ]}
-            value={retentionUnit}
+            disabled={!hasRetention}
             onChange={(value) => {
               if (value === "days" || value === "months" || value === "years") {
                 setRetentionUnit(value);
@@ -132,13 +138,13 @@ export default function TrashRetention() {
             }}
             size="sm"
             style={{ flex: 1 }}
-            disabled={!hasRetention}
+            value={retentionUnit}
           />
           <Button
-            size="sm"
-            onClick={handleSave}
+            disabled={!(hasRetention && isDirty)}
             loading={saving}
-            disabled={!hasRetention || !isDirty}
+            onClick={handleSave}
+            size="sm"
           >
             {t("Save")}
           </Button>

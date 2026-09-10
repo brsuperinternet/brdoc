@@ -26,53 +26,56 @@ export type DestinationFormValues = {
 };
 
 export const DEFAULT_FORM_VALUES: DestinationFormValues = {
-  name: "",
-  type: "splunk_hec",
-  url: "",
-  token: "",
   apiKey: "",
   authHeaderName: "Authorization",
   authHeaderPrefix: "Bearer ",
+  enabled: true,
   format: "json",
+  host: "",
   index: "",
+  name: "",
+  rejectUnauthorized: true,
+  service: "docmost",
+  site: DATADOG_SITES[0],
   source: "docmost",
   sourcetype: "docmost:audit",
-  host: "",
-  site: DATADOG_SITES[0],
-  service: "docmost",
   tags: "",
-  rejectUnauthorized: true,
-  enabled: true,
+  token: "",
+  type: "splunk_hec",
+  url: "",
 };
 
 const HEADER_NAME_RE = /^[A-Za-z0-9-]+$/;
 export const SECRET_MASK = "********";
 
 export function initialValues(
-  destination?: ISiemDestination | null,
+  destination?: ISiemDestination | null
 ): DestinationFormValues {
-  if (!destination) return { ...DEFAULT_FORM_VALUES };
+  if (!destination) {
+    return { ...DEFAULT_FORM_VALUES };
+  }
   const config = destination.config as Record<string, any>;
   const tls = config.tls ?? {};
   return {
     ...DEFAULT_FORM_VALUES,
-    name: destination.name,
-    type: destination.type,
-    enabled: destination.enabled,
-    token: destination.hasSecrets?.token ? SECRET_MASK : "",
     apiKey: destination.hasSecrets?.apiKey ? SECRET_MASK : "",
-    url: config.url ?? "",
     authHeaderName: config.authHeaderName ?? DEFAULT_FORM_VALUES.authHeaderName,
-    authHeaderPrefix: config.authHeaderPrefix ?? DEFAULT_FORM_VALUES.authHeaderPrefix,
+    authHeaderPrefix:
+      config.authHeaderPrefix ?? DEFAULT_FORM_VALUES.authHeaderPrefix,
+    enabled: destination.enabled,
     format: config.format ?? "json",
+    host: config.host ?? "",
     index: config.index ?? "",
+    name: destination.name,
+    rejectUnauthorized: tls.rejectUnauthorized ?? true,
+    service: config.service ?? DEFAULT_FORM_VALUES.service,
+    site: config.site ?? DEFAULT_FORM_VALUES.site,
     source: config.source ?? DEFAULT_FORM_VALUES.source,
     sourcetype: config.sourcetype ?? DEFAULT_FORM_VALUES.sourcetype,
-    host: config.host ?? "",
-    site: config.site ?? DEFAULT_FORM_VALUES.site,
-    service: config.service ?? DEFAULT_FORM_VALUES.service,
     tags: config.tags ?? "",
-    rejectUnauthorized: tls.rejectUnauthorized ?? true,
+    token: destination.hasSecrets?.token ? SECRET_MASK : "",
+    type: destination.type,
+    url: config.url ?? "",
   };
 }
 
@@ -87,25 +90,32 @@ function isValidUrl(value: string): boolean {
 
 export function validateForm(
   values: DestinationFormValues,
-  hasSecrets: Record<string, boolean> = {},
+  hasSecrets: Record<string, boolean> = {}
 ): Partial<Record<keyof DestinationFormValues, string>> {
   const errors: Partial<Record<keyof DestinationFormValues, string>> = {};
 
-  if (!values.name.trim()) errors.name = "Name is required";
+  if (!values.name.trim()) {
+    errors.name = "Name is required";
+  }
 
   if (values.type !== "datadog" && !isValidUrl(values.url.trim())) {
     errors.url = "Enter a valid http(s) URL";
   }
 
   if (values.type === "splunk_hec") {
-    if (!values.token && !hasSecrets.token) {
+    if (!(values.token || hasSecrets.token)) {
       errors.token = "HEC token is required";
     }
     try {
       const url = new URL(values.url.trim());
       const path = url.pathname.replace(/\/+$/, "");
-      if (path !== "" && path !== "/services/collector" && path !== "/services/collector/event") {
-        errors.url = "Enter the HEC base URL or the /services/collector/event endpoint";
+      if (
+        path !== "" &&
+        path !== "/services/collector" &&
+        path !== "/services/collector/event"
+      ) {
+        errors.url =
+          "Enter the HEC base URL or the /services/collector/event endpoint";
       }
     } catch {}
   }
@@ -114,15 +124,17 @@ export function validateForm(
     if (!(DATADOG_SITES as readonly string[]).includes(values.site)) {
       errors.site = "Select a Datadog site";
     }
-    if (!values.apiKey && !hasSecrets.apiKey) errors.apiKey = "API key is required";
-  }
-
-  if (values.type === "http") {
-    if (!HEADER_NAME_RE.test(values.authHeaderName.trim())) {
-      errors.authHeaderName = "Use letters, digits and hyphens only";
+    if (!(values.apiKey || hasSecrets.apiKey)) {
+      errors.apiKey = "API key is required";
     }
   }
 
+  if (
+    values.type === "http" &&
+    !HEADER_NAME_RE.test(values.authHeaderName.trim())
+  ) {
+    errors.authHeaderName = "Use letters, digits and hyphens only";
+  }
 
   return errors;
 }
@@ -132,7 +144,9 @@ function enteredSecret(key: string, value: string): Record<string, string> {
   return trimmed && trimmed !== SECRET_MASK ? { [key]: trimmed } : {};
 }
 
-export function toPayload(values: DestinationFormValues): ISiemDestinationInput {
+export function toPayload(
+  values: DestinationFormValues
+): ISiemDestinationInput {
   const tls = { rejectUnauthorized: values.rejectUnauthorized };
 
   let config: Record<string, unknown>;
@@ -141,39 +155,41 @@ export function toPayload(values: DestinationFormValues): ISiemDestinationInput 
   switch (values.type) {
     case "splunk_hec":
       config = {
-        url: values.url.trim(),
+        host: values.host.trim(),
         index: values.index.trim(),
         source: values.source.trim() || "docmost",
         sourcetype: values.sourcetype.trim() || "docmost:audit",
-        host: values.host.trim(),
         tls,
+        url: values.url.trim(),
       };
       secrets = enteredSecret("token", values.token);
       break;
     case "datadog":
       config = {
-        site: values.site,
         service: values.service.trim() || "docmost",
+        site: values.site,
         tags: values.tags.trim(),
       };
       secrets = enteredSecret("apiKey", values.apiKey);
       break;
     default:
       config = {
-        url: values.url.trim(),
         authHeaderName: values.authHeaderName.trim(),
         authHeaderPrefix: values.authHeaderPrefix,
         format: values.format,
         tls,
+        url: values.url.trim(),
       };
       secrets = enteredSecret("token", values.token);
   }
 
   return {
-    name: values.name.trim(),
-    type: values.type,
     config,
-    secrets: Object.fromEntries(Object.entries(secrets).filter(([, v]) => v !== "")),
     enabled: values.enabled,
+    name: values.name.trim(),
+    secrets: Object.fromEntries(
+      Object.entries(secrets).filter(([, v]) => v !== "")
+    ),
+    type: values.type,
   };
 }

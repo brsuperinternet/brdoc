@@ -1,39 +1,39 @@
 import {
+  ActionIcon,
   Center,
   Group,
   Loader,
+  Menu,
+  ScrollArea,
   Table,
   Text,
-  Menu,
-  ActionIcon,
-  ScrollArea,
 } from "@mantine/core";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { IconDots } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
+import { IconDots } from "@tabler/icons-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { SearchInput } from "@/components/common/search-input.tsx";
+import { IconGroupCircle } from "@/components/icons/icon-people-circle.tsx";
+import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
+import RoleSelectMenu from "@/components/ui/role-select-menu.tsx";
 import {
   useChangeSpaceMemberRoleMutation,
   useRemoveSpaceMemberMutation,
   useSpaceMembersInfiniteQuery,
 } from "@/features/space/queries/space-query.ts";
-import { IconGroupCircle } from "@/components/icons/icon-people-circle.tsx";
 import { IRemoveSpaceMember } from "@/features/space/types/space.types.ts";
-import RoleSelectMenu from "@/components/ui/role-select-menu.tsx";
 import {
   getSpaceRoleLabel,
   spaceRoleData,
 } from "@/features/space/types/space-role-data.ts";
 import { formatMemberCount } from "@/lib";
-import { useTranslation } from "react-i18next";
-import { SearchInput } from "@/components/common/search-input.tsx";
-import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
 
 type MemberType = "user" | "group";
 
 interface SpaceMembersProps {
-  spaceId: string;
   readOnly?: boolean;
+  spaceId: string;
 }
 
 export default function SpaceMembersList({
@@ -52,7 +52,9 @@ export default function SpaceMembersList({
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -60,7 +62,7 @@ export default function SpaceMembersList({
           fetchNextPage();
         }
       },
-      { root: viewportRef.current, threshold: 0.1 },
+      { root: viewportRef.current, threshold: 0.1 }
     );
 
     observer.observe(sentinel);
@@ -74,7 +76,7 @@ export default function SpaceMembersList({
     memberId: string,
     type: MemberType,
     newRole: string,
-    currentRole: string,
+    currentRole: string
   ) => {
     if (newRole === currentRole) {
       return;
@@ -86,8 +88,8 @@ export default function SpaceMembersList({
       userId?: string;
       groupId?: string;
     } = {
-      spaceId: spaceId,
       role: newRole,
+      spaceId,
     };
 
     if (type === "user") {
@@ -102,7 +104,7 @@ export default function SpaceMembersList({
 
   const onRemove = async (memberId: string, type: MemberType) => {
     const memberToRemove: IRemoveSpaceMember = {
-      spaceId: spaceId,
+      spaceId,
     };
 
     if (type === "user") {
@@ -117,18 +119,18 @@ export default function SpaceMembersList({
 
   const openRemoveModal = (memberId: string, type: MemberType) =>
     modals.openConfirmModal({
-      title: t("Remove space member"),
+      centered: true,
       children: (
         <Text size="sm">
           {t(
-            "Are you sure you want to remove this user from the space? The user will lose all access to this space.",
+            "Are you sure you want to remove this user from the space? The user will lose all access to this space."
           )}
         </Text>
       ),
-      centered: true,
-      labels: { confirm: t("Remove"), cancel: t("Cancel") },
       confirmProps: { color: "red" },
+      labels: { cancel: t("Cancel"), confirm: t("Remove") },
       onConfirm: () => onRemove(memberId, type),
+      title: t("Remove space member"),
     });
 
   const members = data?.pages.flatMap((page) => page.items) ?? [];
@@ -161,11 +163,17 @@ export default function SpaceMembersList({
 
                       {member.type === "group" && <IconGroupCircle />}
 
-                      <div style={{ minWidth: 0, overflow: "hidden", maxWidth: 260 }}>
-                        <AutoTooltipText fz="sm" fw={500}>
+                      <div
+                        style={{
+                          maxWidth: 260,
+                          minWidth: 0,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <AutoTooltipText fw={500} fz="sm">
                           {member?.name}
                         </AutoTooltipText>
-                        <Text fz="xs" c="dimmed">
+                        <Text c="dimmed" fz="xs">
                           {member.type == "user" && member?.email}
 
                           {member.type == "group" &&
@@ -177,21 +185,19 @@ export default function SpaceMembersList({
 
                   <Table.Td>
                     {readOnly ? (
-                      <Text fz="sm">
-                        {t(getSpaceRoleLabel(member.role))}
-                      </Text>
+                      <Text fz="sm">{t(getSpaceRoleLabel(member.role))}</Text>
                     ) : (
                       <RoleSelectMenu
-                        roles={spaceRoleData}
-                        roleName={getSpaceRoleLabel(member.role)}
                         onChange={(newRole) =>
                           handleRoleChange(
                             member.id,
                             member.type,
                             newRole,
-                            member.role,
+                            member.role
                           )
                         }
+                        roleName={getSpaceRoleLabel(member.role)}
+                        roles={spaceRoleData}
                       />
                     )}
                   </Table.Td>
@@ -199,20 +205,20 @@ export default function SpaceMembersList({
                   <Table.Td>
                     {!readOnly && (
                       <Menu
-                        shadow="xl"
-                        position="bottom-end"
+                        arrowPosition="center"
                         offset={20}
+                        position="bottom-end"
+                        shadow="xl"
                         width={200}
                         withArrow
-                        arrowPosition="center"
                       >
                         <Menu.Target>
                           <ActionIcon
-                            variant="subtle"
-                            c="gray"
                             aria-label={t("Member actions for {{name}}", {
                               name: member.name,
                             })}
+                            c="gray"
+                            variant="subtle"
                           >
                             <IconDots size={20} stroke={2} />
                           </ActionIcon>

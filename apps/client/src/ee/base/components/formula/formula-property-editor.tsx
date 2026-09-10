@@ -1,11 +1,11 @@
-import { FormulaEditor } from "./formula-editor";
-import { useBaseQuery } from "@/ee/base/queries/base-query";
 import { useUpdatePropertyMutation } from "@/ee/base/queries/base-property-query";
+import { useBaseQuery } from "@/ee/base/queries/base-query";
 import {
-  IBaseProperty,
   FormulaTypeOptions,
+  IBaseProperty,
   TypeOptions,
 } from "@/ee/base/types/base.types";
+import { FormulaEditor } from "./formula-editor";
 
 type Props = {
   property: IBaseProperty;
@@ -20,7 +20,6 @@ export function FormulaPropertyEditor({ property, pageId, onClose }: Props) {
 
   return (
     <FormulaEditor
-      properties={base?.properties ?? []}
       editingPropertyId={property.id}
       initialSource={opts?.source ?? ""}
       name={property.name}
@@ -31,18 +30,19 @@ export function FormulaPropertyEditor({ property, pageId, onClose }: Props) {
           return;
         }
         updatePropertyMutation.mutate({
-          propertyId: property.id,
           pageId,
+          propertyId: property.id,
           typeOptions: {
-            source,
             ast,
-            resultType,
-            dependencies,
             astVersion: 1,
+            dependencies,
+            resultType,
+            source,
           } as TypeOptions,
         });
         onClose();
       }}
+      properties={base?.properties ?? []}
     />
   );
 }

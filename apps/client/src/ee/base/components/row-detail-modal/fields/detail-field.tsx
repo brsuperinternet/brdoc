@@ -1,16 +1,16 @@
-import { forwardRef } from "react";
 import { Checkbox } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
 import clsx from "clsx";
-import { IBaseProperty, IBaseRow } from "@/ee/base/types/base.types";
+import { forwardRef } from "react";
 import { getDescriptor } from "@/ee/base/property-types/property-type.registry";
-import { FieldText } from "./field-text";
+import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { IBaseProperty, IBaseRow } from "@/ee/base/types/base.types";
+import { FieldCellAdapter } from "./field-cell-adapter";
+import { FieldChoice } from "./field-choice";
+import { FieldDate } from "./field-date";
 import { FieldLongText } from "./field-long-text";
 import { FieldNumber } from "./field-number";
-import { FieldDate } from "./field-date";
-import { FieldChoice } from "./field-choice";
-import { FieldCellAdapter } from "./field-cell-adapter";
-import classes from "@/ee/base/styles/row-detail-modal.module.css";
+import { FieldText } from "./field-text";
 
 export type FieldProps = {
   property: IBaseProperty;
@@ -35,12 +35,19 @@ type FieldShellProps = {
 // ref injected into this element; without it the picker renders at (0,0).
 export const FieldShell = forwardRef<HTMLDivElement, FieldShellProps>(
   function FieldShell(
-    { cursor = "default", active, locked, alignTop, className, children, ...rest },
-    ref,
+    {
+      cursor = "default",
+      active,
+      locked,
+      alignTop,
+      className,
+      children,
+      ...rest
+    },
+    ref
   ) {
     return (
       <div
-        ref={ref}
         className={clsx(
           classes.fieldShell,
           cursor === "text" && classes.fieldShellText,
@@ -48,15 +55,16 @@ export const FieldShell = forwardRef<HTMLDivElement, FieldShellProps>(
           active && classes.fieldShellActive,
           locked && classes.fieldShellLocked,
           alignTop && classes.fieldShellTop,
-          className,
+          className
         )}
+        ref={ref}
         {...rest}
       >
-        {locked && <IconLock size={13} className={classes.fieldLockIcon} />}
+        {locked && <IconLock className={classes.fieldLockIcon} size={13} />}
         {children}
       </div>
     );
-  },
+  }
 );
 
 function FieldCheckbox({ value, readOnly, onChange }: FieldProps) {
@@ -64,10 +72,10 @@ function FieldCheckbox({ value, readOnly, onChange }: FieldProps) {
   return (
     <FieldShell>
       <Checkbox
-        size="sm"
         checked={checked}
         disabled={readOnly}
         onChange={() => onChange(!checked)}
+        size="sm"
       />
     </FieldShell>
   );
@@ -80,14 +88,14 @@ function FieldReadonlyCell({ property, value, rowId }: FieldProps) {
       <div className={classes.fieldCellDisplay}>
         {CellComponent && (
           <CellComponent
-            value={value}
-            property={property}
-            rowId={rowId}
             isEditing={false}
-            readOnly
+            onCancel={() => {}}
             onCommit={() => {}}
             onValueChange={() => {}}
-            onCancel={() => {}}
+            property={property}
+            readOnly
+            rowId={rowId}
+            value={value}
           />
         )}
       </div>
@@ -103,18 +111,24 @@ type DetailFieldProps = {
   onEditingChange: (editing: boolean) => void;
 };
 
-export function DetailField({ property, row, readOnly, onUpdate, onEditingChange }: DetailFieldProps) {
+export function DetailField({
+  property,
+  row,
+  readOnly,
+  onUpdate,
+  onEditingChange,
+}: DetailFieldProps) {
   const descriptor = getDescriptor(property.type);
   const value = descriptor?.systemAccessor
     ? descriptor.systemAccessor(row)
     : (row.cells ?? {})[property.id];
   const fieldProps: FieldProps = {
-    property,
-    value,
-    rowId: row.id,
-    readOnly,
     onChange: (next: unknown) => onUpdate(property.id, next),
-    onEditingChange
+    onEditingChange,
+    property,
+    readOnly,
+    rowId: row.id,
+    value,
   };
 
   switch (property.type) {

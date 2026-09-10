@@ -1,17 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Popover, InputBase, Input } from "@mantine/core";
-import { IconX, IconChevronDown } from "@tabler/icons-react";
+import { Input, InputBase, Popover } from "@mantine/core";
+import { IconChevronDown, IconX } from "@tabler/icons-react";
 import clsx from "clsx";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CustomAvatar } from "@/components/ui/custom-avatar";
+import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
 import {
-  usePersonSearch,
   type PersonSuggestion,
+  usePersonSearch,
 } from "@/ee/base/hooks/use-person-search";
 import {
-  useReferenceStore,
   useHydrateUsers,
+  useReferenceStore,
 } from "@/ee/base/reference/reference-store";
-import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
-import { CustomAvatar } from "@/components/ui/custom-avatar";
 import cellClasses from "@/ee/base/styles/cells.module.css";
 
 type FilterPersonInputProps = {
@@ -26,8 +26,12 @@ type FilterPersonInputProps = {
 };
 
 function toIds(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((v): v is string => !!v);
-  if (typeof value === "string" && value) return [value];
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => !!v);
+  }
+  if (typeof value === "string" && value) {
+    return [value];
+  }
   return [];
 }
 
@@ -53,8 +57,11 @@ export function FilterPersonInput({
   const suggestions = usePersonSearch(search, opened);
 
   useEffect(() => {
-    if (opened) requestAnimationFrame(() => searchRef.current?.focus());
-    else setSearch("");
+    if (opened) {
+      requestAnimationFrame(() => searchRef.current?.focus());
+    } else {
+      setSearch("");
+    }
   }, [opened]);
 
   const filtered: PersonSuggestion[] = multiple
@@ -66,19 +73,23 @@ export function FilterPersonInput({
 
   const emit = useCallback(
     (nextIds: string[]) => {
-      if (multiple) onChange(nextIds.length > 0 ? nextIds : undefined);
-      else onChange(nextIds[0] ?? undefined);
+      if (multiple) {
+        onChange(nextIds.length > 0 ? nextIds : undefined);
+      } else {
+        onChange(nextIds[0] ?? undefined);
+      }
     },
-    [multiple, onChange],
+    [multiple, onChange]
   );
 
   const handleSelect = useCallback(
     (id: string) => {
       const picked = suggestions.find((s) => s.id === id);
-      if (picked)
+      if (picked) {
         hydrateUsers([
-          { id: picked.id, name: picked.name, avatarUrl: picked.avatarUrl },
+          { avatarUrl: picked.avatarUrl, id: picked.id, name: picked.name },
         ]);
+      }
       if (multiple) {
         emit(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
       } else {
@@ -87,12 +98,12 @@ export function FilterPersonInput({
       }
       setSearch("");
     },
-    [suggestions, hydrateUsers, multiple, ids, emit],
+    [suggestions, hydrateUsers, multiple, ids, emit]
   );
 
   const handleRemove = useCallback(
     (id: string) => emit(ids.filter((x) => x !== id)),
-    [emit, ids],
+    [emit, ids]
   );
 
   const handleKeyDown = useCallback(
@@ -103,9 +114,13 @@ export function FilterPersonInput({
         setOpened(false);
         return;
       }
-      if (handleNavKey(e)) return;
+      if (handleNavKey(e)) {
+        return;
+      }
       if (e.key === "Enter") {
-        if (activeIndex < 0 || activeIndex >= filtered.length) return;
+        if (activeIndex < 0 || activeIndex >= filtered.length) {
+          return;
+        }
         e.preventDefault();
         handleSelect(filtered[activeIndex].id);
         return;
@@ -115,32 +130,40 @@ export function FilterPersonInput({
         handleRemove(ids[ids.length - 1]);
       }
     },
-    [handleNavKey, activeIndex, filtered, handleSelect, search, ids, handleRemove],
+    [
+      handleNavKey,
+      activeIndex,
+      filtered,
+      handleSelect,
+      search,
+      ids,
+      handleRemove,
+    ]
   );
 
   return (
     <Popover
-      opened={opened}
+      closeOnClickOutside
+      closeOnEscape={false}
       onChange={setOpened}
+      opened={opened}
+      portalProps={{ target: portalTarget ?? undefined }}
       position="bottom-start"
       width={260}
       withinPortal={!!portalTarget}
-      portalProps={{ target: portalTarget ?? undefined }}
-      closeOnEscape={false}
-      closeOnClickOutside
     >
       <Popover.Target>
         <InputBase
           component="button"
-          type="button"
-          size="xs"
-          pointer
-          multiline
-          w={w ?? 170}
           label={label}
+          multiline
+          onClick={() => setOpened((o) => !o)}
+          pointer
           rightSection={<IconChevronDown size={14} />}
           rightSectionPointerEvents="none"
-          onClick={() => setOpened((o) => !o)}
+          size="xs"
+          type="button"
+          w={w ?? 170}
         >
           {ids.length === 0 ? (
             <Input.Placeholder>{placeholder}</Input.Placeholder>
@@ -150,12 +173,12 @@ export function FilterPersonInput({
                 const user = store.users[id];
                 const name = user?.name ?? id.substring(0, 8);
                 return (
-                  <span key={id} className={cellClasses.filterTriggerChip}>
+                  <span className={cellClasses.filterTriggerChip} key={id}>
                     <CustomAvatar
                       avatarUrl={user?.avatarUrl ?? ""}
                       name={name}
-                      size={16}
                       radius="xl"
+                      size={16}
                     />
                     <span className={cellClasses.filterTriggerChipName}>
                       {name}
@@ -174,21 +197,21 @@ export function FilterPersonInput({
               const user = store.users[id];
               const name = user?.name ?? id.substring(0, 8);
               return (
-                <span key={id} className={cellClasses.personTag}>
+                <span className={cellClasses.personTag} key={id}>
                   <CustomAvatar
                     avatarUrl={user?.avatarUrl ?? ""}
                     name={name}
-                    size={18}
                     radius="xl"
+                    size={18}
                   />
                   <span className={cellClasses.personTagName}>{name}</span>
                   <button
-                    type="button"
                     className={cellClasses.personTagRemove}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemove(id);
                     }}
+                    type="button"
                   >
                     <IconX size={10} />
                   </button>
@@ -196,33 +219,33 @@ export function FilterPersonInput({
               );
             })}
           <input
-            ref={searchRef}
             className={cellClasses.personTagInput}
-            placeholder="Find a user..."
-            value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
+            placeholder="Find a user..."
+            ref={searchRef}
+            value={search}
           />
         </div>
         <div className={cellClasses.personDropdownDivider} />
         <div className={cellClasses.selectDropdown}>
           {filtered.map((member, idx) => (
             <div
-              key={member.id}
-              ref={setOptionRef(idx)}
               className={clsx(
                 cellClasses.selectOption,
                 selectedSet.has(member.id) && cellClasses.selectOptionActive,
-                idx === activeIndex && cellClasses.selectOptionKeyboardActive,
+                idx === activeIndex && cellClasses.selectOptionKeyboardActive
               )}
-              onMouseEnter={() => setActiveIndex(idx)}
+              key={member.id}
               onClick={() => handleSelect(member.id)}
+              onMouseEnter={() => setActiveIndex(idx)}
+              ref={setOptionRef(idx)}
             >
               <CustomAvatar
                 avatarUrl={member.avatarUrl ?? ""}
                 name={member.name ?? ""}
-                size={24}
                 radius="xl"
+                size={24}
               />
               <div className={cellClasses.personOptionText}>
                 <span className={cellClasses.personOptionName}>

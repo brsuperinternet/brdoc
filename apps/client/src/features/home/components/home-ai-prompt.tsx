@@ -1,12 +1,12 @@
 import { useAtomValue } from "jotai";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
+import { useNavigate } from "react-router-dom";
 import ChatInput from "@/ee/ai-chat/components/chat-input";
 import type {
   ChatAttachment,
   PageMention,
 } from "@/ee/ai-chat/types/ai-chat.types";
+import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import classes from "./home-ai-prompt.module.css";
 
 export type HomeAiPromptInitialState = {
@@ -21,18 +21,22 @@ export default function HomeAiPrompt() {
   const workspace = useAtomValue(workspaceAtom);
 
   const aiChatEnabled = workspace?.settings?.ai?.chat === true;
-  if (!aiChatEnabled) return null;
+  if (!aiChatEnabled) {
+    return null;
+  }
 
   const handleSend = (
     content: string,
     mentions: PageMention[],
-    attachments: ChatAttachment[],
+    attachments: ChatAttachment[]
   ) => {
-    if (!content.trim() && attachments.length === 0) return;
+    if (!content.trim() && attachments.length === 0) {
+      return;
+    }
     const state: HomeAiPromptInitialState = {
+      initialAttachments: attachments,
       initialContent: content,
       initialMentions: mentions,
-      initialAttachments: attachments,
     };
     navigate("/ai", { state });
   };
@@ -48,11 +52,11 @@ export default function HomeAiPrompt() {
 
       <div className={classes.inputContainer}>
         <ChatInput
+          autofocus={false}
           isStreaming={false}
           onSend={handleSend}
           onStop={() => {}}
           placeholder={t("Ask anything... Use @ to mention pages")}
-          autofocus={false}
         />
       </div>
     </div>

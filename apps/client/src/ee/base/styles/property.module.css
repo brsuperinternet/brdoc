@@ -1,21 +1,21 @@
 .alphabetizeBtn {
   display: flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
 }
 
 .addOptionBtn {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   padding: 4px 0;
 }
 
 .dragHandle {
-  flex-shrink: 0;
-  cursor: grab;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
+  cursor: grab;
 }
 
 .chevronBack {

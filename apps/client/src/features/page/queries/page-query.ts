@@ -1,53 +1,53 @@
+import { notifications } from "@mantine/notifications";
 import {
   InfiniteData,
+  keepPreviousData,
   QueryKey,
-  useInfiniteQuery,
   UseInfiniteQueryResult,
+  UseQueryResult,
+  useInfiniteQuery,
   useMutation,
   useQuery,
-  UseQueryResult,
-  keepPreviousData,
 } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { validate as isValidUuid } from "uuid";
 import {
   createPage,
   deletePage,
-  getPageById,
-  getSidebarPages,
-  updatePage,
-  movePage,
-  getPageBreadcrumbs,
-  getRecentChanges,
-  getCreatedByPages,
   getAllSidebarPages,
+  getCreatedByPages,
   getDeletedPages,
+  getPageBreadcrumbs,
+  getPageById,
+  getRecentChanges,
+  getSidebarPages,
+  movePage,
   restorePage,
+  updatePage,
 } from "@/features/page/services/page-service";
+import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom";
+import { treeModel } from "@/features/page/tree/model/tree-model";
+import { SpaceTreeNode } from "@/features/page/tree/types";
+import { buildTree } from "@/features/page/tree/utils";
 import {
   IMovePage,
   IPage,
   IPageInput,
   SidebarPagesParams,
 } from "@/features/page/types/page.types";
-import { notifications } from "@mantine/notifications";
+import { useQueryEmit } from "@/features/websocket/use-query-emit";
 import { IPagination, QueryParams } from "@/lib/types.ts";
 import { queryClient } from "@/main.tsx";
-import { buildTree } from "@/features/page/tree/utils";
-import { useEffect } from "react";
-import { validate as isValidUuid } from "uuid";
-import { useTranslation } from "react-i18next";
-import { useAtom } from "jotai";
-import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom";
-import { treeModel } from "@/features/page/tree/model/tree-model";
-import { SpaceTreeNode } from "@/features/page/tree/types";
-import { useQueryEmit } from "@/features/websocket/use-query-emit";
 
 export function usePageQuery(
-  pageInput: Partial<IPageInput>,
+  pageInput: Partial<IPageInput>
 ): UseQueryResult<IPage, Error> {
   const query = useQuery({
-    queryKey: ["pages", pageInput.pageId],
-    queryFn: () => getPageById(pageInput),
     enabled: !!pageInput.pageId,
+    queryFn: () => getPageById(pageInput),
+    queryKey: ["pages", pageInput.pageId],
     staleTime: 5 * 60 * 1000,
   });
 
@@ -68,11 +68,11 @@ export function useCreatePageMutation() {
   const { t } = useTranslation();
   return useMutation<IPage, Error, Partial<IPageInput>>({
     mutationFn: (data) => createPage(data),
+    onError: (error) => {
+      notifications.show({ color: "red", message: t("Failed to create page") });
+    },
     onSuccess: (data) => {
       invalidateOnCreatePage(data);
-    },
-    onError: (error) => {
-      notifications.show({ message: t("Failed to create page"), color: "red" });
     },
   });
 }
@@ -97,7 +97,7 @@ export function updatePageData(data: IPage) {
     data.parentPageId,
     data.id,
     data.title,
-    data.icon,
+    data.icon
   );
 }
 
@@ -120,6 +120,9 @@ export function useRemovePageMutation() {
   const { t } = useTranslation();
   return useMutation({
     mutationFn: (pageId: string) => deletePage(pageId, false),
+    onError: (error) => {
+      notifications.show({ color: "red", message: t("Failed to delete page") });
+    },
     onSuccess: (_, pageId) => {
       notifications.show({ message: t("Page moved to trash") });
 
@@ -137,9 +140,6 @@ export function useRemovePageMutation() {
           ["trash-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
-      notifications.show({ message: t("Failed to delete page"), color: "red" });
-    },
   });
 }
 
@@ -147,6 +147,11 @@ export function useDeletePageMutation() {
   const { t } = useTranslation();
   return useMutation({
     mutationFn: (pageId: string) => deletePage(pageId, true),
+    onError: (error) => {
+      const message =
+        error["response"]?.data?.message || t("Failed to delete page");
+      notifications.show({ color: "red", message });
+    },
     onSuccess: (data, pageId) => {
       notifications.show({ message: t("Page deleted successfully") });
       invalidateOnDeletePage(pageId);
@@ -156,11 +161,6 @@ export function useDeletePageMutation() {
         predicate: (item) =>
           ["trash-list"].includes(item.queryKey[0] as string),
       });
-    },
-    onError: (error) => {
-      const message =
-        error["response"]?.data?.message || t("Failed to delete page");
-      notifications.show({ message, color: "red" });
     },
   });
 }
@@ -178,6 +178,12 @@ export function useRestorePageMutation() {
 
   return useMutation({
     mutationFn: (pageId: string) => restorePage(pageId),
+    onError: (error) => {
+      notifications.show({
+        color: "red",
+        message: t("Failed to restore page"),
+      });
+    },
     onSuccess: async (restoredPage) => {
       notifications.show({ message: t("Page restored successfully") });
 
@@ -185,16 +191,16 @@ export function useRestorePageMutation() {
       if (!treeModel.find(treeData, restoredPage.id)) {
         // Create the tree node data with hasChildren from backend
         const nodeData: SpaceTreeNode = {
-          id: restoredPage.id,
-          slugId: restoredPage.slugId,
-          name: restoredPage.title || "Untitled",
-          icon: restoredPage.icon,
-          position: restoredPage.position,
-          spaceId: restoredPage.spaceId,
-          parentPageId: restoredPage.parentPageId,
-          hasChildren: restoredPage.hasChildren || false,
-          isBase: restoredPage.isBase,
           children: [],
+          hasChildren: restoredPage.hasChildren,
+          icon: restoredPage.icon,
+          id: restoredPage.id,
+          isBase: restoredPage.isBase,
+          name: restoredPage.title || "Untitled",
+          parentPageId: restoredPage.parentPageId,
+          position: restoredPage.position,
+          slugId: restoredPage.slugId,
+          spaceId: restoredPage.spaceId,
         };
 
         // Determine the parent and index
@@ -218,12 +224,12 @@ export function useRestorePageMutation() {
         setTimeout(() => {
           emit({
             operation: "addTreeNode",
-            spaceId: restoredPage.spaceId,
             payload: {
-              parentId,
-              index,
               data: nodeData,
+              index,
+              parentId,
             },
+            spaceId: restoredPage.spaceId,
           });
         }, 50);
       }
@@ -242,52 +248,47 @@ export function useRestorePageMutation() {
       queryClient.setQueryData<IPage>(["pages", restoredPage.id], merge);
       queryClient.setQueryData<IPage>(["pages", restoredPage.slugId], merge);
     },
-    onError: (error) => {
-      notifications.show({ message: t("Failed to restore page"), color: "red" });
-    },
   });
 }
 
 export function useGetSidebarPagesQuery(
-  data: SidebarPagesParams | null,
+  data: SidebarPagesParams | null
 ): UseInfiniteQueryResult<InfiniteData<IPagination<IPage>, unknown>> {
   return useInfiniteQuery({
-    queryKey: ["sidebar-pages", data],
     enabled: !!data?.pageId || !!data?.spaceId,
-    queryFn: ({ pageParam }) => getSidebarPages({ ...data, cursor: pageParam, limit: 100 }),
+    getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
     initialPageParam: undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta?.nextCursor ?? undefined,
+    queryFn: ({ pageParam }) =>
+      getSidebarPages({ ...data, cursor: pageParam, limit: 100 }),
+    queryKey: ["sidebar-pages", data],
   });
 }
 
 export function useGetRootSidebarPagesQuery(data: SidebarPagesParams) {
   return useInfiniteQuery({
-    queryKey: ["root-sidebar-pages", data.spaceId],
-    queryFn: async ({ pageParam }) => {
-      return getSidebarPages({ spaceId: data.spaceId, cursor: pageParam, limit: 100 });
-    },
+    getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
     initialPageParam: undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta?.nextCursor ?? undefined,
+    queryFn: async ({ pageParam }) =>
+      getSidebarPages({ cursor: pageParam, limit: 100, spaceId: data.spaceId }),
+    queryKey: ["root-sidebar-pages", data.spaceId],
   });
 }
 
 export function usePageBreadcrumbsQuery(
-  pageId: string,
+  pageId: string
 ): UseQueryResult<Partial<IPage[]>, Error> {
   return useQuery({
-    queryKey: ["breadcrumbs", pageId],
-    queryFn: () => getPageBreadcrumbs(pageId),
     enabled: !!pageId,
+    queryFn: () => getPageBreadcrumbs(pageId),
+    queryKey: ["breadcrumbs", pageId],
   });
 }
 
 export async function fetchAllAncestorChildren(params: SidebarPagesParams) {
   // not using a hook here, so we can call it inside a useEffect hook
   const response = await queryClient.fetchQuery({
-    queryKey: ["sidebar-pages", params],
     queryFn: () => getAllSidebarPages(params),
+    queryKey: ["sidebar-pages", params],
     staleTime: 30 * 60 * 1000,
   });
 
@@ -297,37 +298,41 @@ export async function fetchAllAncestorChildren(params: SidebarPagesParams) {
 
 export function useRecentChangesQuery(spaceId?: string) {
   return useInfiniteQuery({
-    queryKey: ["recent-changes", spaceId],
-    queryFn: ({ pageParam }) =>
-      getRecentChanges({ spaceId, cursor: pageParam, limit: 15 }),
-    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.nextCursor : undefined,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      getRecentChanges({ cursor: pageParam, limit: 15, spaceId }),
+    queryKey: ["recent-changes", spaceId],
     refetchOnMount: true,
   });
 }
 
-export function useCreatedByQuery(params?: { userId?: string; spaceId?: string }) {
+export function useCreatedByQuery(params?: {
+  userId?: string;
+  spaceId?: string;
+}) {
   const { userId, spaceId } = params ?? {};
   return useInfiniteQuery({
-    queryKey: ["pages-created-by-user", { userId, spaceId }],
-    queryFn: ({ pageParam }) => getCreatedByPages({ userId, spaceId, cursor: pageParam, limit: 15 }),
-    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.nextCursor : undefined,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      getCreatedByPages({ cursor: pageParam, limit: 15, spaceId, userId }),
+    queryKey: ["pages-created-by-user", { spaceId, userId }],
     refetchOnMount: true,
   });
 }
 
 export function useDeletedPagesQuery(
   spaceId: string,
-  params?: QueryParams,
+  params?: QueryParams
 ): UseQueryResult<IPagination<IPage>, Error> {
   return useQuery({
-    queryKey: ["trash-list", spaceId, params],
-    queryFn: () => getDeletedPages(spaceId, params),
     enabled: !!spaceId,
     placeholderData: keepPreviousData,
+    queryFn: () => getDeletedPages(spaceId, params),
+    queryKey: ["trash-list", spaceId, params],
     refetchOnMount: true,
     staleTime: 0,
   });
@@ -335,7 +340,7 @@ export function useDeletedPagesQuery(
 
 function getChildrenCacheKeys(
   parentPageId: string | null,
-  spaceId: string,
+  spaceId: string
 ): QueryKey[] {
   if (parentPageId === null) {
     return [["root-sidebar-pages", spaceId]];
@@ -367,7 +372,9 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
     queryClient.setQueryData<InfiniteData<IPagination<Partial<IPage>>>>(
       queryKey,
       (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
         return {
           ...old,
           pages: old.pages.map((page, index) => {
@@ -380,7 +387,7 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
             return page;
           }),
         };
-      },
+      }
     );
   });
 
@@ -388,13 +395,15 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
   if (data.parentPageId !== null) {
     //update sub sidebar pages haschildern
     const subSideBarMatches = queryClient.getQueriesData({
-      queryKey: ["sidebar-pages"],
       exact: false,
+      queryKey: ["sidebar-pages"],
     });
 
     subSideBarMatches.forEach(([key, d]) => {
       queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
         return {
           ...old,
           pages: old.pages.map((page) => ({
@@ -402,7 +411,7 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
             items: page.items.map((sidebarPage: IPage) =>
               sidebarPage.id === data.parentPageId
                 ? { ...sidebarPage, hasChildren: true }
-                : sidebarPage,
+                : sidebarPage
             ),
           })),
         };
@@ -411,13 +420,15 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
 
     //update root sidebar pages haschildern
     const rootSideBarMatches = queryClient.getQueriesData({
-      queryKey: ["root-sidebar-pages", data.spaceId],
       exact: false,
+      queryKey: ["root-sidebar-pages", data.spaceId],
     });
 
     rootSideBarMatches.forEach(([key, d]) => {
       queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
         return {
           ...old,
           pages: old.pages.map((page) => ({
@@ -425,7 +436,7 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
             items: page.items.map((sidebarPage: IPage) =>
               sidebarPage.id === data.parentPageId
                 ? { ...sidebarPage, hasChildren: true }
-                : sidebarPage,
+                : sidebarPage
             ),
           })),
         };
@@ -444,14 +455,16 @@ export function invalidateOnUpdatePage(
   parentPageId: string,
   id: string,
   title: string,
-  icon: string,
+  icon: string
 ) {
   //update all sidebar pages
   getChildrenCacheKeys(parentPageId, spaceId).forEach((queryKey) => {
     queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(
       queryKey,
       (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
         return {
           ...old,
           pages: old.pages.map((page) => ({
@@ -460,14 +473,14 @@ export function invalidateOnUpdatePage(
               sidebarPage.id === id
                 ? {
                     ...sidebarPage,
-                    ...(title !== undefined ? { title } : {}),
-                    ...(icon !== undefined ? { icon } : {}),
+                    ...(title === undefined ? {} : { title }),
+                    ...(icon === undefined ? {} : { icon }),
                   }
-                : sidebarPage,
+                : sidebarPage
             ),
           })),
         };
-      },
+      }
     );
   });
 
@@ -482,14 +495,16 @@ export function updateCacheOnMovePage(
   pageId: string,
   oldParentId: string | null,
   newParentId: string | null,
-  pageData: Partial<IPage>,
+  pageData: Partial<IPage>
 ) {
   // Remove page from old parent's cache
   getChildrenCacheKeys(oldParentId, spaceId).forEach((oldQueryKey) => {
     queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(
       oldQueryKey,
       (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
         return {
           ...old,
           pages: old.pages.map((page) => ({
@@ -497,7 +512,7 @@ export function updateCacheOnMovePage(
             items: page.items.filter((item) => item.id !== pageId),
           })),
         };
-      },
+      }
     );
   });
 
@@ -522,7 +537,9 @@ export function updateCacheOnMovePage(
         queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(
           key,
           (old) => {
-            if (!old) return old;
+            if (!old) {
+              return old;
+            }
             return {
               ...old,
               pages: old.pages.map((page) => ({
@@ -530,11 +547,11 @@ export function updateCacheOnMovePage(
                 items: page.items.map((item) =>
                   item.id === oldParentId
                     ? { ...item, hasChildren: false }
-                    : item,
+                    : item
                 ),
               })),
             };
-          },
+          }
         );
       });
     }
@@ -545,13 +562,17 @@ export function updateCacheOnMovePage(
     queryClient.setQueryData<InfiniteData<IPagination<Partial<IPage>>>>(
       newQueryKey,
       (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
 
         // Check if page already exists in new location
         const exists = old.pages.some((page) =>
-          page.items.some((item) => item.id === pageId),
+          page.items.some((item) => item.id === pageId)
         );
-        if (exists) return old;
+        if (exists) {
+          return old;
+        }
 
         return {
           ...old,
@@ -565,7 +586,7 @@ export function updateCacheOnMovePage(
             return page;
           }),
         };
-      },
+      }
     );
   });
 
@@ -579,13 +600,15 @@ export function updateCacheOnMovePage(
 
     allSideBarMatches.forEach(([key]) => {
       queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
         return {
           ...old,
           pages: old.pages.map((page) => ({
             ...page,
             items: page.items.map((item) =>
-              item.id === newParentId ? { ...item, hasChildren: true } : item,
+              item.id === newParentId ? { ...item, hasChildren: true } : item
             ),
           })),
         };
@@ -604,13 +627,15 @@ export function invalidateOnDeletePage(pageId: string) {
 
   allSideBarMatches.forEach(([key, d]) => {
     queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
-      if (!old) return old;
+      if (!old) {
+        return old;
+      }
       return {
         ...old,
         pages: old.pages.map((page) => ({
           ...page,
           items: page.items.filter(
-            (sidebarPage: IPage) => sidebarPage.id !== pageId,
+            (sidebarPage: IPage) => sidebarPage.id !== pageId
           ),
         })),
       };

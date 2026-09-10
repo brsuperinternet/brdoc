@@ -1,4 +1,4 @@
-import { Group, Button, Tooltip } from "@mantine/core";
+import { Button, Group, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 type BaseViewDraftBannerProps = {
@@ -17,10 +17,12 @@ export function BaseViewDraftBanner({
   saving,
 }: BaseViewDraftBannerProps) {
   const { t } = useTranslation();
-  if (!isDirty) return null;
+  if (!isDirty) {
+    return null;
+  }
   return (
-    <Group justify="flex-end" gap="xs" px="md" py={6} wrap="nowrap">
-      <Button variant="subtle" color="gray" size="xs" onClick={onReset}>
+    <Group gap="xs" justify="flex-end" px="md" py={6} wrap="nowrap">
+      <Button color="gray" onClick={onReset} size="xs" variant="subtle">
         {t("Reset")}
       </Button>
       {canSave && (
@@ -30,11 +32,11 @@ export function BaseViewDraftBanner({
           withArrow
         >
           <Button
-            variant="light"
             color="orange"
-            size="xs"
-            onClick={onSave}
             loading={saving}
+            onClick={onSave}
+            size="xs"
+            variant="light"
           >
             {t("Save for everyone")}
           </Button>

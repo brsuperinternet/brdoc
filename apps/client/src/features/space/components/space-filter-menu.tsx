@@ -1,19 +1,19 @@
-import { ReactNode, useMemo, useState } from "react";
 import {
   Avatar,
   Divider,
   Group,
+  getDefaultZIndex,
   Menu,
   ScrollArea,
   Text,
   TextInput,
-  getDefaultZIndex,
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { IconCheck, IconSearch } from "@tabler/icons-react";
+import { ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetSpacesQuery } from "@/features/space/queries/space-query";
 import { RadioMenuItem } from "@/components/ui/radio-menu-item";
+import { useGetSpacesQuery } from "@/features/space/queries/space-query";
 
 type SpaceFilterMenuProps = {
   value: string | null;
@@ -49,53 +49,59 @@ export function SpaceFilterMenu({
   const spaces = spacesData?.items ?? [];
 
   const orderedSpaces = useMemo(() => {
-    if (!value) return spaces;
+    if (!value) {
+      return spaces;
+    }
     return [...spaces].sort((a, b) => {
-      if (a.id === value) return -1;
-      if (b.id === value) return 1;
+      if (a.id === value) {
+        return -1;
+      }
+      if (b.id === value) {
+        return 1;
+      }
       return 0;
     });
   }, [spaces, value]);
 
   return (
-    <Menu shadow="md" width={width} position={position} zIndex={zIndex}>
+    <Menu position={position} shadow="md" width={width} zIndex={zIndex}>
       <Menu.Target>{children}</Menu.Target>
       <Menu.Dropdown>
         <TextInput
-          placeholder={t("Find a space")}
-          data-autofocus
           autoFocus
+          data-autofocus
           leftSection={<IconSearch size={16} />}
-          value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          size="sm"
-          variant="filled"
+          placeholder={t("Find a space")}
           radius="sm"
+          size="sm"
           styles={{ input: { marginBottom: 8 } }}
+          value={searchQuery}
+          variant="filled"
         />
 
         <ScrollArea.Autosize mah={280}>
           <Menu.Item
-            component={RadioMenuItem}
             aria-checked={!value}
+            component={RadioMenuItem}
             onClick={() => onChange(null)}
           >
             <Group flex="1" gap="xs">
               <Avatar
                 color="initials"
-                variant="filled"
                 name={t("All spaces")}
                 size={20}
+                variant="filled"
               />
               <div style={{ flex: 1 }}>
-                <Text size="sm" fw={500}>
+                <Text fw={500} size="sm">
                   {t("All spaces")}
                 </Text>
-                <Text size="xs" c="dimmed">
+                <Text c="dimmed" size="xs">
                   {t("Search in all your spaces")}
                 </Text>
               </div>
-              {!value && <IconCheck size={20} aria-hidden />}
+              {!value && <IconCheck aria-hidden size={20} />}
             </Group>
           </Menu.Item>
 
@@ -103,22 +109,22 @@ export function SpaceFilterMenu({
 
           {orderedSpaces.map((space) => (
             <Menu.Item
-              key={space.id}
-              component={RadioMenuItem}
               aria-checked={value === space.id}
+              component={RadioMenuItem}
+              key={space.id}
               onClick={() => onChange(space.id)}
             >
               <Group flex="1" gap="xs">
                 <Avatar
                   color="initials"
-                  variant="filled"
                   name={space.name}
                   size={20}
+                  variant="filled"
                 />
-                <Text size="sm" fw={500} style={{ flex: 1 }} truncate>
+                <Text fw={500} size="sm" style={{ flex: 1 }} truncate>
                   {space.name}
                 </Text>
-                {value === space.id && <IconCheck size={20} aria-hidden />}
+                {value === space.id && <IconCheck aria-hidden size={20} />}
               </Group>
             </Menu.Item>
           ))}

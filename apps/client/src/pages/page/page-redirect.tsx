@@ -1,9 +1,9 @@
-import { useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
-import { usePageQuery } from "@/features/page/queries/page-query";
-import { buildPageUrl } from "@/features/page/page.utils.ts";
-import { extractPageSlugId } from "@/lib";
+import { useNavigate, useParams } from "react-router-dom";
 import { Error404 } from "@/components/ui/error-404.tsx";
+import { buildPageUrl } from "@/features/page/page.utils.ts";
+import { usePageQuery } from "@/features/page/queries/page-query";
+import { extractPageSlugId } from "@/lib";
 
 export default function PageRedirect() {
   const { pageSlug } = useParams();

@@ -1,20 +1,20 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { Popover, ActionIcon, Text, Tooltip } from "@mantine/core";
+import { Popover, Text, Tooltip } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
+import { IconFileDescription, IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { IconX, IconFileDescription } from "@tabler/icons-react";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import clsx from "clsx";
-import { IBaseProperty } from "@/ee/base/types/base.types";
-import { useResolvePage } from "@/ee/base/reference/reference-store";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
 import { useBaseQuery } from "@/ee/base/queries/base-query";
-import { searchSuggestions } from "@/features/search/services/search-service";
+import { useResolvePage } from "@/ee/base/reference/reference-store";
+import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
 import { usePageQuery } from "@/features/page/queries/page-query";
+import { searchSuggestions } from "@/features/search/services/search-service";
 import { extractPageSlugId } from "@/lib";
-import { useListKeyboardNav } from "@/ee/base/hooks/use-list-keyboard-nav";
-import cellClasses from "@/ee/base/styles/cells.module.css";
 
 type CellPageProps = {
   value: unknown;
@@ -35,13 +35,17 @@ type PageSuggestion = {
 };
 
 function parsePageId(value: unknown): string | null {
-  if (typeof value === "string" && value.length > 0) return value;
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
   return null;
 }
 
 function parsePastedPageSlugId(input: string): string | null {
   const trimmed = input.trim();
-  if (!trimmed) return null;
+  if (!trimmed) {
+    return null;
+  }
   let path = trimmed;
   if (/^https?:\/\//i.test(trimmed)) {
     try {
@@ -51,7 +55,9 @@ function parsePastedPageSlugId(input: string): string | null {
     }
   }
   const match = path.match(/\/p\/([^/?#]+)/);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
   return extractPageSlugId(match[1]) ?? null;
 }
 
@@ -70,11 +76,11 @@ export function CellPage({
   if (isEditing) {
     return (
       <PagePicker
+        onCancel={onCancel}
+        onCommit={onCommit}
         pageId={pageId}
         resolvedPage={resolvedPage ?? null}
         spaceId={base?.spaceId}
-        onCommit={onCommit}
-        onCancel={onCancel}
       />
     );
   }
@@ -114,17 +120,20 @@ function PagePill({ page }: { page: PillPage }) {
   const url = buildPageUrl(spaceSlug, page.slugId, title);
 
   return (
-    <Tooltip label={title} withinPortal openDelay={400} disabled={!title}>
+    <Tooltip disabled={!title} label={title} openDelay={400} withinPortal>
       <Link
-        to={url}
         className={cellClasses.pagePill}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
+        to={url}
       >
         {page.icon ? (
           <span className={cellClasses.pagePillIcon}>{page.icon}</span>
         ) : (
-          <IconFileDescription size={14} className={cellClasses.pagePillIconFallback} />
+          <IconFileDescription
+            className={cellClasses.pagePillIconFallback}
+            size={14}
+          />
         )}
         <span className={cellClasses.pagePillText}>{title}</span>
       </Link>
@@ -134,7 +143,13 @@ function PagePill({ page }: { page: PillPage }) {
 
 type PagePickerProps = {
   pageId: string | null;
-  resolvedPage: { id: string; slugId: string; title: string | null; icon: string | null; space: { id: string; slug: string; name: string } | null } | null;
+  resolvedPage: {
+    id: string;
+    slugId: string;
+    title: string | null;
+    icon: string | null;
+    space: { id: string; slug: string; name: string } | null;
+  } | null;
   spaceId?: string;
   onCommit: (value: unknown) => void;
   onCancel: () => void;
@@ -160,27 +175,27 @@ function PagePicker({
 
   const pastedSlugId = useMemo(
     () => parsePastedPageSlugId(debouncedSearch),
-    [debouncedSearch],
+    [debouncedSearch]
   );
 
   const { data: suggestions = [] } = useQuery({
-    queryKey: ["bases", "pages", "search", trimmed, spaceId ?? ""],
+    enabled: !pastedSlugId,
     queryFn: async () => {
       const res = await searchSuggestions({
-        query: trimmed,
         includePages: true,
-        spaceId,
         limit: trimmed ? 25 : 5,
+        query: trimmed,
+        spaceId,
       });
       return (res.pages ?? []) as PageSuggestion[];
     },
-    enabled: !pastedSlugId,
+    queryKey: ["bases", "pages", "search", trimmed, spaceId ?? ""],
     staleTime: 15_000,
   });
 
   // Once the pasted link resolves via slugId lookup, commit and close.
   const { data: linkedPage, isFetching: resolvingLink } = usePageQuery(
-    pastedSlugId ? { pageId: pastedSlugId } : {},
+    pastedSlugId ? { pageId: pastedSlugId } : {}
   );
   const linkedRef = useRef(false);
   useEffect(() => {
@@ -201,7 +216,7 @@ function PagePicker({
     (id: string) => {
       onCommit(id === pageId ? null : id);
     },
-    [pageId, onCommit],
+    [pageId, onCommit]
   );
 
   const handleRemove = useCallback(() => {
@@ -215,33 +230,43 @@ function PagePicker({
         onCancel();
         return;
       }
-      if (handleNavKey(e)) return;
+      if (handleNavKey(e)) {
+        return;
+      }
       if (e.key === "Enter") {
-        if (activeIndex < 0 || activeIndex >= suggestions.length) return;
+        if (activeIndex < 0 || activeIndex >= suggestions.length) {
+          return;
+        }
         e.preventDefault();
         handleSelect(suggestions[activeIndex].id);
       }
     },
-    [onCancel, handleNavKey, activeIndex, suggestions, handleSelect],
+    [onCancel, handleNavKey, activeIndex, suggestions, handleSelect]
   );
 
   return (
     <Popover
-      opened
-      onChange={(o) => {
-        if (!o) onCancel();
-      }}
-      onClose={onCancel}
-      position="bottom-start"
-      width={320}
-      trapFocus
       closeOnClickOutside
       closeOnEscape
       hideDetached={false}
+      onChange={(o) => {
+        if (!o) {
+          onCancel();
+        }
+      }}
+      onClose={onCancel}
+      opened
+      position="bottom-start"
+      trapFocus
+      width={320}
     >
       <Popover.Target>
         <div className={cellClasses.popoverTarget}>
-          {resolvedPage ? <PagePill page={resolvedPage} /> : <span className={cellClasses.emptyValue} />}
+          {resolvedPage ? (
+            <PagePill page={resolvedPage} />
+          ) : (
+            <span className={cellClasses.emptyValue} />
+          )}
         </div>
       </Popover.Target>
       <Popover.Dropdown p={0}>
@@ -252,33 +277,33 @@ function PagePicker({
                 <span>{resolvedPage.icon}</span>
               ) : (
                 <IconFileDescription
-                  size={14}
                   color="var(--mantine-color-dimmed)"
+                  size={14}
                 />
               )}
               <span className={cellClasses.personTagName}>
                 {getPageTitle(resolvedPage.title, undefined, t)}
               </span>
               <button
-                type="button"
                 className={cellClasses.personTagRemove}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemove();
                 }}
+                type="button"
               >
                 <IconX size={10} />
               </button>
             </span>
           )}
           <input
-            ref={searchRef}
             className={cellClasses.personTagInput}
-            placeholder={pageId ? "" : "Search for a page..."}
-            value={search}
+            data-autofocus
             onChange={(e) => setSearch(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
-            data-autofocus
+            placeholder={pageId ? "" : "Search for a page..."}
+            ref={searchRef}
+            value={search}
           />
         </div>
 
@@ -290,46 +315,47 @@ function PagePicker({
             </div>
           ) : (
             <>
-          {suggestions.length === 0 && (
-            <div className={cellClasses.personDropdownHint}>
-              {trimmed ? "No pages found" : "No pages yet"}
-            </div>
-          )}
-          {suggestions.map((page, idx) => {
-            const isSelected = page.id === pageId;
-            return (
-              <div
-                key={page.id}
-                ref={setOptionRef(idx)}
-                className={clsx(
-                  cellClasses.selectOption,
-                  isSelected && cellClasses.selectOptionActive,
-                  idx === activeIndex && cellClasses.selectOptionKeyboardActive,
-                )}
-                onMouseEnter={() => setActiveIndex(idx)}
-                onClick={() => handleSelect(page.id)}
-              >
-                {page.icon ? (
-                  <span>{page.icon}</span>
-                ) : (
-                  <IconFileDescription
-                    size={14}
-                    color="var(--mantine-color-dimmed)"
-                  />
-                )}
-                <div className={cellClasses.pageOptionText}>
-                  <span className={cellClasses.personOptionName}>
-                    {getPageTitle(page.title, undefined, t)}
-                  </span>
-                  {page.space?.name && (
-                    <Text size="xs" c="dimmed" truncate>
-                      {page.space.name}
-                    </Text>
-                  )}
+              {suggestions.length === 0 && (
+                <div className={cellClasses.personDropdownHint}>
+                  {trimmed ? "No pages found" : "No pages yet"}
                 </div>
-              </div>
-            );
-          })}
+              )}
+              {suggestions.map((page, idx) => {
+                const isSelected = page.id === pageId;
+                return (
+                  <div
+                    className={clsx(
+                      cellClasses.selectOption,
+                      isSelected && cellClasses.selectOptionActive,
+                      idx === activeIndex &&
+                        cellClasses.selectOptionKeyboardActive
+                    )}
+                    key={page.id}
+                    onClick={() => handleSelect(page.id)}
+                    onMouseEnter={() => setActiveIndex(idx)}
+                    ref={setOptionRef(idx)}
+                  >
+                    {page.icon ? (
+                      <span>{page.icon}</span>
+                    ) : (
+                      <IconFileDescription
+                        color="var(--mantine-color-dimmed)"
+                        size={14}
+                      />
+                    )}
+                    <div className={cellClasses.pageOptionText}>
+                      <span className={cellClasses.personOptionName}>
+                        {getPageTitle(page.title, undefined, t)}
+                      </span>
+                      {page.space?.name && (
+                        <Text c="dimmed" size="xs" truncate>
+                          {page.space.name}
+                        </Text>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </>
           )}
         </div>

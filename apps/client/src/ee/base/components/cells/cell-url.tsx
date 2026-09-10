@@ -1,8 +1,8 @@
-import { IBaseProperty } from "@/ee/base/types/base.types";
 import { sanitizeUrl } from "@docmost/editor-ext";
 import { Tooltip } from "@mantine/core";
 import { useEditableTextCell } from "@/ee/base/hooks/use-editable-text-cell";
 import cellClasses from "@/ee/base/styles/cells.module.css";
+import { IBaseProperty } from "@/ee/base/types/base.types";
 
 type CellUrlProps = {
   value: unknown;
@@ -16,30 +16,37 @@ type CellUrlProps = {
 const toDraft = (value: unknown) => (typeof value === "string" ? value : "");
 const parse = (draft: string) => draft || null;
 
-export function CellUrl({ value, property, rowId, isEditing, onCommit, onCancel }: CellUrlProps) {
+export function CellUrl({
+  value,
+  property,
+  rowId,
+  isEditing,
+  onCommit,
+  onCancel,
+}: CellUrlProps) {
   const { draft, setDraft, inputRef, handleKeyDown, handleBlur } =
     useEditableTextCell({
-      value,
       isEditing,
-      onCommit,
       onCancel,
-      toDraft,
+      onCommit,
       parse,
-      rowId,
       propertyId: property.id,
+      rowId,
+      toDraft,
+      value,
     });
 
   if (isEditing) {
     return (
       <input
-        ref={inputRef}
-        type="url"
         className={cellClasses.cellInput}
-        value={draft}
-        placeholder="https://..."
+        onBlur={handleBlur}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
+        placeholder="https://..."
+        ref={inputRef}
+        type="url"
+        value={draft}
       />
     );
   }
@@ -55,13 +62,19 @@ export function CellUrl({ value, property, rowId, isEditing, onCommit, onCancel 
   }
 
   return (
-    <Tooltip label={displayValue} multiline withinPortal openDelay={400} maw={420}>
+    <Tooltip
+      label={displayValue}
+      maw={420}
+      multiline
+      openDelay={400}
+      withinPortal
+    >
       <a
         className={cellClasses.urlLink}
         href={safeHref}
-        target="_blank"
-        rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
+        rel="noopener noreferrer"
+        target="_blank"
       >
         {displayValue}
       </a>

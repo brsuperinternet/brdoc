@@ -11,16 +11,16 @@ export function LabelPageRowSkeleton({
   metaWidth = 180,
 }: LabelPageRowSkeletonProps) {
   return (
-    <div className={classes.row} aria-hidden="true">
+    <div aria-hidden="true" className={classes.row}>
       <div className={classes.rowMain}>
         <div className={classes.rowIcon}>
-          <Skeleton height={18} width={18} radius="sm" />
+          <Skeleton height={18} radius="sm" width={18} />
         </div>
         <div className={classes.rowBody}>
-          <Skeleton height={15} width={titleWidth} radius="xs" />
+          <Skeleton height={15} radius="xs" width={titleWidth} />
           <div className={classes.rowMeta}>
-            <Skeleton height={18} width={18} radius="sm" />
-            <Skeleton height={12} width={metaWidth} radius="xs" />
+            <Skeleton height={18} radius="sm" width={18} />
+            <Skeleton height={12} radius="xs" width={metaWidth} />
           </div>
         </div>
       </div>
