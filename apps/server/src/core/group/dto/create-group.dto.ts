@@ -1,3 +1,4 @@
+import { Transform, TransformFnParams } from "class-transformer";
 import {
   ArrayMaxSize,
   IsArray,
@@ -6,8 +7,7 @@ import {
   IsUUID,
   MaxLength,
   MinLength,
-} from 'class-validator';
-import {Transform, TransformFnParams} from "class-transformer";
+} from "class-validator";
 
 export class CreateGroupDto {
   @MinLength(2)
@@ -23,11 +23,11 @@ export class CreateGroupDto {
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(50)
-  @IsUUID('all', { each: true })
+  @IsUUID("all", { each: true })
   userIds?: string[];
 }
 
 export enum DefaultGroup {
-  EVERYONE = 'Everyone',
-  DESCRIPTION = 'Group for all users in this workspace.',
+  EVERYONE = "Everyone",
+  DESCRIPTION = "Group for all users in this workspace.",
 }

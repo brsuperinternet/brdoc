@@ -1,25 +1,25 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PublicSpaceRepo } from '@docmost/db/repos/public-space/public-space.repo';
-import { SpaceRepo } from '@docmost/db/repos/space/space.repo';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { ShareService } from '../share/share.service';
-import { TransclusionService } from '../page/transclusion/transclusion.service';
-import { TransclusionLookup } from '../page/transclusion/transclusion.types';
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { PublicSpaceRepo } from "@docmost/db/repos/public-space/public-space.repo";
+import { SpaceRepo } from "@docmost/db/repos/space/space.repo";
 import {
   Page,
   PublicSpace,
   Space,
   Workspace,
-} from '@docmost/db/types/entity.types';
-import { PublicSpaceAppearanceDto } from './dto/public-space.dto';
-import { LicenseCheckService } from '../../integrations/environment/license-check.service';
-import { EnvironmentService } from '../../integrations/environment/environment.service';
-import { Feature, FeatureKey } from '../../common/features';
+} from "@docmost/db/types/entity.types";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { Feature, FeatureKey } from "../../common/features";
+import { EnvironmentService } from "../../integrations/environment/environment.service";
+import { LicenseCheckService } from "../../integrations/environment/license-check.service";
+import { TransclusionService } from "../page/transclusion/transclusion.service";
+import { TransclusionLookup } from "../page/transclusion/transclusion.types";
+import { ShareService } from "../share/share.service";
+import { PublicSpaceAppearanceDto } from "./dto/public-space.dto";
 
 @Injectable()
 export class PublicSpaceService {
@@ -31,7 +31,7 @@ export class PublicSpaceService {
     private readonly shareService: ShareService,
     private readonly transclusionService: TransclusionService,
     private readonly licenseCheckService: LicenseCheckService,
-    private readonly environmentService: EnvironmentService,
+    private readonly environmentService: EnvironmentService
   ) {}
 
   hasFeature(workspace: Workspace, feature: FeatureKey): boolean {
@@ -54,46 +54,46 @@ export class PublicSpaceService {
 
   async getPublicSpace(spaceSlug: string, workspace: Workspace) {
     if (!this.isPublicSpacesAllowed(workspace)) {
-      throw new NotFoundException('Space not found');
+      throw new NotFoundException("Space not found");
     }
 
     const space = await this.spaceRepo.findBySlug(spaceSlug, workspace.id);
     if (!space || space.deletedAt) {
-      throw new NotFoundException('Space not found');
+      throw new NotFoundException("Space not found");
     }
 
     const publicSpace = await this.publicSpaceRepo.findBySpaceId(space.id);
     if (!publicSpace?.enabled) {
-      throw new NotFoundException('Space not found');
+      throw new NotFoundException("Space not found");
     }
 
-    return { space, publicSpace };
+    return { publicSpace, space };
   }
 
   async getPublicSpaceInfo(spaceSlug: string, workspace: Workspace) {
     const { space, publicSpace } = await this.getPublicSpace(
       spaceSlug,
-      workspace,
+      workspace
     );
     return {
-      space: this.toPublicSpaceFields(space),
-      searchIndexing: publicSpace.searchIndexing,
       appearance: this.toPublicAppearance(publicSpace, workspace),
+      searchIndexing: publicSpace.searchIndexing,
+      space: this.toPublicSpaceFields(space),
     };
   }
 
   async getPublicSpaceTree(spaceSlug: string, workspace: Workspace) {
     const { space, publicSpace } = await this.getPublicSpace(
       spaceSlug,
-      workspace,
+      workspace
     );
     const pageTree = await this.pageRepo.getSpacePagesExcludingRestricted(
-      space.id,
+      space.id
     );
     return {
-      space: this.toPublicSpaceFields(space),
-      pageTree,
       appearance: this.toPublicAppearance(publicSpace, workspace),
+      pageTree,
+      space: this.toPublicSpaceFields(space),
     };
   }
 
@@ -101,28 +101,28 @@ export class PublicSpaceService {
     spaceSlug: string,
     pageSlugId: string | undefined,
     workspace: Workspace,
-    opts?: { includeContent?: boolean },
+    opts?: { includeContent?: boolean }
   ) {
     const includeContent = opts?.includeContent !== false;
 
     const { space, publicSpace } = await this.getPublicSpace(
       spaceSlug,
-      workspace,
+      workspace
     );
     const byline = this.getBylineSettings(publicSpace);
 
     let pageId = pageSlugId;
     if (!pageId) {
       const firstRoot = await this.pageRepo.getFirstUnrestrictedRootPage(
-        space.id,
+        space.id
       );
       if (!firstRoot) {
         return {
-          page: null,
-          space: this.toPublicSpaceFields(space),
-          searchIndexing: publicSpace.searchIndexing,
           appearance: this.toPublicAppearance(publicSpace, workspace),
           byline,
+          page: null,
+          searchIndexing: publicSpace.searchIndexing,
+          space: this.toPublicSpaceFields(space),
         };
       }
       pageId = firstRoot.id;
@@ -135,27 +135,27 @@ export class PublicSpaceService {
         })
       : await this.pageRepo.findById(pageId);
     if (!page || page.deletedAt) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     // cross-space targets resolve only as contentless link probes, and only
     // into published spaces; content stays canonical under its own space URL
     if (page.spaceId !== space.id) {
       if (includeContent) {
-        throw new NotFoundException('Page not found');
+        throw new NotFoundException("Page not found");
       }
       return this.resolveCrossSpacePublicPage(page, workspace);
     }
 
     const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
-      page.id,
+      page.id
     );
     if (isRestricted) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     // never ship creator details the space admin chose to hide
-    if (!byline.author && 'creator' in page) {
+    if (!byline.author && "creator" in page) {
       delete (page as any).creator;
     }
 
@@ -164,11 +164,11 @@ export class PublicSpaceService {
     }
 
     return {
-      page,
-      space: this.toPublicSpaceFields(space),
-      searchIndexing: publicSpace.searchIndexing,
       appearance: this.toPublicAppearance(publicSpace, workspace),
       byline,
+      page,
+      searchIndexing: publicSpace.searchIndexing,
+      space: this.toPublicSpaceFields(space),
     };
   }
 
@@ -176,27 +176,27 @@ export class PublicSpaceService {
   private async resolveCrossSpacePublicPage(page: Page, workspace: Workspace) {
     const space = await this.spaceRepo.findById(page.spaceId, workspace.id);
     if (!space || space.deletedAt) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     const publicSpace = await this.publicSpaceRepo.findBySpaceId(space.id);
     if (!publicSpace?.enabled) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
-      page.id,
+      page.id
     );
     if (isRestricted) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     return {
-      page,
-      space: this.toPublicSpaceFields(space),
-      searchIndexing: publicSpace.searchIndexing,
       appearance: this.toPublicAppearance(publicSpace, workspace),
       byline: this.getBylineSettings(publicSpace),
+      page,
+      searchIndexing: publicSpace.searchIndexing,
+      space: this.toPublicSpaceFields(space),
     };
   }
 
@@ -204,38 +204,43 @@ export class PublicSpaceService {
   async lookupTransclusionForPublicSpace(
     spaceSlug: string,
     references: Array<{ sourcePageId: string; transclusionId: string }>,
-    workspace: Workspace,
+    workspace: Workspace
   ): Promise<{ items: TransclusionLookup[] }> {
     const { space } = await this.getPublicSpace(spaceSlug, workspace);
 
     const candidatePageIds = Array.from(
-      new Set(references.map((r) => r.sourcePageId)),
+      new Set(references.map((r) => r.sourcePageId))
     );
 
     const accessibleResults = await Promise.all(
       candidatePageIds.map(async (pageId) => {
         const page = await this.pageRepo.findById(pageId);
-        if (!page || page.deletedAt || page.spaceId !== space.id) return null;
-        const restricted =
-          await this.pagePermissionRepo.hasRestrictedAncestor(page.id);
-        if (restricted) return null;
+        if (!page || page.deletedAt || page.spaceId !== space.id) {
+          return null;
+        }
+        const restricted = await this.pagePermissionRepo.hasRestrictedAncestor(
+          page.id
+        );
+        if (restricted) {
+          return null;
+        }
         return page.id;
-      }),
+      })
     );
     const accessibleSet = new Set<string>(
-      accessibleResults.filter((id): id is string => id !== null),
+      accessibleResults.filter((id): id is string => id !== null)
     );
 
     const { items } = await this.transclusionService.lookupWithAccessSet(
       references,
       accessibleSet,
-      workspace.id,
+      workspace.id
     );
 
     return {
       items: await this.shareService.sanitizeTransclusionItemsForPublic(
         items,
-        workspace.id,
+        workspace.id
       ),
     };
   }
@@ -264,19 +269,22 @@ export class PublicSpaceService {
 
     if (!this.environmentService.isBetaPublicSpaces()) {
       throw new ForbiddenException(
-        'Public spaces are not enabled on this instance',
+        "Public spaces are not enabled on this instance"
       );
     }
 
     if (enabled && !this.isPublicSpacesAllowed(workspace)) {
       throw new ForbiddenException(
-        'Public spaces are not enabled for this workspace',
+        "Public spaces are not enabled for this workspace"
       );
     }
 
-    if (appearance && !this.hasFeature(workspace, Feature.PUBLIC_SPACE_APPEARANCE)) {
+    if (
+      appearance &&
+      !this.hasFeature(workspace, Feature.PUBLIC_SPACE_APPEARANCE)
+    ) {
       throw new ForbiddenException(
-        'Public docs appearance requires a paid license',
+        "Public docs appearance requires a paid license"
       );
     }
 
@@ -291,15 +299,15 @@ export class PublicSpaceService {
     }
 
     const hasByline =
-      typeof bylineAuthor !== 'undefined' ||
-      typeof bylineUpdatedAt !== 'undefined';
+      typeof bylineAuthor !== "undefined" ||
+      typeof bylineUpdatedAt !== "undefined";
 
     let settings: Record<string, unknown> | undefined;
-    if (appearance || hasByline || typeof directory !== 'undefined') {
+    if (appearance || hasByline || typeof directory !== "undefined") {
       const prevSettings = (prev?.settings as Record<string, any>) ?? {};
       settings = { ...prevSettings };
 
-      if (typeof directory !== 'undefined') {
+      if (typeof directory !== "undefined") {
         settings.directory = directory;
       }
 
@@ -307,10 +315,13 @@ export class PublicSpaceService {
         const nextAppearance: Record<string, string> = {
           ...(prevSettings.appearance ?? {}),
         };
-        for (const key of ['primaryColorLight', 'primaryColorDark'] as const) {
+        for (const key of ["primaryColorLight", "primaryColorDark"] as const) {
           const value = appearance[key];
-          if (value === null) delete nextAppearance[key];
-          else if (typeof value !== 'undefined') nextAppearance[key] = value;
+          if (value === null) {
+            delete nextAppearance[key];
+          } else if (typeof value !== "undefined") {
+            nextAppearance[key] = value;
+          }
         }
         settings.appearance = nextAppearance;
       }
@@ -325,12 +336,12 @@ export class PublicSpaceService {
     }
 
     return this.publicSpaceRepo.upsert({
-      spaceId: space.id,
-      workspaceId: space.workspaceId,
+      creatorId: authUserId,
       enabled,
       searchIndexing,
-      creatorId: authUserId,
       settings,
+      spaceId: space.id,
+      workspaceId: space.workspaceId,
     });
   }
 
@@ -340,33 +351,33 @@ export class PublicSpaceService {
       !this.isPublicSpacesAllowed(workspace) ||
       !this.isDirectoryEnabled(workspace)
     ) {
-      throw new NotFoundException('Not found');
+      throw new NotFoundException("Not found");
     }
 
     const rows = await this.publicSpaceRepo.findEnabledWithSpaceByWorkspaceId(
-      workspace.id,
+      workspace.id
     );
     const listed = rows.filter(
-      (row) => (row.settings as any)?.directory === true,
+      (row) => (row.settings as any)?.directory === true
     );
 
     return {
       spaces: listed.map((row) => ({
-        name: row.name,
-        slug: row.slug,
         description: row.description,
         logo: row.logo,
+        name: row.name,
+        slug: row.slug,
       })),
     };
   }
 
   private toPublicSpaceFields(space: Space) {
     return {
+      description: space.description,
       id: space.id,
+      logo: space.logo,
       name: space.name,
       slug: space.slug,
-      description: space.description,
-      logo: space.logo,
     };
   }
 
@@ -383,13 +394,15 @@ export class PublicSpaceService {
       return undefined;
     }
     const appearance = (publicSpace?.settings as any)?.appearance;
-    if (!appearance) return undefined;
+    if (!appearance) {
+      return undefined;
+    }
     const result: { primaryColorLight?: string; primaryColorDark?: string } =
       {};
-    if (typeof appearance.primaryColorLight === 'string') {
+    if (typeof appearance.primaryColorLight === "string") {
       result.primaryColorLight = appearance.primaryColorLight;
     }
-    if (typeof appearance.primaryColorDark === 'string') {
+    if (typeof appearance.primaryColorDark === "string") {
       result.primaryColorDark = appearance.primaryColorDark;
     }
     return Object.keys(result).length > 0 ? result : undefined;

@@ -1,6 +1,6 @@
-import { type Extensions, type JSONContent, getSchema } from '@tiptap/core';
-import { Node } from '@tiptap/pm/model';
-import { getHTMLFromFragment } from './getHTMLFromFragment';
+import { type Extensions, getSchema, type JSONContent } from "@tiptap/core";
+import { Node } from "@tiptap/pm/model";
+import { getHTMLFromFragment } from "./getHTMLFromFragment";
 
 /**
  * This function generates HTML from a ProseMirror JSON content object.
@@ -16,9 +16,9 @@ import { getHTMLFromFragment } from './getHTMLFromFragment';
  * ```
  */
 export function generateHTML(doc: JSONContent, extensions: Extensions): string {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     throw new Error(
-      'generateHTML can only be used in a Node environment\nIf you want to use this in a browser environment, use the `@tiptap/html` import instead.',
+      "generateHTML can only be used in a Node environment\nIf you want to use this in a browser environment, use the `@tiptap/html` import instead."
     );
   }
 

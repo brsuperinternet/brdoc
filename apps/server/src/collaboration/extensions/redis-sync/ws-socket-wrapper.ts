@@ -1,5 +1,5 @@
-import type WebSocket from 'ws';
-import type { WebSocketLike } from '@hocuspocus/server';
+import type { WebSocketLike } from "@hocuspocus/server";
+import type WebSocket from "ws";
 
 /**
  * Wrapper around ws WebSocket that Hocuspocus only writes to.
@@ -15,7 +15,9 @@ export class WsSocketWrapper implements WebSocketLike {
   }
 
   close(code?: number, reason?: string) {
-    if (this.readyState !== 1) return;
+    if (this.readyState !== 1) {
+      return;
+    }
     this.readyState = 3;
     try {
       this.ws.close(code, reason);
@@ -25,7 +27,9 @@ export class WsSocketWrapper implements WebSocketLike {
   }
 
   send(message: Uint8Array) {
-    if (this.readyState !== 1) return;
+    if (this.readyState !== 1) {
+      return;
+    }
     try {
       this.ws.send(message);
     } catch (e) {

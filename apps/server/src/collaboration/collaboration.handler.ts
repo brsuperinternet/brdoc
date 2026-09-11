@@ -1,16 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Hocuspocus, Document } from '@hocuspocus/server';
-import { TiptapTransformer } from '@hocuspocus/transformer';
+import { User } from "@docmost/db/types/entity.types";
+import { Document, Hocuspocus } from "@hocuspocus/server";
+import { TiptapTransformer } from "@hocuspocus/transformer";
+import { Injectable, Logger } from "@nestjs/common";
+import * as Y from "yjs";
 import {
   prosemirrorNodeToYElement,
   tiptapExtensions,
-} from './collaboration.util';
-import { setYjsMark, updateYjsMarkAttribute, YjsSelection } from './yjs.util';
-import * as Y from 'yjs';
-import { User } from '@docmost/db/types/entity.types';
+} from "./collaboration.util";
+import { setYjsMark, updateYjsMarkAttribute, YjsSelection } from "./yjs.util";
 
 export type CollabEventHandlers = ReturnType<
-  CollaborationHandler['getHandlers']
+  CollaborationHandler["getHandlers"]
 >;
 
 @Injectable()
@@ -28,36 +28,13 @@ export class CollaborationHandler {
         //   const fragment = doc.getXmlFragment('default');
         //});
       },
-      setCommentMark: async (
-        documentName: string,
-        payload: {
-          yjsSelection: YjsSelection;
-          commentId: string;
-          resolved: boolean;
-          user: User;
-        },
-      ) => {
-        const { yjsSelection, commentId, resolved, user } = payload;
-        await this.withYdocConnection(
-          hocuspocus,
-          documentName,
-          { user },
-          (doc) => {
-            const fragment = doc.getXmlFragment('default');
-            setYjsMark(doc, fragment, yjsSelection, 'comment', {
-              commentId,
-              resolved,
-            });
-          },
-        );
-      },
       resolveCommentMark: async (
         documentName: string,
         payload: {
           commentId: string;
           resolved: boolean;
           user: User;
-        },
+        }
       ) => {
         const { commentId, resolved, user } = payload;
         await this.withYdocConnection(
@@ -65,14 +42,37 @@ export class CollaborationHandler {
           documentName,
           { user },
           (doc) => {
-            const fragment = doc.getXmlFragment('default');
+            const fragment = doc.getXmlFragment("default");
             updateYjsMarkAttribute(
               fragment,
-              'comment',
-              { name: 'commentId', value: commentId },
-              { resolved },
+              "comment",
+              { name: "commentId", value: commentId },
+              { resolved }
             );
-          },
+          }
+        );
+      },
+      setCommentMark: async (
+        documentName: string,
+        payload: {
+          yjsSelection: YjsSelection;
+          commentId: string;
+          resolved: boolean;
+          user: User;
+        }
+      ) => {
+        const { yjsSelection, commentId, resolved, user } = payload;
+        await this.withYdocConnection(
+          hocuspocus,
+          documentName,
+          { user },
+          (doc) => {
+            const fragment = doc.getXmlFragment("default");
+            setYjsMark(doc, fragment, yjsSelection, "comment", {
+              commentId,
+              resolved,
+            });
+          }
         );
       },
       updatePageContent: async (
@@ -81,35 +81,35 @@ export class CollaborationHandler {
           prosemirrorJson: any;
           operation: string;
           user: User;
-        },
+        }
       ) => {
         const { prosemirrorJson, operation, user } = payload;
-        this.logger.debug('Updating page content via yjs', documentName);
+        this.logger.debug("Updating page content via yjs", documentName);
         await this.withYdocConnection(
           hocuspocus,
           documentName,
           { user },
           (doc) => {
-            const fragment = doc.getXmlFragment('default');
+            const fragment = doc.getXmlFragment("default");
 
-            if (operation === 'replace') {
+            if (operation === "replace") {
               if (fragment.length > 0) {
                 fragment.delete(0, fragment.length);
               }
 
               const newDoc = TiptapTransformer.toYdoc(
                 prosemirrorJson,
-                'default',
-                tiptapExtensions,
+                "default",
+                tiptapExtensions
               );
               Y.applyUpdate(doc, Y.encodeStateAsUpdate(newDoc));
             } else {
               const newContent = prosemirrorJson.content || [];
               const yElements = newContent.map(prosemirrorNodeToYElement);
-              const position = operation === 'prepend' ? 0 : fragment.length;
+              const position = operation === "prepend" ? 0 : fragment.length;
               fragment.insert(position, yElements);
             }
-          },
+          }
         );
       },
     };
@@ -119,11 +119,11 @@ export class CollaborationHandler {
     hocuspocus: Hocuspocus,
     documentName: string,
     context: any = {},
-    fn: (doc: Document) => void,
+    fn: (doc: Document) => void
   ): Promise<void> {
     const connection = await hocuspocus.openDirectConnection(
       documentName,
-      context,
+      context
     );
     try {
       await connection.transact(fn);

@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { dbOrTx } from '@docmost/db/utils';
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { DB } from "@docmost/db/types/db";
 import {
   InsertableSpace,
   Space,
   UpdatableSpace,
-} from '@docmost/db/types/entity.types';
-import { ExpressionBuilder, sql } from 'kysely';
-import { PaginationOptions } from '../../pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
-import { DB } from '@docmost/db/types/db';
-import { validate as isValidUUID } from 'uuid';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventName } from '../../../common/events/event.contants';
+} from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx } from "@docmost/db/utils";
+import { Injectable } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { ExpressionBuilder, sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
+import { validate as isValidUUID } from "uuid";
+import { EventName } from "../../../common/events/event.contants";
+import { PaginationOptions } from "../../pagination/pagination-options";
 
 @Injectable()
 export class SpaceRepo {
@@ -29,21 +29,21 @@ export class SpaceRepo {
       includeMemberCount?: boolean;
       withLock?: boolean;
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Space> {
     const db = dbOrTx(this.db, opts?.trx);
 
     let query = db
-      .selectFrom('spaces')
-      .selectAll('spaces')
+      .selectFrom("spaces")
+      .selectAll("spaces")
       .$if(opts?.includeMemberCount, (qb) => qb.select(this.withMemberCount))
       .select((eb) => this.withIsPublished(eb))
-      .where('workspaceId', '=', workspaceId);
+      .where("workspaceId", "=", workspaceId);
 
     if (isValidUUID(spaceId)) {
-      query = query.where('id', '=', spaceId);
+      query = query.where("id", "=", spaceId);
     } else {
-      query = query.where(sql`LOWER(slug)`, '=', sql`LOWER(${spaceId})`);
+      query = query.where(sql`LOWER(slug)`, "=", sql`LOWER(${spaceId})`);
     }
 
     if (opts?.withLock && opts?.trx) {
@@ -56,45 +56,45 @@ export class SpaceRepo {
   async findBySlug(
     slug: string,
     workspaceId: string,
-    opts?: { includeMemberCount: boolean },
+    opts?: { includeMemberCount: boolean }
   ): Promise<Space> {
     return await this.db
-      .selectFrom('spaces')
-      .selectAll('spaces')
+      .selectFrom("spaces")
+      .selectAll("spaces")
       .$if(opts?.includeMemberCount, (qb) => qb.select(this.withMemberCount))
       .select((eb) => this.withIsPublished(eb))
-      .where(sql`LOWER(slug)`, '=', sql`LOWER(${slug})`)
-      .where('workspaceId', '=', workspaceId)
+      .where(sql`LOWER(slug)`, "=", sql`LOWER(${slug})`)
+      .where("workspaceId", "=", workspaceId)
       .executeTakeFirst();
   }
 
   async findPersonalSpace(
     userId: string,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<Space | undefined> {
     const db = dbOrTx(this.db, trx);
     return db
-      .selectFrom('spaces')
-      .selectAll('spaces')
-      .where('workspaceId', '=', workspaceId)
-      .where('creatorId', '=', userId)
-      .where('isPersonal', '=', true)
-      .where('deletedAt', 'is', null)
+      .selectFrom("spaces")
+      .selectAll("spaces")
+      .where("workspaceId", "=", workspaceId)
+      .where("creatorId", "=", userId)
+      .where("isPersonal", "=", true)
+      .where("deletedAt", "is", null)
       .executeTakeFirst();
   }
 
   async slugExists(
     slug: string,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<boolean> {
     const db = dbOrTx(this.db, trx);
     let { count } = await db
-      .selectFrom('spaces')
-      .select((eb) => eb.fn.count('id').as('count'))
-      .where(sql`LOWER(slug)`, '=', sql`LOWER(${slug})`)
-      .where('workspaceId', '=', workspaceId)
+      .selectFrom("spaces")
+      .select((eb) => eb.fn.count("id").as("count"))
+      .where(sql`LOWER(slug)`, "=", sql`LOWER(${slug})`)
+      .where("workspaceId", "=", workspaceId)
       .executeTakeFirst();
     count = count as number;
     return count != 0;
@@ -104,14 +104,14 @@ export class SpaceRepo {
     updatableSpace: UpdatableSpace,
     spaceId: string,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('spaces')
+      .updateTable("spaces")
       .set({ ...updatableSpace, updatedAt: new Date() })
-      .where('id', '=', spaceId)
-      .where('workspaceId', '=', workspaceId)
+      .where("id", "=", spaceId)
+      .where("workspaceId", "=", workspaceId)
       .returningAll()
       .executeTakeFirst();
   }
@@ -121,19 +121,19 @@ export class SpaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('spaces')
+      .updateTable("spaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
           || jsonb_build_object('sharing', COALESCE(settings->'sharing', '{}'::jsonb)
           || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', spaceId)
-      .where('workspaceId', '=', workspaceId)
+      .where("id", "=", spaceId)
+      .where("workspaceId", "=", workspaceId)
       .returningAll()
       .executeTakeFirst();
   }
@@ -143,30 +143,30 @@ export class SpaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('spaces')
+      .updateTable("spaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
           || jsonb_build_object('comments', COALESCE(settings->'comments', '{}'::jsonb)
           || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', spaceId)
-      .where('workspaceId', '=', workspaceId)
+      .where("id", "=", spaceId)
+      .where("workspaceId", "=", workspaceId)
       .returningAll()
       .executeTakeFirst();
   }
 
   async insertSpace(
     insertableSpace: InsertableSpace,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<Space> {
     const db = dbOrTx(this.db, trx);
     return db
-      .insertInto('spaces')
+      .insertInto("spaces")
       .values(insertableSpace)
       .returningAll()
       .executeTakeFirst();
@@ -174,82 +174,82 @@ export class SpaceRepo {
 
   async getSpacesInWorkspace(
     workspaceId: string,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ) {
     // todo: show spaces user have access based on visibility and memberships
     let query = this.db
-      .selectFrom('spaces')
-      .selectAll('spaces')
+      .selectFrom("spaces")
+      .selectAll("spaces")
       .select((eb) => [this.withMemberCount(eb)])
       .select((eb) => this.withIsPublished(eb))
-      .where('workspaceId', '=', workspaceId);
+      .where("workspaceId", "=", workspaceId);
 
     if (pagination.query) {
       query = query.where((eb) =>
         eb(
           sql`f_unaccent(name)`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
         ).or(
           sql`f_unaccent(description)`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
-        ),
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
+        )
       );
     }
 
     return executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
+      cursor: pagination.cursor,
       fields: [
-        { expression: 'name', direction: 'asc' },
-        { expression: 'id', direction: 'asc' },
+        { direction: "asc", expression: "name" },
+        { direction: "asc", expression: "id" },
       ],
-      parseCursor: (cursor) => ({ name: cursor.name, id: cursor.id }),
+      parseCursor: (cursor) => ({ id: cursor.id, name: cursor.name }),
+      perPage: pagination.limit,
     });
   }
 
-  withMemberCount(eb: ExpressionBuilder<DB, 'spaces'>) {
+  withMemberCount(eb: ExpressionBuilder<DB, "spaces">) {
     const subquery = eb
-      .selectFrom('spaceMembers')
-      .select('spaceMembers.userId')
-      .where('spaceMembers.userId', 'is not', null)
-      .whereRef('spaceMembers.spaceId', '=', 'spaces.id')
+      .selectFrom("spaceMembers")
+      .select("spaceMembers.userId")
+      .where("spaceMembers.userId", "is not", null)
+      .whereRef("spaceMembers.spaceId", "=", "spaces.id")
       .union(
         eb
-          .selectFrom('spaceMembers')
-          .where('spaceMembers.groupId', 'is not', null)
-          .leftJoin('groups', 'groups.id', 'spaceMembers.groupId')
-          .leftJoin('groupUsers', 'groupUsers.groupId', 'groups.id')
-          .select('groupUsers.userId')
-          .whereRef('spaceMembers.spaceId', '=', 'spaces.id'),
+          .selectFrom("spaceMembers")
+          .where("spaceMembers.groupId", "is not", null)
+          .leftJoin("groups", "groups.id", "spaceMembers.groupId")
+          .leftJoin("groupUsers", "groupUsers.groupId", "groups.id")
+          .select("groupUsers.userId")
+          .whereRef("spaceMembers.spaceId", "=", "spaces.id")
       )
-      .as('userId');
+      .as("userId");
 
     return eb
       .selectFrom(subquery)
-      .select((eb) => eb.fn.count('userId').as('count'))
-      .as('memberCount');
+      .select((eb) => eb.fn.count("userId").as("count"))
+      .as("memberCount");
   }
 
-  withIsPublished(eb: ExpressionBuilder<DB, 'spaces'>) {
+  withIsPublished(eb: ExpressionBuilder<DB, "spaces">) {
     return eb
       .exists(
         eb
-          .selectFrom('publicSpaces')
-          .select('publicSpaces.id')
-          .whereRef('publicSpaces.spaceId', '=', 'spaces.id')
-          .where('publicSpaces.enabled', '=', true),
+          .selectFrom("publicSpaces")
+          .select("publicSpaces.id")
+          .whereRef("publicSpaces.spaceId", "=", "spaces.id")
+          .where("publicSpaces.enabled", "=", true)
       )
-      .as('isPublished');
+      .as("isPublished");
   }
 
   async deleteSpace(spaceId: string, workspaceId: string): Promise<void> {
     await this.db
-      .deleteFrom('spaces')
-      .where('id', '=', spaceId)
-      .where('workspaceId', '=', workspaceId)
+      .deleteFrom("spaces")
+      .where("id", "=", spaceId)
+      .where("workspaceId", "=", workspaceId)
       .execute();
 
     this.eventEmitter.emit(EventName.SPACE_DELETED, {

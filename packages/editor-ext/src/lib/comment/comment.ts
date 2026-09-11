@@ -1,6 +1,6 @@
 import { Mark, mergeAttributes } from "@tiptap/core";
-import { commentDecoration } from "./comment-decoration";
 import { Plugin } from "@tiptap/pm/state";
+import { commentDecoration } from "./comment-decoration";
 
 export interface ICommentOptions {
   HTMLAttributes: Record<string, any>;
@@ -26,29 +26,15 @@ declare module "@tiptap/core" {
 }
 
 export const Comment = Mark.create<ICommentOptions, ICommentStorage>({
-  name: "comment",
-  exitable: true,
-  inclusive: false,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-
-  addStorage() {
-    return {
-      activeCommentId: null,
-    };
-  },
-
   addAttributes() {
     return {
       commentId: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-comment-id"),
         renderHTML: (attributes) => {
-          if (!attributes.commentId) return;
+          if (!attributes.commentId) {
+            return;
+          }
 
           return {
             "data-comment-id": attributes.commentId,
@@ -59,7 +45,9 @@ export const Comment = Mark.create<ICommentOptions, ICommentStorage>({
         default: false,
         parseHTML: (element) => element.hasAttribute("data-resolved"),
         renderHTML: (attributes) => {
-          if (!attributes.resolved) return {};
+          if (!attributes.resolved) {
+            return {};
+          }
 
           return {
             "data-resolved": "true",
@@ -69,75 +57,32 @@ export const Comment = Mark.create<ICommentOptions, ICommentStorage>({
     };
   },
 
-  parseHTML() {
-    return [
-      {
-        tag: "span[data-comment-id]",
-        getAttrs: (el) => {
-          const element = el as HTMLSpanElement;
-          const commentId = element.getAttribute("data-comment-id")?.trim();
-          const resolved = element.hasAttribute("data-resolved");
-
-          if (!commentId) return false;
-
-          return {
-            commentId,
-            resolved,
-          };
-        },
-      },
-    ];
-  },
-
   addCommands() {
     return {
+      setComment:
+        (commentId) =>
+        ({ commands }) => {
+          if (!commentId) {
+            return false;
+          }
+          // Just add the new mark, do not remove existing ones
+          return commands.setMark(this.name, { commentId, resolved: false });
+        },
       setCommentDecoration:
         () =>
         ({ tr, dispatch }) => {
           tr.setMeta(commentDecorationMetaKey, true);
-          if (dispatch) dispatch(tr);
+          if (dispatch) {
+            dispatch(tr);
+          }
           return true;
-        },
-      unsetCommentDecoration:
-        () =>
-        ({ tr, dispatch }) => {
-          tr.setMeta(commentDecorationMetaKey, false);
-          if (dispatch) dispatch(tr);
-          return true;
-        },
-      setComment:
-        (commentId) =>
-        ({ commands }) => {
-          if (!commentId) return false;
-          // Just add the new mark, do not remove existing ones
-          return commands.setMark(this.name, { commentId, resolved: false });
-        },
-      unsetComment:
-        (commentId) =>
-        ({ tr, dispatch }) => {
-          if (!commentId) return false;
-
-          tr.doc.descendants((node, pos) => {
-            const from = pos;
-            const to = pos + node.nodeSize;
-
-            const commentMark = node.marks.find(
-              (mark) =>
-                mark.type.name === this.name &&
-                mark.attrs.commentId === commentId
-            );
-
-            if (commentMark) {
-              tr = tr.removeMark(from, to, commentMark);
-            }
-          });
-
-          return dispatch?.(tr);
         },
       setCommentResolved:
         (commentId, resolved) =>
         ({ tr, dispatch }) => {
-          if (!commentId) return false;
+          if (!commentId) {
+            return false;
+          }
 
           tr.doc.descendants((node, pos) => {
             const from = pos;
@@ -157,7 +102,7 @@ export const Comment = Mark.create<ICommentOptions, ICommentStorage>({
                 to,
                 this.type.create({
                   commentId: commentMark.attrs.commentId,
-                  resolved: resolved,
+                  resolved,
                 })
               );
             }
@@ -165,7 +110,81 @@ export const Comment = Mark.create<ICommentOptions, ICommentStorage>({
 
           return dispatch?.(tr);
         },
+      unsetComment:
+        (commentId) =>
+        ({ tr, dispatch }) => {
+          if (!commentId) {
+            return false;
+          }
+
+          tr.doc.descendants((node, pos) => {
+            const from = pos;
+            const to = pos + node.nodeSize;
+
+            const commentMark = node.marks.find(
+              (mark) =>
+                mark.type.name === this.name &&
+                mark.attrs.commentId === commentId
+            );
+
+            if (commentMark) {
+              tr = tr.removeMark(from, to, commentMark);
+            }
+          });
+
+          return dispatch?.(tr);
+        },
+      unsetCommentDecoration:
+        () =>
+        ({ tr, dispatch }) => {
+          tr.setMeta(commentDecorationMetaKey, false);
+          if (dispatch) {
+            dispatch(tr);
+          }
+          return true;
+        },
     };
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+    };
+  },
+
+  addProseMirrorPlugins(): Plugin[] {
+    return [commentDecoration()];
+  },
+
+  addStorage() {
+    return {
+      activeCommentId: null,
+    };
+  },
+  exitable: true,
+  inclusive: false,
+  name: "comment",
+
+  parseHTML() {
+    return [
+      {
+        getAttrs: (el) => {
+          const element = el as HTMLSpanElement;
+          const commentId = element.getAttribute("data-comment-id")?.trim();
+          const resolved = element.hasAttribute("data-resolved");
+
+          if (!commentId) {
+            return false;
+          }
+
+          return {
+            commentId,
+            resolved,
+          };
+        },
+        tag: "span[data-comment-id]",
+      },
+    ];
   },
 
   renderHTML({ HTMLAttributes }) {
@@ -197,7 +216,9 @@ export const Comment = Mark.create<ICommentOptions, ICommentStorage>({
 
     elem.addEventListener("click", (e) => {
       const selection = document.getSelection();
-      if (selection.type === "Range") return;
+      if (selection.type === "Range") {
+        return;
+      }
 
       this.storage.activeCommentId = commentId;
       const commentEventClick = new CustomEvent("ACTIVE_COMMENT_EVENT", {
@@ -209,9 +230,5 @@ export const Comment = Mark.create<ICommentOptions, ICommentStorage>({
     });
 
     return elem;
-  },
-
-  addProseMirrorPlugins(): Plugin[] {
-    return [commentDecoration()];
   },
 });

@@ -1,13 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { NotificationRepo } from '@docmost/db/repos/notification/notification.repo';
-import { InsertableNotification } from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { WsGateway } from '../../ws/ws.gateway';
-import { MailService } from '../../integrations/mail/mail.service';
-import { NotificationTab, NotificationType, NotificationTypeToSettingKey } from './notification.constants';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { NotificationRepo } from "@docmost/db/repos/notification/notification.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { InsertableNotification } from "@docmost/db/types/entity.types";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { Injectable, Logger } from "@nestjs/common";
+import { InjectKysely } from "nestjs-kysely";
+import { MailService } from "../../integrations/mail/mail.service";
+import { WsGateway } from "../../ws/ws.gateway";
+import {
+  NotificationTab,
+  NotificationType,
+  NotificationTypeToSettingKey,
+} from "./notification.constants";
 
 @Injectable()
 export class NotificationService {
@@ -23,20 +27,22 @@ export class NotificationService {
 
   async create(data: InsertableNotification) {
     const user = await this.db
-      .selectFrom('users')
-      .select(['id'])
-      .where('id', '=', data.userId)
-      .where('deletedAt', 'is', null)
-      .where('deactivatedAt', 'is', null)
+      .selectFrom("users")
+      .select(["id"])
+      .where("id", "=", data.userId)
+      .where("deletedAt", "is", null)
+      .where("deactivatedAt", "is", null)
       .executeTakeFirst();
 
-    if (!user) return null;
+    if (!user) {
+      return null;
+    }
 
     const notification = await this.notificationRepo.insert(data);
 
     this.wsGateway.server
       .to(`user-${data.userId}`)
-      .emit('notification', { id: notification.id, type: notification.type });
+      .emit("notification", { id: notification.id, type: notification.type });
 
     return notification;
   }
@@ -44,17 +50,15 @@ export class NotificationService {
   async findByUserId(
     userId: string,
     pagination: PaginationOptions,
-    type: NotificationTab = 'all',
+    type: NotificationTab = "all"
   ) {
     const result = await this.notificationRepo.findByUserId(
       userId,
       pagination,
-      type,
+      type
     );
 
-    const pageIds = result.items
-      .map((n: any) => n.pageId)
-      .filter(Boolean);
+    const pageIds = result.items.map((n: any) => n.pageId).filter(Boolean);
 
     if (pageIds.length > 0) {
       const accessiblePageIds =
@@ -65,7 +69,7 @@ export class NotificationService {
       const accessibleSet = new Set(accessiblePageIds);
 
       result.items = result.items.filter(
-        (n: any) => !n.pageId || accessibleSet.has(n.pageId),
+        (n: any) => !n.pageId || accessibleSet.has(n.pageId)
       );
     }
 
@@ -93,37 +97,41 @@ export class NotificationService {
     notificationId: string,
     subject: string,
     template: any,
-    type?: NotificationType,
+    type?: NotificationType
   ) {
     try {
       const user = await this.db
-        .selectFrom('users')
-        .select(['email', 'settings'])
-        .where('id', '=', userId)
-        .where('deletedAt', 'is', null)
-        .where('deactivatedAt', 'is', null)
+        .selectFrom("users")
+        .select(["email", "settings"])
+        .where("id", "=", userId)
+        .where("deletedAt", "is", null)
+        .where("deactivatedAt", "is", null)
         .executeTakeFirst();
 
-      if (!user?.email) return;
+      if (!user?.email) {
+        return;
+      }
 
       if (type) {
         const settingKey = NotificationTypeToSettingKey[type];
         if (settingKey) {
           const settings = user.settings as any;
-          if (settings?.notifications?.[settingKey] === false) return;
+          if (settings?.notifications?.[settingKey] === false) {
+            return;
+          }
         }
       }
 
       await this.mailService.sendToQueue({
-        to: user.email,
+        notificationId,
         subject,
         template,
-        notificationId,
+        to: user.email,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : "Unknown error";
       this.logger.error(
-        `Failed to queue email for notification ${notificationId}: ${message}`,
+        `Failed to queue email for notification ${notificationId}: ${message}`
       );
     }
   }

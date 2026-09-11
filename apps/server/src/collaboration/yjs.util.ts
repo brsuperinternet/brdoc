@@ -1,11 +1,11 @@
+import { Document } from "@hocuspocus/server";
+import { getSchema } from "@tiptap/core";
 import {
   initProseMirrorDoc,
   relativePositionToAbsolutePosition,
-} from '@tiptap/y-tiptap';
-import * as Y from 'yjs';
-import { Document } from '@hocuspocus/server';
-import { getSchema } from '@tiptap/core';
-import { tiptapExtensions } from './collaboration.util';
+} from "@tiptap/y-tiptap";
+import * as Y from "yjs";
+import { tiptapExtensions } from "./collaboration.util";
 
 export type YjsSelection = {
   anchor: any;
@@ -17,7 +17,7 @@ export function setYjsMark(
   fragment: Y.XmlFragment,
   yjsSelection: YjsSelection,
   markName: string,
-  markAttributes: Record<string, any>,
+  markAttributes: Record<string, any>
 ) {
   const schema = getSchema(tiptapExtensions);
   const { mapping } = initProseMirrorDoc(fragment, schema);
@@ -30,18 +30,18 @@ export function setYjsMark(
     doc,
     fragment,
     anchorRelPos,
-    mapping,
+    mapping
   );
   const head = relativePositionToAbsolutePosition(
     doc,
     fragment,
     headRelPos,
-    mapping,
+    mapping
   );
 
   if (anchor === null || head === null) {
     throw new Error(
-      'Could not resolve Y.js relative positions to absolute positions',
+      "Could not resolve Y.js relative positions to absolute positions"
     );
   }
 
@@ -58,18 +58,20 @@ function applyMarkToYFragment(
   from: number,
   to: number,
   markName: string,
-  markAttributes: Record<string, any>,
+  markAttributes: Record<string, any>
 ) {
   let pos = 0;
 
   const processItem = (item: any, parentNodeName?: string): boolean => {
-    if (pos >= to) return false;
+    if (pos >= to) {
+      return false;
+    }
 
     if (item instanceof Y.XmlText) {
       const textLength = item.length;
       const itemEnd = pos + textLength;
 
-      if (itemEnd > from && pos < to && parentNodeName !== 'codeBlock') {
+      if (itemEnd > from && pos < to && parentNodeName !== "codeBlock") {
         const formatFrom = Math.max(0, from - pos);
         const formatTo = Math.min(textLength, to - pos);
         const formatLength = formatTo - formatFrom;
@@ -82,7 +84,9 @@ function applyMarkToYFragment(
     } else if (item instanceof Y.XmlElement) {
       pos++; // Opening tag
       for (let i = 0; i < item.length; i++) {
-        if (!processItem(item.get(i), item.nodeName)) return false;
+        if (!processItem(item.get(i), item.nodeName)) {
+          return false;
+        }
       }
       pos++; // Closing tag
     }
@@ -90,7 +94,9 @@ function applyMarkToYFragment(
   };
 
   for (let i = 0; i < fragment.length; i++) {
-    if (!processItem(fragment.get(i))) break;
+    if (!processItem(fragment.get(i))) {
+      break;
+    }
   }
 }
 
@@ -102,7 +108,7 @@ export function removeYjsMarkByAttribute(
   fragment: Y.XmlFragment,
   markName: string,
   attributeName: string,
-  attributeValue: string,
+  attributeValue: string
 ) {
   const processItem = (item: any) => {
     if (item instanceof Y.XmlText) {
@@ -141,7 +147,7 @@ export function updateYjsMarkAttribute(
   fragment: Y.XmlFragment,
   markName: string,
   findByAttribute: { name: string; value: string },
-  newAttributes: Record<string, any>,
+  newAttributes: Record<string, any>
 ) {
   const processItem = (item: any) => {
     if (item instanceof Y.XmlText) {

@@ -1,9 +1,9 @@
-import { MailDriver } from './interfaces/mail-driver.interface';
-import { PostmarkConfig } from '../interfaces';
-import { ServerClient } from 'postmark';
-import { MailMessage } from '../interfaces/mail.message';
-import { Logger } from '@nestjs/common';
-import { mailLogName } from '../mail.utils';
+import { Logger } from "@nestjs/common";
+import { ServerClient } from "postmark";
+import { PostmarkConfig } from "../interfaces";
+import { MailMessage } from "../interfaces/mail.message";
+import { mailLogName } from "../mail.utils";
+import { MailDriver } from "./interfaces/mail-driver.interface";
 
 export class PostmarkDriver implements MailDriver {
   private readonly logger = new Logger(mailLogName(PostmarkDriver.name));
@@ -17,10 +17,10 @@ export class PostmarkDriver implements MailDriver {
     try {
       await this.postmarkClient.sendEmail({
         From: message.from,
-        To: message.to,
+        HtmlBody: message.html,
         Subject: message.subject,
         TextBody: message.text,
-        HtmlBody: message.html,
+        To: message.to,
       });
       this.logger.debug(`Sent mail to ${message.to}`);
     } catch (err) {

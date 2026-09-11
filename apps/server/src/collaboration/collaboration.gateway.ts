@@ -1,31 +1,31 @@
-import { Hocuspocus } from '@hocuspocus/server';
-import { IncomingMessage } from 'http';
-import WebSocket from 'ws';
-import { AuthenticationExtension } from './extensions/authentication.extension';
-import { PersistenceExtension } from './extensions/persistence.extension';
-import { Injectable } from '@nestjs/common';
-import { EnvironmentService } from '../integrations/environment/environment.service';
+import { IncomingMessage } from "node:http";
+import * as os from "node:os";
+import { Hocuspocus } from "@hocuspocus/server";
+import { Injectable } from "@nestjs/common";
+import RedisClient from "ioredis";
+import { pack, unpack } from "msgpackr";
+import { nanoid } from "nanoid";
+import WebSocket from "ws";
 import {
   createRetryStrategy,
   parseRedisUrl,
   RedisConfig,
-} from '../common/helpers';
-import { LoggerExtension } from './extensions/logger.extension';
+} from "../common/helpers";
+import { EnvironmentService } from "../integrations/environment/environment.service";
+import { CollabWsAdapter } from "./adapter/collab-ws.adapter";
+import {
+  CollabEventHandlers,
+  CollaborationHandler,
+} from "./collaboration.handler";
+import { AuthenticationExtension } from "./extensions/authentication.extension";
+import { LoggerExtension } from "./extensions/logger.extension";
+import { PersistenceExtension } from "./extensions/persistence.extension";
 import {
   RedisSyncExtension,
   SerializedHTTPRequest,
-} from './extensions/redis-sync';
-import { toWebRequest } from './extensions/redis-sync/redis-sync.types';
-import { WsSocketWrapper } from './extensions/redis-sync/ws-socket-wrapper';
-import RedisClient from 'ioredis';
-import { pack, unpack } from 'msgpackr';
-import { nanoid } from 'nanoid';
-import * as os from 'node:os';
-import { CollabWsAdapter } from './adapter/collab-ws.adapter';
-import {
-  CollaborationHandler,
-  CollabEventHandlers,
-} from './collaboration.handler';
+} from "./extensions/redis-sync";
+import { toWebRequest } from "./extensions/redis-sync/redis-sync.types";
+import { WsSocketWrapper } from "./extensions/redis-sync/ws-socket-wrapper";
 
 @Injectable()
 export class CollaborationGateway {
@@ -41,41 +41,41 @@ export class CollaborationGateway {
     private persistenceExtension: PersistenceExtension,
     private loggerExtension: LoggerExtension,
     private environmentService: EnvironmentService,
-    private collabEventsService: CollaborationHandler,
+    private collabEventsService: CollaborationHandler
   ) {
     this.redisConfig = parseRedisUrl(this.environmentService.getRedisUrl());
     this.withRedis = !this.environmentService.isCollabDisableRedis();
 
     this.hocuspocus = new Hocuspocus({
-      debounce: 10000,
-      maxDebounce: 45000,
-      unloadImmediately: false,
+      debounce: 10_000,
       extensions: [
         this.authenticationExtension,
         this.persistenceExtension,
         this.loggerExtension,
       ],
+      maxDebounce: 45_000,
+      unloadImmediately: false,
     });
 
     if (this.withRedis) {
       // @ts-ignore
       this.redisSync = new RedisSyncExtension({
-        redis: new RedisClient({
-          host: this.redisConfig.host,
-          port: this.redisConfig.port,
-          username: this.redisConfig.username,
-          password: this.redisConfig.password,
-          db: this.redisConfig.db,
-          family: this.redisConfig.family,
-          tls: this.redisConfig.tls,
-          retryStrategy: createRetryStrategy(),
-        }),
-        serverId: `collab-${os?.hostname()}-${nanoid(10)}`,
-        prefix: 'collab',
-        pack,
-        unpack,
         // @ts-ignore
         customEvents: this.collabEventsService.getHandlers(this.hocuspocus),
+        pack,
+        prefix: "collab",
+        redis: new RedisClient({
+          db: this.redisConfig.db,
+          family: this.redisConfig.family,
+          host: this.redisConfig.host,
+          password: this.redisConfig.password,
+          port: this.redisConfig.port,
+          retryStrategy: createRetryStrategy(),
+          tls: this.redisConfig.tls,
+          username: this.redisConfig.username,
+        }),
+        serverId: `collab-${os?.hostname()}-${nanoid(10)}`,
+        unpack,
       });
       this.hocuspocus.configuration.extensions.push(this.redisSync);
       // @ts-ignore
@@ -85,50 +85,50 @@ export class CollaborationGateway {
 
   private serializeRequest(request: IncomingMessage): SerializedHTTPRequest {
     return {
-      method: request.method ?? 'GET',
-      url: request.url ?? '/',
       headers: {
-        'sec-websocket-key': request.headers['sec-websocket-key'] ?? '',
-        'sec-websocket-protocol':
-          request.headers['sec-websocket-protocol'] ?? '',
+        "sec-websocket-key": request.headers["sec-websocket-key"] ?? "",
+        "sec-websocket-protocol":
+          request.headers["sec-websocket-protocol"] ?? "",
       },
-      socket: { remoteAddress: request.socket?.remoteAddress ?? '' },
+      method: request.method ?? "GET",
+      socket: { remoteAddress: request.socket?.remoteAddress ?? "" },
+      url: request.url ?? "/",
     };
   }
 
   handleConnection(client: WebSocket, request: IncomingMessage): any {
     if (this.redisSync) {
       const serializedHTTPRequest = this.serializeRequest(request);
-      const socketId = serializedHTTPRequest.headers['sec-websocket-key'];
+      const socketId = serializedHTTPRequest.headers["sec-websocket-key"];
 
       const wrappedSocket = new WsSocketWrapper(client);
 
       // Route through RedisSync extension (this calls handleConnection internally)
       this.redisSync.onSocketOpen(wrappedSocket, serializedHTTPRequest);
 
-      client.on('message', (data: ArrayBuffer) => {
-        this.redisSync!.onSocketMessage(serializedHTTPRequest, data);
+      client.on("message", (data: ArrayBuffer) => {
+        this.redisSync?.onSocketMessage(serializedHTTPRequest, data);
       });
 
-      client.on('close', (code: number, reason: Buffer) => {
-        this.redisSync!.onSocketClose(
+      client.on("close", (code: number, reason: Buffer) => {
+        this.redisSync?.onSocketClose(
           socketId,
           code,
-          new Uint8Array(reason).buffer,
+          new Uint8Array(reason).buffer
         );
       });
     } else {
       // Fallback to direct Hocuspocus connection
       const clientConnection = this.hocuspocus.handleConnection(
         client,
-        toWebRequest(this.serializeRequest(request)),
+        toWebRequest(this.serializeRequest(request))
       );
 
-      client.on('message', (data: Buffer) => {
+      client.on("message", (data: Buffer) => {
         clientConnection.handleMessage(new Uint8Array(data));
       });
 
-      client.on('close', (code: number, reason: Buffer) => {
+      client.on("close", (code: number, reason: Buffer) => {
         clientConnection.handleClose({ code, reason: reason.toString() });
       });
     }
@@ -145,7 +145,7 @@ export class CollaborationGateway {
   handleYjsEvent<TName extends keyof CollabEventHandlers>(
     eventName: TName,
     documentName: string,
-    payload: Parameters<CollabEventHandlers[TName]>[1],
+    payload: Parameters<CollabEventHandlers[TName]>[1]
   ) {
     return this.redisSync?.handleEvent(eventName, documentName, payload);
   }
@@ -175,13 +175,17 @@ export class CollaborationGateway {
         // Wait for all documents to unload
         this.hocuspocus.configuration.extensions.push({
           async afterUnloadDocument({ instance }) {
-            if (instance.getDocumentsCount() === 0) resolve('');
+            if (instance.getDocumentsCount() === 0) {
+              resolve("");
+            }
           },
         });
 
         collabWsAdapter?.close();
 
-        if (this.hocuspocus.getDocumentsCount() === 0) resolve('');
+        if (this.hocuspocus.getDocumentsCount() === 0) {
+          resolve("");
+        }
         this.hocuspocus.closeConnections();
         this.hocuspocus.flushPendingStores();
       } catch (error) {
@@ -189,6 +193,6 @@ export class CollaborationGateway {
       }
     });
 
-    await this.hocuspocus.hooks('onDestroy', { instance: this.hocuspocus });
+    await this.hocuspocus.hooks("onDestroy", { instance: this.hocuspocus });
   }
 }

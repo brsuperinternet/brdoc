@@ -1,9 +1,4 @@
-import { Readable } from 'stream';
-import {
-  AzureStorageConfig,
-  StorageDriver,
-  StorageOption,
-} from '../interfaces';
+import { Readable } from "node:stream";
 import {
   BlobSASPermissions,
   BlobServiceClient,
@@ -12,9 +7,14 @@ import {
   generateBlobSASQueryParameters,
   SASProtocol,
   StorageSharedKeyCredential,
-} from '@azure/storage-blob';
-import { Logger } from '@nestjs/common';
-import { getMimeType } from '../../../common/helpers';
+} from "@azure/storage-blob";
+import { Logger } from "@nestjs/common";
+import { getMimeType } from "../../../common/helpers";
+import {
+  AzureStorageConfig,
+  StorageDriver,
+  StorageOption,
+} from "../interfaces";
 
 export class AzureDriver implements StorageDriver {
   private readonly config: AzureStorageConfig;
@@ -27,27 +27,26 @@ export class AzureDriver implements StorageDriver {
     this.config = config;
 
     if (!config.accountName) {
-      throw new Error('AzureDriver: accountName is required');
+      throw new Error("AzureDriver: accountName is required");
     }
     if (!config.container) {
-      throw new Error('AzureDriver: container is required');
+      throw new Error("AzureDriver: container is required");
     }
     if (!config.accountKey) {
-      throw new Error('AzureDriver: accountKey is required');
+      throw new Error("AzureDriver: accountKey is required");
     }
 
     this.accountUrl =
-      config.endpoint ??
-      `https://${config.accountName}.blob.core.windows.net`;
+      config.endpoint ?? `https://${config.accountName}.blob.core.windows.net`;
 
     this.sharedKeyCredential = new StorageSharedKeyCredential(
       config.accountName,
-      config.accountKey,
+      config.accountKey
     );
 
     this.blobServiceClient = this.createBlobServiceClient();
     this.containerClient = this.blobServiceClient.getContainerClient(
-      config.container,
+      config.container
     );
   }
 
@@ -63,7 +62,7 @@ export class AzureDriver implements StorageDriver {
   async uploadStream(
     filePath: string,
     file: Readable,
-    options?: { recreateClient?: boolean },
+    options?: { recreateClient?: boolean }
   ): Promise<void> {
     const clientToUse = options?.recreateClient
       ? this.createBlobServiceClient()
@@ -100,7 +99,7 @@ export class AzureDriver implements StorageDriver {
       return await this.blockBlob(filePath).downloadToBuffer();
     } catch (err) {
       throw new Error(
-        `Failed to read file from Azure: ${(err as Error).message}`,
+        `Failed to read file from Azure: ${(err as Error).message}`
       );
     }
   }
@@ -111,25 +110,25 @@ export class AzureDriver implements StorageDriver {
       return response.readableStreamBody as Readable;
     } catch (err) {
       throw new Error(
-        `Failed to read file from Azure: ${(err as Error).message}`,
+        `Failed to read file from Azure: ${(err as Error).message}`
       );
     }
   }
 
   async readRangeStream(
     filePath: string,
-    range: { start: number; end: number },
+    range: { start: number; end: number }
   ): Promise<Readable> {
     try {
       const count = range.end - range.start + 1;
       const response = await this.blockBlob(filePath).download(
         range.start,
-        count,
+        count
       );
       return response.readableStreamBody as Readable;
     } catch (err) {
       throw new Error(
-        `Failed to read file from Azure: ${(err as Error).message}`,
+        `Failed to read file from Azure: ${(err as Error).message}`
       );
     }
   }
@@ -139,7 +138,7 @@ export class AzureDriver implements StorageDriver {
       return await this.blockBlob(filePath).exists();
     } catch (err) {
       throw new Error(
-        `Failed to check existence in Azure: ${(err as Error).message}`,
+        `Failed to check existence in Azure: ${(err as Error).message}`
       );
     }
   }
@@ -153,13 +152,13 @@ export class AzureDriver implements StorageDriver {
     const expiresOn = new Date(Date.now() + expiresIn * 1000);
     const sas = generateBlobSASQueryParameters(
       {
-        containerName: this.config.container,
         blobName: filePath,
-        permissions: BlobSASPermissions.parse('r'),
+        containerName: this.config.container,
         expiresOn,
+        permissions: BlobSASPermissions.parse("r"),
         protocol: SASProtocol.HttpsAndHttp,
       },
-      this.sharedKeyCredential,
+      this.sharedKeyCredential
     ).toString();
     return `${this.accountUrl}/${this.config.container}/${filePath}?${sas}`;
   }
@@ -169,7 +168,7 @@ export class AzureDriver implements StorageDriver {
       await this.blockBlob(filePath).delete();
     } catch (err) {
       throw new Error(
-        `Error deleting file ${filePath} from Azure: ${(err as Error).message}`,
+        `Error deleting file ${filePath} from Azure: ${(err as Error).message}`
       );
     }
   }

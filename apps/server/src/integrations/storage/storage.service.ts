@@ -1,7 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { STORAGE_DRIVER_TOKEN } from './constants/storage.constants';
-import { StorageDriver } from './interfaces';
-import { Readable } from 'stream';
+import { Readable } from "node:stream";
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { STORAGE_DRIVER_TOKEN } from "./constants/storage.constants";
+import { StorageDriver } from "./interfaces";
 
 @Injectable()
 export class StorageService {
@@ -15,7 +15,11 @@ export class StorageService {
     this.logger.debug(`File uploaded successfully. Path: ${filePath}`);
   }
 
-  async uploadStream(filePath: string, fileContent: Readable, options?: { recreateClient?: boolean }) {
+  async uploadStream(
+    filePath: string,
+    fileContent: Readable,
+    options?: { recreateClient?: boolean }
+  ) {
     await this.storageDriver.uploadStream(filePath, fileContent, options);
     this.logger.debug(`File uploaded successfully. Path: ${filePath}`);
   }
@@ -35,7 +39,7 @@ export class StorageService {
 
   async readRangeStream(
     filePath: string,
-    range: { start: number; end: number },
+    range: { start: number; end: number }
   ): Promise<Readable> {
     return this.storageDriver.readRangeStream(filePath, range);
   }

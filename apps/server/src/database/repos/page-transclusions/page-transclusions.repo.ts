@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { dbOrTx } from '@docmost/db/utils';
 import {
   InsertablePageTransclusion,
   PageTransclusion,
   UpdatablePageTransclusion,
-} from '@docmost/db/types/entity.types';
+} from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx } from "@docmost/db/utils";
+import { Injectable } from "@nestjs/common";
+import { InjectKysely } from "nestjs-kysely";
 
 @Injectable()
 export class PageTransclusionsRepo {
@@ -14,58 +14,60 @@ export class PageTransclusionsRepo {
 
   async findByPageId(
     pageId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PageTransclusion[]> {
     return dbOrTx(this.db, trx)
-      .selectFrom('pageTransclusions')
+      .selectFrom("pageTransclusions")
       .selectAll()
-      .where('pageId', '=', pageId)
-      .orderBy('createdAt', 'asc')
+      .where("pageId", "=", pageId)
+      .orderBy("createdAt", "asc")
       .execute();
   }
 
   async findByPageAndTransclusion(
     pageId: string,
     transclusionId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PageTransclusion | undefined> {
     return dbOrTx(this.db, trx)
-      .selectFrom('pageTransclusions')
+      .selectFrom("pageTransclusions")
       .selectAll()
-      .where('pageId', '=', pageId)
-      .where('transclusionId', '=', transclusionId)
+      .where("pageId", "=", pageId)
+      .where("transclusionId", "=", transclusionId)
       .executeTakeFirst();
   }
 
   async findManyByPageAndTransclusion(
     keys: Array<{ pageId: string; transclusionId: string }>,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PageTransclusion[]> {
-    if (keys.length === 0) return [];
+    if (keys.length === 0) {
+      return [];
+    }
     return dbOrTx(this.db, trx)
-      .selectFrom('pageTransclusions')
+      .selectFrom("pageTransclusions")
       .selectAll()
-      .where('workspaceId', '=', workspaceId)
+      .where("workspaceId", "=", workspaceId)
       .where((eb) =>
         eb.or(
           keys.map((k) =>
             eb.and([
-              eb('pageId', '=', k.pageId),
-              eb('transclusionId', '=', k.transclusionId),
-            ]),
-          ),
-        ),
+              eb("pageId", "=", k.pageId),
+              eb("transclusionId", "=", k.transclusionId),
+            ])
+          )
+        )
       )
       .execute();
   }
 
   async insert(
     data: InsertablePageTransclusion,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PageTransclusion> {
     return dbOrTx(this.db, trx)
-      .insertInto('pageTransclusions')
+      .insertInto("pageTransclusions")
       .values(data)
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -73,11 +75,13 @@ export class PageTransclusionsRepo {
 
   async insertMany(
     data: InsertablePageTransclusion[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      return;
+    }
     await dbOrTx(this.db, trx)
-      .insertInto('pageTransclusions')
+      .insertInto("pageTransclusions")
       .values(data)
       .execute();
   }
@@ -86,27 +90,28 @@ export class PageTransclusionsRepo {
     pageId: string,
     transclusionId: string,
     data: UpdatablePageTransclusion,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     await dbOrTx(this.db, trx)
-      .updateTable('pageTransclusions')
+      .updateTable("pageTransclusions")
       .set({ ...data, updatedAt: new Date() })
-      .where('pageId', '=', pageId)
-      .where('transclusionId', '=', transclusionId)
+      .where("pageId", "=", pageId)
+      .where("transclusionId", "=", transclusionId)
       .execute();
   }
 
   async deleteByPageAndTransclusionIds(
     pageId: string,
     transclusionIds: string[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
-    if (transclusionIds.length === 0) return;
+    if (transclusionIds.length === 0) {
+      return;
+    }
     await dbOrTx(this.db, trx)
-      .deleteFrom('pageTransclusions')
-      .where('pageId', '=', pageId)
-      .where('transclusionId', 'in', transclusionIds)
+      .deleteFrom("pageTransclusions")
+      .where("pageId", "=", pageId)
+      .where("transclusionId", "in", transclusionIds)
       .execute();
   }
-
 }

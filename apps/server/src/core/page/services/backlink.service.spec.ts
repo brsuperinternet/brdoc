@@ -1,20 +1,20 @@
-import { Test } from '@nestjs/testing';
-import { BacklinkService } from './backlink.service';
-import { BacklinkRepo } from '@docmost/db/repos/backlink/backlink.repo';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
+import { BacklinkRepo } from "@docmost/db/repos/backlink/backlink.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { Test } from "@nestjs/testing";
+import { BacklinkService } from "./backlink.service";
 
-describe('BacklinkService.countByPageId', () => {
+describe("BacklinkService.countByPageId", () => {
   let service: BacklinkService;
   let backlinkRepo: jest.Mocked<BacklinkRepo>;
   let permissionRepo: jest.Mocked<PagePermissionRepo>;
 
-  const pageId = '00000000-0000-0000-0000-000000000001';
-  const userId = '00000000-0000-0000-0000-000000000099';
+  const pageId = "00000000-0000-0000-0000-000000000001";
+  const userId = "00000000-0000-0000-0000-000000000099";
 
   beforeEach(async () => {
     const backlinkRepoMock: jest.Mocked<Partial<BacklinkRepo>> = {
-      findRelatedPageIds: jest.fn(),
       findPagesByIdsPaginated: jest.fn(),
+      findRelatedPageIds: jest.fn(),
     };
     const permissionRepoMock: jest.Mocked<Partial<PagePermissionRepo>> = {
       filterAccessiblePageIds: jest.fn(),
@@ -31,33 +31,32 @@ describe('BacklinkService.countByPageId', () => {
     service = module.get(BacklinkService);
     backlinkRepo = module.get(BacklinkRepo) as jest.Mocked<BacklinkRepo>;
     permissionRepo = module.get(
-      PagePermissionRepo,
+      PagePermissionRepo
     ) as jest.Mocked<PagePermissionRepo>;
   });
 
-  it('returns post-filter counts for both directions', async () => {
+  it("returns post-filter counts for both directions", async () => {
     backlinkRepo.findRelatedPageIds.mockImplementation(async (_id, dir) =>
-      dir === 'incoming' ? ['a', 'b', 'c'] : ['x', 'y'],
+      dir === "incoming" ? ["a", "b", "c"] : ["x", "y"]
     );
     permissionRepo.filterAccessiblePageIds.mockImplementation(
-      async ({ pageIds }) =>
-        pageIds.filter((id) => id !== 'b' && id !== 'y'),
+      async ({ pageIds }) => pageIds.filter((id) => id !== "b" && id !== "y")
     );
 
     const result = await service.countByPageId(pageId, userId);
 
     expect(result).toEqual({ incoming: 2, outgoing: 1 });
     expect(permissionRepo.filterAccessiblePageIds).toHaveBeenCalledWith({
-      pageIds: ['a', 'b', 'c'],
+      pageIds: ["a", "b", "c"],
       userId,
     });
     expect(permissionRepo.filterAccessiblePageIds).toHaveBeenCalledWith({
-      pageIds: ['x', 'y'],
+      pageIds: ["x", "y"],
       userId,
     });
   });
 
-  it('skips the permission filter when there are no candidates', async () => {
+  it("skips the permission filter when there are no candidates", async () => {
     backlinkRepo.findRelatedPageIds.mockResolvedValue([]);
     permissionRepo.filterAccessiblePageIds.mockResolvedValue([]);
 
@@ -67,36 +66,36 @@ describe('BacklinkService.countByPageId', () => {
     expect(permissionRepo.filterAccessiblePageIds).not.toHaveBeenCalled();
   });
 
-  it('passes the userId to findRelatedPageIds so the repo can apply space membership filtering', async () => {
+  it("passes the userId to findRelatedPageIds so the repo can apply space membership filtering", async () => {
     backlinkRepo.findRelatedPageIds.mockResolvedValue([]);
 
     await service.countByPageId(pageId, userId);
 
     expect(backlinkRepo.findRelatedPageIds).toHaveBeenCalledWith(
       pageId,
-      'incoming',
-      userId,
+      "incoming",
+      userId
     );
     expect(backlinkRepo.findRelatedPageIds).toHaveBeenCalledWith(
       pageId,
-      'outgoing',
-      userId,
+      "outgoing",
+      userId
     );
   });
 });
 
-describe('BacklinkService.findByPageId', () => {
+describe("BacklinkService.findByPageId", () => {
   let service: BacklinkService;
   let backlinkRepo: jest.Mocked<BacklinkRepo>;
   let permissionRepo: jest.Mocked<PagePermissionRepo>;
 
-  const pageId = '00000000-0000-0000-0000-000000000001';
-  const userId = '00000000-0000-0000-0000-000000000099';
+  const pageId = "00000000-0000-0000-0000-000000000001";
+  const userId = "00000000-0000-0000-0000-000000000099";
 
   beforeEach(async () => {
     const backlinkRepoMock: jest.Mocked<Partial<BacklinkRepo>> = {
-      findRelatedPageIds: jest.fn(),
       findPagesByIdsPaginated: jest.fn(),
+      findRelatedPageIds: jest.fn(),
     };
     const permissionRepoMock: jest.Mocked<Partial<PagePermissionRepo>> = {
       filterAccessiblePageIds: jest.fn(),
@@ -113,50 +112,54 @@ describe('BacklinkService.findByPageId', () => {
     service = module.get(BacklinkService);
     backlinkRepo = module.get(BacklinkRepo) as jest.Mocked<BacklinkRepo>;
     permissionRepo = module.get(
-      PagePermissionRepo,
+      PagePermissionRepo
     ) as jest.Mocked<PagePermissionRepo>;
   });
 
-  it('passes filtered ids through to the paginated repo call', async () => {
-    backlinkRepo.findRelatedPageIds.mockResolvedValue(['a', 'b']);
-    permissionRepo.filterAccessiblePageIds.mockResolvedValue(['a']);
+  it("passes filtered ids through to the paginated repo call", async () => {
+    backlinkRepo.findRelatedPageIds.mockResolvedValue(["a", "b"]);
+    permissionRepo.filterAccessiblePageIds.mockResolvedValue(["a"]);
     backlinkRepo.findPagesByIdsPaginated.mockResolvedValue({
       items: [],
       meta: {
-        limit: 20,
         hasNextPage: false,
         hasPrevPage: false,
+        limit: 20,
         nextCursor: null,
         prevCursor: null,
       },
     } as any);
 
-    await service.findByPageId(pageId, 'incoming', userId, { limit: 20 } as any);
+    await service.findByPageId(pageId, "incoming", userId, {
+      limit: 20,
+    } as any);
 
     expect(backlinkRepo.findPagesByIdsPaginated).toHaveBeenCalledWith(
-      ['a'],
-      expect.objectContaining({ limit: 20 }),
+      ["a"],
+      expect.objectContaining({ limit: 20 })
     );
   });
 
-  it('hands an empty list to the repo when there are no accessible ids', async () => {
+  it("hands an empty list to the repo when there are no accessible ids", async () => {
     backlinkRepo.findRelatedPageIds.mockResolvedValue([]);
     backlinkRepo.findPagesByIdsPaginated.mockResolvedValue({
       items: [],
       meta: {
-        limit: 20,
         hasNextPage: false,
         hasPrevPage: false,
+        limit: 20,
         nextCursor: null,
         prevCursor: null,
       },
     } as any);
 
-    await service.findByPageId(pageId, 'incoming', userId, { limit: 20 } as any);
+    await service.findByPageId(pageId, "incoming", userId, {
+      limit: 20,
+    } as any);
 
     expect(backlinkRepo.findPagesByIdsPaginated).toHaveBeenCalledWith(
       [],
-      expect.objectContaining({ limit: 20 }),
+      expect.objectContaining({ limit: 20 })
     );
     expect(permissionRepo.filterAccessiblePageIds).not.toHaveBeenCalled();
   });

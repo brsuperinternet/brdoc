@@ -20,15 +20,15 @@
  SOFTWARE.
  ***/
 
-import { Extension, Range, type Dispatch } from "@tiptap/core";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { type Dispatch, Extension, Range } from "@tiptap/core";
+import { Mark, Node as PMNode } from "@tiptap/pm/model";
 import {
+  type EditorState,
   Plugin,
   PluginKey,
-  type EditorState,
   type Transaction,
 } from "@tiptap/pm/state";
-import { Node as PMNode, Mark } from "@tiptap/pm/model";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 
 declare module "@tiptap/core" {
   interface Storage {
@@ -81,21 +81,21 @@ declare module "@tiptap/core" {
 }
 
 interface TextNodesWithPosition {
-  text: string;
   pos: number;
+  text: string;
 }
 
 const getRegex = (
   searchTerms: string[],
   disableRegex: boolean,
   caseSensitive: boolean,
-  wholeWord: boolean,
+  wholeWord: boolean
 ): RegExp => {
   const terms = searchTerms.filter(Boolean).sort((a, b) => b.length - a.length);
 
   const pattern = terms
     .map((term) =>
-      disableRegex ? term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : term,
+      disableRegex ? term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : term
     )
     .join("|");
 
@@ -103,10 +103,7 @@ const getRegex = (
     ? `(?<![\\p{L}\\p{N}_])(?:${pattern})(?![\\p{L}\\p{N}_])`
     : pattern;
 
-  return new RegExp(
-    finalPattern,
-    caseSensitive ? "gu" : "giu",
-  );
+  return new RegExp(finalPattern, caseSensitive ? "gu" : "giu");
 };
 
 interface ProcessedSearches {
@@ -118,7 +115,7 @@ function processSearches(
   doc: PMNode,
   searchTerm: RegExp,
   searchResultClass: string,
-  resultIndex: number,
+  resultIndex: number
 ): ProcessedSearches {
   const decorations: Decoration[] = [];
   const results: Range[] = [];
@@ -137,13 +134,13 @@ function processSearches(
     if (node.isText) {
       if (textNodesWithPosition[index]) {
         textNodesWithPosition[index] = {
-          text: textNodesWithPosition[index].text + node.text,
           pos: textNodesWithPosition[index].pos,
+          text: textNodesWithPosition[index].text + node.text,
         };
       } else {
         textNodesWithPosition[index] = {
-          text: `${node.text}`,
           pos,
+          text: `${node.text}`,
         };
       }
     } else {
@@ -156,11 +153,13 @@ function processSearches(
   for (const element of textNodesWithPosition) {
     const { text, pos } = element;
     const matches = Array.from(text.matchAll(searchTerm)).filter(
-      ([matchText]) => matchText.trim(),
+      ([matchText]) => matchText.trim()
     );
 
     for (const m of matches) {
-      if (m[0] === "") break;
+      if (m[0] === "") {
+        break;
+      }
 
       if (m.index !== undefined) {
         results.push({
@@ -194,11 +193,13 @@ const replace = (
   replaceTerm: string,
   results: Range[],
   resultIndex: number,
-  { state, dispatch }: { state: EditorState; dispatch: Dispatch },
+  { state, dispatch }: { state: EditorState; dispatch: Dispatch }
 ) => {
   const firstResult = results[resultIndex];
 
-  if (!firstResult) return;
+  if (!firstResult) {
+    return;
+  }
 
   const { from, to } = results[resultIndex];
 
@@ -214,7 +215,7 @@ const replace = (
     });
 
     const marks = Array.from(marksSet);
-    
+
     // Delete the old text
     tr.delete(from, to);
 
@@ -222,7 +223,7 @@ const replace = (
     if (replaceTerm) {
       tr.insert(from, state.schema.text(replaceTerm, marks));
     }
-    
+
     dispatch(tr);
   }
 };
@@ -230,11 +231,13 @@ const replace = (
 const replaceAll = (
   replaceTerm: string,
   results: Range[],
-  { tr, dispatch }: { tr: Transaction; dispatch: Dispatch },
+  { tr, dispatch }: { tr: Transaction; dispatch: Dispatch }
 ) => {
   const resultsCopy = results.slice();
 
-  if (!resultsCopy.length) return;
+  if (!resultsCopy.length) {
+    return;
+  }
 
   // Process replacements in reverse order to avoid position shifting issues
   for (let i = resultsCopy.length - 1; i >= 0; i -= 1) {
@@ -249,7 +252,7 @@ const replaceAll = (
     });
 
     const marks = Array.from(marksSet);
-    
+
     // Delete the old text
     tr.delete(from, to);
 
@@ -263,96 +266,33 @@ const replaceAll = (
 };
 
 export const searchAndReplacePluginKey = new PluginKey(
-  "searchAndReplacePlugin",
+  "searchAndReplacePlugin"
 );
 
 export interface SearchAndReplaceOptions {
-  searchResultClass: string;
   disableRegex: boolean;
+  searchResultClass: string;
 }
 
 export interface SearchAndReplaceStorage {
-  searchTerms: string[];
-  replaceTerm: string;
-  results: Range[];
-  lastSearchTerms: string[];
   caseSensitive: boolean;
   lastCaseSensitive: boolean;
-  wholeWord: boolean;
-  lastWholeWord: boolean;
-  resultIndex: number;
   lastResultIndex: number;
+  lastSearchTerms: string[];
+  lastWholeWord: boolean;
+  replaceTerm: string;
+  resultIndex: number;
+  results: Range[];
+  searchTerms: string[];
+  wholeWord: boolean;
 }
 
 export const SearchAndReplace = Extension.create<
   SearchAndReplaceOptions,
   SearchAndReplaceStorage
 >({
-  name: "searchAndReplace",
-
-  addOptions() {
-    return {
-      searchResultClass: "search-result",
-      disableRegex: true,
-    };
-  },
-
-  addStorage() {
-    return {
-      searchTerms: [],
-      replaceTerm: "",
-      results: [],
-      lastSearchTerms: [],
-      caseSensitive: false,
-      wholeWord: false,
-      lastWholeWord: false,
-      lastCaseSensitive: false,
-      resultIndex: 0,
-      lastResultIndex: 0,
-    };
-  },
-
   addCommands() {
     return {
-      setSearchTerms:
-        (searchTerms: string[]) =>
-        ({ editor }) => {
-          editor.storage.searchAndReplace.searchTerms = searchTerms.filter(Boolean);
-
-          // clear whole word by default
-          // should remove if whole word toggle is added to search and replace dialog
-          editor.storage.searchAndReplace.wholeWord = false;
-
-          return false;
-        },
-      setWholeWord:
-        (wholeWord: boolean) =>
-        ({ editor }) => {
-          editor.storage.searchAndReplace.wholeWord = wholeWord;
-
-          return false;
-        },
-      setReplaceTerm:
-        (replaceTerm: string) =>
-        ({ editor }) => {
-          editor.storage.searchAndReplace.replaceTerm = replaceTerm;
-
-          return false;
-        },
-      setCaseSensitive:
-        (caseSensitive: boolean) =>
-        ({ editor }) => {
-          editor.storage.searchAndReplace.caseSensitive = caseSensitive;
-
-          return false;
-        },
-      resetIndex:
-        () =>
-        ({ editor }) => {
-          editor.storage.searchAndReplace.resultIndex = 0;
-
-          return false;
-        },
       nextSearchResult:
         () =>
         ({ editor }) => {
@@ -389,7 +329,7 @@ export const SearchAndReplace = Extension.create<
           const { replaceTerm, results, resultIndex } =
             editor.storage.searchAndReplace;
 
-          replace(replaceTerm, results, resultIndex, { state, dispatch });
+          replace(replaceTerm, results, resultIndex, { dispatch, state });
 
           // After replace, adjust index if needed
           // The results will be recalculated by the plugin, but we need to ensure
@@ -404,7 +344,7 @@ export const SearchAndReplace = Extension.create<
               // Keep the same position if possible, otherwise go to the last result
               editor.storage.searchAndReplace.resultIndex = Math.min(
                 resultIndex,
-                newResultsLength - 1,
+                newResultsLength - 1
               );
             }
           }, 0);
@@ -416,7 +356,14 @@ export const SearchAndReplace = Extension.create<
         ({ editor, tr, dispatch }) => {
           const { replaceTerm, results } = editor.storage.searchAndReplace;
 
-          replaceAll(replaceTerm, results, { tr, dispatch });
+          replaceAll(replaceTerm, results, { dispatch, tr });
+
+          return false;
+        },
+      resetIndex:
+        () =>
+        ({ editor }) => {
+          editor.storage.searchAndReplace.resultIndex = 0;
 
           return false;
         },
@@ -434,6 +381,46 @@ export const SearchAndReplace = Extension.create<
           }
           return false;
         },
+      setCaseSensitive:
+        (caseSensitive: boolean) =>
+        ({ editor }) => {
+          editor.storage.searchAndReplace.caseSensitive = caseSensitive;
+
+          return false;
+        },
+      setReplaceTerm:
+        (replaceTerm: string) =>
+        ({ editor }) => {
+          editor.storage.searchAndReplace.replaceTerm = replaceTerm;
+
+          return false;
+        },
+      setSearchTerms:
+        (searchTerms: string[]) =>
+        ({ editor }) => {
+          editor.storage.searchAndReplace.searchTerms =
+            searchTerms.filter(Boolean);
+
+          // clear whole word by default
+          // should remove if whole word toggle is added to search and replace dialog
+          editor.storage.searchAndReplace.wholeWord = false;
+
+          return false;
+        },
+      setWholeWord:
+        (wholeWord: boolean) =>
+        ({ editor }) => {
+          editor.storage.searchAndReplace.wholeWord = wholeWord;
+
+          return false;
+        },
+    };
+  },
+
+  addOptions() {
+    return {
+      disableRegex: true,
+      searchResultClass: "search-result",
     };
   },
 
@@ -453,11 +440,17 @@ export const SearchAndReplace = Extension.create<
     return [
       new Plugin({
         key: searchAndReplacePluginKey,
+        props: {
+          decorations(state) {
+            return this.getState(state);
+          },
+        },
         state: {
-          init: () => DecorationSet.empty,
           apply({ doc, docChanged }, oldState) {
             const storage = editor.storage.searchAndReplace;
-            if (!storage) return oldState;
+            if (!storage) {
+              return oldState;
+            }
             const {
               searchTerms,
               lastCaseSensitive,
@@ -472,12 +465,15 @@ export const SearchAndReplace = Extension.create<
             if (
               !docChanged &&
               searchTerms.length === lastSearchTerms.length &&
-              searchTerms.every((term, index) => term === lastSearchTerms[index]) &&
+              searchTerms.every(
+                (term, index) => term === lastSearchTerms[index]
+              ) &&
               lastCaseSensitive === caseSensitive &&
               lastWholeWord === wholeWord &&
               lastResultIndex === resultIndex
-            )
+            ) {
               return oldState;
+            }
 
             setLastSearchTerms(searchTerms);
             setLastCaseSensitive(caseSensitive);
@@ -490,30 +486,37 @@ export const SearchAndReplace = Extension.create<
             }
 
             const { decorationsToReturn, results } = processSearches(
-            doc,
-              getRegex(
-                searchTerms,
-                disableRegex,
-                caseSensitive,
-                wholeWord,
-              ),
-            searchResultClass,
-            resultIndex,
-          );
+              doc,
+              getRegex(searchTerms, disableRegex, caseSensitive, wholeWord),
+              searchResultClass,
+              resultIndex
+            );
 
             editor.storage.searchAndReplace.results = results;
 
             return decorationsToReturn;
           },
-        },
-        props: {
-          decorations(state) {
-            return this.getState(state);
-          },
+          init: () => DecorationSet.empty,
         },
       }),
     ];
   },
+
+  addStorage() {
+    return {
+      caseSensitive: false,
+      lastCaseSensitive: false,
+      lastResultIndex: 0,
+      lastSearchTerms: [],
+      lastWholeWord: false,
+      replaceTerm: "",
+      resultIndex: 0,
+      results: [],
+      searchTerms: [],
+      wholeWord: false,
+    };
+  },
+  name: "searchAndReplace",
 });
 
 export default SearchAndReplace;

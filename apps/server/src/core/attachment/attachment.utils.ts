@@ -1,26 +1,25 @@
-import { MultipartFile } from '@fastify/multipart';
-import * as path from 'path';
-import { AttachmentType } from './attachment.constants';
-import { sanitizeFileName } from '../../common/helpers';
-import { getMimeType } from '../../common/helpers';
+import * as path from "node:path";
+import { MultipartFile } from "@fastify/multipart";
+import { getMimeType, sanitizeFileName } from "../../common/helpers";
+import { AttachmentType } from "./attachment.constants";
 
 export interface PreparedFile {
   buffer?: Buffer;
+  fileExtension: string;
   fileName: string;
   fileSize: number;
-  fileExtension: string;
   mimeType: string;
   multiPartFile?: MultipartFile;
 }
 
 export async function prepareFile(
   filePromise: Promise<MultipartFile>,
-  options: { skipBuffer?: boolean } = {},
+  options: { skipBuffer?: boolean } = {}
 ): Promise<PreparedFile> {
   const file = await filePromise;
 
   if (!file) {
-    throw new Error('No file provided');
+    throw new Error("No file provided");
   }
 
   try {
@@ -38,9 +37,9 @@ export async function prepareFile(
 
     return {
       buffer,
+      fileExtension,
       fileName,
       fileSize,
-      fileExtension,
       mimeType: getMimeType(file.filename),
       multiPartFile: file,
     };
@@ -51,16 +50,16 @@ export async function prepareFile(
 
 export function validateFileType(
   fileExtension: string,
-  allowedTypes: string[],
+  allowedTypes: string[]
 ) {
   if (!allowedTypes.includes(fileExtension)) {
-    throw new Error('Invalid file type');
+    throw new Error("Invalid file type");
   }
 }
 
 export function getAttachmentFolderPath(
   type: AttachmentType,
-  workspaceId: string,
+  workspaceId: string
 ): string {
   switch (type) {
     case AttachmentType.Avatar:

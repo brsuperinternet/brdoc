@@ -1,3 +1,4 @@
+import { User } from "@docmost/db/types/entity.types";
 import {
   Body,
   Controller,
@@ -5,23 +6,25 @@ import {
   HttpStatus,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { NotificationService } from './notification.service';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { User } from '@docmost/db/types/entity.types';
-import { ListNotificationsDto, MarkNotificationsReadDto } from './dto/notification.dto';
+} from "@nestjs/common";
+import { AuthUser } from "../../common/decorators/auth-user.decorator";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import {
+  ListNotificationsDto,
+  MarkNotificationsReadDto,
+} from "./dto/notification.dto";
+import { NotificationService } from "./notification.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('notifications')
+@Controller("notifications")
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('/')
+  @Post("/")
   async getNotifications(
     @Body() dto: ListNotificationsDto,
-    @AuthUser() user: User,
+    @AuthUser() user: User
   ) {
     return this.notificationService.findByUserId(user.id, dto, dto.type);
   }
@@ -34,15 +37,15 @@ export class NotificationController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('mark-read')
+  @Post("mark-read")
   async markAsRead(
     @Body() dto: MarkNotificationsReadDto,
-    @AuthUser() user: User,
+    @AuthUser() user: User
   ) {
     if (dto.notificationIds?.length) {
       await this.notificationService.markMultipleAsRead(
         dto.notificationIds,
-        user.id,
+        user.id
       );
     }
   }

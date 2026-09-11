@@ -1,11 +1,11 @@
-import { InjectKysely } from 'nestjs-kysely';
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { Injectable, Logger } from "@nestjs/common";
 import {
   HealthIndicatorResult,
   HealthIndicatorService,
-} from '@nestjs/terminus';
-import { Injectable, Logger } from '@nestjs/common';
-import { sql } from 'kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
+} from "@nestjs/terminus";
+import { sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
 
 @Injectable()
 export class PostgresHealthIndicator {

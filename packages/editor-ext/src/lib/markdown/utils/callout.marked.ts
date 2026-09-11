@@ -1,15 +1,21 @@
-import { Token, marked } from 'marked';
+import { marked, Token } from "marked";
 
 interface CalloutToken {
-  type: 'callout';
   calloutType: string;
-  text: string;
   raw: string;
+  text: string;
+  type: "callout";
 }
 
 export const calloutExtension = {
-  name: 'callout',
-  level: 'block',
+  level: "block",
+  name: "callout",
+  renderer(token: Token) {
+    const calloutToken = token as CalloutToken;
+    const body = marked.parse(calloutToken.text);
+
+    return `<div data-type="callout" data-callout-type="${calloutToken.calloutType}">${body}</div>`;
+  },
   start(src: string) {
     return src.match(/:::/)?.index ?? -1;
   },
@@ -17,25 +23,19 @@ export const calloutExtension = {
     const rule = /^:::([a-zA-Z0-9]+)\s+([\s\S]+?):::/;
     const match = rule.exec(src);
 
-    const validCalloutTypes = ['info', 'success', 'warning', 'danger'];
+    const validCalloutTypes = ["info", "success", "warning", "danger"];
 
     if (match) {
       let type = match[1];
       if (!validCalloutTypes.includes(type)) {
-        type = 'info';
+        type = "info";
       }
       return {
-        type: 'callout',
         calloutType: type,
         raw: match[0],
         text: match[2].trim(),
+        type: "callout",
       };
     }
-  },
-  renderer(token: Token) {
-    const calloutToken = token as CalloutToken;
-    const body = marked.parse(calloutToken.text);
-
-    return `<div data-type="callout" data-callout-type="${calloutToken.calloutType}">${body}</div>`;
   },
 };

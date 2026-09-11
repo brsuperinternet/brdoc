@@ -1,25 +1,24 @@
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { OnModuleDestroy } from "@nestjs/common";
 import {
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { TokenService } from '../core/auth/services/token.service';
-import { JwtPayload, JwtType } from '../core/auth/dto/jwt-payload';
-import { OnModuleDestroy } from '@nestjs/common';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
-import { WsService } from './ws.service';
-import { getSpaceRoomName, getUserRoomName } from './ws.utils';
-import { BaseRealtimeBridge } from './base-realtime.bridge';
-import * as cookie from 'cookie';
+} from "@nestjs/websockets";
+import * as cookie from "cookie";
+import { Server, Socket } from "socket.io";
+import { JwtPayload, JwtType } from "../core/auth/dto/jwt-payload";
+import { TokenService } from "../core/auth/services/token.service";
+import { BaseRealtimeBridge } from "./base-realtime.bridge";
+import { WsService } from "./ws.service";
+import { getSpaceRoomName, getUserRoomName } from "./ws.utils";
 
 @WebSocketGateway({
-  cors: { origin: '*' },
-  transports: ['websocket'],
+  cors: { origin: "*" },
+  transports: ["websocket"],
 })
 export class WsGateway
   implements
@@ -35,7 +34,7 @@ export class WsGateway
     private tokenService: TokenService,
     private spaceMemberRepo: SpaceMemberRepo,
     private wsService: WsService,
-    private baseRealtime: BaseRealtimeBridge,
+    private baseRealtime: BaseRealtimeBridge
   ) {}
 
   afterInit(server: Server): void {
@@ -47,8 +46,8 @@ export class WsGateway
     try {
       const cookies = cookie.parse(client.handshake.headers.cookie);
       const token: JwtPayload = await this.tokenService.verifyJwt(
-        cookies['authToken'],
-        JwtType.ACCESS,
+        cookies["authToken"],
+        JwtType.ACCESS
       );
 
       const userId = token.sub;
@@ -65,7 +64,7 @@ export class WsGateway
 
       client.join([userRoom, workspaceRoom, ...spaceRooms]);
     } catch (err) {
-      client.emit('Unauthorized');
+      client.emit("Unauthorized");
       client.disconnect();
     }
   }
@@ -74,7 +73,7 @@ export class WsGateway
     await this.baseRealtime.handleDisconnect(client);
   }
 
-  @SubscribeMessage('message')
+  @SubscribeMessage("message")
   async handleMessage(client: Socket, data: any): Promise<void> {
     if (this.wsService.isTreeEvent(data)) {
       await this.wsService.handleTreeEvent(client, data);

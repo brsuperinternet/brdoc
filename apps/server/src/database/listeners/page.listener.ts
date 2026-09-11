@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { EventName } from '../../common/events/event.contants';
-import { InjectQueue } from '@nestjs/bullmq';
-import { QueueJob, QueueName } from '../../integrations/queue/constants';
-import { Queue } from 'bullmq';
-import { EnvironmentService } from '../../integrations/environment/environment.service';
+import { InjectQueue } from "@nestjs/bullmq";
+import { Injectable, Logger } from "@nestjs/common";
+import { OnEvent } from "@nestjs/event-emitter";
+import { Queue } from "bullmq";
+import { EventName } from "../../common/events/event.contants";
+import { EnvironmentService } from "../../integrations/environment/environment.service";
+import { QueueJob, QueueName } from "../../integrations/queue/constants";
 
 export class PageEvent {
   pageIds: string[];
@@ -75,6 +75,6 @@ export class PageListener {
   }
 
   isTypesense(): boolean {
-    return this.environmentService.getSearchDriver() === 'typesense';
+    return this.environmentService.getSearchDriver() === "typesense";
   }
 }

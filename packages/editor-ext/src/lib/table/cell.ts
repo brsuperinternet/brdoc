@@ -1,10 +1,6 @@
 import { TableCell as TiptapTableCell } from "@tiptap/extension-table";
 
 export const TableCell = TiptapTableCell.extend({
-  name: "tableCell",
-  content:
-    "(paragraph | heading | bulletList | orderedList | taskList | blockquote | callout | image | video | audio | subpages | attachment | mathBlock | details | codeBlock)+",
-
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -19,8 +15,8 @@ export const TableCell = TiptapTableCell.extend({
             return {};
           }
           return {
-            style: `background-color: ${attributes.backgroundColor}`,
             "data-background-color": attributes.backgroundColor,
+            style: `background-color: ${attributes.backgroundColor}`,
           };
         },
       },
@@ -40,4 +36,7 @@ export const TableCell = TiptapTableCell.extend({
       },
     };
   },
+  content:
+    "(paragraph | heading | bulletList | orderedList | taskList | blockquote | callout | image | video | audio | subpages | attachment | mathBlock | details | codeBlock)+",
+  name: "tableCell",
 });

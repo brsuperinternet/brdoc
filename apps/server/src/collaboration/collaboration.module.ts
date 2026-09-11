@@ -1,23 +1,32 @@
-import { Logger, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { AuthenticationExtension } from './extensions/authentication.extension';
-import { PersistenceExtension } from './extensions/persistence.extension';
-import { CollaborationGateway } from './collaboration.gateway';
-import { HttpAdapterHost } from '@nestjs/core';
-import { CollabWsAdapter } from './adapter/collab-ws.adapter';
-import { IncomingMessage } from 'http';
-import { WebSocket } from 'ws';
-import { TokenModule } from '../core/auth/token.module';
-import { HistoryProcessor } from './processors/history.processor';
-import { LoggerExtension } from './extensions/logger.extension';
-import { CollaborationHandler } from './collaboration.handler';
-import { CollabHistoryService } from './services/collab-history.service';
-import { WatcherModule } from '../core/watcher/watcher.module';
-import { TransclusionService } from '../core/page/transclusion/transclusion.service';
-import { TransclusionModule } from '../core/page/transclusion/transclusion.module';
-import { StorageModule } from '../integrations/storage/storage.module';
-import { EnvironmentModule } from '../integrations/environment/environment.module';
+import { IncomingMessage } from "node:http";
+import { Logger, Module, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { HttpAdapterHost } from "@nestjs/core";
+import { WebSocket } from "ws";
+import { TokenModule } from "../core/auth/token.module";
+import { TransclusionModule } from "../core/page/transclusion/transclusion.module";
+import { TransclusionService } from "../core/page/transclusion/transclusion.service";
+import { WatcherModule } from "../core/watcher/watcher.module";
+import { EnvironmentModule } from "../integrations/environment/environment.module";
+import { StorageModule } from "../integrations/storage/storage.module";
+import { CollabWsAdapter } from "./adapter/collab-ws.adapter";
+import { CollaborationGateway } from "./collaboration.gateway";
+import { CollaborationHandler } from "./collaboration.handler";
+import { AuthenticationExtension } from "./extensions/authentication.extension";
+import { LoggerExtension } from "./extensions/logger.extension";
+import { PersistenceExtension } from "./extensions/persistence.extension";
+import { HistoryProcessor } from "./processors/history.processor";
+import { CollabHistoryService } from "./services/collab-history.service";
 
 @Module({
+  exports: [CollaborationGateway],
+  imports: [
+    TokenModule,
+    WatcherModule,
+    StorageModule.forRootAsync({
+      imports: [EnvironmentModule],
+    }),
+    TransclusionModule,
+  ],
   providers: [
     CollaborationGateway,
     AuthenticationExtension,
@@ -28,24 +37,15 @@ import { EnvironmentModule } from '../integrations/environment/environment.modul
     CollaborationHandler,
     TransclusionService,
   ],
-  exports: [CollaborationGateway],
-  imports: [
-    TokenModule,
-    WatcherModule,
-    StorageModule.forRootAsync({
-      imports: [EnvironmentModule],
-    }),
-    TransclusionModule,
-  ],
 })
 export class CollaborationModule implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CollaborationModule.name);
   private collabWsAdapter: CollabWsAdapter;
-  private path = '/collab';
+  private path = "/collab";
 
   constructor(
     private readonly collaborationGateway: CollaborationGateway,
-    private readonly httpAdapterHost: HttpAdapterHost,
+    private readonly httpAdapterHost: HttpAdapterHost
   ) {}
 
   onModuleInit() {
@@ -54,16 +54,16 @@ export class CollaborationModule implements OnModuleInit, OnModuleDestroy {
 
     const wss = this.collabWsAdapter.handleUpgrade(this.path, httpServer);
 
-    wss.on('connection', (client: WebSocket, request: IncomingMessage) => {
+    wss.on("connection", (client: WebSocket, request: IncomingMessage) => {
       this.collaborationGateway.handleConnection(client, request);
 
-      client.on('error', (error) => {
-        this.logger.error('WebSocket client error:', error);
+      client.on("error", (error) => {
+        this.logger.error("WebSocket client error:", error);
       });
     });
 
-    wss.on('error', (error) =>
-      this.logger.error('WebSocket server error:', error),
+    wss.on("error", (error) =>
+      this.logger.error("WebSocket server error:", error)
     );
   }
 

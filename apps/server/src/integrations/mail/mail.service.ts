@@ -1,12 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { MAIL_DRIVER_TOKEN } from './mail.constants';
-import { MailDriver } from './drivers/interfaces/mail-driver.interface';
-import { MailMessage } from './interfaces/mail.message';
-import { EnvironmentService } from '../environment/environment.service';
-import { InjectQueue } from '@nestjs/bullmq';
-import { QueueName, QueueJob } from '../queue/constants';
-import { Queue } from 'bullmq';
-import { render } from 'react-email';
+import { InjectQueue } from "@nestjs/bullmq";
+import { Inject, Injectable } from "@nestjs/common";
+import { Queue } from "bullmq";
+import { render } from "react-email";
+import { EnvironmentService } from "../environment/environment.service";
+import { QueueJob, QueueName } from "../queue/constants";
+import { MailDriver } from "./drivers/interfaces/mail-driver.interface";
+import { MailMessage } from "./interfaces/mail.message";
+import { MAIL_DRIVER_TOKEN } from "./mail.constants";
 
 @Injectable()
 export class MailService {
@@ -58,8 +58,10 @@ export class MailService {
 
   private isRecipientBlocked(to: string): boolean {
     const blocked = this.environmentService.getMailBlockedRecipientDomains();
-    if (blocked.length === 0) return false;
-    const domain = to?.split('@')[1]?.toLowerCase();
+    if (blocked.length === 0) {
+      return false;
+    }
+    const domain = to?.split("@")[1]?.toLowerCase();
     return !!domain && blocked.includes(domain);
   }
 }

@@ -1,26 +1,25 @@
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { FavoriteRepo } from "@docmost/db/repos/favorite/favorite.repo";
+import { GroupUserRepo } from "@docmost/db/repos/group/group-user.repo";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { UserRepo } from "@docmost/db/repos/user/user.repo";
+import { WatcherRepo } from "@docmost/db/repos/watcher/watcher.repo";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx, executeTx } from "@docmost/db/utils";
 import {
   BadRequestException,
   forwardRef,
   Inject,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { GroupService } from './group.service';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { InjectKysely } from 'nestjs-kysely';
-import { GroupUserRepo } from '@docmost/db/repos/group/group-user.repo';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
-import { UserRepo } from '@docmost/db/repos/user/user.repo';
-import { executeTx } from '@docmost/db/utils';
-import { WatcherRepo } from '@docmost/db/repos/watcher/watcher.repo';
-import { FavoriteRepo } from '@docmost/db/repos/favorite/favorite.repo';
-import { AuditEvent, AuditResource } from '../../../common/events/audit-events';
+} from "@nestjs/common";
+import { InjectKysely } from "nestjs-kysely";
+import { AuditEvent, AuditResource } from "../../../common/events/audit-events";
 import {
   AUDIT_SERVICE,
   IAuditService,
-} from '../../../integrations/audit/audit.service';
-import { dbOrTx } from '@docmost/db/utils';
+} from "../../../integrations/audit/audit.service";
+import { GroupService } from "./group.service";
 
 @Injectable()
 export class GroupUserService {
@@ -39,13 +38,13 @@ export class GroupUserService {
   async getGroupUsers(
     groupId: string,
     workspaceId: string,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ) {
     await this.groupService.findAndValidateGroup(groupId, workspaceId);
 
     const groupUsers = await this.groupUserRepo.getGroupUsersPaginated(
       groupId,
-      pagination,
+      pagination
     );
 
     return groupUsers;
@@ -55,50 +54,54 @@ export class GroupUserService {
     userIds: string[],
     groupId: string,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
     await this.groupService.findAndValidateGroup(groupId, workspaceId, trx);
 
-    if (userIds.length === 0) return;
+    if (userIds.length === 0) {
+      return;
+    }
 
     // make sure we have valid workspace users
     const validUsers = await db
-      .selectFrom('users')
-      .select(['id', 'name'])
-      .where('users.id', 'in', userIds)
-      .where('users.workspaceId', '=', workspaceId)
+      .selectFrom("users")
+      .select(["id", "name"])
+      .where("users.id", "in", userIds)
+      .where("users.workspaceId", "=", workspaceId)
       .execute();
 
-    if (validUsers.length === 0) return;
+    if (validUsers.length === 0) {
+      return;
+    }
 
     // prepare users to add to group
     const groupUsersToInsert = [];
     for (const user of validUsers) {
       groupUsersToInsert.push({
+        groupId,
         userId: user.id,
-        groupId: groupId,
       });
     }
 
     // batch insert new group users
     await db
-      .insertInto('groupUsers')
+      .insertInto("groupUsers")
       .values(groupUsersToInsert)
-      .onConflict((oc) => oc.columns(['userId', 'groupId']).doNothing())
+      .onConflict((oc) => oc.columns(["userId", "groupId"]).doNothing())
       .execute();
 
     for (const user of validUsers) {
       this.auditService.log({
-        event: AuditEvent.GROUP_MEMBER_ADDED,
-        resourceType: AuditResource.GROUP,
-        resourceId: groupId,
         changes: {
           after: {
             userId: user.id,
             userName: user.name,
           },
         },
+        event: AuditEvent.GROUP_MEMBER_ADDED,
+        resourceId: groupId,
+        resourceType: AuditResource.GROUP,
       });
     }
   }
@@ -106,32 +109,32 @@ export class GroupUserService {
   async removeUserFromGroup(
     userId: string,
     groupId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
     const group = await this.groupService.findAndValidateGroup(
       groupId,
-      workspaceId,
+      workspaceId
     );
 
     const user = await this.userRepo.findById(userId, workspaceId);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     if (group.isDefault) {
       throw new BadRequestException(
-        'You cannot remove users from a default group',
+        "You cannot remove users from a default group"
       );
     }
 
     const groupUser = await this.groupUserRepo.getGroupUserById(
       userId,
-      groupId,
+      groupId
     );
 
     if (!groupUser) {
-      throw new BadRequestException('Group member not found');
+      throw new BadRequestException("Group member not found");
     }
 
     const spaceIds = await this.spaceMemberRepo.getSpaceIdsByGroupId(groupId);
@@ -144,30 +147,30 @@ export class GroupUserService {
         await this.watcherRepo.deleteByUsersWithoutSpaceAccess(
           [userId],
           spaceId,
-          { trx },
+          { trx }
         );
 
         await this.favoriteRepo.deleteByUsersWithoutSpaceAccess(
           [userId],
           spaceId,
-          { trx },
+          { trx }
         );
       }
     });
 
     this.auditService.log({
-      event: AuditEvent.GROUP_MEMBER_REMOVED,
-      resourceType: AuditResource.GROUP,
-      resourceId: groupId,
       changes: {
         before: {
           userId: user.id,
           userName: user.name,
         },
       },
+      event: AuditEvent.GROUP_MEMBER_REMOVED,
       metadata: {
         groupName: group.name,
       },
+      resourceId: groupId,
+      resourceType: AuditResource.GROUP,
     });
   }
 }

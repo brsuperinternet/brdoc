@@ -1,8 +1,8 @@
 import {
-  Node,
   findChildren,
   findParentNode,
   mergeAttributes,
+  Node,
   wrappingInputRule,
 } from "@tiptap/core";
 import { icon, setAttributes } from "../utils";
@@ -22,19 +22,6 @@ export interface DetailsOptions {
 }
 
 export const Details = Node.create<DetailsOptions>({
-  name: "details",
-  group: "block",
-  content: "detailsSummary detailsContent",
-  defining: true,
-  isolating: true,
-  // @ts-ignore
-  allowGapCursor: false,
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-
   addAttributes() {
     return {
       open: {
@@ -45,20 +32,120 @@ export const Details = Node.create<DetailsOptions>({
     };
   },
 
-  parseHTML() {
+  addCommands() {
+    return {
+      setDetails:
+        () =>
+        ({ state, chain }) => {
+          const range = state.selection.$from.blockRange(state.selection.$to);
+          if (!range) {
+            return false;
+          }
+
+          const slice = state.doc.slice(range.start, range.end);
+
+          if (slice.content.firstChild.type.name === "detailsSummary") {
+            return false;
+          }
+
+          if (
+            !state.schema.nodes.detailsContent.contentMatch.matchFragment(
+              slice.content
+            )
+          ) {
+            return false;
+          }
+
+          return chain()
+            .insertContentAt(
+              {
+                from: range.start,
+                to: range.end,
+              },
+              {
+                attrs: {
+                  open: true,
+                },
+                content: [
+                  {
+                    type: "detailsSummary",
+                  },
+                  {
+                    content: slice.toJSON()?.content ?? [],
+                    type: "detailsContent",
+                  },
+                ],
+                type: this.name,
+              }
+            )
+            .setTextSelection(range.start + 2)
+            .run();
+        },
+
+      toggleDetails:
+        () =>
+        ({ state, chain }) => {
+          const node = findParentNode((node) => node.type === this.type)(
+            state.selection
+          );
+          if (node) {
+            return chain().unsetDetails().run();
+          }
+          return chain().setDetails().run();
+        },
+
+      unsetDetails:
+        () =>
+        ({ state, chain }) => {
+          const parent = findParentNode((node) => node.type === this.type)(
+            state.selection
+          );
+          if (!parent) {
+            return false;
+          }
+
+          const summary = findChildren(
+            parent.node,
+            (node) => node.type.name === "detailsSummary"
+          );
+          const content = findChildren(
+            parent.node,
+            (node) => node.type.name === "detailsContent"
+          );
+          if (!summary.length || !content.length) {
+            return false;
+          }
+
+          const range = {
+            from: parent.pos,
+            to: parent.pos + parent.node.nodeSize,
+          };
+          const defaultType = state.doc.resolve(range.from).parent.type
+            .contentMatch.defaultType;
+          return chain()
+            .insertContentAt(range, [
+              defaultType?.create(null, summary[0].node.content).toJSON(),
+              ...(content[0].node.content.toJSON() ?? []),
+            ])
+            .setTextSelection(range.from + 1)
+            .run();
+        },
+    };
+  },
+
+  addInputRules() {
     return [
-      {
-        tag: "details",
-      },
+      wrappingInputRule({
+        find: /^:::details\s$/,
+        type: this.type,
+      }),
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "details",
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-      0,
-    ];
+  addKeyboardShortcuts() {
+    return {
+      "Mod-Alt-d": () => this.editor.commands.toggleDetails(),
+    };
   },
 
   addNodeView() {
@@ -69,7 +156,7 @@ export const Details = Node.create<DetailsOptions>({
       const div = document.createElement("div");
 
       for (const [key, value] of Object.entries(
-        mergeAttributes(this.options.HTMLAttributes),
+        mergeAttributes(this.options.HTMLAttributes)
       )) {
         if (value !== undefined && value !== null) {
           dom.setAttribute(key, value);
@@ -109,13 +196,15 @@ export const Details = Node.create<DetailsOptions>({
       dom.append(btn);
       dom.append(div);
       return {
-        dom,
         contentDOM: div,
+        dom,
         update: (updatedNode) => {
           if (updatedNode.type !== this.type) {
             return false;
           }
-          if (!editor.isEditable) return true;
+          if (!editor.isEditable) {
+            return true;
+          }
           if (updatedNode.attrs.open) {
             dom.setAttribute("open", "true");
           } else {
@@ -126,120 +215,32 @@ export const Details = Node.create<DetailsOptions>({
       };
     };
   },
-
-  addCommands() {
+  addOptions() {
     return {
-      setDetails: () => {
-        return ({ state, chain }) => {
-          const range = state.selection.$from.blockRange(state.selection.$to);
-          if (!range) {
-            return false;
-          }
-
-          const slice = state.doc.slice(range.start, range.end);
-
-          if (slice.content.firstChild.type.name === "detailsSummary")
-            return false;
-
-          if (
-            !state.schema.nodes.detailsContent.contentMatch.matchFragment(
-              slice.content,
-            )
-          ) {
-            return false;
-          }
-
-          return chain()
-            .insertContentAt(
-              {
-                from: range.start,
-                to: range.end,
-              },
-              {
-                type: this.name,
-                attrs: {
-                  open: true,
-                },
-                content: [
-                  {
-                    type: "detailsSummary",
-                  },
-                  {
-                    type: "detailsContent",
-                    content: slice.toJSON()?.content ?? [],
-                  },
-                ],
-              },
-            )
-            .setTextSelection(range.start + 2)
-            .run();
-        };
-      },
-
-      unsetDetails: () => {
-        return ({ state, chain }) => {
-          const parent = findParentNode((node) => node.type === this.type)(
-            state.selection,
-          );
-          if (!parent) {
-            return false;
-          }
-
-          const summary = findChildren(
-            parent.node,
-            (node) => node.type.name === "detailsSummary",
-          );
-          const content = findChildren(
-            parent.node,
-            (node) => node.type.name === "detailsContent",
-          );
-          if (!summary.length || !content.length) {
-            return false;
-          }
-
-          const range = {
-            from: parent.pos,
-            to: parent.pos + parent.node.nodeSize,
-          };
-          const defaultType = state.doc.resolve(range.from).parent.type
-            .contentMatch.defaultType;
-          return chain()
-            .insertContentAt(range, [
-              defaultType?.create(null, summary[0].node.content).toJSON(),
-              ...(content[0].node.content.toJSON() ?? []),
-            ])
-            .setTextSelection(range.from + 1)
-            .run();
-        };
-      },
-
-      toggleDetails: () => {
-        return ({ state, chain }) => {
-          const node = findParentNode((node) => node.type === this.type)(
-            state.selection,
-          );
-          if (node) {
-            return chain().unsetDetails().run();
-          } else {
-            return chain().setDetails().run();
-          }
-        };
-      },
+      HTMLAttributes: {},
     };
   },
+  // @ts-ignore
+  allowGapCursor: false,
+  content: "detailsSummary detailsContent",
+  defining: true,
+  group: "block",
+  isolating: true,
+  name: "details",
 
-  addInputRules() {
+  parseHTML() {
     return [
-      wrappingInputRule({
-        find: /^:::details\s$/,
-        type: this.type,
-      }),
+      {
+        tag: "details",
+      },
     ];
   },
 
-  addKeyboardShortcuts() {
-    return {
-      "Mod-Alt-d": () => this.editor.commands.toggleDetails(),
-    };
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "details",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0,
+    ];
   },
 });

@@ -1,6 +1,6 @@
-import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
-import type { NodeView, ViewMutationRecord } from '@tiptap/pm/view';
-import { getColStyleDeclaration } from './utils/col-style';
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { NodeView, ViewMutationRecord } from "@tiptap/pm/view";
+import { getColStyleDeclaration } from "./utils/col-style";
 
 export function updateColumns(
   node: ProseMirrorNode,
@@ -8,7 +8,7 @@ export function updateColumns(
   table: HTMLTableElement,
   cellMinWidth: number,
   overrideCol?: number,
-  overrideValue?: number,
+  overrideValue?: number
 ) {
   let totalWidth = 0;
   let fixedWidth = true;
@@ -24,7 +24,7 @@ export function updateColumns(
           overrideCol === col
             ? overrideValue
             : ((colwidth && colwidth[j]) as number | undefined);
-        const cssWidth = hasWidth ? `${hasWidth}px` : '';
+        const cssWidth = hasWidth ? `${hasWidth}px` : "";
 
         totalWidth += hasWidth || cellMinWidth;
 
@@ -32,31 +32,31 @@ export function updateColumns(
           fixedWidth = false;
         }
 
-        if (!nextDOM) {
-          const colElement = document.createElement('col');
+        if (nextDOM) {
+          if ((nextDOM as HTMLTableColElement).style.width !== cssWidth) {
+            const [propertyKey, propertyValue] = getColStyleDeclaration(
+              cellMinWidth,
+              hasWidth
+            );
+
+            (nextDOM as HTMLTableColElement).style.setProperty(
+              propertyKey,
+              propertyValue
+            );
+          }
+
+          nextDOM = nextDOM.nextSibling;
+        } else {
+          const colElement = document.createElement("col");
 
           const [propertyKey, propertyValue] = getColStyleDeclaration(
             cellMinWidth,
-            hasWidth,
+            hasWidth
           );
 
           colElement.style.setProperty(propertyKey, propertyValue);
 
           colgroup.appendChild(colElement);
-        } else {
-          if ((nextDOM as HTMLTableColElement).style.width !== cssWidth) {
-            const [propertyKey, propertyValue] = getColStyleDeclaration(
-              cellMinWidth,
-              hasWidth,
-            );
-
-            (nextDOM as HTMLTableColElement).style.setProperty(
-              propertyKey,
-              propertyValue,
-            );
-          }
-
-          nextDOM = nextDOM.nextSibling;
         }
       }
     }
@@ -71,14 +71,14 @@ export function updateColumns(
 
   const hasUserWidth =
     node.attrs.style &&
-    typeof node.attrs.style === 'string' &&
+    typeof node.attrs.style === "string" &&
     /\bwidth\s*:/i.test(node.attrs.style);
 
   if (fixedWidth && !hasUserWidth) {
     table.style.width = `${totalWidth}px`;
-    table.style.minWidth = '';
+    table.style.minWidth = "";
   } else {
-    table.style.width = '';
+    table.style.width = "";
     table.style.minWidth = `${totalWidth}px`;
   }
 }
@@ -99,21 +99,23 @@ export class TableView implements NodeView {
   constructor(node: ProseMirrorNode, cellMinWidth: number) {
     this.node = node;
     this.cellMinWidth = cellMinWidth;
-    this.dom = document.createElement('div');
-    this.dom.className = 'tableWrapper';
-    this.table = this.dom.appendChild(document.createElement('table'));
+    this.dom = document.createElement("div");
+    this.dom.className = "tableWrapper";
+    this.table = this.dom.appendChild(document.createElement("table"));
 
     if (node.attrs.style) {
       this.table.style.cssText = node.attrs.style;
     }
 
-    this.colgroup = this.table.appendChild(document.createElement('colgroup'));
+    this.colgroup = this.table.appendChild(document.createElement("colgroup"));
     updateColumns(node, this.colgroup, this.table, cellMinWidth);
-    this.contentDOM = this.table.appendChild(document.createElement('tbody'));
+    this.contentDOM = this.table.appendChild(document.createElement("tbody"));
   }
 
   update(node: ProseMirrorNode) {
-    if (node.type !== this.node.type) return false;
+    if (node.type !== this.node.type) {
+      return false;
+    }
 
     this.node = node;
     updateColumns(node, this.colgroup, this.table, this.cellMinWidth);
@@ -126,18 +128,18 @@ export class TableView implements NodeView {
     const isInsideWrapper = this.dom.contains(target);
     const isInsideContent = this.contentDOM.contains(target);
 
-    if (isInsideWrapper && !isInsideContent) {
-      if (
-        mutation.type === 'attributes' ||
-        mutation.type === 'childList' ||
-        mutation.type === 'characterData'
-      ) {
-        return true;
-      }
+    if (
+      isInsideWrapper &&
+      !isInsideContent &&
+      (mutation.type === "attributes" ||
+        mutation.type === "childList" ||
+        mutation.type === "characterData")
+    ) {
+      return true;
     }
 
     // Chevron span (.tableReadonlySortChevron) added/removed by sort plugin.
-    if (mutation.type === 'childList') {
+    if (mutation.type === "childList") {
       const nodes = [
         ...Array.from(mutation.addedNodes),
         ...Array.from(mutation.removedNodes),
@@ -146,7 +148,7 @@ export class TableView implements NodeView {
         nodes.some(
           (n) =>
             n instanceof Element &&
-            n.classList.contains('tableReadonlySortChevron'),
+            n.classList.contains("tableReadonlySortChevron")
         )
       ) {
         return true;

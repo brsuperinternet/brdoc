@@ -3,10 +3,13 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { ClsService } from 'nestjs-cls';
-import { AuditContext, AUDIT_CONTEXT_KEY } from '../middlewares/audit-context.middleware';
+} from "@nestjs/common";
+import { ClsService } from "nestjs-cls";
+import { Observable } from "rxjs";
+import {
+  AUDIT_CONTEXT_KEY,
+  AuditContext,
+} from "../middlewares/audit-context.middleware";
 
 @Injectable()
 export class AuditActorInterceptor implements NestInterceptor {

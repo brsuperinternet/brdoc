@@ -1,5 +1,5 @@
-import { IsArray, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { IsArray, IsIn, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class NotificationIdDto {
   @IsUUID()
@@ -16,6 +16,6 @@ export class MarkNotificationsReadDto {
 export class ListNotificationsDto extends PaginationOptions {
   @IsOptional()
   @IsString()
-  @IsIn(['direct', 'updates', 'all'])
-  type?: 'direct' | 'updates' | 'all' = 'all';
+  @IsIn(["direct", "updates", "all"])
+  type?: "direct" | "updates" | "all" = "all";
 }

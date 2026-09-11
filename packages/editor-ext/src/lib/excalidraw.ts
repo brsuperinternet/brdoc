@@ -1,8 +1,8 @@
-import { Node, mergeAttributes } from "@tiptap/core";
-import { ResizableNodeView } from "./resizable-nodeview";
-import type { ResizableNodeViewDirection } from "./resizable-nodeview";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { normalizeFileUrl, syncAltBadge } from "./media-utils";
+import type { ResizableNodeViewDirection } from "./resizable-nodeview";
+import { ResizableNodeView } from "./resizable-nodeview";
 
 export type ExcalidrawResizeOptions = {
   enabled: boolean;
@@ -21,20 +21,20 @@ export type ExcalidrawResizeOptions = {
 
 export interface ExcalidrawOptions {
   HTMLAttributes: Record<string, any>;
-  view: any;
   resize: ExcalidrawResizeOptions | false;
+  view: any;
 }
 
 export interface ExcalidrawAttributes {
+  align?: string;
+  alt?: string;
+  aspectRatio?: number;
+  attachmentId?: string;
+  height?: number;
+  size?: number;
   src?: string;
   title?: string;
-  alt?: string;
-  size?: number;
   width?: number | string;
-  height?: number;
-  aspectRatio?: number;
-  align?: string;
-  attachmentId?: string;
 }
 
 declare module "@tiptap/core" {
@@ -48,24 +48,57 @@ declare module "@tiptap/core" {
 }
 
 export const Excalidraw = Node.create<ExcalidrawOptions>({
-  name: "excalidraw",
-  inline: false,
-  group: "block",
-  isolating: true,
-  atom: true,
-  defining: true,
-  draggable: true,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-      resize: false,
-    };
-  },
-
   addAttributes() {
     return {
+      align: {
+        default: "center",
+        parseHTML: (element) => element.getAttribute("data-align"),
+        renderHTML: (attributes: ExcalidrawAttributes) => ({
+          "data-align": attributes.align,
+        }),
+      },
+      alt: {
+        default: undefined,
+        parseHTML: (element) => element.getAttribute("data-alt"),
+        renderHTML: (attributes: ExcalidrawAttributes) => ({
+          "data-alt": attributes.alt,
+        }),
+      },
+      aspectRatio: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-aspect-ratio"),
+        renderHTML: (attributes: ExcalidrawAttributes) => ({
+          "data-aspect-ratio": attributes.aspectRatio,
+        }),
+      },
+      attachmentId: {
+        default: undefined,
+        parseHTML: (element) => element.getAttribute("data-attachment-id"),
+        renderHTML: (attributes: ExcalidrawAttributes) => ({
+          "data-attachment-id": attributes.attachmentId,
+        }),
+      },
+      height: {
+        default: null,
+        parseHTML: (element) => {
+          const raw = element.getAttribute("data-height");
+          if (!raw) {
+            return null;
+          }
+          const num = Number.parseFloat(raw);
+          return isNaN(num) ? null : num;
+        },
+        renderHTML: (attributes: ExcalidrawAttributes) => ({
+          "data-height": attributes.height,
+        }),
+      },
+      size: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-size"),
+        renderHTML: (attributes: ExcalidrawAttributes) => ({
+          "data-size": attributes.size,
+        }),
+      },
       src: {
         default: "",
         parseHTML: (element) => element.getAttribute("data-src"),
@@ -80,106 +113,35 @@ export const Excalidraw = Node.create<ExcalidrawOptions>({
           "data-title": attributes.title,
         }),
       },
-      alt: {
-        default: undefined,
-        parseHTML: (element) => element.getAttribute("data-alt"),
-        renderHTML: (attributes: ExcalidrawAttributes) => ({
-          "data-alt": attributes.alt,
-        }),
-      },
       width: {
         default: null,
         parseHTML: (element) => {
           const raw = element.getAttribute("data-width");
-          if (!raw) return null;
-          if (raw.endsWith("%")) return raw;
-          const num = parseFloat(raw);
+          if (!raw) {
+            return null;
+          }
+          if (raw.endsWith("%")) {
+            return raw;
+          }
+          const num = Number.parseFloat(raw);
           return isNaN(num) ? null : num;
         },
         renderHTML: (attributes: ExcalidrawAttributes) => ({
           "data-width": attributes.width,
         }),
       },
-      height: {
-        default: null,
-        parseHTML: (element) => {
-          const raw = element.getAttribute("data-height");
-          if (!raw) return null;
-          const num = parseFloat(raw);
-          return isNaN(num) ? null : num;
-        },
-        renderHTML: (attributes: ExcalidrawAttributes) => ({
-          "data-height": attributes.height,
-        }),
-      },
-      size: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-size"),
-        renderHTML: (attributes: ExcalidrawAttributes) => ({
-          "data-size": attributes.size,
-        }),
-      },
-      aspectRatio: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-aspect-ratio"),
-        renderHTML: (attributes: ExcalidrawAttributes) => ({
-          "data-aspect-ratio": attributes.aspectRatio,
-        }),
-      },
-      align: {
-        default: "center",
-        parseHTML: (element) => element.getAttribute("data-align"),
-        renderHTML: (attributes: ExcalidrawAttributes) => ({
-          "data-align": attributes.align,
-        }),
-      },
-      attachmentId: {
-        default: undefined,
-        parseHTML: (element) => element.getAttribute("data-attachment-id"),
-        renderHTML: (attributes: ExcalidrawAttributes) => ({
-          "data-attachment-id": attributes.attachmentId,
-        }),
-      },
     };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: `div[data-type="${this.name}"]`,
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "div",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
-      [
-        "img",
-        {
-          src: HTMLAttributes["data-src"],
-          alt: HTMLAttributes["data-alt"] || HTMLAttributes["data-title"],
-          width: HTMLAttributes["data-width"],
-        },
-      ],
-    ];
   },
 
   addCommands() {
     return {
       setExcalidraw:
         (attrs: ExcalidrawAttributes) =>
-        ({ commands }) => {
-          return commands.insertContent({
+        ({ commands }) =>
+          commands.insertContent({
+            attrs,
             type: "excalidraw",
-            attrs: attrs,
-          });
-        },
+          }),
 
       setExcalidrawAlign:
         (align) =>
@@ -189,7 +151,7 @@ export const Excalidraw = Node.create<ExcalidrawOptions>({
       setExcalidrawSize:
         (width, height) =>
         ({ commands }) =>
-          commands.updateAttributes("excalidraw", { width, height }),
+          commands.updateAttributes("excalidraw", { height, width }),
     };
   },
 
@@ -242,26 +204,28 @@ export const Excalidraw = Node.create<ExcalidrawOptions>({
       let currentNode = node;
 
       const nodeView = new ResizableNodeView({
-        element: el,
         editor,
-        node,
+        element: el,
         getPos,
-        onResize: (w, h) => {
-          el.style.width = `${w}px`;
-          el.style.height = `${h}px`;
-        },
+        node,
         onCommit: () => {
           const pos = getPos();
-          if (pos === undefined) return;
+          if (pos === undefined) {
+            return;
+          }
 
           this.editor
             .chain()
             .setNodeSelection(pos)
             .updateAttributes(this.name, {
-              width: Math.round(el.offsetWidth),
               height: Math.round(el.offsetHeight),
+              width: Math.round(el.offsetWidth),
             })
             .run();
+        },
+        onResize: (w, h) => {
+          el.style.width = `${w}px`;
+          el.style.height = `${h}px`;
         },
         onUpdate: (updatedNode, _decorations, _innerDecorations) => {
           if (updatedNode.type !== currentNode.type) {
@@ -276,8 +240,7 @@ export const Excalidraw = Node.create<ExcalidrawOptions>({
             updatedNode.attrs.alt !== currentNode.attrs.alt ||
             updatedNode.attrs.title !== currentNode.attrs.title
           ) {
-            el.alt =
-              updatedNode.attrs.alt || updatedNode.attrs.title || "";
+            el.alt = updatedNode.attrs.alt || updatedNode.attrs.title || "";
           }
 
           const w = updatedNode.attrs.width;
@@ -299,14 +262,14 @@ export const Excalidraw = Node.create<ExcalidrawOptions>({
           return true;
         },
         options: {
+          className,
+          createCustomHandle,
           directions,
           min: {
-            width: minWidth,
             height: minHeight,
+            width: minWidth,
           },
           preserveAspectRatio: alwaysPreserveAspectRatio === true,
-          createCustomHandle,
-          className,
         },
       });
 
@@ -323,11 +286,9 @@ export const Excalidraw = Node.create<ExcalidrawOptions>({
           const parentEl = dom.parentElement;
           if (parentEl) {
             const containerWidth = parentEl.clientWidth;
-            const pctValue = parseInt(widthAttr, 10);
+            const pctValue = Number.parseInt(widthAttr, 10);
             if (!isNaN(pctValue) && containerWidth > 0) {
-              const pxWidth = Math.round(
-                containerWidth * (pctValue / 100),
-              );
+              const pxWidth = Math.round(containerWidth * (pctValue / 100));
               el.style.width = `${pxWidth}px`;
               if (node.attrs.aspectRatio) {
                 el.style.height = `${Math.round(pxWidth / node.attrs.aspectRatio)}px`;
@@ -350,6 +311,48 @@ export const Excalidraw = Node.create<ExcalidrawOptions>({
 
       return nodeView;
     };
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      resize: false,
+      view: null,
+    };
+  },
+  atom: true,
+  defining: true,
+  draggable: true,
+  group: "block",
+  inline: false,
+  isolating: true,
+  name: "excalidraw",
+
+  parseHTML() {
+    return [
+      {
+        tag: `div[data-type="${this.name}"]`,
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(
+        { "data-type": this.name },
+        this.options.HTMLAttributes,
+        HTMLAttributes
+      ),
+      [
+        "img",
+        {
+          alt: HTMLAttributes["data-alt"] || HTMLAttributes["data-title"],
+          src: HTMLAttributes["data-src"],
+          width: HTMLAttributes["data-width"],
+        },
+      ],
+    ];
   },
 });
 

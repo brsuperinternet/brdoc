@@ -1,17 +1,17 @@
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { GroupRepo } from "@docmost/db/repos/group/group.repo";
+import { UserRepo } from "@docmost/db/repos/user/user.repo";
+import { GroupUser, InsertableGroupUser } from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx, executeTx } from "@docmost/db/utils";
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { dbOrTx, executeTx } from '@docmost/db/utils';
-import { sql } from 'kysely';
-import { GroupUser, InsertableGroupUser } from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '../../pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
-import { GroupRepo } from '@docmost/db/repos/group/group.repo';
-import { UserRepo } from '@docmost/db/repos/user/user.repo';
+} from "@nestjs/common";
+import { sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
+import { PaginationOptions } from "../../pagination/pagination-options";
 
 @Injectable()
 export class GroupUserRepo {
@@ -24,24 +24,24 @@ export class GroupUserRepo {
   async getGroupUserById(
     userId: string,
     groupId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .selectFrom('groupUsers')
+      .selectFrom("groupUsers")
       .selectAll()
-      .where('userId', '=', userId)
-      .where('groupId', '=', groupId)
+      .where("userId", "=", userId)
+      .where("groupId", "=", groupId)
       .executeTakeFirst();
   }
 
   async insertGroupUser(
     insertableGroupUser: InsertableGroupUser,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<GroupUser> {
     const db = dbOrTx(this.db, trx);
     return db
-      .insertInto('groupUsers')
+      .insertInto("groupUsers")
       .values(insertableGroupUser)
       .returningAll()
       .executeTakeFirst();
@@ -49,31 +49,31 @@ export class GroupUserRepo {
 
   async getGroupUsersPaginated(groupId: string, pagination: PaginationOptions) {
     let query = this.db
-      .selectFrom('groupUsers')
-      .innerJoin('users', 'users.id', 'groupUsers.userId')
-      .selectAll('users')
-      .where('groupId', '=', groupId);
+      .selectFrom("groupUsers")
+      .innerJoin("users", "users.id", "groupUsers.userId")
+      .selectAll("users")
+      .where("groupId", "=", groupId);
 
     if (pagination.query) {
       query = query.where((eb) =>
         eb(
           sql`f_unaccent(users.name)`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
         ).or(
           sql`users.email`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
-        ),
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
+        )
       );
     }
 
     const result = await executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
-      fields: [{ expression: 'users.id', direction: 'asc', key: 'id' }],
+      cursor: pagination.cursor,
+      fields: [{ direction: "asc", expression: "users.id", key: "id" }],
       parseCursor: (cursor) => ({ id: cursor.id }),
+      perPage: pagination.limit,
     });
 
     result.items.map((user) => {
@@ -87,7 +87,7 @@ export class GroupUserRepo {
     userId: string,
     groupId: string,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     await executeTx(
       this.db,
@@ -96,70 +96,70 @@ export class GroupUserRepo {
           trx,
         });
         if (!group) {
-          throw new NotFoundException('Group not found');
+          throw new NotFoundException("Group not found");
         }
 
         const user = await this.userRepo.findById(userId, workspaceId, {
-          trx: trx,
+          trx,
         });
 
         if (!user) {
-          throw new NotFoundException('User not found');
+          throw new NotFoundException("User not found");
         }
 
         const groupUserExists = await this.getGroupUserById(
           userId,
           groupId,
-          trx,
+          trx
         );
 
         if (groupUserExists) {
           throw new BadRequestException(
-            'User is already a member of this group',
+            "User is already a member of this group"
           );
         }
 
         await this.insertGroupUser(
           {
-            userId,
             groupId,
+            userId,
           },
-          trx,
+          trx
         );
       },
-      trx,
+      trx
     );
   }
 
   async addUserToDefaultGroup(
     userId: string,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     await executeTx(
       this.db,
       async (trx) => {
         const defaultGroup = await this.groupRepo.getDefaultGroup(
           workspaceId,
-          trx,
+          trx
         );
         await this.insertGroupUser(
           {
-            userId,
             groupId: defaultGroup.id,
+            userId,
           },
-          trx,
+          trx
         );
       },
-      trx,
+      trx
     );
   }
 
   async getUserIdsByGroupId(groupId: string): Promise<string[]> {
     const rows = await this.db
-      .selectFrom('groupUsers')
-      .select('userId')
-      .where('groupId', '=', groupId)
+      .selectFrom("groupUsers")
+      .select("userId")
+      .where("groupId", "=", groupId)
       .execute();
 
     return rows.map((r) => r.userId);
@@ -168,23 +168,23 @@ export class GroupUserRepo {
   async delete(
     userId: string,
     groupId: string,
-    opts?: { trx?: KyselyTransaction },
+    opts?: { trx?: KyselyTransaction }
   ): Promise<void> {
     const { trx } = opts;
     const db = dbOrTx(this.db, trx);
 
     await db
-      .deleteFrom('groupUsers')
-      .where('userId', '=', userId)
-      .where('groupId', '=', groupId)
+      .deleteFrom("groupUsers")
+      .where("userId", "=", userId)
+      .where("groupId", "=", groupId)
       .execute();
   }
 
   async getUserGroupIds(userId: string): Promise<string[]> {
     const results = await this.db
-      .selectFrom('groupUsers')
-      .select('groupId')
-      .where('userId', '=', userId)
+      .selectFrom("groupUsers")
+      .select("groupId")
+      .where("userId", "=", userId)
       .execute();
 
     return results.map((r) => r.groupId);

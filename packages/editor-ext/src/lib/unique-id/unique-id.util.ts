@@ -41,12 +41,12 @@ import type { UniqueID } from "./unique-id";
  */
 export function addUniqueIdsToDoc(
   doc: JSONContent,
-  extensions: Extensions,
+  extensions: Extensions
 ): JSONContent {
   // Find the UniqueID extension in the extensions array. If it's not found, throw an error.
-  const uniqueIDExtension = extensions.find(
-    (ext) => ext.name === "uniqueID",
-  ) as typeof UniqueID | undefined;
+  const uniqueIDExtension = extensions.find((ext) => ext.name === "uniqueID") as
+    | typeof UniqueID
+    | undefined;
   if (!uniqueIDExtension) {
     throw new Error("UniqueID extension not found in the extensions array");
   }
@@ -60,9 +60,10 @@ export function addUniqueIdsToDoc(
   const contentNode = Node.fromJSON(schema, doc);
 
   // Find nodes that don't have a unique ID
-  const nodesWithoutId = findChildren(contentNode, (node) => {
-    return !node.attrs[attributeName] && types.includes(node.type.name);
-  });
+  const nodesWithoutId = findChildren(
+    contentNode,
+    (node) => !node.attrs[attributeName] && types.includes(node.type.name)
+  );
 
   // Edit the document to add unique IDs to the nodes that don't have a unique ID
   let tr = EditorState.create({

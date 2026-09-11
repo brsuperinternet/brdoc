@@ -1,13 +1,11 @@
-import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Extension } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 
-import { attach, detach, getController } from './controller';
+import { attach, detach, getController } from "./controller";
 
-const tableHeaderPinKey = new PluginKey('tableHeaderPin');
+const tableHeaderPinKey = new PluginKey("tableHeaderPin");
 
 export const TableHeaderPin = Extension.create({
-  name: 'tableHeaderPin',
-
   addProseMirrorPlugins() {
     let editorRoot: HTMLElement | null = null;
     let domObserver: MutationObserver | null = null;
@@ -16,9 +14,11 @@ export const TableHeaderPin = Extension.create({
 
     const reconcile = () => {
       rafHandle = null;
-      if (!editorRoot) return;
+      if (!editorRoot) {
+        return;
+      }
       const current = new Set(
-        editorRoot.querySelectorAll<HTMLElement>('.tableWrapper'),
+        editorRoot.querySelectorAll<HTMLElement>(".tableWrapper")
       );
       for (const w of tracked) {
         if (!current.has(w)) {
@@ -35,7 +35,9 @@ export const TableHeaderPin = Extension.create({
     };
 
     const schedule = () => {
-      if (rafHandle !== null) return;
+      if (rafHandle !== null) {
+        return;
+      }
       rafHandle = requestAnimationFrame(reconcile);
     };
 
@@ -49,16 +51,9 @@ export const TableHeaderPin = Extension.create({
           schedule();
 
           domObserver = new MutationObserver(schedule);
-          domObserver.observe(editorRoot, { subtree: true, childList: true });
+          domObserver.observe(editorRoot, { childList: true, subtree: true });
 
           return {
-            update(view, prevState) {
-              if (!editorRoot) return;
-              if (view.state.doc === prevState.doc) return;
-              editorRoot
-                .querySelectorAll<HTMLElement>('.tableWrapper')
-                .forEach((w) => getController(w)?.refresh());
-            },
             destroy() {
               if (rafHandle !== null) {
                 cancelAnimationFrame(rafHandle);
@@ -66,13 +61,27 @@ export const TableHeaderPin = Extension.create({
               }
               domObserver?.disconnect();
               domObserver = null;
-              for (const w of tracked) detach(w);
+              for (const w of tracked) {
+                detach(w);
+              }
               tracked.clear();
               editorRoot = null;
+            },
+            update(view, prevState) {
+              if (!editorRoot) {
+                return;
+              }
+              if (view.state.doc === prevState.doc) {
+                return;
+              }
+              editorRoot
+                .querySelectorAll<HTMLElement>(".tableWrapper")
+                .forEach((w) => getController(w)?.refresh());
             },
           };
         },
       }),
     ];
   },
+  name: "tableHeaderPin",
 });

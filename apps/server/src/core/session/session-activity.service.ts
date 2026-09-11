@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { RedisService } from '@nestjs-labs/nestjs-ioredis';
-import type { Redis } from 'ioredis';
-import { UserSessionRepo } from '@docmost/db/repos/session/user-session.repo';
-import { UserRepo } from '@docmost/db/repos/user/user.repo';
+import { UserSessionRepo } from "@docmost/db/repos/session/user-session.repo";
+import { UserRepo } from "@docmost/db/repos/user/user.repo";
+import { Injectable } from "@nestjs/common";
+import { RedisService } from "@nestjs-labs/nestjs-ioredis";
+import type { Redis } from "ioredis";
 
 const THROTTLE_SECONDS = 15 * 60; // 15 minutes
 
@@ -13,7 +13,7 @@ export class SessionActivityService {
   constructor(
     private readonly redisService: RedisService,
     private readonly userSessionRepo: UserSessionRepo,
-    private readonly userRepo: UserRepo,
+    private readonly userRepo: UserRepo
   ) {
     this.redis = this.redisService.getOrThrow();
   }
@@ -22,9 +22,11 @@ export class SessionActivityService {
     const key = `session:activity:${sessionId}`;
 
     this.redis
-      .set(key, '1', 'EX', THROTTLE_SECONDS, 'NX')
+      .set(key, "1", "EX", THROTTLE_SECONDS, "NX")
       .then((result) => {
-        if (result === null) return; // key already exists, throttled
+        if (result === null) {
+          return; // key already exists, throttled
+        }
 
         this.userSessionRepo.updateLastActiveAt(sessionId).catch(() => {});
         this.userRepo

@@ -3,10 +3,10 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-} from '@nestjs/common';
-import { map, Observable } from 'rxjs';
-import { Reflector } from '@nestjs/core';
-import { SKIP_TRANSFORM_KEY } from '../decorators/skip-transform.decorator';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { map, Observable } from "rxjs";
+import { SKIP_TRANSFORM_KEY } from "../decorators/skip-transform.decorator";
 export interface Response<T> {
   data: T;
 }
@@ -19,11 +19,11 @@ export class TransformHttpResponseInterceptor<T>
 
   intercept(
     context: ExecutionContext,
-    next: CallHandler<T>,
+    next: CallHandler<T>
   ): Observable<Response<T> | any> {
     const skipTransform = this.reflector.get(
       SKIP_TRANSFORM_KEY,
-      context.getHandler(),
+      context.getHandler()
     );
 
     if (skipTransform) {
@@ -33,8 +33,8 @@ export class TransformHttpResponseInterceptor<T>
     return next.handle().pipe(
       map((data) => {
         const status = context.switchToHttp().getResponse().statusCode;
-        return { data, success: true, status };
-      }),
+        return { data, status, success: true };
+      })
     );
   }
 }

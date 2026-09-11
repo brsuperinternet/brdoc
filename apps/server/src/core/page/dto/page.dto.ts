@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer";
 import {
   IsBoolean,
   IsIn,
@@ -5,10 +6,9 @@ import {
   IsOptional,
   IsString,
   IsUUID,
-} from 'class-validator';
-import { Transform } from 'class-transformer';
+} from "class-validator";
 
-import { ContentFormat } from './create-page.dto';
+import { ContentFormat } from "./create-page.dto";
 
 export class PageIdDto {
   @IsString()
@@ -37,7 +37,7 @@ export class PageInfoDto extends PageIdDto {
 
   @IsOptional()
   @Transform(({ value }) => value?.toLowerCase())
-  @IsIn(['json', 'markdown', 'html'])
+  @IsIn(["json", "markdown", "html"])
   format?: ContentFormat;
 }
 

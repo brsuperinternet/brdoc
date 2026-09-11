@@ -1,6 +1,7 @@
 //Source MIT - https://github.com/buttondown/tiptap-footnotes
-import { EditorState, Transaction } from "@tiptap/pm/state";
+
 import { Fragment, Node } from "@tiptap/pm/model";
+import { EditorState, Transaction } from "@tiptap/pm/state";
 
 // update the reference number of all the footnote references in the document
 export function updateFootnoteReferences(tr: Transaction) {
@@ -32,7 +33,7 @@ function getFootnotes(tr: Transaction) {
       return false;
     }
   });
-  return { footnotesRange, footnotes };
+  return { footnotes, footnotesRange };
 }
 
 // update the "footnotes" ordered list based on the footnote references in the document
@@ -43,8 +44,8 @@ export function updateFootnotesList(tr: Transaction, state: EditorState) {
   const footnotesType = state.schema.nodes.footnotes;
 
   const emptyParagraph = state.schema.nodeFromJSON({
-    type: "paragraph",
     content: [],
+    type: "paragraph",
   });
 
   const { footnotesRange, footnotes } = getFootnotes(tr);
@@ -55,48 +56,51 @@ export function updateFootnotesList(tr: Transaction, state: EditorState) {
       obj[footnote.attrs["data-id"]] = footnote;
       return obj;
     },
-    {} as any,
+    {} as any
   );
 
   const newFootnotes: Node[] = [];
 
-  let footnoteRefIds = new Set(
-    footnoteReferences.map((ref) => ref.attrs["data-id"]),
+  const footnoteRefIds = new Set(
+    footnoteReferences.map((ref) => ref.attrs["data-id"])
   );
   const deleteFootnoteIds: Set<string> = new Set();
-  for (let footnote of footnotes) {
+  for (const footnote of footnotes) {
     const id = footnote.attrs["data-id"];
     if (!footnoteRefIds.has(id) || deleteFootnoteIds.has(id)) {
       deleteFootnoteIds.add(id);
       // we traverse through this footnote's content because it may contain footnote references.
       // we want to delete the footnotes associated with these references, so we add them to the delete set.
       footnote.content.descendants((node) => {
-        if (node.type.name == "footnoteReference")
+        if (node.type.name == "footnoteReference") {
           deleteFootnoteIds.add(node.attrs["data-id"]);
+        }
       });
     }
   }
 
   for (let i = 0; i < footnoteReferences.length; i++) {
-    let refId = footnoteReferences[i].attrs["data-id"];
+    const refId = footnoteReferences[i].attrs["data-id"];
 
-    if (deleteFootnoteIds.has(refId)) continue;
+    if (deleteFootnoteIds.has(refId)) {
+      continue;
+    }
     // if there is a footnote w/ the same id as this `ref`, we preserve its content and update its id attribute
     if (refId in footnoteIds) {
-      let footnote = footnoteIds[refId];
+      const footnote = footnoteIds[refId];
       newFootnotes.push(
         footnoteType.create(
           { ...footnote.attrs, id: `fn:${i + 1}` },
-          footnote.content,
-        ),
+          footnote.content
+        )
       );
     } else {
-      let newNode = footnoteType.create(
+      const newNode = footnoteType.create(
         {
           "data-id": refId,
           id: `fn:${i + 1}`,
         },
-        [emptyParagraph],
+        [emptyParagraph]
       );
       newFootnotes.push(newNode);
     }
@@ -107,17 +111,17 @@ export function updateFootnotesList(tr: Transaction, state: EditorState) {
     if (footnotesRange) {
       tr.delete(footnotesRange.from, footnotesRange.to);
     }
-  } else if (!footnotesRange) {
+  } else if (footnotesRange) {
+    tr.replaceWith(
+      footnotesRange?.from + 1, // add 1 to point at the position after the opening ol tag
+      footnotesRange?.to - 1, // substract 1 to point to the position before the closing ol tag
+      Fragment.from(newFootnotes)
+    );
+  } else {
     // there is no footnotes node present in the doc, add it
     tr.insert(
       tr.doc.content.size,
-      footnotesType.create(undefined, Fragment.from(newFootnotes)),
-    );
-  } else {
-    tr.replaceWith(
-      footnotesRange!.from + 1, // add 1 to point at the position after the opening ol tag
-      footnotesRange!.to - 1, // substract 1 to point to the position before the closing ol tag
-      Fragment.from(newFootnotes),
+      footnotesType.create(undefined, Fragment.from(newFootnotes))
     );
   }
 }

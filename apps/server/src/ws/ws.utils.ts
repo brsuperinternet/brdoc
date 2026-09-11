@@ -1,5 +1,5 @@
 export const WS_CACHE_TTL_MS = 30_000;
-export const WS_SPACE_RESTRICTION_CACHE_PREFIX = 'ws:space-restrictions:';
+export const WS_SPACE_RESTRICTION_CACHE_PREFIX = "ws:space-restrictions:";
 
 export function getSpaceRoomName(spaceId: string): string {
   return `space-${spaceId}`;
@@ -10,11 +10,11 @@ export function getUserRoomName(userId: string): string {
 }
 
 export const TREE_EVENTS = new Set([
-  'updateOne',
-  'addTreeNode',
-  'moveTreeNode',
-  'deleteTreeNode',
-  'refetchRootTreeNodeEvent',
+  "updateOne",
+  "addTreeNode",
+  "moveTreeNode",
+  "deleteTreeNode",
+  "refetchRootTreeNodeEvent",
 ]);
 
 export function getBaseRoomName(pageId: string): string {
@@ -22,8 +22,8 @@ export function getBaseRoomName(pageId: string): string {
 }
 
 export const BASE_INBOUND_EVENTS = new Set([
-  'base:subscribe',
-  'base:unsubscribe',
-  'base:presence',
-  'base:presence:leave',
+  "base:subscribe",
+  "base:unsubscribe",
+  "base:presence",
+  "base:presence:leave",
 ]);

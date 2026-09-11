@@ -1,22 +1,22 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { WorkspaceService } from '../../workspace/services/workspace.service';
-import { CreateWorkspaceDto } from '../../workspace/dto/create-workspace.dto';
-import { CreateAdminUserDto } from '../dto/create-admin-user.dto';
-import { UserRepo } from '@docmost/db/repos/user/user.repo';
-import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
-import { getWorkspaceDefaultPageEditMode } from '../../workspace/workspace.util';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { executeTx } from '@docmost/db/utils';
-import { InjectKysely } from 'nestjs-kysely';
-import { User, Workspace } from '@docmost/db/types/entity.types';
-import { GroupUserRepo } from '@docmost/db/repos/group/group-user.repo';
-import { UserRole } from '../../../common/helpers/types/permission';
-import { AuditEvent, AuditResource } from '../../../common/events/audit-events';
+import { GroupUserRepo } from "@docmost/db/repos/group/group-user.repo";
+import { UserRepo } from "@docmost/db/repos/user/user.repo";
+import { WorkspaceRepo } from "@docmost/db/repos/workspace/workspace.repo";
+import { User, Workspace } from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { executeTx } from "@docmost/db/utils";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { InjectKysely } from "nestjs-kysely";
+import { AuditEvent, AuditResource } from "../../../common/events/audit-events";
+import { UserRole } from "../../../common/helpers/types/permission";
 import {
   AUDIT_SERVICE,
   IAuditService,
-} from '../../../integrations/audit/audit.service';
+} from "../../../integrations/audit/audit.service";
+import { CreateWorkspaceDto } from "../../workspace/dto/create-workspace.dto";
+import { WorkspaceService } from "../../workspace/services/workspace.service";
+import { getWorkspaceDefaultPageEditMode } from "../../workspace/workspace.util";
+import { CreateAdminUserDto } from "../dto/create-admin-user.dto";
+import { CreateUserDto } from "../dto/create-user.dto";
 
 @Injectable()
 export class SignupService {
@@ -32,16 +32,16 @@ export class SignupService {
   async signup(
     createUserDto: CreateUserDto,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<User> {
     const userCheck = await this.userRepo.findByEmail(
       createUserDto.email,
-      workspaceId,
+      workspaceId
     );
 
     if (userCheck) {
       throw new BadRequestException(
-        'An account with this email already exists in this workspace',
+        "An account with this email already exists in this workspace"
       );
     }
 
@@ -55,10 +55,10 @@ export class SignupService {
         const user = await this.userRepo.insertUser(
           {
             ...createUserDto,
-            workspaceId: workspaceId,
+            workspaceId,
           },
           trx,
-          { pageEditMode: getWorkspaceDefaultPageEditMode(workspace) },
+          { pageEditMode: getWorkspaceDefaultPageEditMode(workspace) }
         );
 
         // add user to workspace
@@ -66,34 +66,34 @@ export class SignupService {
           user.id,
           workspaceId,
           undefined,
-          trx,
+          trx
         );
 
         // add user to default group
         await this.groupUserRepo.addUserToDefaultGroup(
           user.id,
           workspaceId,
-          trx,
+          trx
         );
         return user;
       },
-      trx,
+      trx
     );
 
     this.auditService.log({
-      event: AuditEvent.USER_CREATED,
-      resourceType: AuditResource.USER,
-      resourceId: user.id,
       changes: {
         after: {
-          name: user.name,
           email: user.email,
+          name: user.name,
           role: user.role,
         },
       },
+      event: AuditEvent.USER_CREATED,
       metadata: {
-        source: 'signup',
+        source: "signup",
       },
+      resourceId: user.id,
+      resourceType: AuditResource.USER,
     });
 
     return user;
@@ -101,7 +101,7 @@ export class SignupService {
 
   async initialSetup(
     createAdminUserDto: CreateAdminUserDto,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     let user: User,
       workspace: Workspace = null;
@@ -112,31 +112,31 @@ export class SignupService {
         // create user
         user = await this.userRepo.insertUser(
           {
-            name: createAdminUserDto.name,
             email: createAdminUserDto.email,
+            emailVerifiedAt: new Date(),
+            name: createAdminUserDto.name,
             password: createAdminUserDto.password,
             role: UserRole.OWNER,
-            emailVerifiedAt: new Date(),
           },
-          trx,
+          trx
         );
 
         // create workspace with full setup
         const workspaceData: CreateWorkspaceDto = {
-          name: createAdminUserDto.workspaceName || 'My workspace',
           hostname: createAdminUserDto.hostname,
+          name: createAdminUserDto.workspaceName || "My workspace",
         };
 
         workspace = await this.workspaceService.create(
           user,
           workspaceData,
-          trx,
+          trx
         );
 
         user.workspaceId = workspace.id;
         return user;
       },
-      trx,
+      trx
     );
 
     return { user, workspace };

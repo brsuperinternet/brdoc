@@ -1,13 +1,13 @@
-import { type Kysely, sql } from 'kysely';
+import { type Kysely, sql } from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
-    .alterTable('pages')
-    .addColumn('is_base', 'boolean', (col) =>
-      col.ifNotExists().notNull().defaultTo(false),
+    .alterTable("pages")
+    .addColumn("is_base", "boolean", (col) =>
+      col.ifNotExists().notNull().defaultTo(false)
     )
-    .addColumn('base_schema_version', 'integer', (col) =>
-      col.ifNotExists().notNull().defaultTo(0),
+    .addColumn("base_schema_version", "integer", (col) =>
+      col.ifNotExists().notNull().defaultTo(0)
     )
     .execute();
 
@@ -18,36 +18,36 @@ export async function up(db: Kysely<any>): Promise<void> {
   `.execute(db);
 
   await db.schema
-    .createTable('base_properties')
+    .createTable("base_properties")
     .ifNotExists()
-    .addColumn('id', 'varchar', (col) => col.notNull())
-    .addColumn('page_id', 'uuid', (col) =>
-      col.references('pages.id').onDelete('cascade').notNull(),
+    .addColumn("id", "varchar", (col) => col.notNull())
+    .addColumn("page_id", "uuid", (col) =>
+      col.references("pages.id").onDelete("cascade").notNull()
     )
-    .addColumn('name', 'varchar', (col) => col.notNull())
-    .addColumn('type', 'varchar', (col) => col.notNull())
-    .addColumn('position', 'varchar', (col) => col.notNull())
-    .addColumn('type_options', 'jsonb')
-    .addColumn('pending_type', 'varchar')
-    .addColumn('pending_type_options', 'jsonb')
-    .addColumn('pending_token', 'uuid')
-    .addColumn('is_primary', 'boolean', (col) => col.notNull().defaultTo(false))
-    .addColumn('schema_version', 'integer', (col) => col.notNull().defaultTo(1))
-    .addColumn('workspace_id', 'uuid', (col) =>
-      col.references('workspaces.id').onDelete('cascade').notNull(),
+    .addColumn("name", "varchar", (col) => col.notNull())
+    .addColumn("type", "varchar", (col) => col.notNull())
+    .addColumn("position", "varchar", (col) => col.notNull())
+    .addColumn("type_options", "jsonb")
+    .addColumn("pending_type", "varchar")
+    .addColumn("pending_type_options", "jsonb")
+    .addColumn("pending_token", "uuid")
+    .addColumn("is_primary", "boolean", (col) => col.notNull().defaultTo(false))
+    .addColumn("schema_version", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("workspace_id", "uuid", (col) =>
+      col.references("workspaces.id").onDelete("cascade").notNull()
     )
-    .addColumn('created_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
-    .addColumn('updated_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
-    .addColumn('deleted_at', 'timestamptz')
-    .addPrimaryKeyConstraint('base_properties_pkey', ['page_id', 'id'])
+    .addColumn("deleted_at", "timestamptz")
+    .addPrimaryKeyConstraint("base_properties_pkey", ["page_id", "id"])
     .execute();
 
   await sql`CREATE INDEX IF NOT EXISTS idx_base_properties_page_id ON base_properties (page_id)`.execute(
-    db,
+    db
   );
 
   await sql`
@@ -66,34 +66,34 @@ export async function up(db: Kysely<any>): Promise<void> {
   `.execute(db);
 
   await db.schema
-    .createTable('base_rows')
+    .createTable("base_rows")
     .ifNotExists()
-    .addColumn('id', 'uuid', (col) =>
-      col.primaryKey().defaultTo(sql`gen_uuid_v7()`),
+    .addColumn("id", "uuid", (col) =>
+      col.primaryKey().defaultTo(sql`gen_uuid_v7()`)
     )
-    .addColumn('page_id', 'uuid', (col) =>
-      col.references('pages.id').onDelete('cascade').notNull(),
+    .addColumn("page_id", "uuid", (col) =>
+      col.references("pages.id").onDelete("cascade").notNull()
     )
-    .addColumn('cells', 'jsonb', (col) =>
-      col.notNull().defaultTo(sql`'{}'::jsonb`),
+    .addColumn("cells", "jsonb", (col) =>
+      col.notNull().defaultTo(sql`'{}'::jsonb`)
     )
-    .addColumn('position', 'varchar', (col) => col.notNull())
-    .addColumn('creator_id', 'uuid', (col) =>
-      col.references('users.id').onDelete('set null'),
+    .addColumn("position", "varchar", (col) => col.notNull())
+    .addColumn("creator_id", "uuid", (col) =>
+      col.references("users.id").onDelete("set null")
     )
-    .addColumn('last_updated_by_id', 'uuid', (col) =>
-      col.references('users.id').onDelete('set null'),
+    .addColumn("last_updated_by_id", "uuid", (col) =>
+      col.references("users.id").onDelete("set null")
     )
-    .addColumn('workspace_id', 'uuid', (col) =>
-      col.references('workspaces.id').onDelete('cascade').notNull(),
+    .addColumn("workspace_id", "uuid", (col) =>
+      col.references("workspaces.id").onDelete("cascade").notNull()
     )
-    .addColumn('created_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
-    .addColumn('updated_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
-    .addColumn('deleted_at', 'timestamptz')
+    .addColumn("deleted_at", "timestamptz")
     .execute();
 
   await sql`
@@ -115,36 +115,36 @@ export async function up(db: Kysely<any>): Promise<void> {
   `.execute(db);
 
   await db.schema
-    .createTable('base_views')
+    .createTable("base_views")
     .ifNotExists()
-    .addColumn('id', 'uuid', (col) =>
-      col.primaryKey().defaultTo(sql`gen_uuid_v7()`),
+    .addColumn("id", "uuid", (col) =>
+      col.primaryKey().defaultTo(sql`gen_uuid_v7()`)
     )
-    .addColumn('page_id', 'uuid', (col) =>
-      col.references('pages.id').onDelete('cascade').notNull(),
+    .addColumn("page_id", "uuid", (col) =>
+      col.references("pages.id").onDelete("cascade").notNull()
     )
-    .addColumn('name', 'varchar', (col) => col.notNull())
-    .addColumn('type', 'varchar', (col) => col.notNull().defaultTo('table'))
-    .addColumn('position', 'varchar', (col) => col.notNull())
-    .addColumn('config', 'jsonb', (col) =>
-      col.notNull().defaultTo(sql`'{}'::jsonb`),
+    .addColumn("name", "varchar", (col) => col.notNull())
+    .addColumn("type", "varchar", (col) => col.notNull().defaultTo("table"))
+    .addColumn("position", "varchar", (col) => col.notNull())
+    .addColumn("config", "jsonb", (col) =>
+      col.notNull().defaultTo(sql`'{}'::jsonb`)
     )
-    .addColumn('workspace_id', 'uuid', (col) =>
-      col.references('workspaces.id').onDelete('cascade').notNull(),
+    .addColumn("workspace_id", "uuid", (col) =>
+      col.references("workspaces.id").onDelete("cascade").notNull()
     )
-    .addColumn('creator_id', 'uuid', (col) =>
-      col.references('users.id').onDelete('set null'),
+    .addColumn("creator_id", "uuid", (col) =>
+      col.references("users.id").onDelete("set null")
     )
-    .addColumn('created_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
-    .addColumn('updated_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
     .execute();
 
   await sql`CREATE INDEX IF NOT EXISTS idx_base_views_page_id ON base_views (page_id)`.execute(
-    db,
+    db
   );
 
   // Cell extraction helpers for filters and sorts. Return NULL for absent or
@@ -229,9 +229,9 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema.dropTable('base_views').execute();
-  await db.schema.dropTable('base_rows').execute();
-  await db.schema.dropTable('base_properties').execute();
+  await db.schema.dropTable("base_views").execute();
+  await db.schema.dropTable("base_rows").execute();
+  await db.schema.dropTable("base_properties").execute();
 
   await sql`DROP FUNCTION jsonb_set_many(jsonb, jsonb)`.execute(db);
   await sql`DROP FUNCTION base_cell_array(jsonb, text)`.execute(db);
@@ -242,8 +242,8 @@ export async function down(db: Kysely<any>): Promise<void> {
 
   await sql`DROP INDEX idx_pages_is_base`.execute(db);
   await db.schema
-    .alterTable('pages')
-    .dropColumn('base_schema_version')
-    .dropColumn('is_base')
+    .alterTable("pages")
+    .dropColumn("base_schema_version")
+    .dropColumn("is_base")
     .execute();
 }

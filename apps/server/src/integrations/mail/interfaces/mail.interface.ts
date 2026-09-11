@@ -1,9 +1,9 @@
-import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import SMTPTransport from "nodemailer/lib/smtp-transport";
 
 export enum MailOption {
-  SMTP = 'smtp',
-  Postmark = 'postmark',
-  Log = 'log',
+  SMTP = "smtp",
+  Postmark = "postmark",
+  Log = "log",
 }
 
 export type MailConfig =

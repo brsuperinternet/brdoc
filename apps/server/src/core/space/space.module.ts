@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
-import { SpaceService } from './services/space.service';
-import { SpaceController } from './space.controller';
-import { SpaceMemberService } from './services/space-member.service';
+import { Module } from "@nestjs/common";
+import { SpaceService } from "./services/space.service";
+import { SpaceMemberService } from "./services/space-member.service";
+import { SpaceController } from "./space.controller";
 
 @Module({
-  imports: [],
   controllers: [SpaceController],
-  providers: [SpaceService, SpaceMemberService],
   exports: [SpaceService, SpaceMemberService],
+  imports: [],
+  providers: [SpaceService, SpaceMemberService],
 })
 export class SpaceModule {}

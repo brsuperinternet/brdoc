@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { Agent, Dispatcher } from 'undici';
-import { OutboundUrlGuard } from './outbound-url.guard';
+import { Injectable } from "@nestjs/common";
+import { Agent, Dispatcher } from "undici";
+import { OutboundUrlGuard } from "./outbound-url.guard";
 
 export const OUTBOUND_REQUEST_TIMEOUT_MS = 10_000;
 
@@ -35,14 +35,14 @@ export class OutboundAgentFactory implements IOutboundAgentFactory {
     };
 
     const agent = new Agent({
+      bodyTimeout: OUTBOUND_REQUEST_TIMEOUT_MS,
       connect: {
         ca: tls?.caCert || undefined,
-        rejectUnauthorized: tls?.rejectUnauthorized ?? true,
         lookup: lookup as any,
+        rejectUnauthorized: tls?.rejectUnauthorized ?? true,
         timeout: OUTBOUND_REQUEST_TIMEOUT_MS,
       },
       headersTimeout: OUTBOUND_REQUEST_TIMEOUT_MS,
-      bodyTimeout: OUTBOUND_REQUEST_TIMEOUT_MS,
     });
 
     return {

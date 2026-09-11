@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
-} from 'class-validator';
+} from "class-validator";
 
 export class SearchDTO {
   @IsOptional()
@@ -27,7 +27,7 @@ export class SearchDTO {
 
   @IsOptional()
   @IsArray()
-  @IsUUID('all', { each: true })
+  @IsUUID("all", { each: true })
   labelIds?: string[];
 
   @IsOptional()

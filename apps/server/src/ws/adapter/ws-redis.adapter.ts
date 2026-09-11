@@ -1,12 +1,12 @@
-import { IoAdapter } from '@nestjs/platform-socket.io';
-import { ServerOptions } from 'socket.io';
-import { createAdapter } from '@socket.io/redis-adapter';
-import Redis, { RedisOptions } from 'ioredis';
+import { IoAdapter } from "@nestjs/platform-socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import Redis, { RedisOptions } from "ioredis";
+import { ServerOptions } from "socket.io";
 import {
   createRetryStrategy,
   parseRedisUrl,
   RedisConfig,
-} from '../../common/helpers';
+} from "../../common/helpers";
 
 export class WsRedisIoAdapter extends IoAdapter {
   private adapterConstructor: ReturnType<typeof createAdapter>;
@@ -17,15 +17,15 @@ export class WsRedisIoAdapter extends IoAdapter {
 
     const options: RedisOptions = {
       family: this.redisConfig.family,
-      tls: this.redisConfig.tls,
       retryStrategy: createRetryStrategy(),
+      tls: this.redisConfig.tls,
     };
 
     const pubClient = new Redis(process.env.REDIS_URL, options);
     const subClient = new Redis(process.env.REDIS_URL, options);
 
-    pubClient.on('error', (err) => () => {});
-    subClient.on('error', (err) => () => {});
+    pubClient.on("error", (err) => () => {});
+    subClient.on("error", (err) => () => {});
 
     this.adapterConstructor = createAdapter(pubClient, subClient);
   }

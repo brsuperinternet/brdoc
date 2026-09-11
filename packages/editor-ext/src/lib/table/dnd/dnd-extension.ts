@@ -1,9 +1,19 @@
 import { Editor, Extension } from "@tiptap/core";
-import { PluginKey, Plugin, PluginSpec, TextSelection, Transaction } from "@tiptap/pm/state";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import {
+  Plugin,
+  PluginKey,
+  PluginSpec,
+  TextSelection,
+  Transaction,
+} from "@tiptap/pm/state";
+import { cellAround, columnResizingPluginKey } from "@tiptap/pm/tables";
 import { EditorProps, EditorView } from "@tiptap/pm/view";
-import { columnResizingPluginKey } from "@tiptap/pm/tables";
-import { cellAround } from "@tiptap/pm/tables";
+import { moveColumn, moveRow } from "../utils";
+import { findTable } from "../utils/query";
+import { getDragOverColumn, getDragOverRow } from "./calc-drag-over";
+import { DropIndicatorController } from "./preview/drop-indicator-controller";
+import { PreviewController } from "./preview/preview-controller";
 import {
   cellInfoFromResolvedCell,
   DraggingDOMs,
@@ -11,26 +21,21 @@ import {
   getHoveringCell,
   HoveringCellInfo,
 } from "./utils";
-import { getDragOverColumn, getDragOverRow } from "./calc-drag-over";
-import { findTable } from "../utils/query";
-import { moveColumn, moveRow } from "../utils";
-import { PreviewController } from "./preview/preview-controller";
-import { DropIndicatorController } from "./preview/drop-indicator-controller";
 
 export interface TableHandleState {
+  dragging: { orientation: "col" | "row"; index: number } | null;
+  frozen: boolean;
   hoveringCell: HoveringCellInfo | null;
   tableNode: ProseMirrorNode | null;
   tablePos: number | null;
-  dragging: { orientation: "col" | "row"; index: number } | null;
-  frozen: boolean;
 }
 
 const INITIAL_STATE: TableHandleState = {
+  dragging: null,
+  frozen: false,
   hoveringCell: null,
   tableNode: null,
   tablePos: null,
-  dragging: null,
-  frozen: false,
 };
 
 export const TableDndKey = new PluginKey<TableHandleState>("table-handles");
@@ -52,30 +57,37 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
   private _dragging = false;
 
   state = {
-    init: (): TableHandleState => INITIAL_STATE,
     apply: (tr: Transaction, prev: TableHandleState): TableHandleState => {
       const meta = tr.getMeta(TableDndKey) as Partial<TableHandleState> | null;
-      if (!meta) return prev;
+      if (!meta) {
+        return prev;
+      }
       let changed = false;
       for (const key in meta) {
-        if (!Object.is(prev[key as keyof TableHandleState], meta[key as keyof TableHandleState])) {
+        if (
+          !Object.is(
+            prev[key as keyof TableHandleState],
+            meta[key as keyof TableHandleState]
+          )
+        ) {
           changed = true;
           break;
         }
       }
       return changed ? { ...prev, ...meta } : prev;
     },
+    init: (): TableHandleState => INITIAL_STATE,
   };
 
   constructor(public editor: Editor) {
     this.props = {
       handleDOMEvents: {
-        pointermove: this._pointerMove,
         // Force-unfreeze on any pointerdown that lands on the editor.
         // Mantine's `Menu.onClose` doesn't always fire on outside click
         // (the dropdown vanishes visually but the callback is skipped),
         // which would otherwise leave `frozen=true` permanently.
         pointerdown: this._pointerDown,
+        pointermove: this._pointerMove,
       },
     };
 
@@ -93,7 +105,7 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
     // Track the cursor cell so handles follow keyboard nav and clicks too.
     this.editor.on("selectionUpdate", this._onSelectionUpdate);
     this._disposables.push(() =>
-      this.editor.off("selectionUpdate", this._onSelectionUpdate),
+      this.editor.off("selectionUpdate", this._onSelectionUpdate)
     );
 
     return {
@@ -109,26 +121,44 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
 
   private _pointerDown = (view: EditorView, _event: PointerEvent): boolean => {
     const current = TableDndKey.getState(view.state);
-    if (current?.frozen) this.editor.commands.unfreezeHandles();
+    if (current?.frozen) {
+      this.editor.commands.unfreezeHandles();
+    }
     return false;
   };
 
   private _pointerMove = (view: EditorView, event: PointerEvent) => {
     const current = TableDndKey.getState(view.state);
-    if (current?.frozen || current?.dragging) return;
+    if (current?.frozen || current?.dragging) {
+      return;
+    }
 
     const resizeState = columnResizingPluginKey.getState(view.state);
-    if (resizeState?.dragging) return;
+    if (resizeState?.dragging) {
+      return;
+    }
 
     if (!this.editor.isEditable) {
-      if (current?.hoveringCell == null && current?.tableNode == null && current?.tablePos == null) return;
-      this._dispatchMeta({ hoveringCell: null, tableNode: null, tablePos: null });
+      if (
+        current?.hoveringCell == null &&
+        current?.tableNode == null &&
+        current?.tablePos == null
+      ) {
+        return;
+      }
+      this._dispatchMeta({
+        hoveringCell: null,
+        tableNode: null,
+        tablePos: null,
+      });
       return;
     }
 
     const hoveringCell = getHoveringCell(view, event);
     if (hoveringCell) {
-      if (current?.hoveringCell?.cellPos === hoveringCell.cellPos) return;
+      if (current?.hoveringCell?.cellPos === hoveringCell.cellPos) {
+        return;
+      }
       this._hoveringCell = hoveringCell;
       const $cell = view.state.doc.resolve(hoveringCell.cellPos);
       const tableInfo = findTable($cell);
@@ -146,7 +176,9 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
     const $cellPos = cellAround(view.state.selection.$head);
     if ($cellPos) {
       const cellInfo = cellInfoFromResolvedCell($cellPos);
-      if (current?.hoveringCell?.cellPos === cellInfo.cellPos) return;
+      if (current?.hoveringCell?.cellPos === cellInfo.cellPos) {
+        return;
+      }
       this._hoveringCell = cellInfo;
       const tableInfo = findTable($cellPos);
       this._dispatchMeta({
@@ -158,21 +190,35 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
     }
 
     this._hoveringCell = undefined;
-    if (current?.hoveringCell == null && current?.tableNode == null && current?.tablePos == null) return;
+    if (
+      current?.hoveringCell == null &&
+      current?.tableNode == null &&
+      current?.tablePos == null
+    ) {
+      return;
+    }
     this._dispatchMeta({ hoveringCell: null, tableNode: null, tablePos: null });
   };
 
   private _onSelectionUpdate = () => {
-    if (!this.editor.isEditable) return;
+    if (!this.editor.isEditable) {
+      return;
+    }
 
     const current = TableDndKey.getState(this.editor.state);
-    if (current?.frozen || current?.dragging) return;
+    if (current?.frozen || current?.dragging) {
+      return;
+    }
 
     const $cellPos = cellAround(this.editor.state.selection.$head);
-    if (!$cellPos) return;
+    if (!$cellPos) {
+      return;
+    }
 
     const cellInfo = cellInfoFromResolvedCell($cellPos);
-    if (current?.hoveringCell?.cellPos === cellInfo.cellPos) return;
+    if (current?.hoveringCell?.cellPos === cellInfo.cellPos) {
+      return;
+    }
 
     this._hoveringCell = cellInfo;
     const tableInfo = findTable($cellPos);
@@ -195,9 +241,11 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
   startDragFromHandle = (
     orientation: "col" | "row",
     clientX: number,
-    clientY: number,
+    clientY: number
   ): boolean => {
-    if (!this._hoveringCell) return false;
+    if (!this._hoveringCell) {
+      return false;
+    }
     this._dragging = true;
     this._draggingDirection = orientation;
     this._startCoords = { x: clientX, y: clientY };
@@ -212,7 +260,7 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
       this.editor.view,
       this._hoveringCell.cellPos,
       draggingIndex,
-      orientation,
+      orientation
     );
     if (!relatedDoms) {
       this._dragging = false;
@@ -220,7 +268,11 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
     }
     this._draggingDOMs = relatedDoms;
 
-    this._previewController.onDragStart(relatedDoms, draggingIndex, orientation);
+    this._previewController.onDragStart(
+      relatedDoms,
+      draggingIndex,
+      orientation
+    );
     this._dropIndicatorController.onDragStart(relatedDoms, orientation);
 
     // Park the selection inside the dragged cell unless it's already in the
@@ -238,17 +290,14 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
       }
     })();
     const tr = state.tr;
-    if (
-      hoverTable &&
-      (!currentTable || currentTable.pos !== hoverTable.pos)
-    ) {
+    if (hoverTable && (!currentTable || currentTable.pos !== hoverTable.pos)) {
       try {
         const $inside = state.doc.resolve(this._hoveringCell.cellPos + 1);
         tr.setSelection(TextSelection.near($inside, 1));
       } catch {}
     }
     tr.setMeta(TableDndKey, {
-      dragging: { orientation, index: draggingIndex },
+      dragging: { index: draggingIndex, orientation },
     });
     tr.setMeta("addToHistory", false);
     this.editor.view.dispatch(tr);
@@ -257,18 +306,17 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
 
   updateDragPosition = (clientX: number, clientY: number) => {
     const draggingDOMs = this._draggingDOMs;
-    if (!draggingDOMs || !this._dragging) return;
+    if (!draggingDOMs || !this._dragging) {
+      return;
+    }
 
     if (this._draggingDirection === "col") {
-      this._previewController.onDragging(
-        draggingDOMs,
-        clientX,
-        clientY,
-        "col",
-      );
+      this._previewController.onDragging(draggingDOMs, clientX, clientY, "col");
       const direction = this._startCoords.x > clientX ? "left" : "right";
       const dragOverColumn = getDragOverColumn(draggingDOMs.table, clientX);
-      if (!dragOverColumn) return;
+      if (!dragOverColumn) {
+        return;
+      }
       const [col, index] = dragOverColumn;
       this._droppingIndex = index;
       this._dropIndicatorController.onDragging(col, direction, "col");
@@ -278,19 +326,25 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
     this._previewController.onDragging(draggingDOMs, clientX, clientY, "row");
     const direction = this._startCoords.y > clientY ? "up" : "down";
     const dragOverRow = getDragOverRow(draggingDOMs.table, clientY);
-    if (!dragOverRow) return;
+    if (!dragOverRow) {
+      return;
+    }
     const [row, index] = dragOverRow;
     this._droppingIndex = index;
     this._dropIndicatorController.onDragging(row, direction, "row");
   };
 
   commitDrop = () => {
-    if (!this._dragging) return;
+    if (!this._dragging) {
+      return;
+    }
     const direction = this._draggingDirection;
     const from = this._draggingIndex;
     const to = this._droppingIndex;
 
-    if (from < 0 || to < 0 || from === to) return;
+    if (from < 0 || to < 0 || from === to) {
+      return;
+    }
 
     // Use the live (auto-mapped) selection as the table anchor — PM has
     // already mapped it through any concurrent remote transactions, so
@@ -299,12 +353,22 @@ class TableHandlePluginSpec implements PluginSpec<TableHandleState> {
     const pos = this.editor.state.selection.from;
 
     if (direction === "col") {
-      if (moveColumn({ tr, originIndex: from, targetIndex: to, select: true, pos })) {
+      if (
+        moveColumn({
+          originIndex: from,
+          pos,
+          select: true,
+          targetIndex: to,
+          tr,
+        })
+      ) {
         this.editor.view.dispatch(tr);
       }
       return;
     }
-    if (moveRow({ tr, originIndex: from, targetIndex: to, select: true, pos })) {
+    if (
+      moveRow({ originIndex: from, pos, select: true, targetIndex: to, tr })
+    ) {
       this.editor.view.dispatch(tr);
     }
   };
@@ -325,24 +389,25 @@ export type { TableHandlePluginSpec };
 
 // Resolve via plugin key, not a module singleton — survives StrictMode / HMR.
 export function getTableHandlePluginSpec(
-  editor: Editor,
+  editor: Editor
 ): TableHandlePluginSpec | null {
   const plugin = TableDndKey.get(editor.state);
-  if (!plugin) return null;
+  if (!plugin) {
+    return null;
+  }
   return plugin.spec as unknown as TableHandlePluginSpec;
 }
 
 export const TableDndExtension = Extension.create({
-  name: "table-drag-and-drop",
   addProseMirrorPlugins() {
     const editor = this.editor;
     const spec = new TableHandlePluginSpec(editor);
     return [new Plugin(spec)];
   },
+  name: "table-drag-and-drop",
 });
 
 export const TableHandleCommandsExtension = Extension.create({
-  name: "table-handle-commands",
   addCommands() {
     return {
       freezeHandles:
@@ -381,6 +446,7 @@ export const TableHandleCommandsExtension = Extension.create({
         },
     };
   },
+  name: "table-handle-commands",
 });
 
 declare module "@tiptap/core" {

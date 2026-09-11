@@ -5,34 +5,37 @@ import {
   ISectionOptions,
   Packer,
   SectionType,
-} from 'docx';
-import { Node as ProsemirrorNode } from 'prosemirror-model';
-import { IFootnotes, SerializationState } from './types';
+} from "docx";
+import { Node as ProsemirrorNode } from "prosemirror-model";
+import { IFootnotes, SerializationState } from "./types";
 
 export function createShortId() {
   return Math.random().toString(36).slice(2, 11);
 }
 
-export function buildDoc(state: SerializationState, opts?: IPropertiesOptions): Document {
+export function buildDoc(
+  state: SerializationState,
+  opts?: IPropertiesOptions
+): Document {
   let sections = state?.sections?.length
     ? state.sections.map((section) => ({
+        children: section.children,
+        footers: section.config.footers,
+        headers: section.config.headers,
         properties: section.config.properties || {
           type: SectionType.CONTINUOUS,
         },
-        headers: section.config.headers,
-        footers: section.config.footers,
-        children: section.children,
       }))
     : undefined;
   if (!sections) {
     sections = [
       {
-        headers: undefined,
+        children: state?.children || [],
         footers: undefined,
+        headers: undefined,
         properties: {
           type: SectionType.CONTINUOUS,
         },
-        children: state?.children || [],
       },
     ];
   }
@@ -53,19 +56,19 @@ export function buildDoc(state: SerializationState, opts?: IPropertiesOptions): 
  *  Creates a docx document from the given state.
  * */
 export function createDocFromState(state: {
-  numbering: INumberingOptions['config'];
-  children: ISectionOptions['children'];
+  numbering: INumberingOptions["config"];
+  children: ISectionOptions["children"];
   footnotes?: IFootnotes;
 }) {
   return buildDoc({
+    footnotes: state.footnotes,
     numbering: state.numbering,
     sections: [
       {
-        config: {},
         children: state.children,
+        config: {},
       },
     ],
-    footnotes: state.footnotes,
   });
 }
 
@@ -74,7 +77,7 @@ export async function writeDocx(
   /**
    * @deprecated use `.then()` or `await` instead
    */
-  write?: ((buffer: Buffer) => void) | ((buffer: Buffer) => Promise<void>),
+  write?: ((buffer: Buffer) => void) | ((buffer: Buffer) => Promise<void>)
 ) {
   const buffer = await Packer.toBuffer(doc);
   await write?.(buffer);
@@ -82,9 +85,11 @@ export async function writeDocx(
 }
 
 export function getLatexFromNode(node: ProsemirrorNode): string {
-  let math = '';
+  let math = "";
   node.forEach((child) => {
-    if (child.isText) math += child.text;
+    if (child.isText) {
+      math += child.text;
+    }
     // TODO: improve this as we may have other things in the future
   });
   return math;

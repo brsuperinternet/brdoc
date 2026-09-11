@@ -1,39 +1,45 @@
-import { Node, Mark } from 'prosemirror-model';
 import {
-  IParagraphOptions,
-  IRunOptions,
-  Paragraph,
-  TextRun,
-  ExternalHyperlink,
-  ParagraphChild,
-  MathRun,
-  Math,
-  TabStopType,
-  TabStopPosition,
-  SequentialIdentifier,
-  Bookmark,
-  ImageRun,
   AlignmentType,
-  Table,
-  TableRow,
-  TableCell,
-  ITableCellOptions,
-  InternalHyperlink,
-  SimpleField,
+  Bookmark,
+  Document,
+  ExternalHyperlink,
   FootnoteReferenceRun,
   IImageOptions,
-  Document,
+  ImageRun,
+  InternalHyperlink,
+  IParagraphOptions,
+  IPropertiesOptions,
+  IRunOptions,
+  ITableCellOptions,
   ITableOptions,
   ITableRowOptions,
-  IPropertiesOptions,
-} from 'docx';
-import { imageDimensionsFromData } from 'image-dimensions';
-import { createNumbering, NumberingStyles } from './numbering';
-import { buildDoc, createShortId } from './utils';
-import { IFootnotes, INumbering, Mutable, SectionConfig, SerializationState } from './types';
+  Math,
+  MathRun,
+  Paragraph,
+  ParagraphChild,
+  SequentialIdentifier,
+  SimpleField,
+  Table,
+  TableCell,
+  TableRow,
+  TabStopPosition,
+  TabStopType,
+  TextRun,
+} from "docx";
+import { imageDimensionsFromData } from "image-dimensions";
+import { Mark, Node } from "prosemirror-model";
+import { createNumbering, NumberingStyles } from "./numbering";
+import {
+  IFootnotes,
+  INumbering,
+  Mutable,
+  SectionConfig,
+  SerializationState,
+} from "./types";
+import { buildDoc, createShortId } from "./utils";
 
 // This is duplicated from @curvenote/schema
-export type AlignOptions = 'left' | 'center' | 'right';
+export type AlignOptions = "left" | "center" | "right";
 
 export type NodeSerializer = Record<
   string,
@@ -42,12 +48,21 @@ export type NodeSerializer = Record<
 
 export type NodeSerializerAsync = Record<
   string,
-  (state: DocxSerializerStateAsync, node: Node, parent: Node, index: number) => void | Promise<void>
+  (
+    state: DocxSerializerStateAsync,
+    node: Node,
+    parent: Node,
+    index: number
+  ) => void | Promise<void>
 >;
 
 export type MarkSerializer = Record<
   string,
-  (state: DocxSerializerState | DocxSerializerStateAsync, node: Node, mark: Mark) => IRunOptions
+  (
+    state: DocxSerializerState | DocxSerializerStateAsync,
+    node: Node,
+    mark: Mark
+  ) => IRunOptions
 >;
 
 export type Options = {
@@ -65,21 +80,21 @@ export type IMathOpts = {
   id?: string | null;
   numbered?: boolean;
 };
-export type ImageType = 'jpg' | 'png' | 'gif' | 'bmp';
+export type ImageType = "jpg" | "png" | "gif" | "bmp";
 
 export const MAX_IMAGE_WIDTH = 600;
 
 function createReferenceBookmark(
   id: string,
-  kind: 'Equation' | 'Figure' | 'Table',
+  kind: "Equation" | "Figure" | "Table",
   before?: string,
-  after?: string,
+  after?: string
 ) {
   const textBefore = before ? [new TextRun(before)] : [];
   const textAfter = after ? [new TextRun(after)] : [];
   return new Bookmark({
-    id,
     children: [...textBefore, new SequentialIdentifier(kind), ...textAfter],
+    id,
   });
 }
 
@@ -124,8 +139,8 @@ export class DocxSerializerState {
     // Initialize sections
     if (options.sections && options.sections.length > 0) {
       this.sections = options.sections.map((config) => ({
-        config,
         children: [],
+        config,
       }));
       this.children = this.sections[0].children;
     } else {
@@ -135,23 +150,28 @@ export class DocxSerializerState {
 
   renderContent(parent: Node, opts?: IParagraphOptions) {
     parent.forEach((node, _, i) => {
-      if (opts) this.addParagraphOptions(opts);
+      if (opts) {
+        this.addParagraphOptions(opts);
+      }
       this.render(node, parent, i);
     });
   }
 
   render(node: Node, parent: Node, index: number) {
-    if (typeof parent === 'number') throw new Error('!');
-    if (!this.nodes[node.type.name])
-      throw new Error(`Token type \`${node.type.name}\` not supported by Word renderer`);
+    if (typeof parent === "number") {
+      throw new Error("!");
+    }
+    if (!this.nodes[node.type.name]) {
+      throw new Error(
+        `Token type \`${node.type.name}\` not supported by Word renderer`
+      );
+    }
     this.nodes[node.type.name](this, node, parent, index);
   }
 
   renderMarks(node: Node, marks: Mark[]): IRunOptions {
     return marks
-      .map((mark) => {
-        return this.marks[mark.type.name]?.(this, node, mark);
-      })
+      .map((mark) => this.marks[mark.type.name]?.(this, node, mark))
       .reduce((a, b) => ({ ...a, ...b }), {});
   }
 
@@ -159,29 +179,33 @@ export class DocxSerializerState {
     // Pop the stack over to this object when we encounter a link, and closeLink restores it
     let currentLink: { link: string; stack: ParagraphChild[] } | undefined;
     const closeLink = () => {
-      if (!currentLink) return;
+      if (!currentLink) {
+        return;
+      }
       const hyperlink = new ExternalHyperlink({
-        link: currentLink.link,
         // child: this.current[0],
         children: this.current,
+        link: currentLink.link,
       });
       this.current = [...currentLink.stack, hyperlink];
       currentLink = undefined;
     };
     const openLink = (href: string) => {
       const sameLink = href === currentLink?.link;
-      this.addRunOptions({ style: 'Hyperlink' });
+      this.addRunOptions({ style: "Hyperlink" });
       // TODO: https://github.com/dolanmiu/docx/issues/1119
       // Remove the if statement here and oneLink!
       const oneLink = true;
-      if (!oneLink) {
-        closeLink();
-      } else {
-        if (currentLink && sameLink) return;
+      if (oneLink) {
+        if (currentLink && sameLink) {
+          return;
+        }
         if (currentLink && !sameLink) {
           // Close previous, and open a new one
           closeLink();
         }
+      } else {
+        closeLink();
       }
       currentLink = {
         link: href,
@@ -190,7 +214,7 @@ export class DocxSerializerState {
       this.current = [];
     };
     const progress = (node: Node, offset: number, index: number) => {
-      const links = node.marks.filter((m) => m.type.name === 'link');
+      const links = node.marks.filter((m) => m.type.name === "link");
       const hasLink = links.length > 0;
       if (hasLink) {
         openLink(links[0].attrs.href);
@@ -209,26 +233,28 @@ export class DocxSerializerState {
   }
 
   renderList(node: Node, style: NumberingStyles) {
-    if (!this.currentNumbering) {
+    if (this.currentNumbering) {
+      const { reference, level } = this.currentNumbering;
+      this.currentNumbering = { level: level + 1, reference };
+    } else {
       const nextId = createShortId();
       this.numbering.push(createNumbering(nextId, style));
-      this.currentNumbering = { reference: nextId, level: 0 };
-    } else {
-      const { reference, level } = this.currentNumbering;
-      this.currentNumbering = { reference, level: level + 1 };
+      this.currentNumbering = { level: 0, reference: nextId };
     }
     this.renderContent(node);
     if (this.currentNumbering.level === 0) {
       delete this.currentNumbering;
     } else {
       const { reference, level } = this.currentNumbering;
-      this.currentNumbering = { reference, level: level - 1 };
+      this.currentNumbering = { level: level - 1, reference };
     }
   }
 
   // This is a pass through to the paragraphs, etc. underneath they will close the block
   renderListItem(node: Node) {
-    if (!this.currentNumbering) throw new Error('Trying to create a list item without a list?');
+    if (!this.currentNumbering) {
+      throw new Error("Trying to create a list item without a list?");
+    }
     this.addParagraphOptions({ numbering: this.currentNumbering });
     this.renderContent(node);
   }
@@ -242,7 +268,9 @@ export class DocxSerializerState {
   }
 
   text(text: string | null | undefined, opts?: IRunOptions) {
-    if (!text) return;
+    if (!text) {
+      return;
+    }
     this.current.push(new TextRun({ text, ...this.nextRunOpts, ...opts }));
     delete this.nextRunOpts;
   }
@@ -254,23 +282,23 @@ export class DocxSerializerState {
     }
     const id = opts.id ?? createShortId();
     this.current = [
-      new TextRun('\t'),
+      new TextRun("\t"),
       new Math({
         children: [new MathRun(latex)],
       }),
-      new TextRun('\t('),
-      createReferenceBookmark(id, 'Equation'),
-      new TextRun(')'),
+      new TextRun("\t("),
+      createReferenceBookmark(id, "Equation"),
+      new TextRun(")"),
     ];
     this.addParagraphOptions({
       tabStops: [
         {
-          type: TabStopType.CENTER,
           position: TabStopPosition.MAX / 2,
+          type: TabStopType.CENTER,
         },
         {
-          type: TabStopType.RIGHT,
           position: TabStopPosition.MAX,
+          type: TabStopType.RIGHT,
         },
       ],
     });
@@ -282,40 +310,42 @@ export class DocxSerializerState {
   image(
     src: string,
     widthPercent = 70,
-    align: AlignOptions = 'center',
+    align: AlignOptions = "center",
     imageRunOpts?: IImageOptions,
-    imageType?: ImageType,
+    imageType?: ImageType
   ) {
     const buffer = this.options.getImageBuffer(src);
     const dimensions = imageDimensionsFromData(buffer);
     /* If the image is not a valid image, don't add it */
-    if (!dimensions) return;
+    if (!dimensions) {
+      return;
+    }
     const aspect = dimensions.height / dimensions.width;
     const width = this.maxImageWidth * (widthPercent / 100);
     let it;
     try {
-      it = imageType || (src.replace(/.*\./, '').toLowerCase() as any);
+      it = imageType || (src.replace(/.*\./, "").toLowerCase() as any);
     } catch (e) {
-      it = 'png';
+      it = "png";
     }
     this.current.push(
       new ImageRun({
         data: buffer,
         ...imageRunOpts,
-        type: it,
         transformation: {
           ...(imageRunOpts?.transformation || {}),
-          width,
           height: width * aspect,
+          width,
         },
-      }),
+        type: it,
+      })
     );
     let alignment: string;
     switch (align) {
-      case 'right':
+      case "right":
         alignment = AlignmentType.RIGHT;
         break;
-      case 'left':
+      case "left":
         alignment = AlignmentType.LEFT;
         break;
       default:
@@ -330,9 +360,9 @@ export class DocxSerializerState {
     node: Node,
     opts: {
       getCellOptions?: (cell: Node) => ITableCellOptions;
-      getRowOptions?: (row: Node) => Omit<ITableRowOptions, 'children'>;
-      tableOptions?: Omit<ITableOptions, 'rows'>;
-    } = {},
+      getRowOptions?: (row: Node) => Omit<ITableRowOptions, "children">;
+      tableOptions?: Omit<ITableOptions, "rows">;
+    } = {}
   ) {
     const { getCellOptions, getRowOptions, tableOptions } = opts;
     const actualChildren = this.children;
@@ -342,7 +372,7 @@ export class DocxSerializerState {
       // Check if all cells are headers in this row
       let tableHeader = true;
       row.content.forEach((cell) => {
-        if (cell.type.name !== 'tableHeader') {
+        if (cell.type.name !== "tableHeader") {
           tableHeader = false;
         }
       });
@@ -351,30 +381,48 @@ export class DocxSerializerState {
       row.content.forEach((cell) => {
         this.children = [];
         this.renderContent(cell);
-        const tableCellOpts: Mutable<ITableCellOptions> = { children: this.children };
+        const tableCellOpts: Mutable<ITableCellOptions> = {
+          children: this.children,
+        };
         const colspan = cell.attrs.colspan ?? 1;
         const rowspan = cell.attrs.rowspan ?? 1;
-        if (colspan > 1) tableCellOpts.columnSpan = colspan;
-        if (rowspan > 1) tableCellOpts.rowSpan = rowspan;
+        if (colspan > 1) {
+          tableCellOpts.columnSpan = colspan;
+        }
+        if (rowspan > 1) {
+          tableCellOpts.rowSpan = rowspan;
+        }
         cells.push(
           new TableCell({
             ...tableCellOpts,
             ...(getCellOptions?.(cell) || {}),
-          }),
+          })
         );
       });
-      rows.push(new TableRow({ ...(getRowOptions?.(row) || {}), children: cells, tableHeader }));
+      rows.push(
+        new TableRow({
+          ...(getRowOptions?.(row) || {}),
+          children: cells,
+          tableHeader,
+        })
+      );
     });
     this.maxImageWidth = MAX_IMAGE_WIDTH;
     const table = new Table({ ...tableOptions, rows });
     actualChildren.push(table);
     // If there are multiple tables, this seperates them
-    actualChildren.push(new Paragraph(''));
+    actualChildren.push(new Paragraph(""));
     this.children = actualChildren;
   }
 
-  captionLabel(id: string, kind: 'Figure' | 'Table', { suffix } = { suffix: ': ' }) {
-    this.current.push(...[createReferenceBookmark(id, kind, `${kind} `), new TextRun(suffix)]);
+  captionLabel(
+    id: string,
+    kind: "Figure" | "Table",
+    { suffix } = { suffix: ": " }
+  ) {
+    this.current.push(
+      ...[createReferenceBookmark(id, kind, `${kind} `), new TextRun(suffix)]
+    );
   }
 
   $footnoteCounter = 0;
@@ -432,8 +480,8 @@ export class DocxSerializerState {
    */
   addSection(config: SectionConfig = {}) {
     this.sections.push({
-      config,
       children: [],
+      config,
     });
     this.currentSectionIndex = this.sections.length - 1;
     this.children = this.sections[this.currentSectionIndex].children;
@@ -458,17 +506,21 @@ export class DocxSerializerState {
    */
   getSerializationState(): SerializationState {
     return {
+      footnotes: this.footnotes,
       numbering: this.numbering,
       sections: this.sections,
-      footnotes: this.footnotes,
     };
   }
 
   createReference(id: string, before?: string, after?: string) {
     const children: ParagraphChild[] = [];
-    if (before) children.push(new TextRun(before));
+    if (before) {
+      children.push(new TextRun(before));
+    }
     children.push(new SimpleField(`REF ${id} \\h`));
-    if (after) children.push(new TextRun(after));
+    if (after) {
+      children.push(new TextRun(after));
+    }
     const ref = new InternalHyperlink({ anchor: id, children });
     this.current.push(ref);
   }
@@ -487,7 +539,7 @@ export class DocxSerializer {
   serialize(
     content: Node,
     options: Options,
-    getDocumentOptions?: (state: SerializationState) => IPropertiesOptions,
+    getDocumentOptions?: (state: SerializationState) => IPropertiesOptions
   ): Document {
     const state = new DocxSerializerState(this.nodes, this.marks, options);
     state.renderContent(content);
@@ -526,7 +578,11 @@ export class DocxSerializerStateAsync {
 
   currentNumbering?: { reference: string; level: number };
 
-  constructor(nodes: NodeSerializerAsync, marks: MarkSerializer, options: OptionsAsync) {
+  constructor(
+    nodes: NodeSerializerAsync,
+    marks: MarkSerializer,
+    options: OptionsAsync
+  ) {
     this.nodes = nodes;
     this.marks = marks;
     this.options = options ?? ({} as OptionsAsync);
@@ -536,8 +592,8 @@ export class DocxSerializerStateAsync {
     // Initialize sections
     if (options.sections && options.sections.length > 0) {
       this.sections = options.sections.map((config) => ({
-        config,
         children: [],
+        config,
       }));
       this.children = this.sections[0].children;
     } else {
@@ -548,24 +604,31 @@ export class DocxSerializerStateAsync {
   async renderContent(parent: Node, opts?: IParagraphOptions) {
     for (let i = 0; i < parent.childCount; i += 1) {
       const node = parent.child(i);
-      if (opts) this.addParagraphOptions(opts);
+      if (opts) {
+        this.addParagraphOptions(opts);
+      }
       // eslint-disable-next-line no-await-in-loop
       await this.render(node, parent, i);
     }
   }
 
   async render(node: Node, parent: Node, index: number) {
-    if (typeof parent === 'number') throw new Error('!');
-    if (!this.nodes[node.type.name])
-      throw new Error(`Token type \`${node.type.name}\` not supported by Word renderer`);
-    await Promise.resolve(this.nodes[node.type.name](this, node, parent, index));
+    if (typeof parent === "number") {
+      throw new Error("!");
+    }
+    if (!this.nodes[node.type.name]) {
+      throw new Error(
+        `Token type \`${node.type.name}\` not supported by Word renderer`
+      );
+    }
+    await Promise.resolve(
+      this.nodes[node.type.name](this, node, parent, index)
+    );
   }
 
   renderMarks(node: Node, marks: Mark[]): IRunOptions {
     return marks
-      .map((mark) => {
-        return this.marks[mark.type.name]?.(this, node, mark);
-      })
+      .map((mark) => this.marks[mark.type.name]?.(this, node, mark))
       .reduce((a, b) => ({ ...a, ...b }), {});
   }
 
@@ -573,29 +636,33 @@ export class DocxSerializerStateAsync {
     // Pop the stack over to this object when we encounter a link, and closeLink restores it
     let currentLink: { link: string; stack: ParagraphChild[] } | undefined;
     const closeLink = () => {
-      if (!currentLink) return;
+      if (!currentLink) {
+        return;
+      }
       const hyperlink = new ExternalHyperlink({
-        link: currentLink.link,
         // child: this.current[0],
         children: this.current,
+        link: currentLink.link,
       });
       this.current = [...currentLink.stack, hyperlink];
       currentLink = undefined;
     };
     const openLink = (href: string) => {
       const sameLink = href === currentLink?.link;
-      this.addRunOptions({ style: 'Hyperlink' });
+      this.addRunOptions({ style: "Hyperlink" });
       // TODO: https://github.com/dolanmiu/docx/issues/1119
       // Remove the if statement here and oneLink!
       const oneLink = true;
-      if (!oneLink) {
-        closeLink();
-      } else {
-        if (currentLink && sameLink) return;
+      if (oneLink) {
+        if (currentLink && sameLink) {
+          return;
+        }
         if (currentLink && !sameLink) {
           // Close previous, and open a new one
           closeLink();
         }
+      } else {
+        closeLink();
       }
       currentLink = {
         link: href,
@@ -604,7 +671,7 @@ export class DocxSerializerStateAsync {
       this.current = [];
     };
     const progress = async (node: Node, offset: number, index: number) => {
-      const links = node.marks.filter((m) => m.type.name === 'link');
+      const links = node.marks.filter((m) => m.type.name === "link");
       const hasLink = links.length > 0;
       if (hasLink) {
         openLink(links[0].attrs.href);
@@ -627,26 +694,28 @@ export class DocxSerializerStateAsync {
   }
 
   async renderList(node: Node, style: NumberingStyles) {
-    if (!this.currentNumbering) {
+    if (this.currentNumbering) {
+      const { reference, level } = this.currentNumbering;
+      this.currentNumbering = { level: level + 1, reference };
+    } else {
       const nextId = createShortId();
       this.numbering.push(createNumbering(nextId, style));
-      this.currentNumbering = { reference: nextId, level: 0 };
-    } else {
-      const { reference, level } = this.currentNumbering;
-      this.currentNumbering = { reference, level: level + 1 };
+      this.currentNumbering = { level: 0, reference: nextId };
     }
     await this.renderContent(node);
     if (this.currentNumbering.level === 0) {
       delete this.currentNumbering;
     } else {
       const { reference, level } = this.currentNumbering;
-      this.currentNumbering = { reference, level: level - 1 };
+      this.currentNumbering = { level: level - 1, reference };
     }
   }
 
   // This is a pass through to the paragraphs, etc. underneath they will close the block
   async renderListItem(node: Node) {
-    if (!this.currentNumbering) throw new Error('Trying to create a list item without a list?');
+    if (!this.currentNumbering) {
+      throw new Error("Trying to create a list item without a list?");
+    }
     this.addParagraphOptions({ numbering: this.currentNumbering });
     await this.renderContent(node);
   }
@@ -660,7 +729,9 @@ export class DocxSerializerStateAsync {
   }
 
   text(text: string | null | undefined, opts?: IRunOptions) {
-    if (!text) return;
+    if (!text) {
+      return;
+    }
     this.current.push(new TextRun({ text, ...this.nextRunOpts, ...opts }));
     delete this.nextRunOpts;
   }
@@ -672,23 +743,23 @@ export class DocxSerializerStateAsync {
     }
     const id = opts.id ?? createShortId();
     this.current = [
-      new TextRun('\t'),
+      new TextRun("\t"),
       new Math({
         children: [new MathRun(latex)],
       }),
-      new TextRun('\t('),
-      createReferenceBookmark(id, 'Equation'),
-      new TextRun(')'),
+      new TextRun("\t("),
+      createReferenceBookmark(id, "Equation"),
+      new TextRun(")"),
     ];
     this.addParagraphOptions({
       tabStops: [
         {
-          type: TabStopType.CENTER,
           position: TabStopPosition.MAX / 2,
+          type: TabStopType.CENTER,
         },
         {
-          type: TabStopType.RIGHT,
           position: TabStopPosition.MAX,
+          type: TabStopType.RIGHT,
         },
       ],
     });
@@ -700,40 +771,42 @@ export class DocxSerializerStateAsync {
   async image(
     src: string,
     widthPercent = 70,
-    align: AlignOptions = 'center',
+    align: AlignOptions = "center",
     imageRunOpts?: IImageOptions,
-    imageType?: ImageType,
+    imageType?: ImageType
   ) {
     const buffer = await Promise.resolve(this.options.getImageBuffer(src));
     const dimensions = imageDimensionsFromData(buffer);
     /* If the image is not a valid image, don't add it */
-    if (!dimensions) return;
+    if (!dimensions) {
+      return;
+    }
     const aspect = dimensions.height / dimensions.width;
     const width = this.maxImageWidth * (widthPercent / 100);
     let it;
     try {
-      it = imageType || (src.replace(/.*\./, '').toLowerCase() as any);
+      it = imageType || (src.replace(/.*\./, "").toLowerCase() as any);
     } catch (e) {
-      it = 'png';
+      it = "png";
     }
     this.current.push(
       new ImageRun({
         data: buffer,
         ...imageRunOpts,
-        type: it,
         transformation: {
           ...(imageRunOpts?.transformation || {}),
-          width,
           height: width * aspect,
+          width,
         },
-      }),
+        type: it,
+      })
     );
     let alignment: string;
     switch (align) {
-      case 'right':
+      case "right":
         alignment = AlignmentType.RIGHT;
         break;
-      case 'left':
+      case "left":
         alignment = AlignmentType.LEFT;
         break;
       default:
@@ -748,9 +821,9 @@ export class DocxSerializerStateAsync {
     node: Node,
     opts: {
       getCellOptions?: (cell: Node) => ITableCellOptions;
-      getRowOptions?: (row: Node) => Omit<ITableRowOptions, 'children'>;
-      tableOptions?: Omit<ITableOptions, 'rows'>;
-    } = {},
+      getRowOptions?: (row: Node) => Omit<ITableRowOptions, "children">;
+      tableOptions?: Omit<ITableOptions, "rows">;
+    } = {}
   ) {
     const { getCellOptions, getRowOptions, tableOptions } = opts;
     const actualChildren = this.children;
@@ -763,9 +836,13 @@ export class DocxSerializerStateAsync {
       let tableHeader = true;
 
       // Check if all cells in the row are headers
-      for (let cellIndex = 0; cellIndex < row.content.childCount; cellIndex += 1) {
+      for (
+        let cellIndex = 0;
+        cellIndex < row.content.childCount;
+        cellIndex += 1
+      ) {
         const cell = row.content.child(cellIndex);
-        if (cell.type.name !== 'tableHeader') {
+        if (cell.type.name !== "tableHeader") {
           tableHeader = false;
         }
       }
@@ -773,37 +850,59 @@ export class DocxSerializerStateAsync {
       this.maxImageWidth = MAX_IMAGE_WIDTH / row.content.childCount;
 
       // Iterate through cells and ensure order
-      for (let cellIndex = 0; cellIndex < row.content.childCount; cellIndex += 1) {
+      for (
+        let cellIndex = 0;
+        cellIndex < row.content.childCount;
+        cellIndex += 1
+      ) {
         const cell = row.content.child(cellIndex);
         this.children = [];
         // eslint-disable-next-line no-await-in-loop
         await this.renderContent(cell); // Ensure order
-        const tableCellOpts: Mutable<ITableCellOptions> = { children: this.children };
+        const tableCellOpts: Mutable<ITableCellOptions> = {
+          children: this.children,
+        };
         const colspan = cell.attrs.colspan ?? 1;
         const rowspan = cell.attrs.rowspan ?? 1;
-        if (colspan > 1) tableCellOpts.columnSpan = colspan;
-        if (rowspan > 1) tableCellOpts.rowSpan = rowspan;
+        if (colspan > 1) {
+          tableCellOpts.columnSpan = colspan;
+        }
+        if (rowspan > 1) {
+          tableCellOpts.rowSpan = rowspan;
+        }
         cells.push(
           new TableCell({
             ...tableCellOpts,
             ...(getCellOptions?.(cell) || {}),
-          }),
+          })
         );
       }
 
-      rows.push(new TableRow({ ...(getRowOptions?.(row) || {}), children: cells, tableHeader }));
+      rows.push(
+        new TableRow({
+          ...(getRowOptions?.(row) || {}),
+          children: cells,
+          tableHeader,
+        })
+      );
     }
 
     this.maxImageWidth = MAX_IMAGE_WIDTH;
     const table = new Table({ ...tableOptions, rows });
     actualChildren.push(table);
     // If there are multiple tables, this separates them
-    actualChildren.push(new Paragraph(''));
+    actualChildren.push(new Paragraph(""));
     this.children = actualChildren;
   }
 
-  captionLabel(id: string, kind: 'Figure' | 'Table', { suffix } = { suffix: ': ' }) {
-    this.current.push(...[createReferenceBookmark(id, kind, `${kind} `), new TextRun(suffix)]);
+  captionLabel(
+    id: string,
+    kind: "Figure" | "Table",
+    { suffix } = { suffix: ": " }
+  ) {
+    this.current.push(
+      ...[createReferenceBookmark(id, kind, `${kind} `), new TextRun(suffix)]
+    );
   }
 
   $footnoteCounter = 0;
@@ -837,7 +936,7 @@ export class DocxSerializerStateAsync {
     await this.renderContent(node);
     this.footnotes[number] = {
       children: this.children.filter(
-        (child): child is Paragraph => child instanceof Paragraph,
+        (child): child is Paragraph => child instanceof Paragraph
       ),
     };
 
@@ -884,8 +983,8 @@ export class DocxSerializerStateAsync {
    */
   addSection(config: SectionConfig = {}) {
     this.sections.push({
-      config,
       children: [],
+      config,
     });
     this.currentSectionIndex = this.sections.length - 1;
     this.children = this.sections[this.currentSectionIndex].children;
@@ -910,17 +1009,21 @@ export class DocxSerializerStateAsync {
    */
   getSerializationState(): SerializationState {
     return {
+      footnotes: this.footnotes,
       numbering: this.numbering,
       sections: this.sections,
-      footnotes: this.footnotes,
     };
   }
 
   createReference(id: string, before?: string, after?: string) {
     const children: ParagraphChild[] = [];
-    if (before) children.push(new TextRun(before));
+    if (before) {
+      children.push(new TextRun(before));
+    }
     children.push(new SimpleField(`REF ${id} \\h`));
-    if (after) children.push(new TextRun(after));
+    if (after) {
+      children.push(new TextRun(after));
+    }
     const ref = new InternalHyperlink({ anchor: id, children });
     this.current.push(ref);
   }
@@ -939,7 +1042,7 @@ export class DocxSerializerAsync {
   async serializeAsync(
     content: Node,
     options: OptionsAsync,
-    getDocumentOptions?: (state: SerializationState) => IPropertiesOptions,
+    getDocumentOptions?: (state: SerializationState) => IPropertiesOptions
   ) {
     const state = new DocxSerializerStateAsync(this.nodes, this.marks, options);
     await state.renderContent(content);

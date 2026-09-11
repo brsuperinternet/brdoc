@@ -1,4 +1,4 @@
-import { INumberingOptions, Paragraph, ISectionOptions } from 'docx';
+import { INumberingOptions, ISectionOptions, Paragraph } from "docx";
 
 export type Mutable<T> = {
   -readonly [k in keyof T]: T[k];
@@ -15,20 +15,20 @@ export type IFootnotes = Mutable<
   >
 >;
 
-export type INumbering = INumberingOptions['config'][0];
+export type INumbering = INumberingOptions["config"][0];
 
 export interface SectionConfig {
-  properties?: ISectionOptions['properties'];
-  headers?: ISectionOptions['headers'];
-  footers?: ISectionOptions['footers'];
+  footers?: ISectionOptions["footers"];
+  headers?: ISectionOptions["headers"];
+  properties?: ISectionOptions["properties"];
 }
 
 export interface SerializationState {
-  numbering: INumberingOptions['config'];
+  children?: ISectionOptions["children"];
+  footnotes?: IFootnotes;
+  numbering: INumberingOptions["config"];
   sections?: Array<{
     config: SectionConfig;
-    children: ISectionOptions['children'];
+    children: ISectionOptions["children"];
   }>;
-  children?: ISectionOptions['children'];
-  footnotes?: IFootnotes;
 }

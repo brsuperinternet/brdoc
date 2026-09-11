@@ -1,25 +1,25 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { dbOrTx } from '@docmost/db/utils';
-import { sql } from 'kysely';
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { GroupRepo } from "@docmost/db/repos/group/group.repo";
+import { SpaceRepo } from "@docmost/db/repos/space/space.repo";
 import {
   InsertableSpaceMember,
   SpaceMember,
   UpdatableSpaceMember,
-} from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '../../pagination/pagination-options';
-import { MemberInfo, UserSpaceRole } from './types';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
-import { GroupRepo } from '@docmost/db/repos/group/group.repo';
-import { SpaceRepo } from '@docmost/db/repos/space/space.repo';
-import { withCache } from '../../../common/helpers/with-cache';
+} from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx } from "@docmost/db/utils";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { Cache } from "cache-manager";
+import { sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
 import {
   CacheKey,
   PERMISSION_CACHE_TTL_MS,
-} from '../../../common/helpers/cache-keys';
+} from "../../../common/helpers/cache-keys";
+import { withCache } from "../../../common/helpers/with-cache";
+import { PaginationOptions } from "../../pagination/pagination-options";
+import { MemberInfo, UserSpaceRole } from "./types";
 
 @Injectable()
 export class SpaceMemberRepo {
@@ -32,11 +32,11 @@ export class SpaceMemberRepo {
 
   async insertSpaceMember(
     insertableSpaceMember: InsertableSpaceMember,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
     await db
-      .insertInto('spaceMembers')
+      .insertInto("spaceMembers")
       .values(insertableSpaceMember)
       .returningAll()
       .execute();
@@ -46,14 +46,14 @@ export class SpaceMemberRepo {
     updatableSpaceMember: UpdatableSpaceMember,
     spaceMemberId: string,
     spaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
     await db
-      .updateTable('spaceMembers')
+      .updateTable("spaceMembers")
       .set(updatableSpaceMember)
-      .where('id', '=', spaceMemberId)
-      .where('spaceId', '=', spaceId)
+      .where("id", "=", spaceMemberId)
+      .where("spaceId", "=", spaceId)
       .execute();
   }
 
@@ -63,19 +63,19 @@ export class SpaceMemberRepo {
       userId?: string;
       groupId?: string;
     },
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<SpaceMember> {
     const db = dbOrTx(this.db, trx);
     let query = db
-      .selectFrom('spaceMembers')
+      .selectFrom("spaceMembers")
       .selectAll()
-      .where('spaceId', '=', spaceId);
+      .where("spaceId", "=", spaceId);
     if (opts.userId) {
-      query = query.where('userId', '=', opts.userId);
+      query = query.where("userId", "=", opts.userId);
     } else if (opts.groupId) {
-      query = query.where('groupId', '=', opts.groupId);
+      query = query.where("groupId", "=", opts.groupId);
     } else {
-      throw new BadRequestException('Please provide a userId or groupId');
+      throw new BadRequestException("Please provide a userId or groupId");
     }
     return query.executeTakeFirst();
   }
@@ -83,28 +83,28 @@ export class SpaceMemberRepo {
   async removeSpaceMemberById(
     memberId: string,
     spaceId: string,
-    opts?: { trx?: KyselyTransaction },
+    opts?: { trx?: KyselyTransaction }
   ): Promise<void> {
     const { trx } = opts;
     const db = dbOrTx(this.db, trx);
     await db
-      .deleteFrom('spaceMembers')
-      .where('id', '=', memberId)
-      .where('spaceId', '=', spaceId)
+      .deleteFrom("spaceMembers")
+      .where("id", "=", memberId)
+      .where("spaceId", "=", spaceId)
       .execute();
   }
 
   async roleCountBySpaceId(
     role: string,
     spaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<number> {
     const db = dbOrTx(this.db, trx);
     const { count } = await db
-      .selectFrom('spaceMembers')
-      .select((eb) => eb.fn.count('role').as('count'))
-      .where('role', '=', role)
-      .where('spaceId', '=', spaceId)
+      .selectFrom("spaceMembers")
+      .select((eb) => eb.fn.count("role").as("count"))
+      .where("role", "=", role)
+      .where("spaceId", "=", spaceId)
       .executeTakeFirst();
 
     return count as number;
@@ -112,76 +112,76 @@ export class SpaceMemberRepo {
 
   async getSpaceMembersPaginated(
     spaceId: string,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ) {
     let baseQuery = this.db
-      .selectFrom('spaceMembers')
-      .leftJoin('users', 'users.id', 'spaceMembers.userId')
-      .leftJoin('groups', 'groups.id', 'spaceMembers.groupId')
+      .selectFrom("spaceMembers")
+      .leftJoin("users", "users.id", "spaceMembers.userId")
+      .leftJoin("groups", "groups.id", "spaceMembers.groupId")
       .select([
-        'spaceMembers.id as id',
-        'users.id as userId',
-        'users.name as userName',
-        'users.avatarUrl as userAvatarUrl',
-        'users.email as userEmail',
-        'groups.id as groupId',
-        'groups.name as groupName',
-        'groups.isDefault as groupIsDefault',
-        'spaceMembers.role',
-        'spaceMembers.createdAt',
+        "spaceMembers.id as id",
+        "users.id as userId",
+        "users.name as userName",
+        "users.avatarUrl as userAvatarUrl",
+        "users.email as userEmail",
+        "groups.id as groupId",
+        "groups.name as groupName",
+        "groups.isDefault as groupIsDefault",
+        "spaceMembers.role",
+        "spaceMembers.createdAt",
       ])
       .select((eb) => this.groupRepo.withMemberCount(eb))
       .select(
         sql<number>`case when groups.id is not null then 1 else 0 end`.as(
-          'isGroup',
-        ),
+          "isGroup"
+        )
       )
       .select(
         sql<number>`case "space_members"."role" when 'admin' then 1 when 'writer' then 2 when 'reader' then 3 else 4 end`.as(
-          'roleOrder',
-        ),
+          "roleOrder"
+        )
       )
-      .select(sql<string>`coalesce(users.name, groups.name)`.as('memberName'))
-      .where('spaceId', '=', spaceId);
+      .select(sql<string>`coalesce(users.name, groups.name)`.as("memberName"))
+      .where("spaceId", "=", spaceId);
 
     if (pagination.query) {
       baseQuery = baseQuery.where((eb) =>
         eb(
           sql`f_unaccent(users.name)`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
         )
           .or(
             sql`users.email`,
-            'ilike',
-            sql`f_unaccent(${'%' + pagination.query + '%'})`,
+            "ilike",
+            sql`f_unaccent(${"%" + pagination.query + "%"})`
           )
           .or(
             sql`f_unaccent(groups.name)`,
-            'ilike',
-            sql`f_unaccent(${'%' + pagination.query + '%'})`,
-          ),
+            "ilike",
+            sql`f_unaccent(${"%" + pagination.query + "%"})`
+          )
       );
     }
 
-    const query = this.db.selectFrom(baseQuery.as('sub')).selectAll('sub');
+    const query = this.db.selectFrom(baseQuery.as("sub")).selectAll("sub");
 
     const result = await executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
+      cursor: pagination.cursor,
       fields: [
-        { expression: 'sub.roleOrder', direction: 'asc', key: 'roleOrder' },
-        { expression: 'sub.isGroup', direction: 'desc', key: 'isGroup' },
-        { expression: 'sub.memberName', direction: 'asc', key: 'memberName' },
-        { expression: 'sub.id', direction: 'asc', key: 'id' },
+        { direction: "asc", expression: "sub.roleOrder", key: "roleOrder" },
+        { direction: "desc", expression: "sub.isGroup", key: "isGroup" },
+        { direction: "asc", expression: "sub.memberName", key: "memberName" },
+        { direction: "asc", expression: "sub.id", key: "id" },
       ],
       parseCursor: (cursor) => ({
-        roleOrder: parseInt(cursor.roleOrder, 10),
-        isGroup: parseInt(cursor.isGroup, 10),
-        memberName: cursor.memberName,
         id: cursor.id,
+        isGroup: Number.parseInt(cursor.isGroup, 10),
+        memberName: cursor.memberName,
+        roleOrder: Number.parseInt(cursor.roleOrder, 10),
       }),
+      perPage: pagination.limit,
     });
 
     let memberInfo: MemberInfo;
@@ -189,26 +189,26 @@ export class SpaceMemberRepo {
     const members = result.items.map((member) => {
       if (member.userId) {
         memberInfo = {
+          avatarUrl: member.userAvatarUrl,
+          email: member.userEmail,
           id: member.userId,
           name: member.userName,
-          email: member.userEmail,
-          avatarUrl: member.userAvatarUrl,
-          type: 'user',
+          type: "user",
         };
       } else if (member.groupId) {
         memberInfo = {
           id: member.groupId,
-          name: member.groupName,
-          memberCount: member.memberCount as number,
           isDefault: member.groupIsDefault,
-          type: 'group',
+          memberCount: member.memberCount as number,
+          name: member.groupName,
+          type: "group",
         };
       }
 
       return {
         ...memberInfo,
-        role: member.role,
         createdAt: member.createdAt,
+        role: member.role,
       };
     });
 
@@ -227,7 +227,7 @@ export class SpaceMemberRepo {
    */
   async getUserSpaceRoles(
     userId: string,
-    spaceId: string,
+    spaceId: string
   ): Promise<UserSpaceRole[]> {
     return withCache(
       this.cacheManager,
@@ -235,21 +235,21 @@ export class SpaceMemberRepo {
       PERMISSION_CACHE_TTL_MS,
       async () => {
         const roles = await this.db
-          .selectFrom('spaceMembers')
-          .select(['userId', 'role'])
-          .where('userId', '=', userId)
-          .where('spaceId', '=', spaceId)
+          .selectFrom("spaceMembers")
+          .select(["userId", "role"])
+          .where("userId", "=", userId)
+          .where("spaceId", "=", spaceId)
           .unionAll(
             this.db
-              .selectFrom('spaceMembers')
+              .selectFrom("spaceMembers")
               .innerJoin(
-                'groupUsers',
-                'groupUsers.groupId',
-                'spaceMembers.groupId',
+                "groupUsers",
+                "groupUsers.groupId",
+                "spaceMembers.groupId"
               )
-              .select(['groupUsers.userId', 'spaceMembers.role'])
-              .where('groupUsers.userId', '=', userId)
-              .where('spaceMembers.spaceId', '=', spaceId),
+              .select(["groupUsers.userId", "spaceMembers.role"])
+              .where("groupUsers.userId", "=", userId)
+              .where("spaceMembers.spaceId", "=", spaceId)
           )
           .execute();
 
@@ -257,28 +257,30 @@ export class SpaceMemberRepo {
           return undefined;
         }
         return roles;
-      },
+      }
     );
   }
 
   async getUserIdsWithSpaceAccess(
     userIds: string[],
-    spaceId: string,
+    spaceId: string
   ): Promise<Set<string>> {
-    if (userIds.length === 0) return new Set();
+    if (userIds.length === 0) {
+      return new Set();
+    }
 
     const rows = await this.db
-      .selectFrom('spaceMembers')
-      .select('userId')
-      .where('userId', 'in', userIds)
-      .where('spaceId', '=', spaceId)
+      .selectFrom("spaceMembers")
+      .select("userId")
+      .where("userId", "in", userIds)
+      .where("spaceId", "=", spaceId)
       .unionAll(
         this.db
-          .selectFrom('spaceMembers')
-          .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
-          .select('groupUsers.userId')
-          .where('groupUsers.userId', 'in', userIds)
-          .where('spaceMembers.spaceId', '=', spaceId),
+          .selectFrom("spaceMembers")
+          .innerJoin("groupUsers", "groupUsers.groupId", "spaceMembers.groupId")
+          .select("groupUsers.userId")
+          .where("groupUsers.userId", "in", userIds)
+          .where("spaceMembers.spaceId", "=", spaceId)
       )
       .execute();
 
@@ -287,9 +289,9 @@ export class SpaceMemberRepo {
 
   async getSpaceIdsByGroupId(groupId: string): Promise<string[]> {
     const rows = await this.db
-      .selectFrom('spaceMembers')
-      .select('spaceId')
-      .where('groupId', '=', groupId)
+      .selectFrom("spaceMembers")
+      .select("spaceId")
+      .where("groupId", "=", groupId)
       .execute();
 
     return rows.map((r) => r.spaceId);
@@ -297,17 +299,17 @@ export class SpaceMemberRepo {
 
   getUserSpaceIdsQuery(userId: string) {
     return this.db
-      .selectFrom('spaceMembers')
-      .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
-      .select('spaces.id')
-      .where('userId', '=', userId)
+      .selectFrom("spaceMembers")
+      .innerJoin("spaces", "spaces.id", "spaceMembers.spaceId")
+      .select("spaces.id")
+      .where("userId", "=", userId)
       .union(
         this.db
-          .selectFrom('spaceMembers')
-          .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
-          .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
-          .select('spaces.id')
-          .where('groupUsers.userId', '=', userId),
+          .selectFrom("spaceMembers")
+          .innerJoin("groupUsers", "groupUsers.groupId", "spaceMembers.groupId")
+          .innerJoin("spaces", "spaces.id", "spaceMembers.spaceId")
+          .select("spaces.id")
+          .where("groupUsers.userId", "=", userId)
       );
   }
 
@@ -318,60 +320,58 @@ export class SpaceMemberRepo {
 
   async getUserRolesForSpaces(
     userId: string,
-    spaceIds: string[],
+    spaceIds: string[]
   ): Promise<{ spaceId: string; role: string }[]> {
-    if (spaceIds.length === 0) return [];
+    if (spaceIds.length === 0) {
+      return [];
+    }
 
     return this.db
-      .selectFrom('spaceMembers')
-      .select(['spaceId', 'role'])
-      .where('userId', '=', userId)
-      .where('spaceId', 'in', spaceIds)
+      .selectFrom("spaceMembers")
+      .select(["spaceId", "role"])
+      .where("userId", "=", userId)
+      .where("spaceId", "in", spaceIds)
       .unionAll(
         this.db
-          .selectFrom('spaceMembers')
-          .innerJoin(
-            'groupUsers',
-            'groupUsers.groupId',
-            'spaceMembers.groupId',
-          )
-          .select(['spaceMembers.spaceId', 'spaceMembers.role'])
-          .where('groupUsers.userId', '=', userId)
-          .where('spaceMembers.spaceId', 'in', spaceIds),
+          .selectFrom("spaceMembers")
+          .innerJoin("groupUsers", "groupUsers.groupId", "spaceMembers.groupId")
+          .select(["spaceMembers.spaceId", "spaceMembers.role"])
+          .where("groupUsers.userId", "=", userId)
+          .where("spaceMembers.spaceId", "in", spaceIds)
       )
       .execute();
   }
 
   async getUserSpaces(userId: string, pagination: PaginationOptions) {
     let query = this.db
-      .selectFrom('spaces')
+      .selectFrom("spaces")
       .selectAll()
       .select((eb) => [this.spaceRepo.withMemberCount(eb)])
-      .where('id', 'in', this.getUserSpaceIdsQuery(userId));
+      .where("id", "in", this.getUserSpaceIdsQuery(userId));
 
     if (pagination.query) {
       query = query.where((eb) =>
         eb(
           sql`f_unaccent(name)`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
         ).or(
           sql`f_unaccent(description)`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
-        ),
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
+        )
       );
     }
 
     return executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
+      cursor: pagination.cursor,
       fields: [
-        { expression: 'name', direction: 'asc' },
-        { expression: 'id', direction: 'asc' },
+        { direction: "asc", expression: "name" },
+        { direction: "asc", expression: "id" },
       ],
-      parseCursor: (cursor) => ({ name: cursor.name, id: cursor.id }),
+      parseCursor: (cursor) => ({ id: cursor.id, name: cursor.name }),
+      perPage: pagination.limit,
     });
   }
 }

@@ -1,14 +1,13 @@
+import { Transform } from "class-transformer";
 import {
-  IsBoolean,
   IsIn,
   IsOptional,
   IsString,
   IsUUID,
   ValidateIf,
-} from 'class-validator';
-import { Transform } from 'class-transformer';
+} from "class-validator";
 
-export type ContentFormat = 'json' | 'markdown' | 'html';
+export type ContentFormat = "json" | "markdown" | "html";
 
 export class CreatePageDto {
   @IsOptional()
@@ -30,7 +29,7 @@ export class CreatePageDto {
   content?: string | object;
 
   @ValidateIf((o) => o.content !== undefined)
-  @Transform(({ value }) => value?.toLowerCase() ?? 'json')
-  @IsIn(['json', 'markdown', 'html'])
+  @Transform(({ value }) => value?.toLowerCase() ?? "json")
+  @IsIn(["json", "markdown", "html"])
   format?: ContentFormat;
 }

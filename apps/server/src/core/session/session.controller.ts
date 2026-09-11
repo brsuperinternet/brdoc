@@ -1,3 +1,4 @@
+import { User, Workspace } from "@docmost/db/types/entity.types";
 import {
   BadRequestException,
   Body,
@@ -7,17 +8,16 @@ import {
   Post,
   Req,
   UseGuards,
-} from '@nestjs/common';
-import { SessionService } from './session.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
-import { AuthWorkspace } from '../../common/decorators/auth-workspace.decorator';
-import { User, Workspace } from '@docmost/db/types/entity.types';
-import { RevokeSessionDto } from './dto/revoke-session.dto';
-import { FastifyRequest } from 'fastify';
+} from "@nestjs/common";
+import { FastifyRequest } from "fastify";
+import { AuthUser } from "../../common/decorators/auth-user.decorator";
+import { AuthWorkspace } from "../../common/decorators/auth-workspace.decorator";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { RevokeSessionDto } from "./dto/revoke-session.dto";
+import { SessionService } from "./session.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('sessions')
+@Controller("sessions")
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
@@ -26,55 +26,55 @@ export class SessionController {
   async listSessions(
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
-    @Req() req: FastifyRequest,
+    @Req() req: FastifyRequest
   ) {
     const currentSessionId = (req.raw as any).sessionId ?? null;
     const sessions = await this.sessionService.getActiveSessions(
       user.id,
       workspace.id,
-      currentSessionId,
+      currentSessionId
     );
     return { sessions };
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('revoke')
+  @Post("revoke")
   async revokeSession(
     @Body() dto: RevokeSessionDto,
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
-    @Req() req: FastifyRequest,
+    @Req() req: FastifyRequest
   ) {
     const currentSessionId = (req.raw as any).sessionId;
     if (dto.sessionId === currentSessionId) {
       throw new BadRequestException(
-        'Cannot revoke current session. Use logout instead.',
+        "Cannot revoke current session. Use logout instead."
       );
     }
     await this.sessionService.revokeSession(
       dto.sessionId,
       user.id,
-      workspace.id,
+      workspace.id
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('revoke-all')
+  @Post("revoke-all")
   async revokeAllSessions(
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
-    @Req() req: FastifyRequest,
+    @Req() req: FastifyRequest
   ) {
     const currentSessionId = (req.raw as any).sessionId;
     if (!currentSessionId) {
       throw new BadRequestException(
-        'Current session not found. Please log in again.',
+        "Current session not found. Please log in again."
       );
     }
     await this.sessionService.revokeAllOtherSessions(
       currentSessionId,
       user.id,
-      workspace.id,
+      workspace.id
     );
   }
 }

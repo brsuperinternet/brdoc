@@ -13,19 +13,25 @@ declare module "@tiptap/core" {
 }
 
 export const PageBreak = Node.create<PageBreakOptions>({
-  name: "pageBreak",
-
-  group: "block",
-
-  atom: true,
-
-  selectable: true,
+  addCommands() {
+    return {
+      setPageBreak:
+        () =>
+        ({ chain }) =>
+          chain().insertContent({ type: this.name }).focus().run(),
+    };
+  },
 
   addOptions() {
     return {
       HTMLAttributes: {},
     };
   },
+
+  atom: true,
+
+  group: "block",
+  name: "pageBreak",
 
   parseHTML() {
     return [
@@ -39,22 +45,12 @@ export const PageBreak = Node.create<PageBreakOptions>({
     return [
       "div",
       mergeAttributes(
-        { "data-type": this.name, class: "page-break" },
+        { class: "page-break", "data-type": this.name },
         this.options.HTMLAttributes,
-        HTMLAttributes,
+        HTMLAttributes
       ),
     ];
   },
 
-  addCommands() {
-    return {
-      setPageBreak:
-        () =>
-        ({ chain }) =>
-          chain()
-            .insertContent({ type: this.name })
-            .focus()
-            .run(),
-    };
-  },
+  selectable: true,
 });

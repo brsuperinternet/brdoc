@@ -1,21 +1,20 @@
-import { S3StorageConfig, StorageDriver, StorageOption } from '../interfaces';
+import { Readable } from "node:stream";
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   NoSuchKey,
-  PutObjectCommand,
   S3Client,
-} from '@aws-sdk/client-s3';
-import { streamToBuffer } from '../storage.utils';
-import { Readable } from 'stream';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { getMimeType } from '../../../common/helpers';
-import { Upload } from '@aws-sdk/lib-storage';
-import { Logger } from '@nestjs/common';
+} from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { Logger } from "@nestjs/common";
+import { getMimeType } from "../../../common/helpers";
+import { S3StorageConfig, StorageDriver, StorageOption } from "../interfaces";
+import { streamToBuffer } from "../storage.utils";
 
-const S3_MAX_SOCKETS = parseInt(process.env.AWS_S3_MAX_SOCKETS) || 200;
+const S3_MAX_SOCKETS = Number.parseInt(process.env.AWS_S3_MAX_SOCKETS) || 200;
 
 export class S3Driver implements StorageDriver {
   private readonly s3Client: S3Client;
@@ -39,10 +38,10 @@ export class S3Driver implements StorageDriver {
       const upload = new Upload({
         client: this.s3Client,
         params: {
-          Bucket: this.config.bucket,
-          Key: filePath,
           Body: file,
+          Bucket: this.config.bucket,
           ContentType: contentType,
+          Key: filePath,
         },
       });
 
@@ -56,7 +55,7 @@ export class S3Driver implements StorageDriver {
   async uploadStream(
     filePath: string,
     file: Readable,
-    options?: { recreateClient?: boolean },
+    options?: { recreateClient?: boolean }
   ): Promise<void> {
     let clientToUse = this.s3Client;
     let shouldDestroyClient = false;
@@ -74,10 +73,10 @@ export class S3Driver implements StorageDriver {
       const upload = new Upload({
         client: clientToUse,
         params: {
-          Bucket: this.config.bucket,
-          Key: filePath,
           Body: file,
+          Bucket: this.config.bucket,
           ContentType: contentType,
+          Key: filePath,
         },
       });
 
@@ -100,7 +99,7 @@ export class S3Driver implements StorageDriver {
             Bucket: this.config.bucket,
             CopySource: `${this.config.bucket}/${fromFilePath}`,
             Key: toFilePath,
-          }),
+          })
         );
       }
     } catch (err) {
@@ -140,7 +139,7 @@ export class S3Driver implements StorageDriver {
 
   async readRangeStream(
     filePath: string,
-    range: { start: number; end: number },
+    range: { start: number; end: number }
   ): Promise<Readable> {
     try {
       const command = new GetObjectCommand({
@@ -195,7 +194,7 @@ export class S3Driver implements StorageDriver {
       await this.s3Client.send(command);
     } catch (err) {
       throw new Error(
-        `Error deleting file ${filePath} from S3. ${(err as Error).message}`,
+        `Error deleting file ${filePath} from S3. ${(err as Error).message}`
       );
     }
   }

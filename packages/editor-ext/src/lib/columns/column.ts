@@ -1,4 +1,4 @@
-import { Node, mergeAttributes, findParentNode } from "@tiptap/core";
+import { findParentNode, mergeAttributes, Node } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 
 export interface ColumnOptions {
@@ -18,29 +18,18 @@ declare module "@tiptap/core" {
 }
 
 export const Column = Node.create<ColumnOptions>({
-  name: "column",
-  group: "block",
-  content: "block+",
-  defining: true,
-  isolating: true,
-  selectable: false,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-
   addAttributes() {
     return {
       width: {
         default: null,
         parseHTML: (element) => {
           const value = element.getAttribute("data-width");
-          return value ? parseFloat(value) : null;
+          return value ? Number.parseFloat(value) : null;
         },
         renderHTML: (attributes: ColumnAttributes) => {
-          if (!attributes.width) return {};
+          if (!attributes.width) {
+            return {};
+          }
           return {
             "data-width": attributes.width,
             style: `flex: ${attributes.width}`,
@@ -50,39 +39,32 @@ export const Column = Node.create<ColumnOptions>({
     };
   },
 
-  parseHTML() {
-    return [
-      {
-        tag: `div[data-type="${this.name}"]`,
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "div",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
-      0,
-    ];
+  addCommands() {
+    return {
+      setColumnWidth:
+        (width) =>
+        ({ commands }) =>
+          commands.updateAttributes("column", { width }),
+    };
   },
 
   addKeyboardShortcuts() {
     const jumpToColumn = (direction: 1 | -1) => () => {
       const { state, dispatch } = this.editor.view;
 
-      const columns = findParentNode(
-        (node) => node.type.name === "columns",
-      )(state.selection);
-      if (!columns) return false;
+      const columns = findParentNode((node) => node.type.name === "columns")(
+        state.selection
+      );
+      if (!columns) {
+        return false;
+      }
 
-      const column = findParentNode(
-        (node) => node.type.name === "column",
-      )(state.selection);
-      if (!column) return false;
+      const column = findParentNode((node) => node.type.name === "column")(
+        state.selection
+      );
+      if (!column) {
+        return false;
+      }
 
       let currentIndex = -1;
       columns.node.forEach((_child, offset, index) => {
@@ -104,24 +86,47 @@ export const Column = Node.create<ColumnOptions>({
       const targetPos = columns.pos + 1 + offset + 1 + 1;
       if (dispatch) {
         dispatch(
-          state.tr.setSelection(TextSelection.create(state.doc, targetPos)),
+          state.tr.setSelection(TextSelection.create(state.doc, targetPos))
         );
       }
       return true;
     };
 
     return {
-      Tab: jumpToColumn(1),
       "Shift-Tab": jumpToColumn(-1),
+      Tab: jumpToColumn(1),
     };
   },
 
-  addCommands() {
+  addOptions() {
     return {
-      setColumnWidth:
-        (width) =>
-        ({ commands }) =>
-          commands.updateAttributes("column", { width }),
+      HTMLAttributes: {},
     };
   },
+  content: "block+",
+  defining: true,
+  group: "block",
+  isolating: true,
+  name: "column",
+
+  parseHTML() {
+    return [
+      {
+        tag: `div[data-type="${this.name}"]`,
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(
+        { "data-type": this.name },
+        this.options.HTMLAttributes,
+        HTMLAttributes
+      ),
+      0,
+    ];
+  },
+  selectable: false,
 });

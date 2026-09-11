@@ -4,26 +4,26 @@ import {
   Injectable,
   Logger,
   UnauthorizedException,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { AuthGuard } from "@nestjs/passport";
+import { addDays } from "date-fns";
+import { JwtType } from "../../core/auth/dto/jwt-payload";
+import { EnvironmentService } from "../../integrations/environment/environment.service";
 import {
   OAUTH_SCOPE_KEY,
   OAuthRouteScope,
-} from '../decorators/oauth-scope.decorator';
-import { REQUIRE_SESSION_AUTH_KEY } from '../decorators/require-session-auth.decorator';
-import { JwtType } from '../../core/auth/dto/jwt-payload';
-import { Reflector } from '@nestjs/core';
-import { EnvironmentService } from '../../integrations/environment/environment.service';
-import { addDays } from 'date-fns';
+} from "../decorators/oauth-scope.decorator";
+import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
+import { REQUIRE_SESSION_AUTH_KEY } from "../decorators/require-session-auth.decorator";
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
-  private logger = new Logger('JwtAuthGuard');
+export class JwtAuthGuard extends AuthGuard("jwt") {
+  private logger = new Logger("JwtAuthGuard");
 
   constructor(
     private reflector: Reflector,
-    private environmentService: EnvironmentService,
+    private environmentService: EnvironmentService
   ) {
     super();
   }
@@ -48,14 +48,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     const requiresSession = this.reflector.getAllAndOverride<boolean>(
       REQUIRE_SESSION_AUTH_KEY,
-      [ctx.getHandler(), ctx.getClass()],
+      [ctx.getHandler(), ctx.getClass()]
     );
     if (requiresSession && user.authType !== JwtType.ACCESS) {
       this.logger.debug(
-        `session-only endpoint ${ctx.getClass()?.name}.${ctx.getHandler()?.name} refused authType ${user.authType}`,
+        `session-only endpoint ${ctx.getClass()?.name}.${ctx.getHandler()?.name} refused authType ${user.authType}`
       );
       throw new ForbiddenException(
-        'This action requires an interactive user session',
+        "This action requires an interactive user session"
       );
     }
 
@@ -65,17 +65,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       >(OAUTH_SCOPE_KEY, [ctx.getHandler(), ctx.getClass()]);
       if (!required) {
         this.logger.warn(
-          `oauth scope check: no @OAuthScope metadata on ${ctx.getClass()?.name}.${ctx.getHandler()?.name}`,
+          `oauth scope check: no @OAuthScope metadata on ${ctx.getClass()?.name}.${ctx.getHandler()?.name}`
         );
-        throw new ForbiddenException('OAuth tokens cannot access this endpoint');
+        throw new ForbiddenException(
+          "OAuth tokens cannot access this endpoint"
+        );
       }
       const scopes: string[] = user.oauth.scopes ?? [];
       const satisfied =
-        required === 'read'
-          ? scopes.includes('read') || scopes.includes('write')
-          : scopes.includes('write');
+        required === "read"
+          ? scopes.includes("read") || scopes.includes("write")
+          : scopes.includes("write");
       if (!satisfied) {
-        throw new ForbiddenException('insufficient_scope');
+        throw new ForbiddenException("insufficient_scope");
       }
     }
 
@@ -102,11 +104,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         workspaceIds.push(workspaceId);
       }
 
-      res.setCookie('joinedWorkspaces', JSON.stringify(workspaceIds), {
-        httpOnly: false,
-        domain: '.' + this.environmentService.getSubdomainHost(),
-        path: '/',
+      res.setCookie("joinedWorkspaces", JSON.stringify(workspaceIds), {
+        domain: "." + this.environmentService.getSubdomainHost(),
         expires: addDays(new Date(), 365),
+        httpOnly: false,
+        path: "/",
         secure: this.environmentService.isHttps(),
       });
     }

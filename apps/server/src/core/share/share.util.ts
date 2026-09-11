@@ -1,14 +1,14 @@
-import { Node } from '@tiptap/pm/model';
+import { Node } from "@tiptap/pm/model";
 
 export function updateAttachmentAttr(
   node: Node,
-  attr: 'src' | 'url',
-  token: string,
+  attr: "src" | "url",
+  token: string
 ) {
   const attrVal = node.attrs[attr];
   if (
     attrVal &&
-    (attrVal.startsWith('/files') || attrVal.startsWith('/api/files'))
+    (attrVal.startsWith("/files") || attrVal.startsWith("/api/files"))
   ) {
     // @ts-ignore
     node.attrs[attr] = updateAttachmentUrl(attrVal, token);
@@ -16,7 +16,7 @@ export function updateAttachmentAttr(
 }
 
 function updateAttachmentUrl(src: string, jwtToken: string) {
-  const updatedSrc = src.replace('/files/', '/files/public/');
-  const separator = updatedSrc.includes('?') ? '&' : '?';
+  const updatedSrc = src.replace("/files/", "/files/public/");
+  const separator = updatedSrc.includes("?") ? "&" : "?";
   return `${updatedSrc}${separator}jwt=${jwtToken}`;
 }

@@ -1,6 +1,6 @@
 import {
-  Highlight as TiptapHighlight,
   type HighlightOptions,
+  Highlight as TiptapHighlight,
 } from "@tiptap/extension-highlight";
 
 export const Highlight = TiptapHighlight.extend<HighlightOptions>({

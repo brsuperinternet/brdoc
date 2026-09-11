@@ -10,14 +10,14 @@ import {
   IsUUID,
   MaxLength,
   MinLength,
-} from 'class-validator';
-import { InviteUserRole } from '../../../common/helpers/types/permission';
-import { NoUrls } from '../../../common/validators/no-urls.validator';
+} from "class-validator";
+import { InviteUserRole } from "../../../common/helpers/types/permission";
+import { NoUrls } from "../../../common/validators/no-urls.validator";
 
 export class InviteUserDto {
   @IsArray()
   @ArrayMaxSize(50, {
-    message: 'you cannot invite more than 50 users at a time',
+    message: "you cannot invite more than 50 users at a time",
   })
   @ArrayMinSize(1)
   @IsEmail({}, { each: true })
@@ -26,10 +26,10 @@ export class InviteUserDto {
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(25, {
-    message: 'you cannot add invited users to more than 25 groups at a time',
+    message: "you cannot add invited users to more than 25 groups at a time",
   })
   @ArrayMinSize(0)
-  @IsUUID('all', { each: true })
+  @IsUUID("all", { each: true })
   groupIds: string[];
 
   @IsEnum(InviteUserRole)

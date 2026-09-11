@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { sanitizeUrl } from "./utils";
 
@@ -7,11 +7,11 @@ export interface EmbedOptions {
   view: any;
 }
 export interface EmbedAttributes {
-  src?: string;
-  provider: string;
   align?: string;
-  width?: number;
   height?: number;
+  provider: string;
+  src?: string;
+  width?: number;
 }
 
 declare module "@tiptap/core" {
@@ -23,22 +23,29 @@ declare module "@tiptap/core" {
 }
 
 export const Embed = Node.create<EmbedOptions>({
-  name: "embed",
-  inline: false,
-  group: "block",
-  isolating: true,
-  atom: true,
-  defining: true,
-  draggable: true,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-    };
-  },
   addAttributes() {
     return {
+      align: {
+        default: "center",
+        parseHTML: (element) => element.getAttribute("data-align"),
+        renderHTML: (attributes: EmbedAttributes) => ({
+          "data-align": attributes.align,
+        }),
+      },
+      height: {
+        default: 600,
+        parseHTML: (element) => element.getAttribute("data-height"),
+        renderHTML: (attributes: EmbedAttributes) => ({
+          "data-height": attributes.height,
+        }),
+      },
+      provider: {
+        default: "",
+        parseHTML: (element) => element.getAttribute("data-provider"),
+        renderHTML: (attributes: EmbedAttributes) => ({
+          "data-provider": attributes.provider,
+        }),
+      },
       src: {
         default: "",
         parseHTML: (element) => {
@@ -49,20 +56,6 @@ export const Embed = Node.create<EmbedOptions>({
           "data-src": sanitizeUrl(attributes.src),
         }),
       },
-      provider: {
-        default: "",
-        parseHTML: (element) => element.getAttribute("data-provider"),
-        renderHTML: (attributes: EmbedAttributes) => ({
-          "data-provider": attributes.provider,
-        }),
-      },
-      align: {
-        default: "center",
-        parseHTML: (element) => element.getAttribute("data-align"),
-        renderHTML: (attributes: EmbedAttributes) => ({
-          "data-align": attributes.align,
-        }),
-      },
       width: {
         default: 800,
         parseHTML: (element) => element.getAttribute("data-width"),
@@ -70,15 +63,48 @@ export const Embed = Node.create<EmbedOptions>({
           "data-width": attributes.width,
         }),
       },
-      height: {
-        default: 600,
-        parseHTML: (element) => element.getAttribute("data-height"),
-        renderHTML: (attributes: EmbedAttributes) => ({
-          "data-height": attributes.height,
-        }),
-      },
     };
   },
+
+  addCommands() {
+    return {
+      setEmbed:
+        (attrs: EmbedAttributes) =>
+        ({ commands }) => {
+          // Validate the URL before inserting
+          const validatedAttrs = {
+            ...attrs,
+            src: sanitizeUrl(attrs.src),
+          };
+
+          return commands.insertContent({
+            attrs: validatedAttrs,
+            type: "embed",
+          });
+        },
+    };
+  },
+
+  addNodeView() {
+    // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
+    this.editor.isInitialized = true;
+
+    return ReactNodeViewRenderer(this.options.view);
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      view: null,
+    };
+  },
+  atom: true,
+  defining: true,
+  draggable: true,
+  group: "block",
+  inline: false,
+  isolating: true,
+  name: "embed",
 
   parseHTML() {
     return [
@@ -108,31 +134,5 @@ export const Embed = Node.create<EmbedOptions>({
         safeHref,
       ],
     ];
-  },
-
-  addCommands() {
-    return {
-      setEmbed:
-        (attrs: EmbedAttributes) =>
-        ({ commands }) => {
-          // Validate the URL before inserting
-          const validatedAttrs = {
-            ...attrs,
-            src: sanitizeUrl(attrs.src),
-          };
-
-          return commands.insertContent({
-            type: "embed",
-            attrs: validatedAttrs,
-          });
-        },
-    };
-  },
-
-  addNodeView() {
-    // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
-    this.editor.isInitialized = true;
-
-    return ReactNodeViewRenderer(this.options.view);
   },
 });

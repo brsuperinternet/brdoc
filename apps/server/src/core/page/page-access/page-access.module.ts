@@ -1,9 +1,9 @@
-import { Global, Module } from '@nestjs/common';
-import { PageAccessService } from './page-access.service';
+import { Global, Module } from "@nestjs/common";
+import { PageAccessService } from "./page-access.service";
 
 @Global()
 @Module({
-  providers: [PageAccessService],
   exports: [PageAccessService],
+  providers: [PageAccessService],
 })
 export class PageAccessModule {}

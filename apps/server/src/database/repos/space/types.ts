@@ -1,22 +1,22 @@
 export interface UserSpaceRole {
-  userId: string;
   role: string;
+  userId: string;
 }
 
 interface SpaceUserInfo {
+  avatarUrl: string;
+  email: string;
   id: string;
   name: string;
-  email: string;
-  avatarUrl: string;
-  type: 'user';
+  type: "user";
 }
 
 interface SpaceGroupInfo {
   id: string;
-  name: string;
   isDefault: boolean;
   memberCount: number;
-  type: 'group';
+  name: string;
+  type: "group";
 }
 
 export type MemberInfo = SpaceUserInfo | SpaceGroupInfo;

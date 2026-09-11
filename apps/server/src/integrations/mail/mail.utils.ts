@@ -1,3 +1,1 @@
-export const mailLogName = (driverName: string) => {
-  return `Mail::${driverName}`;
-};
+export const mailLogName = (driverName: string) => `Mail::${driverName}`;

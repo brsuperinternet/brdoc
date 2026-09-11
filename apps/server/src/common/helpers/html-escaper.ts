@@ -21,18 +21,18 @@
  * THE SOFTWARE.
  */
 
-const { replace } = '';
+const { replace } = "";
 
 // escape
 const es = /&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34);/g;
 const ca = /[&<>'"]/g;
 
 const esca = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  "'": '&#39;',
-  '"': '&quot;',
+  "'": "&#39;",
+  '"': "&quot;",
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
 };
 const pe = (m) => esca[m];
 
@@ -47,16 +47,16 @@ export const htmlEscape = (es) => replace.call(es, ca, pe);
 
 // unescape
 const unes = {
-  '&amp;': '&',
-  '&#38;': '&',
-  '&lt;': '<',
-  '&#60;': '<',
-  '&gt;': '>',
-  '&#62;': '>',
-  '&apos;': "'",
-  '&#39;': "'",
-  '&quot;': '"',
-  '&#34;': '"',
+  "&#34;": '"',
+  "&#38;": "&",
+  "&#39;": "'",
+  "&#60;": "<",
+  "&#62;": ">",
+  "&amp;": "&",
+  "&apos;": "'",
+  "&gt;": ">",
+  "&lt;": "<",
+  "&quot;": '"',
 };
 const cape = (m) => unes[m];
 

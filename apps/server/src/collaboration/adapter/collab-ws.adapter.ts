@@ -1,4 +1,4 @@
-import { WebSocketServer } from 'ws';
+import { WebSocketServer } from "ws";
 
 export class CollabWsAdapter {
   private readonly wss: WebSocketServer;
@@ -8,22 +8,22 @@ export class CollabWsAdapter {
   }
 
   handleUpgrade(path: string, httpServer: any) {
-    httpServer.on('upgrade', (request: any, socket: any, head: any) => {
+    httpServer.on("upgrade", (request: any, socket: any, head: any) => {
       try {
-        const baseUrl = 'ws://' + request.headers.host + '/';
+        const baseUrl = "ws://" + request.headers.host + "/";
         const pathname = new URL(request.url, baseUrl).pathname;
 
         if (pathname === path) {
           this.wss.handleUpgrade(request, socket, head, (ws) => {
-            this.wss.emit('connection', ws, request);
+            this.wss.emit("connection", ws, request);
           });
-        } else if (pathname === '/socket.io/') {
+        } else if (pathname === "/socket.io/") {
           return;
         } else {
           socket.destroy();
         }
       } catch (err) {
-        socket.end('HTTP/1.1 400\r\n' + (err as Error).message);
+        socket.end("HTTP/1.1 400\r\n" + (err as Error).message);
       }
     });
 

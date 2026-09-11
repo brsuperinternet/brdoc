@@ -1,3 +1,5 @@
+import { LabelType } from "@docmost/db/repos/label/label.repo";
+import { Transform } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -9,11 +11,9 @@ import {
   IsUUID,
   Matches,
   MaxLength,
-} from 'class-validator';
-import { Transform } from 'class-transformer';
-import { LabelType } from '@docmost/db/repos/label/label.repo';
-import { PageIdDto } from '../../page/dto/page.dto';
-import { normalizeLabelName } from '../utils';
+} from "class-validator";
+import { PageIdDto } from "../../page/dto/page.dto";
+import { normalizeLabelName } from "../utils";
 
 //TODO: We may support SPACE/TEMPLATE labels in the future
 const SUPPORTED_LABEL_TYPES: LabelType[] = [LabelType.PAGE];
@@ -25,13 +25,13 @@ export class AddLabelsDto extends PageIdDto {
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @Transform(({ value }) =>
-    Array.isArray(value) ? value.map(normalizeLabelName) : value,
+    Array.isArray(value) ? value.map(normalizeLabelName) : value
   )
   @MaxLength(100, { each: true })
   @Matches(/^[a-z0-9_-][a-z0-9_~-]*$/, {
     each: true,
     message:
-      'Label names can only contain letters, numbers, hyphens, underscores, and tildes, and cannot start with a tilde',
+      "Label names can only contain letters, numbers, hyphens, underscores, and tildes, and cannot start with a tilde",
   })
   names: string[];
 }
@@ -49,7 +49,7 @@ export class FindPagesByLabelDto {
   @IsOptional()
   @IsString()
   @Transform(({ value }) =>
-    typeof value === 'string' ? normalizeLabelName(value) : value,
+    typeof value === "string" ? normalizeLabelName(value) : value
   )
   @MaxLength(100)
   name?: string;
@@ -63,7 +63,7 @@ export class LabelInfoDto {
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }) =>
-    typeof value === 'string' ? normalizeLabelName(value) : value,
+    typeof value === "string" ? normalizeLabelName(value) : value
   )
   @MaxLength(100)
   name: string;

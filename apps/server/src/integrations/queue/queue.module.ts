@@ -1,32 +1,34 @@
-import { Global, Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { EnvironmentService } from '../environment/environment.service';
-import { createRetryStrategy, parseRedisUrl } from '../../common/helpers';
-import { QueueName } from './constants';
-import { GeneralQueueProcessor } from './processors/general-queue.processor';
+import { BullModule } from "@nestjs/bullmq";
+import { Global, Module } from "@nestjs/common";
+import { createRetryStrategy, parseRedisUrl } from "../../common/helpers";
+import { EnvironmentService } from "../environment/environment.service";
+import { QueueName } from "./constants";
+import { GeneralQueueProcessor } from "./processors/general-queue.processor";
 
 @Global()
 @Module({
+  exports: [BullModule],
   imports: [
     BullModule.forRootAsync({
+      inject: [EnvironmentService],
       useFactory: (environmentService: EnvironmentService) => {
         const redisConfig = parseRedisUrl(environmentService.getRedisUrl());
         return {
           connection: {
-            host: redisConfig.host,
-            port: redisConfig.port,
-            username: redisConfig.username,
-            password: redisConfig.password,
             db: redisConfig.db,
             family: redisConfig.family,
-            tls: redisConfig.tls,
+            host: redisConfig.host,
+            password: redisConfig.password,
+            port: redisConfig.port,
             retryStrategy: createRetryStrategy(),
+            tls: redisConfig.tls,
+            username: redisConfig.username,
           },
           defaultJobOptions: {
             attempts: 3,
             backoff: {
-              type: 'exponential',
               delay: 20 * 1000,
+              type: "exponential",
             },
             removeOnComplete: {
               count: 200,
@@ -37,7 +39,6 @@ import { GeneralQueueProcessor } from './processors/general-queue.processor';
           },
         };
       },
-      inject: [EnvironmentService],
     }),
     BullModule.registerQueue({
       name: QueueName.EMAIL_QUEUE,
@@ -52,66 +53,65 @@ import { GeneralQueueProcessor } from './processors/general-queue.processor';
       name: QueueName.BILLING_QUEUE,
     }),
     BullModule.registerQueue({
+      defaultJobOptions: {
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
       name: QueueName.FILE_TASK_QUEUE,
-      defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: true,
-        attempts: 1,
-      },
     }),
     BullModule.registerQueue({
+      defaultJobOptions: {
+        attempts: 2,
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
       name: QueueName.SEARCH_QUEUE,
-      defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: true,
-        attempts: 2,
-      },
     }),
     BullModule.registerQueue({
-      name: QueueName.AI_QUEUE,
       defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: true,
         attempts: 1,
-      },
-    }),
-    BullModule.registerQueue({
-      name: QueueName.HISTORY_QUEUE,
-      defaultJobOptions: {
         removeOnComplete: true,
         removeOnFail: true,
-        attempts: 2,
       },
+      name: QueueName.AI_QUEUE,
+    }),
+    BullModule.registerQueue({
+      defaultJobOptions: {
+        attempts: 2,
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+      name: QueueName.HISTORY_QUEUE,
     }),
     BullModule.registerQueue({
       name: QueueName.NOTIFICATION_QUEUE,
     }),
     BullModule.registerQueue({
-      name: QueueName.AUDIT_QUEUE,
       defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: true,
         attempts: 3,
-      },
-    }),
-    BullModule.registerQueue({
-      name: QueueName.SIEM_QUEUE,
-      defaultJobOptions: {
         removeOnComplete: true,
         removeOnFail: true,
-        attempts: 1,
       },
+      name: QueueName.AUDIT_QUEUE,
     }),
     BullModule.registerQueue({
-      name: QueueName.BASE_QUEUE,
+      defaultJobOptions: {
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+      name: QueueName.SIEM_QUEUE,
+    }),
+    BullModule.registerQueue({
       defaultJobOptions: {
         attempts: 2,
         removeOnComplete: { count: 200 },
         removeOnFail: { count: 100 },
       },
+      name: QueueName.BASE_QUEUE,
     }),
   ],
-  exports: [BullModule],
   providers: [GeneralQueueProcessor],
 })
 export class QueueModule {}

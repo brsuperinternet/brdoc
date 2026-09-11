@@ -4,13 +4,13 @@ import {
   IsOptional,
   IsString,
   IsUUID,
-} from 'class-validator';
+} from "class-validator";
 
 export class AddFavoriteDto {
   @IsString()
   @IsNotEmpty()
-  @IsIn(['page', 'space', 'template'])
-  type: 'page' | 'space' | 'template';
+  @IsIn(["page", "space", "template"])
+  type: "page" | "space" | "template";
 
   @IsOptional()
   @IsUUID()

@@ -1,3 +1,5 @@
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { User, Workspace } from "@docmost/db/types/entity.types";
 import {
   BadRequestException,
   Body,
@@ -8,32 +10,30 @@ import {
   Logger,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { SearchService } from './search.service';
+} from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
+import { Public } from "src/common/decorators/public.decorator";
+import { AuthUser } from "../../common/decorators/auth-user.decorator";
+import { AuthWorkspace } from "../../common/decorators/auth-workspace.decorator";
+import { OAuthScope } from "../../common/decorators/oauth-scope.decorator";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { EnvironmentService } from "../../integrations/environment/environment.service";
+import SpaceAbilityFactory from "../casl/abilities/space-ability.factory";
+import {
+  SpaceCaslAction,
+  SpaceCaslSubject,
+} from "../casl/interfaces/space-ability.type";
+import { PublicSpaceService } from "../public-space/public-space.service";
 import {
   SearchDTO,
   SearchPublicSpaceDTO,
   SearchShareDTO,
   SearchSuggestionDTO,
-} from './dto/search.dto';
-import { AuthWorkspace } from '../../common/decorators/auth-workspace.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { OAuthScope } from '../../common/decorators/oauth-scope.decorator';
-import { User, Workspace } from '@docmost/db/types/entity.types';
-import SpaceAbilityFactory from '../casl/abilities/space-ability.factory';
-import {
-  SpaceCaslAction,
-  SpaceCaslSubject,
-} from '../casl/interfaces/space-ability.type';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
-import { Public } from 'src/common/decorators/public.decorator';
-import { EnvironmentService } from '../../integrations/environment/environment.service';
-import { ModuleRef } from '@nestjs/core';
-import { PublicSpaceService } from '../public-space/public-space.service';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
+} from "./dto/search.dto";
+import { SearchService } from "./search.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('search')
+@Controller("search")
 export class SearchController {
   private readonly logger = new Logger(SearchController.name);
 
@@ -43,23 +43,23 @@ export class SearchController {
     private readonly environmentService: EnvironmentService,
     private readonly publicSpaceService: PublicSpaceService,
     private readonly pageRepo: PageRepo,
-    private moduleRef: ModuleRef,
+    private moduleRef: ModuleRef
   ) {}
 
   @HttpCode(HttpStatus.OK)
   @Post()
-  @OAuthScope('read')
+  @OAuthScope("read")
   async pageSearch(
     @Body() searchDto: SearchDTO,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     delete searchDto.shareId;
 
     if (searchDto.spaceId) {
       const ability = await this.spaceAbility.createForUser(
         user,
-        searchDto.spaceId,
+        searchDto.spaceId
       );
 
       if (ability.cannot(SpaceCaslAction.Read, SpaceCaslSubject.Page)) {
@@ -67,7 +67,7 @@ export class SearchController {
       }
     }
 
-    if (this.environmentService.getSearchDriver() === 'typesense') {
+    if (this.environmentService.getSearchDriver() === "typesense") {
       return this.searchTypesense(searchDto, {
         userId: user.id,
         workspaceId: workspace.id,
@@ -81,29 +81,29 @@ export class SearchController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('suggest')
-  @OAuthScope('read')
+  @Post("suggest")
+  @OAuthScope("read")
   async searchSuggestions(
     @Body() dto: SearchSuggestionDTO,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     return this.searchService.searchSuggestions(dto, user.id, workspace.id);
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('share-search')
+  @Post("share-search")
   async searchShare(
     @Body() searchDto: SearchShareDTO,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     delete searchDto.spaceId;
     if (!searchDto.shareId) {
-      throw new BadRequestException('shareId is required');
+      throw new BadRequestException("shareId is required");
     }
 
-    if (this.environmentService.getSearchDriver() === 'typesense') {
+    if (this.environmentService.getSearchDriver() === "typesense") {
       return this.searchTypesense(searchDto, {
         workspaceId: workspace.id,
       });
@@ -116,10 +116,10 @@ export class SearchController {
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('public-space-search')
+  @Post("public-space-search")
   async searchPublicSpace(
     @Body() searchDto: SearchPublicSpaceDTO,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     delete searchDto.spaceId;
     delete searchDto.shareId;
@@ -130,23 +130,23 @@ export class SearchController {
 
     const { space } = await this.publicSpaceService.getPublicSpace(
       searchDto.spaceSlug,
-      workspace,
+      workspace
     );
     const pages = await this.pageRepo.getSpacePagesExcludingRestricted(
-      space.id,
+      space.id
     );
     const publicPageIds = pages.map((page) => page.id);
 
-    if (this.environmentService.getSearchDriver() === 'typesense') {
+    if (this.environmentService.getSearchDriver() === "typesense") {
       return this.searchTypesense(searchDto, {
-        workspaceId: workspace.id,
         publicPageIds,
+        workspaceId: workspace.id,
       });
     }
 
     return this.searchService.searchPage(searchDto, {
-      workspaceId: workspace.id,
       publicPageIds,
+      workspaceId: workspace.id,
     });
   }
 
@@ -156,32 +156,32 @@ export class SearchController {
       userId?: string;
       workspaceId: string;
       publicPageIds?: string[];
-    },
+    }
   ) {
     const { userId, workspaceId, publicPageIds } = opts;
     let TypesenseModule: any;
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      TypesenseModule = require('./../../ee/typesense/services/page-search.service');
+      TypesenseModule = require("./../../ee/typesense/services/page-search.service");
 
       const PageSearchService = this.moduleRef.get(
         TypesenseModule.PageSearchService,
         {
           strict: false,
-        },
+        }
       );
 
       return PageSearchService.searchPage(searchParams, {
-        userId: userId,
-        workspaceId,
         publicPageIds,
+        userId,
+        workspaceId,
       });
     } catch (err) {
       this.logger.debug(
-        'Typesense module requested but enterprise module not bundled in this build',
+        "Typesense module requested but enterprise module not bundled in this build"
       );
     }
 
-    throw new BadRequestException('Enterprise Typesense search module missing');
+    throw new BadRequestException("Enterprise Typesense search module missing");
   }
 }

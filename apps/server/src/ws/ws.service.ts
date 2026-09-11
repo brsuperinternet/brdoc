@@ -1,17 +1,17 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { Server, Socket } from 'socket.io';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
-import { SpaceRole } from '../common/helpers/types/permission';
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Inject, Injectable } from "@nestjs/common";
+import { Cache } from "cache-manager";
+import { Server, Socket } from "socket.io";
+import { SpaceRole } from "../common/helpers/types/permission";
 import {
-  TREE_EVENTS,
-  WS_SPACE_RESTRICTION_CACHE_PREFIX,
-  WS_CACHE_TTL_MS,
   getSpaceRoomName,
   getUserRoomName,
-} from './ws.utils';
+  TREE_EVENTS,
+  WS_CACHE_TTL_MS,
+  WS_SPACE_RESTRICTION_CACHE_PREFIX,
+} from "./ws.utils";
 
 @Injectable()
 export class WsService {
@@ -36,24 +36,24 @@ export class WsService {
 
     const userSpaceRoles = await this.spaceMemberRepo.getUserSpaceRoles(
       client.data.userId,
-      data.spaceId,
+      data.spaceId
     );
     const canPublish = userSpaceRoles?.some(
-      ({ role }) => role === SpaceRole.ADMIN || role === SpaceRole.WRITER,
+      ({ role }) => role === SpaceRole.ADMIN || role === SpaceRole.WRITER
     );
 
     if (!canPublish) {
       return;
     }
 
-    if (data.operation === 'refetchRootTreeNodeEvent') {
-      client.broadcast.to(room).emit('message', data);
+    if (data.operation === "refetchRootTreeNodeEvent") {
+      client.broadcast.to(room).emit("message", data);
       return;
     }
 
     const hasRestrictions = await this.spaceHasRestrictions(data.spaceId);
     if (!hasRestrictions) {
-      client.broadcast.to(room).emit('message', data);
+      client.broadcast.to(room).emit("message", data);
       return;
     }
 
@@ -65,7 +65,7 @@ export class WsService {
     const isRestricted =
       await this.pagePermissionRepo.hasRestrictedAncestor(pageId);
     if (!isRestricted) {
-      client.broadcast.to(room).emit('message', data);
+      client.broadcast.to(room).emit("message", data);
       return;
     }
 
@@ -74,27 +74,27 @@ export class WsService {
 
   async invalidateSpaceRestrictionCache(spaceId: string): Promise<void> {
     await this.cacheManager.del(
-      `${WS_SPACE_RESTRICTION_CACHE_PREFIX}${spaceId}`,
+      `${WS_SPACE_RESTRICTION_CACHE_PREFIX}${spaceId}`
     );
   }
 
   async emitCommentEvent(
     spaceId: string,
     pageId: string,
-    data: any,
+    data: any
   ): Promise<void> {
     const room = getSpaceRoomName(spaceId);
 
     const hasRestrictions = await this.spaceHasRestrictions(spaceId);
     if (!hasRestrictions) {
-      this.server.to(room).emit('message', data);
+      this.server.to(room).emit("message", data);
       return;
     }
 
     const isRestricted =
       await this.pagePermissionRepo.hasRestrictedAncestor(pageId);
     if (!isRestricted) {
-      this.server.to(room).emit('message', data);
+      this.server.to(room).emit("message", data);
       return;
     }
 
@@ -102,15 +102,17 @@ export class WsService {
   }
 
   async emitToUsers(userIds: string[], data: any): Promise<void> {
-    if (userIds.length === 0) return;
+    if (userIds.length === 0) {
+      return;
+    }
     const rooms = userIds.map((id) => getUserRoomName(id));
-    this.server.to(rooms).emit('message', data);
+    this.server.to(rooms).emit("message", data);
   }
 
   async emitToSpaceExceptUsers(
     spaceId: string,
     excludeUserIds: string[],
-    data: any,
+    data: any
   ): Promise<void> {
     const room = getSpaceRoomName(spaceId);
     const sockets = await this.server.in(room).fetchSockets();
@@ -119,7 +121,7 @@ export class WsService {
     for (const socket of sockets) {
       const userId = socket.data.userId as string;
       if (userId && !excludeSet.has(userId)) {
-        socket.emit('message', data);
+        socket.emit("message", data);
       }
     }
   }
@@ -132,7 +134,7 @@ export class WsService {
     room: string,
     excludeSocketId: string | null,
     pageId: string,
-    data: any,
+    data: any
   ): Promise<void> {
     const sockets = await this.server.in(room).fetchSockets();
 
@@ -142,12 +144,16 @@ export class WsService {
     const otherSockets = excludeSocketId
       ? sockets.filter((s) => s.id !== excludeSocketId)
       : sockets;
-    if (otherSockets.length === 0) return;
+    if (otherSockets.length === 0) {
+      return;
+    }
 
     const userSocketMap = new Map<string, typeof otherSockets>();
     for (const socket of otherSockets) {
       const userId = socket.data.userId as string;
-      if (!userId) continue;
+      if (!userId) {
+        continue;
+      }
       const existing = userSocketMap.get(userId);
       if (existing) {
         existing.push(socket);
@@ -157,19 +163,21 @@ export class WsService {
     }
 
     const candidateUserIds = Array.from(userSocketMap.keys());
-    if (candidateUserIds.length === 0) return;
+    if (candidateUserIds.length === 0) {
+      return;
+    }
 
     const authorizedUserIds =
       await this.pagePermissionRepo.getUserIdsWithPageAccess(
         pageId,
-        candidateUserIds,
+        candidateUserIds
       );
 
     const authorizedSet = new Set(authorizedUserIds);
     for (const [userId, userSockets] of userSocketMap) {
       if (authorizedSet.has(userId)) {
         for (const socket of userSockets) {
-          socket.emit('message', data);
+          socket.emit("message", data);
         }
       }
     }
@@ -193,13 +201,13 @@ export class WsService {
 
   private extractPageId(data: any): string | null {
     switch (data.operation) {
-      case 'addTreeNode':
+      case "addTreeNode":
         return data.payload?.data?.id ?? null;
-      case 'moveTreeNode':
+      case "moveTreeNode":
         return data.payload?.id ?? null;
-      case 'deleteTreeNode':
+      case "deleteTreeNode":
         return data.payload?.node?.id ?? null;
-      case 'updateOne':
+      case "updateOne":
         return data.id ?? null;
       default:
         return null;

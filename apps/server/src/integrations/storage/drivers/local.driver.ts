@@ -1,13 +1,13 @@
+import { createReadStream, createWriteStream } from "node:fs";
+import { dirname, resolve, sep } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import * as fs from "fs-extra";
 import {
-  StorageDriver,
   LocalStorageConfig,
+  StorageDriver,
   StorageOption,
-} from '../interfaces';
-import { dirname, resolve, sep } from 'path';
-import * as fs from 'fs-extra';
-import { Readable } from 'stream';
-import { createReadStream, createWriteStream } from 'node:fs';
-import { pipeline } from 'node:stream/promises';
+} from "../interfaces";
 
 export class LocalDriver implements StorageDriver {
   private readonly config: LocalStorageConfig;
@@ -20,7 +20,7 @@ export class LocalDriver implements StorageDriver {
     const storageRoot = resolve(this.config.storagePath);
     const fullPath = resolve(storageRoot, filePath);
     if (fullPath !== storageRoot && !fullPath.startsWith(storageRoot + sep)) {
-      throw new Error('Invalid file path');
+      throw new Error("Invalid file path");
     }
     return fullPath;
   }
@@ -39,7 +39,11 @@ export class LocalDriver implements StorageDriver {
     }
   }
 
-  async uploadStream(filePath: string, file: Readable, options?: { recreateClient?: boolean }): Promise<void> {
+  async uploadStream(
+    filePath: string,
+    file: Readable,
+    options?: { recreateClient?: boolean }
+  ): Promise<void> {
     try {
       const fullPath = this._fullPath(filePath);
       await fs.mkdir(dirname(fullPath), { recursive: true });
@@ -80,15 +84,15 @@ export class LocalDriver implements StorageDriver {
 
   async readRangeStream(
     filePath: string,
-    range: { start: number; end: number },
+    range: { start: number; end: number }
   ): Promise<Readable> {
     const fullPath = this._fullPath(filePath);
     if (!(await fs.pathExists(fullPath))) {
       throw new Error(`File not found: ${filePath}`);
     }
     return createReadStream(fullPath, {
-      start: range.start,
       end: range.end,
+      start: range.start,
     });
   }
 
@@ -97,13 +101,13 @@ export class LocalDriver implements StorageDriver {
       return await fs.pathExists(this._fullPath(filePath));
     } catch (err) {
       throw new Error(
-        `Failed to check file existence: ${(err as Error).message}`,
+        `Failed to check file existence: ${(err as Error).message}`
       );
     }
   }
 
   async getSignedUrl(filePath: string, expireIn: number): Promise<string> {
-    throw new Error('Signed URLs are not supported for local storage.');
+    throw new Error("Signed URLs are not supported for local storage.");
   }
 
   getUrl(filePath: string): string {

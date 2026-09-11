@@ -1,20 +1,23 @@
 // Source https://github.com/ueberdosis/hocuspocus/pull/1008 - MIT
+
+import { ConnectionTimeout, Unauthorized } from "@hocuspocus/common";
 import {
+  afterUnloadDocumentPayload,
   Extension,
   Hocuspocus,
   IncomingMessage,
   onConfigurePayload,
   onLoadDocumentPayload,
-  afterUnloadDocumentPayload,
   WebSocketLike,
-} from '@hocuspocus/server';
-import { ConnectionTimeout, Unauthorized } from '@hocuspocus/common';
-import RedisClient from 'ioredis';
-import { CollabProxySocket } from './collab-proxy-socket';
+} from "@hocuspocus/server";
+import RedisClient from "ioredis";
+import { CollabProxySocket } from "./collab-proxy-socket";
 import {
   Configuration,
   CustomEvents,
+  OriginConnection,
   Pack,
+  ProxyConnection,
   RSAMessage,
   RSAMessageClose,
   RSAMessageCloseProxy,
@@ -23,13 +26,11 @@ import {
   RSAMessageProxy,
   RSAMessageUnload,
   SerializedHTTPRequest,
-  Unpack,
-  OriginConnection,
-  ProxyConnection,
   toWebRequest,
-} from './redis-sync.types';
+  Unpack,
+} from "./redis-sync.types";
 
-export type { Pack, SerializedHTTPRequest } from './redis-sync.types';
+export type { Pack, SerializedHTTPRequest } from "./redis-sync.types";
 
 type ServerId = string;
 type DocumentName = string;
@@ -53,12 +54,12 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
   private readonly lockTTL: number;
   private instance!: Hocuspocus;
   private readonly customEvents: TCE;
-  private replyIdCounter: number = 0;
+  private replyIdCounter = 0;
   // @ts-ignore
-  private pendingReplies: Record<number, PromiseWithResolvers<any>['resolve']> =
+  private pendingReplies: Record<number, PromiseWithResolvers<any>["resolve"]> =
     {};
   private deriveContext: (
-    serializedHTTPRequest: SerializedHTTPRequest,
+    serializedHTTPRequest: SerializedHTTPRequest
   ) => Record<string, any>;
 
   constructor(configuration: Configuration<TCE>) {
@@ -80,15 +81,15 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
     this.serverId = serverId;
     this.lockTTL = lockTTL ?? 10_000;
     this.customEventTTL = customEventTTL ?? 30_000;
-    this.prefix = prefix ?? 'collab';
+    this.prefix = prefix ?? "collab";
     this.lockPrefix = `${this.prefix}Lock`;
     this.msgChannel = `${this.prefix}Msg`;
     this.customEvents = (customEvents as any) ?? ({} as any as CustomEvents);
     this.deriveContext = deriveContext ?? (() => ({}));
     this.sub.subscribe(this.msgChannel, `${this.msgChannel}:${this.serverId}`);
-    this.sub.on('messageBuffer', this.handleRedisMessage);
-    this.pub.on('error', () => {});
-    this.sub.on('error', () => {});
+    this.sub.on("messageBuffer", this.handleRedisMessage);
+    this.pub.on("error", () => {});
+    this.sub.on("error", () => {});
   }
   private getKey(documentName: string) {
     return `${this.lockPrefix}:${documentName}`;
@@ -103,24 +104,24 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       socket.markClosed();
       clientConnection.handleClose({
         code: 1000,
-        reason: 'provider_initiated',
+        reason: "provider_initiated",
       });
     }
   }
 
   private handleProxyMessage(
-    msg: Pick<RSAMessageProxy, 'replyTo' | 'message' | 'serializedHTTPRequest'>,
+    msg: Pick<RSAMessageProxy, "replyTo" | "message" | "serializedHTTPRequest">
   ) {
     const { replyTo, message, serializedHTTPRequest } = msg;
     const { headers } = serializedHTTPRequest;
-    const socketId = headers['sec-websocket-key'];
+    const socketId = headers["sec-websocket-key"];
     let entry = this.proxyConnections[socketId];
     if (!entry) {
       const socket = new CollabProxySocket(
         this.pub,
         this.pack,
         replyTo,
-        socketId,
+        socketId
       );
       // A proxy connection with no live documents (client left the page, auth
       // failed, or the origin server crashed) is reaped by hocuspocus' message
@@ -131,10 +132,10 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
         delete this.proxyConnections[socketId];
         if (code !== ConnectionTimeout.code) {
           const msg: RSAMessageClose = {
-            type: 'close',
             code,
             reason,
             socketId,
+            type: "close",
           };
           this.pub.publish(replyTo, this.pack(msg));
         }
@@ -142,7 +143,7 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       const clientConnection = this.instance.handleConnection(
         socket,
         toWebRequest(serializedHTTPRequest),
-        this.deriveContext(serializedHTTPRequest),
+        this.deriveContext(serializedHTTPRequest)
       );
       entry = { clientConnection, socket };
       this.proxyConnections[socketId] = entry;
@@ -158,10 +159,10 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
     const lockPromise = this.pub.set(
       this.getKey(documentName),
       this.serverId,
-      'PX',
+      "PX",
       this.lockTTL,
-      'NX',
-      'GET',
+      "NX",
+      "GET"
     );
     this.lockPromises[documentName] = lockPromise;
     // Briefly cache the serverId that claimed the doc to reduce load on redis
@@ -175,47 +176,51 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
 
   private getOrClaimLockThrottled(documentName: string) {
     const existingWorkerIdPromise = this.lockPromises[documentName];
-    if (existingWorkerIdPromise) return existingWorkerIdPromise;
+    if (existingWorkerIdPromise) {
+      return existingWorkerIdPromise;
+    }
     return this.getOrClaimLock(documentName);
   }
 
   private handleRedisMessage = async (
     _channel: Buffer,
-    packedMessage: Buffer,
+    packedMessage: Buffer
   ) => {
     const msg = this.unpack(packedMessage) as RSAMessage;
     const { type } = msg;
-    if (type === 'proxy') {
+    if (type === "proxy") {
       this.handleProxyMessage(msg);
       return;
     }
-    if (type === 'closeProxy') {
+    if (type === "closeProxy") {
       this.closeProxy(msg.socketId);
       return;
     }
-    if (type === 'unload') {
+    if (type === "unload") {
       delete this.lockPromises[msg.documentName];
       return;
     }
-    if (type === 'customEventStart') {
+    if (type === "customEventStart") {
       const { documentName, eventName, payload, replyTo, replyId } = msg;
       const res = await this.handleEventLocally(
         eventName as Extract<keyof TCE, string>,
         documentName,
-        payload,
+        payload
       );
       const reply: RSAMessageCustomEventComplete = {
-        type: 'customEventComplete',
-        replyId,
         payload: res,
+        replyId,
+        type: "customEventComplete",
       };
       this.pub.publish(`${replyTo}`, this.pack(reply));
       return;
     }
-    if (type === 'customEventComplete') {
+    if (type === "customEventComplete") {
       const { replyId, payload } = msg;
       const resolveFn = this.pendingReplies[replyId];
-      if (!resolveFn) return;
+      if (!resolveFn) {
+        return;
+      }
       delete this.pendingReplies[replyId];
       resolveFn(payload);
       return;
@@ -227,9 +232,9 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       return;
     }
     const { socket } = entry;
-    if (type === 'close') {
+    if (type === "close") {
       socket.close(msg.code, msg.reason);
-    } else if (type === 'send') {
+    } else if (type === "send") {
       socket.send(msg.message);
     }
   };
@@ -239,8 +244,8 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       this.pub.set(
         this.getKey(documentName),
         this.serverId,
-        'PX',
-        this.lockTTL,
+        "PX",
+        this.lockTTL
       );
     }, this.lockTTL / 2);
   }
@@ -254,10 +259,12 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
   private async handleEventLocally<TName extends Extract<keyof TCE, string>>(
     eventName: TName,
     documentName: string,
-    payload: any,
+    payload: any
   ) {
     const handler = this.customEvents[eventName];
-    if (!handler) throw new Error(`Invalid eventName: ${eventName}`);
+    if (!handler) {
+      throw new Error(`Invalid eventName: ${eventName}`);
+    }
     const result = await handler(documentName, payload);
     return result as Promise<ReturnType<TCE[TName]>>;
   }
@@ -267,7 +274,7 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
     documentName: string,
     payload: any,
     // if true, don't claim the lock. Useful for targeting pages that are currently open
-    onlyIfOpen = false,
+    onlyIfOpen = false
   ) {
     const isDocLoadedOnInstance = this.instance.documents.has(documentName);
 
@@ -288,12 +295,12 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       const replyId = this.replyIdCounter;
       // another server owns the doc
       const proxyMessage: RSAMessageCustomEventStart = {
-        eventName,
         documentName,
+        eventName,
         payload,
-        replyTo: `${this.msgChannel}:${this.serverId}`,
         replyId,
-        type: 'customEventStart',
+        replyTo: `${this.msgChannel}:${this.serverId}`,
+        type: "customEventStart",
       };
       const msg = this.pack(proxyMessage);
       this.pub.publish(`${this.msgChannel}:${proxyTo}`, msg);
@@ -302,7 +309,7 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       this.pendingReplies[replyId] = resolve;
       setTimeout(() => {
         delete this.pendingReplies[replyId];
-        reject(new Error('TIMEOUT'));
+        reject(new Error("TIMEOUT"));
       }, this.customEventTTL);
       return promise as Promise<ReturnType<TCE[TName]>>;
     }
@@ -322,24 +329,26 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
   /* WebSocket Server Hooks */
   onSocketOpen(
     ws: WebSocketLike,
-    serializedHTTPRequest: SerializedHTTPRequest,
+    serializedHTTPRequest: SerializedHTTPRequest
   ) {
-    const socketId = serializedHTTPRequest.headers['sec-websocket-key'];
+    const socketId = serializedHTTPRequest.headers["sec-websocket-key"];
     const clientConnection = this.instance.handleConnection(
       ws,
       toWebRequest(serializedHTTPRequest),
-      this.deriveContext(serializedHTTPRequest),
+      this.deriveContext(serializedHTTPRequest)
     );
     this.originConnections[socketId] = { clientConnection, socket: ws };
   }
 
   async onSocketMessage(
     serializedHTTPRequest: SerializedHTTPRequest,
-    detachableMsg: ArrayBuffer,
+    detachableMsg: ArrayBuffer
   ) {
-    const socketId = serializedHTTPRequest.headers['sec-websocket-key'];
+    const socketId = serializedHTTPRequest.headers["sec-websocket-key"];
     const entry = this.originConnections[socketId];
-    if (!entry) return;
+    if (!entry) {
+      return;
+    }
     const { clientConnection } = entry;
 
     let message: Uint8Array;
@@ -349,7 +358,7 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       const tmpMsg = new IncomingMessage(detachableMsg);
       const documentNameAndSessionId = tmpMsg.readVarString();
       // session-aware providers suffix the documentName with \0sessionId
-      const sepIdx = documentNameAndSessionId.indexOf('\0');
+      const sepIdx = documentNameAndSessionId.indexOf("\0");
       documentName =
         sepIdx === -1
           ? documentNameAndSessionId
@@ -376,10 +385,10 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
       (clientConnection as any).connectionEstablishedAt = Date.now();
       // another server owns the doc
       const proxyMessage: RSAMessageProxy = {
-        serializedHTTPRequest: serializedHTTPRequest,
-        replyTo: `${this.msgChannel}:${this.serverId}`,
         message,
-        type: 'proxy',
+        replyTo: `${this.msgChannel}:${this.serverId}`,
+        serializedHTTPRequest,
+        type: "proxy",
       };
       const msg = this.pack(proxyMessage);
       this.pub.publish(`${this.msgChannel}:${proxyTo}`, msg);
@@ -391,13 +400,15 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
 
   onSocketClose(socketId: string, code?: number, reason?: ArrayBuffer) {
     const entry = this.originConnections[socketId];
-    if (!entry) return;
+    if (!entry) {
+      return;
+    }
     delete this.originConnections[socketId];
     entry.clientConnection.handleClose({
       code: code ?? 1000,
-      reason: reason ? Buffer.from(reason).toString() : '',
+      reason: reason ? Buffer.from(reason).toString() : "",
     });
-    const msg: RSAMessageCloseProxy = { type: 'closeProxy', socketId };
+    const msg: RSAMessageCloseProxy = { socketId, type: "closeProxy" };
     this.pub.publish(this.msgChannel, this.pack(msg)).catch(() => {});
   }
 
@@ -416,7 +427,7 @@ export class RedisSyncExtension<TCE extends CustomEvents> implements Extension {
     const { documentName } = data;
     this.releaseLock(documentName);
     // Broadcast to cluster to immediately remove the cached redis value
-    const msg: RSAMessageUnload = { type: 'unload', documentName };
+    const msg: RSAMessageUnload = { documentName, type: "unload" };
     this.pub.publish(this.msgChannel, this.pack(msg));
   }
 

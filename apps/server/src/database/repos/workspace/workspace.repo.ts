@@ -1,40 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '../../types/kysely.types';
-import { dbOrTx } from '../../utils';
+import { DB, Workspaces } from "@docmost/db/types/db";
 import {
   InsertableWorkspace,
   UpdatableWorkspace,
   Workspace,
-} from '@docmost/db/types/entity.types';
-import { ExpressionBuilder, sql } from 'kysely';
-import { DB, Workspaces } from '@docmost/db/types/db';
+} from "@docmost/db/types/entity.types";
+import { Injectable } from "@nestjs/common";
+import { ExpressionBuilder, sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
+import { KyselyDB, KyselyTransaction } from "../../types/kysely.types";
+import { dbOrTx } from "../../utils";
 
 @Injectable()
 export class WorkspaceRepo {
   public baseFields: Array<keyof Workspaces> = [
-    'id',
-    'name',
-    'description',
-    'logo',
-    'hostname',
-    'customDomain',
-    'settings',
-    'defaultRole',
-    'emailDomains',
-    'defaultSpaceId',
-    'createdAt',
-    'updatedAt',
-    'deletedAt',
-    'stripeCustomerId',
-    'status',
-    'billingEmail',
-    'trialEndAt',
-    'enforceSso',
-    'plan',
-    'enforceMfa',
-    'trashRetentionDays',
-    'isScimEnabled',
+    "id",
+    "name",
+    "description",
+    "logo",
+    "hostname",
+    "customDomain",
+    "settings",
+    "defaultRole",
+    "emailDomains",
+    "defaultSpaceId",
+    "createdAt",
+    "updatedAt",
+    "deletedAt",
+    "stripeCustomerId",
+    "status",
+    "billingEmail",
+    "trialEndAt",
+    "enforceSso",
+    "plan",
+    "enforceMfa",
+    "trashRetentionDays",
+    "isScimEnabled",
   ];
   constructor(@InjectKysely() private readonly db: KyselyDB) {}
 
@@ -45,21 +45,21 @@ export class WorkspaceRepo {
       withMemberCount?: boolean;
       withLicenseKey?: boolean;
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Workspace> {
     const db = dbOrTx(this.db, opts?.trx);
 
     let query = db
-      .selectFrom('workspaces')
+      .selectFrom("workspaces")
       .select(this.baseFields)
-      .where('id', '=', workspaceId);
+      .where("id", "=", workspaceId);
 
     if (opts?.withMemberCount) {
       query = query.select(this.withMemberCount);
     }
 
     if (opts?.withLicenseKey) {
-      query = query.select('licenseKey');
+      query = query.select("licenseKey");
     }
 
     if (opts?.withLock && opts?.trx) {
@@ -69,45 +69,45 @@ export class WorkspaceRepo {
     return query.executeTakeFirst();
   }
 
-  async findLicenseKeyById(
-    workspaceId: string,
-  ): Promise<string | undefined> {
+  async findLicenseKeyById(workspaceId: string): Promise<string | undefined> {
     const row = await this.db
-      .selectFrom('workspaces')
-      .select('licenseKey')
-      .where('id', '=', workspaceId)
+      .selectFrom("workspaces")
+      .select("licenseKey")
+      .where("id", "=", workspaceId)
       .executeTakeFirst();
     return row?.licenseKey;
   }
 
   async findFirst(): Promise<Workspace> {
     return await this.db
-      .selectFrom('workspaces')
+      .selectFrom("workspaces")
       .selectAll()
-      .orderBy('createdAt', 'asc')
+      .orderBy("createdAt", "asc")
       .limit(1)
       .executeTakeFirst();
   }
 
   async findByHostname(hostname: string): Promise<Workspace> {
     return await this.db
-      .selectFrom('workspaces')
+      .selectFrom("workspaces")
       .selectAll()
-      .where(sql`LOWER(hostname)`, '=', sql`LOWER(${hostname})`)
+      .where(sql`LOWER(hostname)`, "=", sql`LOWER(${hostname})`)
       .executeTakeFirst();
   }
 
   async hostnameExists(
     hostname: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<boolean> {
-    if (hostname?.length < 1) return false;
+    if (hostname?.length < 1) {
+      return false;
+    }
 
     const db = dbOrTx(this.db, trx);
     let { count } = await db
-      .selectFrom('workspaces')
-      .select((eb) => eb.fn.count('id').as('count'))
-      .where(sql`LOWER(hostname)`, '=', sql`LOWER(${hostname})`)
+      .selectFrom("workspaces")
+      .select((eb) => eb.fn.count("id").as("count"))
+      .where(sql`LOWER(hostname)`, "=", sql`LOWER(${hostname})`)
       .executeTakeFirst();
     count = count as number;
     return count != 0;
@@ -116,24 +116,24 @@ export class WorkspaceRepo {
   async updateWorkspace(
     updatableWorkspace: UpdatableWorkspace,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<Workspace> {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({ ...updatableWorkspace, updatedAt: new Date() })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
 
   async insertWorkspace(
     insertableWorkspace: InsertableWorkspace,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<Workspace> {
     const db = dbOrTx(this.db, trx);
     return db
-      .insertInto('workspaces')
+      .insertInto("workspaces")
       .values(insertableWorkspace)
       .returning(this.baseFields)
       .executeTakeFirst();
@@ -141,31 +141,31 @@ export class WorkspaceRepo {
 
   async count(): Promise<number> {
     const { count } = await this.db
-      .selectFrom('workspaces')
-      .select((eb) => eb.fn.count('id').as('count'))
+      .selectFrom("workspaces")
+      .select((eb) => eb.fn.count("id").as("count"))
       .executeTakeFirst();
     return count as number;
   }
 
-  withMemberCount(eb: ExpressionBuilder<DB, 'workspaces'>) {
+  withMemberCount(eb: ExpressionBuilder<DB, "workspaces">) {
     return eb
-      .selectFrom('users')
-      .select((eb) => eb.fn.countAll().as('count'))
-      .where('users.deactivatedAt', 'is', null)
-      .where('users.deletedAt', 'is', null)
-      .whereRef('users.workspaceId', '=', 'workspaces.id')
-      .as('memberCount');
+      .selectFrom("users")
+      .select((eb) => eb.fn.countAll().as("count"))
+      .where("users.deactivatedAt", "is", null)
+      .where("users.deletedAt", "is", null)
+      .whereRef("users.workspaceId", "=", "workspaces.id")
+      .as("memberCount");
   }
 
   async getActiveUserCount(workspaceId: string): Promise<number> {
     const users = await this.db
-      .selectFrom('users')
-      .select(['id', 'deactivatedAt', 'deletedAt'])
-      .where('workspaceId', '=', workspaceId)
+      .selectFrom("users")
+      .select(["id", "deactivatedAt", "deletedAt"])
+      .where("workspaceId", "=", workspaceId)
       .execute();
 
     const activeUsers = users.filter(
-      (user) => user.deletedAt === null && user.deactivatedAt === null,
+      (user) => user.deletedAt === null && user.deactivatedAt === null
     );
 
     return activeUsers.length;
@@ -175,18 +175,18 @@ export class WorkspaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('api', COALESCE(settings->'api', '{}'::jsonb)
                 || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
@@ -195,18 +195,18 @@ export class WorkspaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('ai', COALESCE(settings->'ai', '{}'::jsonb)
                 || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
@@ -214,18 +214,18 @@ export class WorkspaceRepo {
   async updateAiEmbeddingFingerprint(
     workspaceId: string,
     fingerprint: { driver: string; model: string; dimensions: number },
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('ai', COALESCE(settings->'ai', '{}'::jsonb)
                 || jsonb_build_object('embedding', ${JSON.stringify(fingerprint)}::text::jsonb))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .execute();
   }
 
@@ -233,18 +233,18 @@ export class WorkspaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('sharing', COALESCE(settings->'sharing', '{}'::jsonb)
                 || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
@@ -253,18 +253,18 @@ export class WorkspaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('publicSpaces', COALESCE(settings->'publicSpaces', '{}'::jsonb)
                 || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
@@ -273,18 +273,18 @@ export class WorkspaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('templates', COALESCE(settings->'templates', '{}'::jsonb)
                 || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
@@ -293,18 +293,18 @@ export class WorkspaceRepo {
     workspaceId: string,
     prefKey: string,
     prefValue: string | boolean,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('spaces', COALESCE(settings->'spaces', '{}'::jsonb)
                 || jsonb_build_object('${sql.raw(prefKey)}', ${sql.lit(prefValue)}))`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
@@ -312,19 +312,18 @@ export class WorkspaceRepo {
   async updateDefaultPageEditMode(
     workspaceId: string,
     pageEditMode: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     return db
-      .updateTable('workspaces')
+      .updateTable("workspaces")
       .set({
         settings: sql`COALESCE(settings, '{}'::jsonb)
                 || jsonb_build_object('defaultPageEditMode', ${sql.lit(pageEditMode)})`,
         updatedAt: new Date(),
       })
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
-
 }

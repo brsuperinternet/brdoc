@@ -1,9 +1,9 @@
-import { Editor, findParentNode, isTextSelection } from "@tiptap/core";
-import { EditorState, Selection, Transaction } from "@tiptap/pm/state";
-import { EditorView } from "@tiptap/pm/view";
-import { CellSelection, TableMap } from "@tiptap/pm/tables";
-import { Node, ResolvedPos } from "@tiptap/pm/model";
 import { sanitizeUrl as braintreeSanitizeUrl } from "@braintree/sanitize-url";
+import { Editor, findParentNode, isTextSelection } from "@tiptap/core";
+import { Node, ResolvedPos } from "@tiptap/pm/model";
+import { EditorState, Selection, Transaction } from "@tiptap/pm/state";
+import { CellSelection, TableMap } from "@tiptap/pm/tables";
+import { EditorView } from "@tiptap/pm/view";
 import { customAlphabet } from "nanoid";
 
 export const isRectSelected = (rect: any) => (selection: CellSelection) => {
@@ -13,8 +13,8 @@ export const isRectSelected = (rect: any) => (selection: CellSelection) => {
   const selectedCells = map.cellsInRect(
     map.rectBetween(
       selection.$anchorCell.pos - start,
-      selection.$headCell.pos - start,
-    ),
+      selection.$headCell.pos - start
+    )
   );
 
   for (let i = 0, count = cells.length; i < count; i += 1) {
@@ -28,7 +28,7 @@ export const isRectSelected = (rect: any) => (selection: CellSelection) => {
 
 export const findTable = (selection: Selection) =>
   findParentNode(
-    (node) => node.type.spec.tableRole && node.type.spec.tableRole === "table",
+    (node) => node.type.spec.tableRole && node.type.spec.tableRole === "table"
   )(selection);
 
 export const isCellSelection = (selection: any) =>
@@ -39,10 +39,10 @@ export const isColumnSelected = (columnIndex: number) => (selection: any) => {
     const map = TableMap.get(selection.$anchorCell.node(-1));
 
     return isRectSelected({
+      bottom: map.height,
       left: columnIndex,
       right: columnIndex + 1,
       top: 0,
-      bottom: map.height,
     })(selection);
   }
 
@@ -54,10 +54,10 @@ export const isRowSelected = (rowIndex: number) => (selection: any) => {
     const map = TableMap.get(selection.$anchorCell.node(-1));
 
     return isRectSelected({
+      bottom: rowIndex + 1,
       left: 0,
       right: map.width,
       top: rowIndex,
-      bottom: rowIndex + 1,
     })(selection);
   }
 
@@ -69,10 +69,10 @@ export const isTableSelected = (selection: any) => {
     const map = TableMap.get(selection.$anchorCell.node(-1));
 
     return isRectSelected({
+      bottom: map.height,
       left: 0,
       right: map.width,
       top: 0,
-      bottom: map.height,
     })(selection);
   }
 
@@ -92,10 +92,10 @@ export const getCellsInColumn =
         (acc, index) => {
           if (index >= 0 && index <= map.width - 1) {
             const cells = map.cellsInRect({
+              bottom: map.height,
               left: index,
               right: index + 1,
               top: 0,
-              bottom: map.height,
             });
 
             return acc.concat(
@@ -103,14 +103,14 @@ export const getCellsInColumn =
                 const node = table.node.nodeAt(nodePos);
                 const pos = nodePos + table.start;
 
-                return { pos, start: pos + 1, node };
-              }),
+                return { node, pos, start: pos + 1 };
+              })
             );
           }
 
           return acc;
         },
-        [] as { pos: number; start: number; node: Node | null | undefined }[],
+        [] as { pos: number; start: number; node: Node | null | undefined }[]
       );
     }
     return null;
@@ -130,24 +130,24 @@ export const getCellsInRow =
         (acc, index) => {
           if (index >= 0 && index <= map.height - 1) {
             const cells = map.cellsInRect({
+              bottom: index + 1,
               left: 0,
               right: map.width,
               top: index,
-              bottom: index + 1,
             });
 
             return acc.concat(
               cells.map((nodePos) => {
                 const node = table.node.nodeAt(nodePos);
                 const pos = nodePos + table.start;
-                return { pos, start: pos + 1, node };
-              }),
+                return { node, pos, start: pos + 1 };
+              })
             );
           }
 
           return acc;
         },
-        [] as { pos: number; start: number; node: Node | null | undefined }[],
+        [] as { pos: number; start: number; node: Node | null | undefined }[]
       );
     }
 
@@ -160,17 +160,17 @@ export const getCellsInTable = (selection: Selection) => {
   if (table) {
     const map = TableMap.get(table.node);
     const cells = map.cellsInRect({
+      bottom: map.height,
       left: 0,
       right: map.width,
       top: 0,
-      bottom: map.height,
     });
 
     return cells.map((nodePos) => {
       const node = table.node.nodeAt(nodePos);
       const pos = nodePos + table.start;
 
-      return { pos, start: pos + 1, node };
+      return { node, pos, start: pos + 1 };
     });
   }
 
@@ -179,17 +179,17 @@ export const getCellsInTable = (selection: Selection) => {
 
 export const findParentNodeClosestToPos = (
   $pos: ResolvedPos,
-  predicate: (node: Node) => boolean,
+  predicate: (node: Node) => boolean
 ) => {
   for (let i = $pos.depth; i > 0; i -= 1) {
     const node = $pos.node(i);
 
     if (predicate(node)) {
       return {
-        pos: i > 0 ? $pos.before(i) : 0,
-        start: $pos.start(i),
         depth: i,
         node,
+        pos: i > 0 ? $pos.before(i) : 0,
+        start: $pos.start(i),
       };
     }
   }
@@ -220,24 +220,24 @@ const select =
         const bottom = isRowSelection ? index + 1 : map.height;
 
         const cellsInFirstRow = map.cellsInRect({
-          left,
-          top,
-          right: isRowSelection ? right : left + 1,
           bottom: isRowSelection ? top + 1 : bottom,
+          left,
+          right: isRowSelection ? right : left + 1,
+          top,
         });
 
         const cellsInLastRow =
           bottom - top === 1
             ? cellsInFirstRow
             : map.cellsInRect({
-                left: isRowSelection ? left : right - 1,
-                top: isRowSelection ? bottom - 1 : top,
-                right,
                 bottom,
+                left: isRowSelection ? left : right - 1,
+                right,
+                top: isRowSelection ? bottom - 1 : top,
               });
 
         const head = table.start + cellsInFirstRow[0];
-        const anchor = table.start + cellsInLastRow[cellsInLastRow.length - 1];
+        const anchor = table.start + cellsInLastRow.at(-1);
         const $head = tr.doc.resolve(head);
         const $anchor = tr.doc.resolve(anchor);
 
@@ -260,7 +260,7 @@ export const selectTable = (tr: Transaction) => {
 
     if (map && map.length) {
       const head = table.start + map[0];
-      const anchor = table.start + map[map.length - 1];
+      const anchor = table.start + map.at(-1);
       const $head = tr.doc.resolve(head);
       const $anchor = tr.doc.resolve(anchor);
 
@@ -342,7 +342,7 @@ export const isRowGripSelected = ({
 // Guard floating-menu callbacks (getReferencedVirtualElement, shouldShow) with
 // this before touching `editor.view.nodeDOM(...)`.
 export function isEditorReady(
-  editor: Editor | null | undefined,
+  editor: Editor | null | undefined
 ): editor is Editor {
   return !!editor && editor.isInitialized;
 }
@@ -369,11 +369,11 @@ export function isTextSelected(editor: Editor) {
 export function setAttributes(
   editor: Editor,
   getPos: (() => number) | boolean,
-  attrs: Record<string, any>,
+  attrs: Record<string, any>
 ) {
   if (editor.isEditable && typeof getPos === "function") {
     editor.view.dispatch(
-      editor.view.state.tr.setNodeMarkup(getPos(), undefined, attrs),
+      editor.view.state.tr.setNodeMarkup(getPos(), undefined, attrs)
     );
   }
 }
@@ -383,7 +383,9 @@ export function icon(name: string) {
 }
 
 export function sanitizeUrl(url: string | undefined): string {
-  if (!url) return "";
+  if (!url) {
+    return "";
+  }
 
   const sanitized = braintreeSanitizeUrl(url);
 
@@ -392,9 +394,13 @@ export function sanitizeUrl(url: string | undefined): string {
 }
 
 export function isInternalFileUrl(url: string | undefined): boolean {
-  if (!url) return false;
+  if (!url) {
+    return false;
+  }
   const normalized = url.trim();
-  return normalized.startsWith("/api/files/") || normalized.startsWith("/files/");
+  return (
+    normalized.startsWith("/api/files/") || normalized.startsWith("/files/")
+  );
 }
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz";

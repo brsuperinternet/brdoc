@@ -8,7 +8,6 @@ import {
 import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
 import { generateNodeId } from "../utils";
 
-
 const REFNUM_ATTR = "data-reference-number";
 const REF_CLASS = "footnote-ref";
 
@@ -25,42 +24,6 @@ declare module "@tiptap/core" {
 }
 
 const FootnoteReference = Node.create({
-  name: "footnoteReference",
-  inline: true,
-  content: "text*",
-  group: "inline",
-  atom: true,
-  draggable: true,
-
-  parseHTML() {
-    return [
-      {
-        tag: `sup`,
-        priority: 1000,
-        getAttrs(node) {
-          const anchor = node.querySelector<HTMLAnchorElement>(
-            `a.${REF_CLASS}:first-child`
-          );
-
-          if (!anchor) {
-            return false;
-          }
-
-          const id = anchor.getAttribute("data-id");
-          const ref = anchor.getAttribute(REFNUM_ATTR);
-
-          return {
-            "data-id": id ?? generateNodeId(),
-            referenceNumber: ref ?? anchor.innerText,
-          };
-        },
-        contentElement(node) {
-          return node.firstChild as HTMLElement;
-        },
-      },
-    ];
-  },
-
   addAttributes() {
     return {
       class: {
@@ -73,7 +36,6 @@ const FootnoteReference = Node.create({
           };
         },
       },
-      referenceNumber: {},
 
       href: {
         renderHTML(attributes) {
@@ -82,18 +44,39 @@ const FootnoteReference = Node.create({
           };
         },
       },
+      referenceNumber: {},
     };
   },
 
-  renderHTML({ HTMLAttributes }) {
-    const { referenceNumber, ...attributes } = HTMLAttributes;
-    const attrs = mergeAttributes(this.options.HTMLAttributes, attributes);
-    attrs[REFNUM_ATTR] = referenceNumber;
+  addCommands() {
+    return {
+      addFootnote:
+        () =>
+        ({ state, tr }) => {
+          const node = this.type.create({
+            "data-id": generateNodeId(),
+          });
+          tr.insert(state.selection.anchor, node);
+          return true;
+        },
+    };
+  },
 
+  addInputRules() {
+    // when a user types [^text], add a new footnote
     return [
-      "sup",
-      { id: `fnref:${referenceNumber}` },
-      ["a", attrs, HTMLAttributes.referenceNumber],
+      {
+        find: /\[\^(.*?)\]/,
+        handler({ range, match, chain }) {
+          const start = range.from;
+          const end = range.to;
+          if (match[1]) {
+            chain().deleteRange({ from: start, to: end }).addFootnote().run();
+          }
+        },
+        type: this.type,
+        undoable: true,
+      },
     ];
   },
 
@@ -160,60 +143,78 @@ const FootnoteReference = Node.create({
         key: new PluginKey("footnoteRefClick"),
 
         props: {
-          // on double-click, focus on the footnote
-          handleDoubleClickOn(view, pos, node, nodePos, event) {
-            if (node.type.name != "footnoteReference") return false;
-            event.preventDefault();
-            const id = node.attrs["data-id"];
-            return editor.commands.focusFootnote(id);
-          },
           // click the footnote reference once to get focus, click twice to scroll to the footnote
           handleClickOn(view, pos, node, nodePos, event) {
-            if (node.type.name != "footnoteReference") return false;
+            if (node.type.name != "footnoteReference") {
+              return false;
+            }
             event.preventDefault();
             const { selection } = editor.state.tr;
             if (selection instanceof NodeSelection && selection.node.eq(node)) {
               const id = node.attrs["data-id"];
               return editor.commands.focusFootnote(id);
-            } else {
-              editor.chain().setNodeSelection(nodePos).run();
-              return true;
             }
+            editor.chain().setNodeSelection(nodePos).run();
+            return true;
+          },
+          // on double-click, focus on the footnote
+          handleDoubleClickOn(view, pos, node, nodePos, event) {
+            if (node.type.name != "footnoteReference") {
+              return false;
+            }
+            event.preventDefault();
+            const id = node.attrs["data-id"];
+            return editor.commands.focusFootnote(id);
           },
         },
       }),
     ];
   },
+  atom: true,
+  content: "text*",
+  draggable: true,
+  group: "inline",
+  inline: true,
+  name: "footnoteReference",
 
-  addCommands() {
-    return {
-      addFootnote:
-        () =>
-        ({ state, tr }) => {
-          const node = this.type.create({
-            "data-id": generateNodeId(),
-          });
-          tr.insert(state.selection.anchor, node);
-          return true;
-        },
-    };
-  },
-
-  addInputRules() {
-    // when a user types [^text], add a new footnote
+  parseHTML() {
     return [
       {
-        find: /\[\^(.*?)\]/,
-        type: this.type,
-        undoable: true,
-        handler({ range, match, chain }) {
-          const start = range.from;
-          let end = range.to;
-          if (match[1]) {
-            chain().deleteRange({ from: start, to: end }).addFootnote().run();
-          }
+        contentElement(node) {
+          return node.firstChild as HTMLElement;
         },
+        getAttrs(node) {
+          const anchor = node.querySelector<HTMLAnchorElement>(
+            `a.${REF_CLASS}:first-child`
+          );
+
+          if (!anchor) {
+            return false;
+          }
+
+          const id = anchor.getAttribute("data-id");
+          const ref = anchor.getAttribute(REFNUM_ATTR);
+
+          return {
+            "data-id": id ?? generateNodeId(),
+            referenceNumber: ref ?? anchor.innerText,
+          };
+        },
+        priority: 1000,
+        tag: "sup",
       },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const { referenceNumber, ...attributes } = HTMLAttributes;
+    const attrs = mergeAttributes(this.options.HTMLAttributes, attributes);
+    attrs[REFNUM_ATTR] = referenceNumber;
+
+    return [
+      "sup",
+      { id: `fnref:${referenceNumber}` },
+      ["a", attrs, HTMLAttributes.referenceNumber],
     ];
   },
 });

@@ -5,7 +5,7 @@ import {
   ReferenceExpression,
   SelectQueryBuilder,
   StringReference,
-} from 'kysely';
+} from "kysely";
 
 type SortField<DB, TB extends keyof DB, O> =
   | {
@@ -30,11 +30,11 @@ type ExtractSortFieldKey<
   TB extends keyof DB,
   O,
   T extends SortField<DB, TB, O>,
-> = T['key'] extends keyof O & string
-  ? T['key']
-  : T['expression'] extends keyof O & string
-    ? T['expression']
-    : T['expression'] extends `${string}.${infer K}`
+> = T["key"] extends keyof O & string
+  ? T["key"]
+  : T["expression"] extends keyof O & string
+    ? T["expression"]
+    : T["expression"] extends `${string}.${infer K}`
       ? K extends keyof O & string
         ? K
         : never
@@ -78,7 +78,7 @@ export type CursorDecoder<
   T extends Fields<DB, TB, O>,
 > = (
   cursor: string,
-  fields: FieldNames<DB, TB, O, T>,
+  fields: FieldNames<DB, TB, O, T>
 ) => DecodedCursor<DB, TB, O, T>;
 
 type ParsedCursorValues<
@@ -106,7 +106,7 @@ type CursorPaginationResultRow<
     : TCursorKey extends false
       ? never
       : TCursorKey extends true
-        ? '$cursor'
+        ? "$cursor"
         : TCursorKey]: string;
 };
 
@@ -145,28 +145,30 @@ export async function executeWithCursorPagination<
     parseCursor:
       | CursorParser<DB, TB, O, TFields>
       | { parse: CursorParser<DB, TB, O, TFields> };
-  },
+  }
 ): Promise<CursorPaginationResult<O, TCursorKey>> {
   const encodeCursor = opts.encodeCursor ?? defaultEncodeCursor;
   const decodeCursor = opts.decodeCursor ?? defaultDecodeCursor;
 
   const parseCursor =
-    typeof opts.parseCursor === 'function'
+    typeof opts.parseCursor === "function"
       ? opts.parseCursor
       : opts.parseCursor.parse;
 
   const fields = opts.fields.map((field) => {
     let key = field.key;
 
-    if (!key && typeof field.expression === 'string') {
-      const expressionParts = field.expression.split('.');
+    if (!key && typeof field.expression === "string") {
+      const expressionParts = field.expression.split(".");
 
       key = (expressionParts[1] ?? expressionParts[0]) as
         | (keyof O & string)
         | undefined;
     }
 
-    if (!key) throw new Error('missing key');
+    if (!key) {
+      throw new Error("missing key");
+    }
 
     return { ...field, key };
   });
@@ -190,7 +192,7 @@ export async function executeWithCursorPagination<
   function applyCursor(
     qb: SelectQueryBuilder<DB, TB, O>,
     encoded: string,
-    defaultDirection: OrderByDirection,
+    defaultDirection: OrderByDirection
   ) {
     const decoded = decodeCursor(encoded, fieldNames);
     const cursor = parseCursor(decoded);
@@ -202,29 +204,33 @@ export async function executeWithCursorPagination<
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const field = fields[i]!;
 
-        const comparison = field.direction === defaultDirection ? '>' : '<';
+        const comparison = field.direction === defaultDirection ? ">" : "<";
         const value = cursor[field.key as keyof typeof cursor];
         const compareExpr = field.cursorExpression ?? field.expression;
 
         const conditions = [eb(compareExpr, comparison, value)];
 
         if (expression) {
-          conditions.push(and([eb(compareExpr, '=', value), expression]));
+          conditions.push(and([eb(compareExpr, "=", value), expression]));
         }
 
         expression = or(conditions);
       }
 
       if (!expression) {
-        throw new Error('Error building cursor expression');
+        throw new Error("Error building cursor expression");
       }
 
       return expression;
     });
   }
 
-  if (opts.cursor) qb = applyCursor(qb, opts.cursor, 'asc');
-  if (opts.beforeCursor) qb = applyCursor(qb, opts.beforeCursor, 'desc');
+  if (opts.cursor) {
+    qb = applyCursor(qb, opts.cursor, "asc");
+  }
+  if (opts.beforeCursor) {
+    qb = applyCursor(qb, opts.beforeCursor, "desc");
+  }
 
   const reversed = !!opts.beforeCursor && !opts.cursor;
 
@@ -232,7 +238,7 @@ export async function executeWithCursorPagination<
     qb = qb.orderBy(
       expression,
       orderModifier ??
-        (reversed ? (direction === 'asc' ? 'desc' : 'asc') : direction),
+        (reversed ? (direction === "asc" ? "desc" : "asc") : direction)
     );
   }
 
@@ -242,12 +248,16 @@ export async function executeWithCursorPagination<
 
   // If we fetched an extra row to determine if we have a next page, that
   // shouldn't be in the returned results
-  if (rows.length > opts.perPage) rows.pop();
+  if (rows.length > opts.perPage) {
+    rows.pop();
+  }
 
-  if (reversed) rows.reverse();
+  if (reversed) {
+    rows.reverse();
+  }
 
   const startRow = rows[0];
-  const endRow = rows[rows.length - 1];
+  const endRow = rows.at(-1);
 
   const hasPrevPage = !!opts.cursor;
   const prevCursor = hasPrevPage && startRow ? generateCursor(startRow) : null;
@@ -257,7 +267,7 @@ export async function executeWithCursorPagination<
     items: rows.map((row) => {
       if (opts.cursorPerRow) {
         const cursorKey =
-          typeof opts.cursorPerRow === 'string' ? opts.cursorPerRow : '$cursor';
+          typeof opts.cursorPerRow === "string" ? opts.cursorPerRow : "$cursor";
 
         (row as any)[cursorKey] = generateCursor(row);
       }
@@ -265,9 +275,9 @@ export async function executeWithCursorPagination<
       return row as CursorPaginationResultRow<O, TCursorKey>;
     }),
     meta: {
-      limit: opts.perPage,
       hasNextPage,
       hasPrevPage,
+      limit: opts.perPage,
       nextCursor,
       prevCursor,
     },
@@ -284,16 +294,16 @@ export function defaultEncodeCursor<
 
   for (const [key, value] of values) {
     switch (typeof value) {
-      case 'string':
+      case "string":
         cursor.set(key, value);
         break;
 
-      case 'number':
-      case 'bigint':
+      case "number":
+      case "bigint":
         cursor.set(key, value.toString(10));
         break;
 
-      case 'object': {
+      case "object": {
         if (value instanceof Date) {
           cursor.set(key, value.toISOString());
           break;
@@ -306,18 +316,18 @@ export function defaultEncodeCursor<
     }
   }
 
-  return Buffer.from(cursor.toString(), 'utf8').toString('base64url');
+  return Buffer.from(cursor.toString(), "utf8").toString("base64url");
 }
 
 export function emptyCursorPaginationResult<T>(
-  limit: number,
+  limit: number
 ): CursorPaginationResult<T> {
   return {
     items: [],
     meta: {
-      limit,
       hasNextPage: false,
       hasPrevPage: false,
+      limit,
       nextCursor: null,
       prevCursor: null,
     },
@@ -331,22 +341,22 @@ export function defaultDecodeCursor<
   T extends Fields<DB, TB, O>,
 >(
   cursor: string,
-  fields: FieldNames<DB, TB, O, T>,
+  fields: FieldNames<DB, TB, O, T>
 ): DecodedCursor<DB, TB, O, T> {
   let parsed;
 
   try {
     parsed = [
       ...new URLSearchParams(
-        Buffer.from(cursor, 'base64url').toString('utf8'),
+        Buffer.from(cursor, "base64url").toString("utf8")
       ).entries(),
     ];
   } catch {
-    throw new Error('Unparsable cursor');
+    throw new Error("Unparsable cursor");
   }
 
   if (parsed.length !== fields.length) {
-    throw new Error('Unexpected number of fields');
+    throw new Error("Unexpected number of fields");
   }
 
   for (let i = 0; i < fields.length; i++) {
@@ -354,11 +364,11 @@ export function defaultDecodeCursor<
     const expectedName = fields[i];
 
     if (!field) {
-      throw new Error('Unable to find field');
+      throw new Error("Unable to find field");
     }
 
     if (field[0] !== expectedName) {
-      throw new Error('Unexpected field name');
+      throw new Error("Unexpected field name");
     }
   }
 

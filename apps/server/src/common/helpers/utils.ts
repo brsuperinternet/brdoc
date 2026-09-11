@@ -1,10 +1,12 @@
-import * as path from 'path';
-import * as bcrypt from 'bcrypt';
-import sanitize = require('sanitize-filename');
-import { FastifyRequest } from 'fastify';
-import { Readable, Transform } from 'stream';
+import * as path from "node:path";
+import * as bcrypt from "bcrypt";
 
-export const envPath = path.resolve(process.cwd(), '..', '..', '.env');
+import sanitize = require("sanitize-filename");
+
+import { Readable, Transform } from "node:stream";
+import { FastifyRequest } from "fastify";
+
+export const envPath = path.resolve(process.cwd(), "..", "..", ".env");
 
 export async function hashPassword(password: string) {
   const saltRounds = 12;
@@ -13,7 +15,7 @@ export async function hashPassword(password: string) {
 
 export async function comparePasswordHash(
   plainPassword: string,
-  passwordHash: string,
+  passwordHash: string
 ): Promise<boolean> {
   return bcrypt.compare(plainPassword, passwordHash);
 }
@@ -46,53 +48,53 @@ export function parseRedisUrl(redisUrl: string): RedisConfig {
     protocol,
     searchParams,
   } = url;
-  const portInt = port ? parseInt(port, 10) : 6379;
+  const portInt = port ? Number.parseInt(port, 10) : 6379;
 
-  let db: number = 0;
+  let db = 0;
   // extract db value if present
   if (pathname.length > 1) {
     const value = pathname.slice(1);
-    if (!isNaN(parseInt(value))) {
-      db = parseInt(value, 10);
+    if (!isNaN(Number.parseInt(value))) {
+      db = Number.parseInt(value, 10);
     }
   }
 
   // extract family from query parameters
   let family: number | undefined;
-  const familyParam = searchParams.get('family');
-  if (familyParam && !isNaN(parseInt(familyParam))) {
-    family = parseInt(familyParam, 10);
+  const familyParam = searchParams.get("family");
+  if (familyParam && !isNaN(Number.parseInt(familyParam))) {
+    family = Number.parseInt(familyParam, 10);
   }
 
   const tls =
-    protocol === 'rediss:'
-      ? searchParams.get('rejectUnauthorized') === 'false'
+    protocol === "rediss:"
+      ? searchParams.get("rejectUnauthorized") === "false"
         ? { rejectUnauthorized: false }
         : {}
       : undefined;
 
   return {
-    host: hostname,
-    port: portInt,
-    username: username ? decodeURIComponent(username) : undefined,
-    password: password ? decodeURIComponent(password) : undefined,
     db,
     family,
+    host: hostname,
+    password: password ? decodeURIComponent(password) : undefined,
+    port: portInt,
     tls,
+    username: username ? decodeURIComponent(username) : undefined,
   };
 }
 
 export function createRetryStrategy() {
   return function (times: number): number {
-    return Math.max(Math.min(Math.exp(times), 20000), 3000);
+    return Math.max(Math.min(Math.exp(times), 20_000), 3000);
   };
 }
 
 export function extractDateFromUuid7(uuid7: string) {
   //https://park.is/blog_posts/20240803_extracting_timestamp_from_uuid_v7/
-  const parts = uuid7.split('-');
+  const parts = uuid7.split("-");
   const highBitsHex = parts[0] + parts[1].slice(0, 4);
-  const timestamp = parseInt(highBitsHex, 16);
+  const timestamp = Number.parseInt(highBitsHex, 16);
 
   return new Date(timestamp);
 }
@@ -105,7 +107,7 @@ export type SanitizeFileNameOptions = {
 
 export function sanitizeFileName(
   fileName: string,
-  options: SanitizeFileNameOptions = {},
+  options: SanitizeFileNameOptions = {}
 ): string {
   // Decode percent-encoded sequences so that bypasses like "..%2F" reach
   // sanitize() as literal "../" and get stripped. sanitize-filename only
@@ -123,19 +125,21 @@ export function sanitizeFileName(
   if (options.preserveSpaces) {
     return sanitized;
   }
-  return sanitized.replace(/ /g, '_').replace(/#/g, '_');
+  return sanitized.replace(/ /g, "_").replace(/#/g, "_");
 }
 
 export function removeAccent(str: string): string {
-  if (!str) return str;
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!str) {
+    return str;
+  }
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 export function extractBearerTokenFromHeader(
-  request: FastifyRequest,
+  request: FastifyRequest
 ): string | undefined {
-  const [type, token] = request.headers.authorization?.split(' ') ?? [];
-  return type?.toLowerCase() === 'bearer' ? token : undefined;
+  const [type, token] = request.headers.authorization?.split(" ") ?? [];
+  return type?.toLowerCase() === "bearer" ? token : undefined;
 }
 
 /**
@@ -149,8 +153,12 @@ export function normalizePostgresUrl(url: string): string {
   const newParams = new URLSearchParams();
 
   for (const [key, value] of parsed.searchParams) {
-    if (key === 'sslmode' && value === 'no-verify') continue;
-    if (key === 'schema') continue;
+    if (key === "sslmode" && value === "no-verify") {
+      continue;
+    }
+    if (key === "schema") {
+      continue;
+    }
     newParams.append(key, value);
   }
 
@@ -162,14 +170,16 @@ export function diffAuditTrackedFields(
   fields: readonly string[],
   dto: Record<string, any>,
   before: Record<string, any> | undefined | null,
-  after: Record<string, any> | undefined | null,
+  after: Record<string, any> | undefined | null
 ): { before: Record<string, any>; after: Record<string, any> } | null {
   const beforeDiff: Record<string, any> = {};
   const afterDiff: Record<string, any> = {};
   let hasChanges = false;
 
   for (const field of fields) {
-    if (typeof dto[field] === 'undefined') continue;
+    if (typeof dto[field] === "undefined") {
+      continue;
+    }
     const oldVal = JSON.stringify(before?.[field] ?? null);
     const newVal = JSON.stringify(after?.[field] ?? null);
     if (oldVal !== newVal) {
@@ -179,7 +189,7 @@ export function diffAuditTrackedFields(
     }
   }
 
-  return hasChanges ? { before: beforeDiff, after: afterDiff } : null;
+  return hasChanges ? { after: afterDiff, before: beforeDiff } : null;
 }
 
 export function isUserDisabled(user: {
@@ -189,11 +199,11 @@ export function isUserDisabled(user: {
   return !!(user.deactivatedAt || user.deletedAt);
 }
 
-const SENSITIVE_URL_PREFIXES = ['/api/sso/'];
+const SENSITIVE_URL_PREFIXES = ["/api/sso/"];
 
 export function redactSensitiveUrl(url: string): string {
   if (url && SENSITIVE_URL_PREFIXES.some((prefix) => url.includes(prefix))) {
-    const qsIndex = url.indexOf('?');
+    const qsIndex = url.indexOf("?");
     if (qsIndex !== -1) {
       return url.substring(0, qsIndex);
     }
@@ -211,7 +221,7 @@ export function createByteCountingStream(source: Readable) {
   });
 
   source.pipe(stream);
-  source.on('error', (err) => stream.emit('error', err));
+  source.on("error", (err) => stream.emit("error", err));
 
-  return { stream, getBytesRead: () => bytesRead };
+  return { getBytesRead: () => bytesRead, stream };
 }

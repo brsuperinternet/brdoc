@@ -5,6 +5,25 @@ import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 
 export interface MentionNodeAttrs {
   /**
+   * the anchor hash for page mentions (e.g., "heading-1")
+   */
+  anchorId?: string;
+
+  /**
+   * the id of the user who initiated the mention
+   */
+  creatorId?: string;
+
+  /**
+   * the entity id - userId or pageId
+   */
+  entityId?: string | null;
+
+  /**
+   * the entity type - user or page
+   */
+  entityType: "user" | "page";
+  /**
    *  unique mention node id (uuidv7)
    */
   id: string | null;
@@ -15,29 +34,9 @@ export interface MentionNodeAttrs {
   label?: string | null;
 
   /**
-   * the entity type - user or page
-   */
-  entityType: "user" | "page";
-
-  /**
-   * the entity id - userId or pageId
-   */
-  entityId?: string | null;
-
-  /**
    * page slugId
    */
   slugId?: string | null;
-
-  /**
-   * the id of the user who initiated the mention
-   */
-  creatorId?: string;
-
-  /**
-   * the anchor hash for page mentions (e.g., "heading-1")
-   */
-  anchorId?: string;
 }
 
 export type MentionOptions<
@@ -98,77 +97,63 @@ export const MentionPluginKey = new PluginKey("mention");
  * @see https://www.tiptap.dev/api/extensions/mention
  */
 export const Mention = Node.create<MentionOptions>({
-  name: "mention",
-
-  priority: 101,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      renderText({ options, node }) {
-        return `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
-      },
-      deleteTriggerWithBackspace: false,
-      renderHTML({ options, node }) {
-        const isUserMention = node.attrs.entityType === "user";
-        return [
-          "span",
-          mergeAttributes(this.HTMLAttributes, options.HTMLAttributes),
-          `${isUserMention ? options.suggestion.char : ""}${node.attrs.label ?? node.attrs.entityId}`,
-        ];
-      },
-      suggestion: {
-        char: "@",
-        pluginKey: MentionPluginKey,
-        command: ({ editor, range, props }) => {
-          // increase range.to by one when the next node is of type "text"
-          // and starts with a space character
-          const nodeAfter = editor.view.state.selection.$to.nodeAfter;
-          const overrideSpace = nodeAfter?.text?.startsWith(" ");
-
-          if (overrideSpace) {
-            range.to += 1;
-          }
-
-          editor
-            .chain()
-            .focus()
-            .insertContentAt(range, [
-              {
-                type: this.name,
-                attrs: props,
-              },
-              {
-                type: "text",
-                text: " ",
-              },
-            ])
-            .run();
-
-          // get reference to `window` object from editor element, to support cross-frame JS usage
-          editor.view.dom.ownerDocument.defaultView
-            ?.getSelection()
-            ?.collapseToEnd();
-        },
-        allow: ({ state, range }) => {
-          const $from = state.doc.resolve(range.from);
-          const type = state.schema.nodes[this.name];
-          const allow = !!$from.parent.type.contentMatch.matchType(type);
-
-          return allow;
-        },
-      },
-    };
-  },
-
-  group: "inline",
-  inline: true,
-  selectable: true,
-  atom: true,
-  draggable: true,
-
   addAttributes() {
     return {
+      anchorId: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-anchor-id"),
+        renderHTML: (attributes) => {
+          if (!attributes.anchorId) {
+            return {};
+          }
+
+          return {
+            "data-anchor-id": attributes.anchorId,
+          };
+        },
+      },
+
+      creatorId: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-creator-id"),
+        renderHTML: (attributes) => {
+          if (!attributes.creatorId) {
+            return {};
+          }
+
+          return {
+            "data-creator-id": attributes.creatorId,
+          };
+        },
+      },
+
+      entityId: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-entity-id"),
+        renderHTML: (attributes) => {
+          if (!attributes.entityId) {
+            return {};
+          }
+
+          return {
+            "data-entity-id": attributes.entityId,
+          };
+        },
+      },
+
+      entityType: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-entity-type"),
+        renderHTML: (attributes) => {
+          if (!attributes.entityType) {
+            return {};
+          }
+
+          return {
+            "data-entity-type": attributes.entityType,
+          };
+        },
+      },
       id: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-id"),
@@ -197,34 +182,6 @@ export const Mention = Node.create<MentionOptions>({
         },
       },
 
-      entityType: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-entity-type"),
-        renderHTML: (attributes) => {
-          if (!attributes.entityType) {
-            return {};
-          }
-
-          return {
-            "data-entity-type": attributes.entityType,
-          };
-        },
-      },
-
-      entityId: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-entity-id"),
-        renderHTML: (attributes) => {
-          if (!attributes.entityId) {
-            return {};
-          }
-
-          return {
-            "data-entity-id": attributes.entityId,
-          };
-        },
-      },
-
       slugId: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-slug-id"),
@@ -238,77 +195,7 @@ export const Mention = Node.create<MentionOptions>({
           };
         },
       },
-
-      creatorId: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-creator-id"),
-        renderHTML: (attributes) => {
-          if (!attributes.creatorId) {
-            return {};
-          }
-
-          return {
-            "data-creator-id": attributes.creatorId,
-          };
-        },
-      },
-
-      anchorId: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-anchor-id"),
-        renderHTML: (attributes) => {
-          if (!attributes.anchorId) {
-            return {};
-          }
-
-          return {
-            "data-anchor-id": attributes.anchorId,
-          };
-        },
-      },
     };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: `span[data-type="${this.name}"]`,
-      },
-    ];
-  },
-
-  renderHTML({ node, HTMLAttributes }) {
-    const mergedOptions = { ...this.options };
-
-    mergedOptions.HTMLAttributes = mergeAttributes(
-      { "data-type": this.name },
-      this.options.HTMLAttributes,
-      HTMLAttributes,
-    );
-    const html = this.options.renderHTML({
-      options: mergedOptions,
-      node,
-    });
-
-    if (typeof html === "string") {
-      return [
-        "span",
-        mergeAttributes(
-          { "data-type": this.name },
-          this.options.HTMLAttributes,
-          HTMLAttributes,
-        ),
-        html,
-      ];
-    }
-    return html;
-  },
-
-  renderText({ node }) {
-    return this.options.renderText({
-      options: this.options,
-      node,
-    });
   },
 
   addKeyboardShortcuts() {
@@ -331,7 +218,7 @@ export const Mention = Node.create<MentionOptions>({
                   ? ""
                   : this.options.suggestion.char || "",
                 pos,
-                pos + node.nodeSize,
+                pos + node.nodeSize
               );
 
               return false;
@@ -343,6 +230,65 @@ export const Mention = Node.create<MentionOptions>({
     };
   },
 
+  addOptions() {
+    return {
+      deleteTriggerWithBackspace: false,
+      HTMLAttributes: {},
+      renderHTML({ options, node }) {
+        const isUserMention = node.attrs.entityType === "user";
+        return [
+          "span",
+          mergeAttributes(this.HTMLAttributes, options.HTMLAttributes),
+          `${isUserMention ? options.suggestion.char : ""}${node.attrs.label ?? node.attrs.entityId}`,
+        ];
+      },
+      renderText({ options, node }) {
+        return `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
+      },
+      suggestion: {
+        allow: ({ state, range }) => {
+          const $from = state.doc.resolve(range.from);
+          const type = state.schema.nodes[this.name];
+          const allow = !!$from.parent.type.contentMatch.matchType(type);
+
+          return allow;
+        },
+        char: "@",
+        command: ({ editor, range, props }) => {
+          // increase range.to by one when the next node is of type "text"
+          // and starts with a space character
+          const nodeAfter = editor.view.state.selection.$to.nodeAfter;
+          const overrideSpace = nodeAfter?.text?.startsWith(" ");
+
+          if (overrideSpace) {
+            range.to += 1;
+          }
+
+          editor
+            .chain()
+            .focus()
+            .insertContentAt(range, [
+              {
+                attrs: props,
+                type: this.name,
+              },
+              {
+                text: " ",
+                type: "text",
+              },
+            ])
+            .run();
+
+          // get reference to `window` object from editor element, to support cross-frame JS usage
+          editor.view.dom.ownerDocument.defaultView
+            ?.getSelection()
+            ?.collapseToEnd();
+        },
+        pluginKey: MentionPluginKey,
+      },
+    };
+  },
+
   addProseMirrorPlugins() {
     return [
       Suggestion({
@@ -351,4 +297,55 @@ export const Mention = Node.create<MentionOptions>({
       }),
     ];
   },
+  atom: true,
+  draggable: true,
+
+  group: "inline",
+  inline: true,
+  name: "mention",
+
+  parseHTML() {
+    return [
+      {
+        tag: `span[data-type="${this.name}"]`,
+      },
+    ];
+  },
+
+  priority: 101,
+
+  renderHTML({ node, HTMLAttributes }) {
+    const mergedOptions = { ...this.options };
+
+    mergedOptions.HTMLAttributes = mergeAttributes(
+      { "data-type": this.name },
+      this.options.HTMLAttributes,
+      HTMLAttributes
+    );
+    const html = this.options.renderHTML({
+      node,
+      options: mergedOptions,
+    });
+
+    if (typeof html === "string") {
+      return [
+        "span",
+        mergeAttributes(
+          { "data-type": this.name },
+          this.options.HTMLAttributes,
+          HTMLAttributes
+        ),
+        html,
+      ];
+    }
+    return html;
+  },
+
+  renderText({ node }) {
+    return this.options.renderText({
+      node,
+      options: this.options,
+    });
+  },
+  selectable: true,
 });

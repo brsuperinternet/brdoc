@@ -1,14 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Label } from '@docmost/db/types/entity.types';
-import { LabelRepo, LabelType } from '@docmost/db/repos/label/label.repo';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { executeTx } from '@docmost/db/utils';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { normalizeLabelName } from './utils';
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { LabelRepo, LabelType } from "@docmost/db/repos/label/label.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { Label } from "@docmost/db/types/entity.types";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { executeTx } from "@docmost/db/utils";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { InjectKysely } from "nestjs-kysely";
 import { EventName } from "src/common/events/event.contants";
+import { normalizeLabelName } from "./utils";
 
 @Injectable()
 export class LabelService {
@@ -22,7 +22,7 @@ export class LabelService {
   async addLabelsToPage(
     pageId: string,
     names: string[],
-    workspaceId: string,
+    workspaceId: string
   ): Promise<Label[]> {
     const attached: Label[] = [];
     await executeTx(this.db, async (trx) => {
@@ -31,7 +31,7 @@ export class LabelService {
           name.trim(),
           workspaceId,
           LabelType.PAGE,
-          trx,
+          trx
         );
         await this.labelRepo.addLabelToPage(pageId, label.id, trx);
         attached.push(label);
@@ -40,34 +40,34 @@ export class LabelService {
 
     this.eventEmitter.emit(EventName.PAGE_UPDATED, {
       pageIds: [pageId],
-      workspaceId: workspaceId,
+      workspaceId,
     });
-    
+
     return attached;
   }
 
   async removeLabelFromPage(
     pageId: string,
     labelId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
     await executeTx(this.db, async (trx) => {
       const label = await this.labelRepo.findById(labelId, trx);
       if (!label || label.workspaceId !== workspaceId) {
-        throw new NotFoundException('Label not found');
+        throw new NotFoundException("Label not found");
       }
 
       await this.labelRepo.removeLabelFromPage(
         pageId,
         labelId,
         workspaceId,
-        trx,
+        trx
       );
 
       const count = await this.labelRepo.getLabelPageCount(
         labelId,
         workspaceId,
-        trx,
+        trx
       );
       if (count === 0) {
         await this.labelRepo.deleteLabel(labelId, workspaceId, trx);
@@ -76,7 +76,7 @@ export class LabelService {
 
     this.eventEmitter.emit(EventName.PAGE_UPDATED, {
       pageIds: [pageId],
-      workspaceId: workspaceId,
+      workspaceId,
     });
   }
 
@@ -88,14 +88,9 @@ export class LabelService {
     workspaceId: string,
     userId: string,
     type: LabelType,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ) {
-    return this.labelRepo.findLabels(
-      workspaceId,
-      userId,
-      type,
-      pagination,
-    );
+    return this.labelRepo.findLabels(workspaceId, userId, type, pagination);
   }
 
   async findPagesByLabel(
@@ -105,16 +100,24 @@ export class LabelService {
       spaceId?: string;
       query?: string;
       pagination: PaginationOptions;
-    },
+    }
   ) {
-    const result = await this.labelRepo.findPagesByLabelId(labelId, userId, opts);
-    if (result.items.length === 0) return result;
-
-    const accessibleIds = await this.pagePermissionRepo.filterAccessiblePageIds({
-      pageIds: result.items.map((p) => p.id),
+    const result = await this.labelRepo.findPagesByLabelId(
+      labelId,
       userId,
-      spaceId: opts.spaceId,
-    });
+      opts
+    );
+    if (result.items.length === 0) {
+      return result;
+    }
+
+    const accessibleIds = await this.pagePermissionRepo.filterAccessiblePageIds(
+      {
+        pageIds: result.items.map((p) => p.id),
+        spaceId: opts.spaceId,
+        userId,
+      }
+    );
     const accessible = new Set(accessibleIds);
     return {
       items: result.items.filter((p) => accessible.has(p.id)),
@@ -127,23 +130,19 @@ export class LabelService {
     type: LabelType,
     workspaceId: string,
     userId: string,
-    spaceId?: string,
+    spaceId?: string
   ) {
     const normalized = normalizeLabelName(name);
     const label = await this.labelRepo.findByNameAndWorkspace(
       normalized,
       workspaceId,
-      type,
+      type
     );
 
     // Uniform response shape.
     // We don't want to expose whether the label row exists
     const usageCount = label
-      ? await this.labelRepo.getLabelPageCountForUser(
-          label.id,
-          userId,
-          spaceId,
-        )
+      ? await this.labelRepo.getLabelPageCountForUser(label.id, userId, spaceId)
       : 0;
 
     return {

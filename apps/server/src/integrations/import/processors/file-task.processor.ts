@@ -1,13 +1,13 @@
-import { Logger, OnModuleDestroy } from '@nestjs/common';
-import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
-import { QueueJob, QueueName } from 'src/integrations/queue/constants';
-import { FileImportTaskService } from '../services/file-import-task.service';
-import { FileTaskStatus } from '../utils/file.utils';
-import { StorageService } from '../../storage/storage.service';
-import { ModuleRef } from '@nestjs/core';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Logger, OnModuleDestroy } from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
+import { Job } from "bullmq";
+import { InjectKysely } from "nestjs-kysely";
+import { QueueJob, QueueName } from "src/integrations/queue/constants";
+import { StorageService } from "../../storage/storage.service";
+import { FileImportTaskService } from "../services/file-import-task.service";
+import { FileTaskStatus } from "../utils/file.utils";
 
 @Processor(QueueName.FILE_TASK_QUEUE)
 export class FileTaskProcessor extends WorkerHost implements OnModuleDestroy {
@@ -36,14 +36,14 @@ export class FileTaskProcessor extends WorkerHost implements OnModuleDestroy {
           break;
       }
     } catch (err) {
-      this.logger.error('File task failed', err);
+      this.logger.error("File task failed", err);
       throw err;
     }
   }
 
   private getPdfExportService() {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const PdfExportModule = require('./../../../ee/pdf-export/pdf-export.service');
+    const PdfExportModule = require("./../../../ee/pdf-export/pdf-export.service");
     return this.moduleRef.get(PdfExportModule.PdfExportService, {
       strict: false,
     });
@@ -59,18 +59,18 @@ export class FileTaskProcessor extends WorkerHost implements OnModuleDestroy {
     await pdfExportService.cleanupExpiredExports();
   }
 
-  @OnWorkerEvent('active')
+  @OnWorkerEvent("active")
   onActive(job: Job) {
     this.logger.debug(`Processing ${job.name} job`);
   }
 
-  @OnWorkerEvent('failed')
+  @OnWorkerEvent("failed")
   async onFailed(job: Job) {
     const fileTaskId = job.data?.fileTaskId;
     this.logger.error(
       fileTaskId
         ? `Error processing ${job.name} job. File Task ID: ${fileTaskId}. Reason: ${job.failedReason}`
-        : `Error processing ${job.name} job. Reason: ${job.failedReason}`,
+        : `Error processing ${job.name} job. Reason: ${job.failedReason}`
     );
 
     if (job.name === QueueJob.IMPORT_TASK) {
@@ -80,26 +80,26 @@ export class FileTaskProcessor extends WorkerHost implements OnModuleDestroy {
     }
   }
 
-  @OnWorkerEvent('completed')
+  @OnWorkerEvent("completed")
   async onCompleted(job: Job) {
     const fileTaskId = job.data?.fileTaskId;
     this.logger.log(
       fileTaskId
         ? `Completed ${job.name} job for File task ID ${fileTaskId}`
-        : `Completed ${job.name} job`,
+        : `Completed ${job.name} job`
     );
 
     if (job.name === QueueJob.IMPORT_TASK) {
       try {
         const fileTask = await this.fileTaskService.getFileTask(
-          job.data.fileTaskId,
+          job.data.fileTaskId
         );
         if (fileTask) {
           await this.storageService.delete(fileTask.filePath);
           this.logger.debug(`Deleted imported zip file: ${fileTask.filePath}`);
         }
       } catch (err) {
-        this.logger.error(`Failed to delete imported zip file:`, err);
+        this.logger.error("Failed to delete imported zip file:", err);
       }
     }
     // Export tasks: do NOT delete the file on completion (kept for 24h cache)
@@ -108,12 +108,12 @@ export class FileTaskProcessor extends WorkerHost implements OnModuleDestroy {
   private async handleFailedImportJob(job: Job) {
     try {
       const fileTaskId = job.data.fileTaskId;
-      const reason = job.failedReason || 'Unknown error';
+      const reason = job.failedReason || "Unknown error";
 
       await this.fileTaskService.updateTaskStatus(
         fileTaskId,
         FileTaskStatus.Failed,
-        reason,
+        reason
       );
 
       const fileTask = await this.fileTaskService.getFileTask(fileTaskId);
@@ -128,16 +128,16 @@ export class FileTaskProcessor extends WorkerHost implements OnModuleDestroy {
   private async handleFailedExportJob(job: Job) {
     try {
       const fileTaskId = job.data.fileTaskId;
-      const reason = job.failedReason || 'Unknown error';
+      const reason = job.failedReason || "Unknown error";
 
       await this.db
-        .updateTable('fileTasks')
+        .updateTable("fileTasks")
         .set({
-          status: FileTaskStatus.Failed,
           errorMessage: reason,
+          status: FileTaskStatus.Failed,
           updatedAt: new Date(),
         })
-        .where('id', '=', fileTaskId)
+        .where("id", "=", fileTaskId)
         .execute();
     } catch (err) {
       this.logger.error(err);

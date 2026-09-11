@@ -3,28 +3,27 @@ import {
   Module,
   NestModule,
   RequestMethod,
-} from '@nestjs/common';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
-import { WorkspaceModule } from './workspace/workspace.module';
-import { PageModule } from './page/page.module';
-import { AttachmentModule } from './attachment/attachment.module';
-import { CommentModule } from './comment/comment.module';
-import { SearchModule } from './search/search.module';
-import { SpaceModule } from './space/space.module';
-import { GroupModule } from './group/group.module';
-import { CaslModule } from './casl/casl.module';
-import { PageAccessModule } from './page/page-access/page-access.module';
-import { DomainMiddleware } from '../common/middlewares/domain.middleware';
-import { AuditContextMiddleware } from '../common/middlewares/audit-context.middleware';
-import { ShareModule } from './share/share.module';
-import { PublicSpaceModule } from './public-space/public-space.module';
-import { LabelModule } from './label/label.module';
-import { NotificationModule } from './notification/notification.module';
-import { WatcherModule } from './watcher/watcher.module';
-import { FavoriteModule } from './favorite/favorite.module';
-import { SessionModule } from './session/session.module';
-import { ClsMiddleware } from 'nestjs-cls';
+} from "@nestjs/common";
+import { AuditContextMiddleware } from "../common/middlewares/audit-context.middleware";
+import { DomainMiddleware } from "../common/middlewares/domain.middleware";
+import { AttachmentModule } from "./attachment/attachment.module";
+import { AuthModule } from "./auth/auth.module";
+import { CaslModule } from "./casl/casl.module";
+import { CommentModule } from "./comment/comment.module";
+import { FavoriteModule } from "./favorite/favorite.module";
+import { GroupModule } from "./group/group.module";
+import { LabelModule } from "./label/label.module";
+import { NotificationModule } from "./notification/notification.module";
+import { PageModule } from "./page/page.module";
+import { PageAccessModule } from "./page/page-access/page-access.module";
+import { PublicSpaceModule } from "./public-space/public-space.module";
+import { SearchModule } from "./search/search.module";
+import { SessionModule } from "./session/session.module";
+import { ShareModule } from "./share/share.module";
+import { SpaceModule } from "./space/space.module";
+import { UserModule } from "./user/user.module";
+import { WatcherModule } from "./watcher/watcher.module";
+import { WorkspaceModule } from "./workspace/workspace.module";
 
 @Module({
   imports: [
@@ -51,20 +50,20 @@ import { ClsMiddleware } from 'nestjs-cls';
 export class CoreModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     const excludedRoutes = [
-      { path: 'auth/setup', method: RequestMethod.POST },
-      { path: 'health', method: RequestMethod.GET },
-      { path: 'health/live', method: RequestMethod.GET },
-      { path: 'billing/stripe/webhook', method: RequestMethod.POST },
+      { method: RequestMethod.POST, path: "auth/setup" },
+      { method: RequestMethod.GET, path: "health" },
+      { method: RequestMethod.GET, path: "health/live" },
+      { method: RequestMethod.POST, path: "billing/stripe/webhook" },
     ];
 
     consumer
       .apply(DomainMiddleware)
       .exclude(...excludedRoutes)
-      .forRoutes('*');
+      .forRoutes("*");
 
     consumer
       .apply(AuditContextMiddleware)
       .exclude(...excludedRoutes)
-      .forRoutes('*');
+      .forRoutes("*");
   }
 }

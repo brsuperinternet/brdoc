@@ -1,35 +1,59 @@
-import { register } from "./registry";
 import { valueToString } from "../number";
+import { register } from "./registry";
 
 const s = (v: unknown): string => valueToString(v);
 
 register({
-  name: "concat", arity: { min: 1, max: null }, paramTypes: "variadic-any", returnType: "string",
+  arity: { max: null, min: 1 },
+  category: "string",
+  doc: "Concatenates strings.",
   eval: (args) => args.map(s).join(""),
-  doc: "Concatenates strings.", category: "string",
+  name: "concat",
+  paramTypes: "variadic-any",
+  returnType: "string",
 });
 register({
-  name: "length", arity: { min: 1, max: 1 }, paramTypes: ["string"], returnType: "number",
+  arity: { max: 1, min: 1 },
+  category: "string",
+  doc: "Length of a string.",
   eval: ([v]) => s(v).length,
-  doc: "Length of a string.", category: "string",
+  name: "length",
+  paramTypes: ["string"],
+  returnType: "number",
 });
 register({
-  name: "contains", arity: { min: 2, max: 2 }, paramTypes: ["string", "string"], returnType: "boolean",
+  arity: { max: 2, min: 2 },
+  category: "string",
+  doc: "Returns true if the first string contains the second.",
   eval: ([a, b]) => s(a).includes(s(b)),
-  doc: "Returns true if the first string contains the second.", category: "string",
+  name: "contains",
+  paramTypes: ["string", "string"],
+  returnType: "boolean",
 });
 register({
-  name: "lower", arity: { min: 1, max: 1 }, paramTypes: ["string"], returnType: "string",
+  arity: { max: 1, min: 1 },
+  category: "string",
+  doc: "Lowercases the string.",
   eval: ([v]) => s(v).toLowerCase(),
-  doc: "Lowercases the string.", category: "string",
+  name: "lower",
+  paramTypes: ["string"],
+  returnType: "string",
 });
 register({
-  name: "upper", arity: { min: 1, max: 1 }, paramTypes: ["string"], returnType: "string",
+  arity: { max: 1, min: 1 },
+  category: "string",
+  doc: "Uppercases the string.",
   eval: ([v]) => s(v).toUpperCase(),
-  doc: "Uppercases the string.", category: "string",
+  name: "upper",
+  paramTypes: ["string"],
+  returnType: "string",
 });
 register({
-  name: "trim", arity: { min: 1, max: 1 }, paramTypes: ["string"], returnType: "string",
+  arity: { max: 1, min: 1 },
+  category: "string",
+  doc: "Strips whitespace from both ends.",
   eval: ([v]) => s(v).trim(),
-  doc: "Strips whitespace from both ends.", category: "string",
+  name: "trim",
+  paramTypes: ["string"],
+  returnType: "string",
 });

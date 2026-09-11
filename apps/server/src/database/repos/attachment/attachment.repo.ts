@@ -1,53 +1,53 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { ExpressionBuilder, sql } from 'kysely';
-import { jsonObjectFrom } from 'kysely/helpers/postgres';
-import { DB } from '@docmost/db/types/db';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { dbOrTx } from '@docmost/db/utils';
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { DB } from "@docmost/db/types/db";
 import {
   Attachment,
   InsertableAttachment,
   UpdatableAttachment,
-} from '@docmost/db/types/entity.types';
-import { AttachmentType } from '../../../core/attachment/attachment.constants';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
+} from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx } from "@docmost/db/utils";
+import { Injectable } from "@nestjs/common";
+import { ExpressionBuilder, sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { InjectKysely } from "nestjs-kysely";
+import { AttachmentType } from "../../../core/attachment/attachment.constants";
 
 @Injectable()
 export class AttachmentRepo {
   constructor(@InjectKysely() private readonly db: KyselyDB) {}
 
   private baseFields: Array<keyof Attachment> = [
-    'id',
-    'fileName',
-    'filePath',
-    'fileSize',
-    'fileExt',
-    'mimeType',
-    'type',
-    'creatorId',
-    'pageId',
-    'spaceId',
-    'aiChatId',
-    'workspaceId',
-    'createdAt',
-    'updatedAt',
-    'deletedAt',
+    "id",
+    "fileName",
+    "filePath",
+    "fileSize",
+    "fileExt",
+    "mimeType",
+    "type",
+    "creatorId",
+    "pageId",
+    "spaceId",
+    "aiChatId",
+    "workspaceId",
+    "createdAt",
+    "updatedAt",
+    "deletedAt",
   ];
 
   async findById(
     attachmentId: string,
     opts?: {
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Attachment> {
     const db = dbOrTx(this.db, opts?.trx);
 
     return db
-      .selectFrom('attachments')
+      .selectFrom("attachments")
       .select(this.baseFields)
-      .where('id', '=', attachmentId)
+      .where("id", "=", attachmentId)
       .executeTakeFirst();
   }
 
@@ -55,25 +55,25 @@ export class AttachmentRepo {
     attachmentId: string,
     opts?: {
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Attachment> {
     const db = dbOrTx(this.db, opts?.trx);
 
     return db
-      .selectFrom('attachments')
-      .select([...this.baseFields, 'textContent'])
-      .where('id', '=', attachmentId)
+      .selectFrom("attachments")
+      .select([...this.baseFields, "textContent"])
+      .where("id", "=", attachmentId)
       .executeTakeFirst();
   }
 
   async insertAttachment(
     insertableAttachment: InsertableAttachment,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<Attachment> {
     const db = dbOrTx(this.db, trx);
 
     return db
-      .insertInto('attachments')
+      .insertInto("attachments")
       .values(insertableAttachment)
       .returning(this.baseFields)
       .executeTakeFirst();
@@ -83,65 +83,67 @@ export class AttachmentRepo {
     spaceId: string,
     opts?: {
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Attachment[]> {
     const db = dbOrTx(this.db, opts?.trx);
 
     return db
-      .selectFrom('attachments')
+      .selectFrom("attachments")
       .select(this.baseFields)
-      .where('spaceId', '=', spaceId)
+      .where("spaceId", "=", spaceId)
       .execute();
   }
 
   async findPageAttachments(pageId: string, pagination: PaginationOptions) {
     let query = this.db
-      .selectFrom('attachments')
+      .selectFrom("attachments")
       .select(this.baseFields)
       .select((eb) => this.withCreator(eb))
-      .where('pageId', '=', pageId)
-      .where('type', '=', AttachmentType.File)
-      .where('deletedAt', 'is', null);
+      .where("pageId", "=", pageId)
+      .where("type", "=", AttachmentType.File)
+      .where("deletedAt", "is", null);
 
     if (pagination.query) {
       query = query.where(
         sql`f_unaccent(file_name)`,
-        'ilike',
-        sql`f_unaccent(${'%' + pagination.query + '%'})`,
+        "ilike",
+        sql`f_unaccent(${"%" + pagination.query + "%"})`
       );
     }
 
     return executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
-      fields: [{ expression: 'id', direction: 'desc' }],
+      cursor: pagination.cursor,
+      fields: [{ direction: "desc", expression: "id" }],
       parseCursor: (cursor) => ({ id: cursor.id }),
+      perPage: pagination.limit,
     });
   }
 
-  withCreator(eb: ExpressionBuilder<DB, 'attachments'>) {
+  withCreator(eb: ExpressionBuilder<DB, "attachments">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('users')
-        .select(['users.id', 'users.name', 'users.avatarUrl'])
-        .whereRef('users.id', '=', 'attachments.creatorId'),
-    ).as('creator');
+        .selectFrom("users")
+        .select(["users.id", "users.name", "users.avatarUrl"])
+        .whereRef("users.id", "=", "attachments.creatorId")
+    ).as("creator");
   }
 
   async findByIds(
     ids: string[],
     opts?: {
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Attachment[]> {
-    if (ids.length === 0) return [];
+    if (ids.length === 0) {
+      return [];
+    }
     const db = dbOrTx(this.db, opts?.trx);
 
     return db
-      .selectFrom('attachments')
+      .selectFrom("attachments")
       .select(this.baseFields)
-      .where('id', 'in', ids)
+      .where("id", "in", ids)
       .execute();
   }
 
@@ -149,38 +151,38 @@ export class AttachmentRepo {
     aiChatId: string,
     opts?: {
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Attachment[]> {
     const db = dbOrTx(this.db, opts?.trx);
 
     return db
-      .selectFrom('attachments')
+      .selectFrom("attachments")
       .select(this.baseFields)
-      .where('aiChatId', '=', aiChatId)
+      .where("aiChatId", "=", aiChatId)
       .execute();
   }
 
   updateAttachmentsByPageId(
     updatableAttachment: UpdatableAttachment,
     pageIds: string[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     return dbOrTx(this.db, trx)
-      .updateTable('attachments')
+      .updateTable("attachments")
       .set(updatableAttachment)
-      .where('pageId', 'in', pageIds)
+      .where("pageId", "in", pageIds)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
 
   async updateAttachment(
     updatableAttachment: UpdatableAttachment,
-    attachmentId: string,
+    attachmentId: string
   ): Promise<Attachment> {
     return await this.db
-      .updateTable('attachments')
+      .updateTable("attachments")
       .set(updatableAttachment)
-      .where('id', '=', attachmentId)
+      .where("id", "=", attachmentId)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
@@ -189,32 +191,34 @@ export class AttachmentRepo {
     attachmentIds: string[],
     aiChatId: string,
     creatorId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
-    if (attachmentIds.length === 0) return;
+    if (attachmentIds.length === 0) {
+      return;
+    }
 
     await this.db
-      .updateTable('attachments')
+      .updateTable("attachments")
       .set({ aiChatId })
-      .where('id', 'in', attachmentIds)
-      .where('creatorId', '=', creatorId)
-      .where('workspaceId', '=', workspaceId)
-      .where('type', '=', AttachmentType.Chat)
-      .where('aiChatId', 'is', null)
+      .where("id", "in", attachmentIds)
+      .where("creatorId", "=", creatorId)
+      .where("workspaceId", "=", workspaceId)
+      .where("type", "=", AttachmentType.Chat)
+      .where("aiChatId", "is", null)
       .execute();
   }
 
   async deleteAttachmentById(attachmentId: string): Promise<void> {
     await this.db
-      .deleteFrom('attachments')
-      .where('id', '=', attachmentId)
+      .deleteFrom("attachments")
+      .where("id", "=", attachmentId)
       .executeTakeFirst();
   }
 
   async deleteAttachmentByFilePath(attachmentFilePath: string): Promise<void> {
     await this.db
-      .deleteFrom('attachments')
-      .where('filePath', '=', attachmentFilePath)
+      .deleteFrom("attachments")
+      .where("filePath", "=", attachmentFilePath)
       .executeTakeFirst();
   }
 }

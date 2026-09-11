@@ -1,13 +1,11 @@
-import Image from "@tiptap/extension-image";
-import { ImageOptions as DefaultImageOptions } from "@tiptap/extension-image";
+import { mergeAttributes, Range } from "@tiptap/core";
+import Image, {
+  ImageOptions as DefaultImageOptions,
+} from "@tiptap/extension-image";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import {
-  mergeAttributes,
-  Range,
-} from "@tiptap/core";
-import { ResizableNodeView } from "../resizable-nodeview";
-import type { ResizableNodeViewDirection } from "../resizable-nodeview";
 import { normalizeFileUrl, syncAltBadge } from "../media-utils";
+import type { ResizableNodeViewDirection } from "../resizable-nodeview";
+import { ResizableNodeView } from "../resizable-nodeview";
 
 export type ImageResizeOptions = {
   enabled: boolean;
@@ -25,23 +23,23 @@ export type ImageResizeOptions = {
 };
 
 export interface ImageOptions extends DefaultImageOptions {
-  view: any;
   resize: ImageResizeOptions | false;
+  view: any;
 }
 
 export interface ImageAttributes {
-  src?: string;
-  alt?: string;
   align?: string;
-  attachmentId?: string;
-  size?: number;
-  width?: number | string;
-  height?: number;
+  alt?: string;
   aspectRatio?: number;
+  attachmentId?: string;
+  height?: number;
   placeholder?: {
     id: string;
     name: string;
   };
+  size?: number;
+  src?: string;
+  width?: number | string;
 }
 
 declare module "@tiptap/core" {
@@ -49,7 +47,7 @@ declare module "@tiptap/core" {
     imageBlock: {
       setImage: (attributes: ImageAttributes) => ReturnType;
       setImageAt: (
-        attributes: ImageAttributes & { pos: number | Range },
+        attributes: ImageAttributes & { pos: number | Range }
       ) => ReturnType;
       setImageAlign: (align: "left" | "center" | "right") => ReturnType;
       setImageWidth: (width: number) => ReturnType;
@@ -59,56 +57,8 @@ declare module "@tiptap/core" {
 }
 
 export const TiptapImage = Image.extend<ImageOptions>({
-  name: "image",
-
-  inline: false,
-  group: "block",
-  isolating: true,
-  atom: true,
-  defining: true,
-
-  addOptions() {
-    return {
-      ...this.parent?.(),
-      view: null,
-      resize: false,
-    };
-  },
-
   addAttributes() {
     return {
-      src: {
-        default: "",
-        parseHTML: (element) => element.getAttribute("src"),
-        renderHTML: (attributes) => ({
-          src: attributes.src,
-        }),
-      },
-      width: {
-        default: null,
-        parseHTML: (element) => {
-          const raw = element.getAttribute("width");
-          if (!raw) return null;
-          if (raw.endsWith("%")) return raw;
-          const num = parseFloat(raw);
-          return isNaN(num) ? null : num;
-        },
-        renderHTML: (attributes: ImageAttributes) => ({
-          width: attributes.width,
-        }),
-      },
-      height: {
-        default: null,
-        parseHTML: (element) => {
-          const raw = element.getAttribute("height");
-          if (!raw) return null;
-          const num = parseFloat(raw);
-          return isNaN(num) ? null : num;
-        },
-        renderHTML: (attributes: ImageAttributes) => ({
-          height: attributes.height,
-        }),
-      },
       align: {
         default: "center",
         parseHTML: (element) => element.getAttribute("data-align"),
@@ -123,12 +73,37 @@ export const TiptapImage = Image.extend<ImageOptions>({
           alt: attributes.alt,
         }),
       },
+      aspectRatio: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-aspect-ratio"),
+        renderHTML: (attributes: ImageAttributes) => ({
+          "data-aspect-ratio": attributes.aspectRatio,
+        }),
+      },
       attachmentId: {
         default: undefined,
         parseHTML: (element) => element.getAttribute("data-attachment-id"),
         renderHTML: (attributes: ImageAttributes) => ({
           "data-attachment-id": attributes.attachmentId,
         }),
+      },
+      height: {
+        default: null,
+        parseHTML: (element) => {
+          const raw = element.getAttribute("height");
+          if (!raw) {
+            return null;
+          }
+          const num = Number.parseFloat(raw);
+          return isNaN(num) ? null : num;
+        },
+        renderHTML: (attributes: ImageAttributes) => ({
+          height: attributes.height,
+        }),
+      },
+      placeholder: {
+        default: null,
+        rendered: false,
       },
       size: {
         default: null,
@@ -137,61 +112,65 @@ export const TiptapImage = Image.extend<ImageOptions>({
           "data-size": attributes.size,
         }),
       },
-      aspectRatio: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-aspect-ratio"),
-        renderHTML: (attributes: ImageAttributes) => ({
-          "data-aspect-ratio": attributes.aspectRatio,
+      src: {
+        default: "",
+        parseHTML: (element) => element.getAttribute("src"),
+        renderHTML: (attributes) => ({
+          src: attributes.src,
         }),
       },
-      placeholder: {
+      width: {
         default: null,
-        rendered: false,
+        parseHTML: (element) => {
+          const raw = element.getAttribute("width");
+          if (!raw) {
+            return null;
+          }
+          if (raw.endsWith("%")) {
+            return raw;
+          }
+          const num = Number.parseFloat(raw);
+          return isNaN(num) ? null : num;
+        },
+        renderHTML: (attributes: ImageAttributes) => ({
+          width: attributes.width,
+        }),
       },
     };
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "img",
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-    ];
   },
 
   addCommands() {
     return {
       setImage:
         (attrs: ImageAttributes) =>
-        ({ commands }) => {
-          return commands.insertContent({
+        ({ commands }) =>
+          commands.insertContent({
+            attrs,
             type: "image",
-            attrs: attrs,
-          });
-        },
-
-      setImageAt:
-        (attrs) =>
-        ({ commands }) => {
-          return commands.insertContentAt(attrs.pos, {
-            type: "image",
-            attrs: attrs,
-          });
-        },
+          }),
 
       setImageAlign:
         (align) =>
         ({ commands }) =>
           commands.updateAttributes("image", { align }),
 
-      setImageWidth:
-        (width) =>
+      setImageAt:
+        (attrs) =>
         ({ commands }) =>
-          commands.updateAttributes("image", { width }),
+          commands.insertContentAt(attrs.pos, {
+            attrs,
+            type: "image",
+          }),
 
       setImageSize:
         (width, height) =>
         ({ commands }) =>
-          commands.updateAttributes("image", { width, height }),
+          commands.updateAttributes("image", { height, width }),
+
+      setImageWidth:
+        (width) =>
+        ({ commands }) =>
+          commands.updateAttributes("image", { width }),
     };
   },
 
@@ -268,26 +247,28 @@ export const TiptapImage = Image.extend<ImageOptions>({
       let currentNode = node;
 
       const nodeView = new ResizableNodeView({
-        element: el,
         editor,
-        node,
+        element: el,
         getPos,
-        onResize: (w, h) => {
-          el.style.width = `${w}px`;
-          el.style.height = `${h}px`;
-        },
+        node,
         onCommit: () => {
           const pos = getPos();
-          if (pos === undefined) return;
+          if (pos === undefined) {
+            return;
+          }
 
           this.editor
             .chain()
             .setNodeSelection(pos)
             .updateAttributes(this.name, {
-              width: Math.round(el.offsetWidth),
               height: Math.round(el.offsetHeight),
+              width: Math.round(el.offsetWidth),
             })
             .run();
+        },
+        onResize: (w, h) => {
+          el.style.width = `${w}px`;
+          el.style.height = `${h}px`;
         },
         onUpdate: (updatedNode, _decorations, _innerDecorations) => {
           if (updatedNode.type !== currentNode.type) {
@@ -322,14 +303,14 @@ export const TiptapImage = Image.extend<ImageOptions>({
           return true;
         },
         options: {
+          className,
+          createCustomHandle,
           directions,
           min: {
-            width: minWidth,
             height: minHeight,
+            width: minWidth,
           },
           preserveAspectRatio: alwaysPreserveAspectRatio === true,
-          createCustomHandle,
-          className,
         },
       });
 
@@ -348,11 +329,9 @@ export const TiptapImage = Image.extend<ImageOptions>({
           const parentEl = dom.parentElement;
           if (parentEl) {
             const containerWidth = parentEl.clientWidth;
-            const pctValue = parseInt(widthAttr, 10);
+            const pctValue = Number.parseInt(widthAttr, 10);
             if (!isNaN(pctValue) && containerWidth > 0) {
-              const pxWidth = Math.round(
-                containerWidth * (pctValue / 100),
-              );
+              const pxWidth = Math.round(containerWidth * (pctValue / 100));
               el.style.width = `${pxWidth}px`;
               if (node.attrs.aspectRatio) {
                 el.style.height = `${Math.round(pxWidth / node.attrs.aspectRatio)}px`;
@@ -375,6 +354,28 @@ export const TiptapImage = Image.extend<ImageOptions>({
 
       return nodeView;
     };
+  },
+
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      resize: false,
+      view: null,
+    };
+  },
+  atom: true,
+  defining: true,
+  group: "block",
+
+  inline: false,
+  isolating: true,
+  name: "image",
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "img",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+    ];
   },
 });
 

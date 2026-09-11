@@ -1,11 +1,11 @@
+import { Transform, TransformFnParams } from "class-transformer";
 import {
   IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
-} from 'class-validator';
-import {Transform, TransformFnParams} from "class-transformer";
+} from "class-validator";
 
 export class CreateSpaceDto {
   @MinLength(2)
@@ -22,7 +22,7 @@ export class CreateSpaceDto {
   @MaxLength(100)
   @Matches(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/, {
     message:
-      'Space slug must start with a letter or number and may contain hyphens and underscores',
+      "Space slug must start with a letter or number and may contain hyphens and underscores",
   })
   slug: string;
 }

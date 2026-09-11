@@ -1,17 +1,17 @@
-import { Logger, OnModuleDestroy } from '@nestjs/common';
-import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { QueueName } from '../../queue/constants';
-import { Job } from 'bullmq';
-import { MailService } from '../mail.service';
-import { MailMessage } from '../interfaces/mail.message';
-import { NotificationRepo } from '@docmost/db/repos/notification/notification.repo';
+import { NotificationRepo } from "@docmost/db/repos/notification/notification.repo";
+import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Logger, OnModuleDestroy } from "@nestjs/common";
+import { Job } from "bullmq";
+import { QueueName } from "../../queue/constants";
+import { MailMessage } from "../interfaces/mail.message";
+import { MailService } from "../mail.service";
 
 @Processor(QueueName.EMAIL_QUEUE)
 export class EmailProcessor extends WorkerHost implements OnModuleDestroy {
   private readonly logger = new Logger(EmailProcessor.name);
   constructor(
     private readonly mailService: MailService,
-    private readonly notificationRepo: NotificationRepo,
+    private readonly notificationRepo: NotificationRepo
   ) {
     super();
   }
@@ -27,24 +27,26 @@ export class EmailProcessor extends WorkerHost implements OnModuleDestroy {
       try {
         await this.notificationRepo.markAsEmailed(job.data.notificationId);
       } catch (err) {
-        this.logger.warn(`Failed to mark notification ${job.data.notificationId} as emailed`);
+        this.logger.warn(
+          `Failed to mark notification ${job.data.notificationId} as emailed`
+        );
       }
     }
   }
 
-  @OnWorkerEvent('active')
+  @OnWorkerEvent("active")
   onActive(job: Job) {
     this.logger.debug(`Processing ${job.name} job`);
   }
 
-  @OnWorkerEvent('failed')
+  @OnWorkerEvent("failed")
   onError(job: Job) {
     this.logger.error(
-      `Error processing ${job.name} job. Reason: ${job.failedReason}`,
+      `Error processing ${job.name} job. Reason: ${job.failedReason}`
     );
   }
 
-  @OnWorkerEvent('completed')
+  @OnWorkerEvent("completed")
   onCompleted(job: Job) {
     this.logger.debug(`Completed ${job.name} job`);
   }

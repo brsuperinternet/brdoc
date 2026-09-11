@@ -1,34 +1,34 @@
+import { CursorPaginationResult } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { ShareRepo } from "@docmost/db/repos/share/share.repo";
+import { SpaceRepo } from "@docmost/db/repos/space/space.repo";
+import { WorkspaceRepo } from "@docmost/db/repos/workspace/workspace.repo";
+import { Space, User } from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { executeTx } from "@docmost/db/utils";
+import { InjectQueue } from "@nestjs/bullmq";
 import {
   BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { CreateSpaceDto } from '../dto/create-space.dto';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { SpaceRepo } from '@docmost/db/repos/space/space.repo';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { Space, User } from '@docmost/db/types/entity.types';
-import { UpdateSpaceDto } from '../dto/update-space.dto';
-import { executeTx } from '@docmost/db/utils';
-import { InjectKysely } from 'nestjs-kysely';
-import { Feature } from '../../../common/features';
-import { SpaceMemberService } from './space-member.service';
-import { SpaceRole } from '../../../common/helpers/types/permission';
-import { QueueJob, QueueName } from 'src/integrations/queue/constants';
-import { Queue } from 'bullmq';
-import { InjectQueue } from '@nestjs/bullmq';
-import { CursorPaginationResult } from '@docmost/db/pagination/cursor-pagination';
-import { ShareRepo } from '@docmost/db/repos/share/share.repo';
-import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
-import { LicenseCheckService } from '../../../integrations/environment/license-check.service';
-import { AuditEvent, AuditResource } from '../../../common/events/audit-events';
-import { diffAuditTrackedFields } from '../../../common/helpers';
+} from "@nestjs/common";
+import { Queue } from "bullmq";
+import { InjectKysely } from "nestjs-kysely";
+import { QueueJob, QueueName } from "src/integrations/queue/constants";
+import { AuditEvent, AuditResource } from "../../../common/events/audit-events";
+import { Feature } from "../../../common/features";
+import { diffAuditTrackedFields } from "../../../common/helpers";
+import { SpaceRole } from "../../../common/helpers/types/permission";
 import {
   AUDIT_SERVICE,
   IAuditService,
-} from '../../../integrations/audit/audit.service';
+} from "../../../integrations/audit/audit.service";
+import { LicenseCheckService } from "../../../integrations/environment/license-check.service";
+import { CreateSpaceDto } from "../dto/create-space.dto";
+import { UpdateSpaceDto } from "../dto/update-space.dto";
+import { SpaceMemberService } from "./space-member.service";
 
 @Injectable()
 export class SpaceService {
@@ -48,7 +48,7 @@ export class SpaceService {
     workspaceId: string,
     createSpaceDto: CreateSpaceDto,
     trx?: KyselyTransaction,
-    options?: { isPersonal?: boolean },
+    options?: { isPersonal?: boolean }
   ): Promise<Space> {
     let space = null;
 
@@ -60,7 +60,7 @@ export class SpaceService {
           workspaceId,
           createSpaceDto,
           trx,
-          options,
+          options
         );
 
         await this.spaceMemberService.addUserToSpace(
@@ -68,17 +68,13 @@ export class SpaceService {
           space.id,
           SpaceRole.ADMIN,
           workspaceId,
-          trx,
+          trx
         );
       },
-      trx,
+      trx
     );
 
     this.auditService.log({
-      event: AuditEvent.SPACE_CREATED,
-      resourceType: AuditResource.SPACE,
-      resourceId: space.id,
-      spaceId: space.id,
       changes: {
         after: {
           name: space.name,
@@ -86,6 +82,10 @@ export class SpaceService {
           ...(space.isPersonal ? { isPersonal: true } : {}),
         },
       },
+      event: AuditEvent.SPACE_CREATED,
+      resourceId: space.id,
+      resourceType: AuditResource.SPACE,
+      spaceId: space.id,
     });
 
     return { ...space, memberCount: 1 };
@@ -96,83 +96,83 @@ export class SpaceService {
     workspaceId: string,
     createSpaceDto: CreateSpaceDto,
     trx?: KyselyTransaction,
-    options?: { isPersonal?: boolean },
+    options?: { isPersonal?: boolean }
   ): Promise<Space> {
     const slugExists = await this.spaceRepo.slugExists(
       createSpaceDto.slug,
       workspaceId,
-      trx,
+      trx
     );
     if (slugExists) {
       throw new BadRequestException(
-        'Space slug exists. Please use a unique space slug',
+        "Space slug exists. Please use a unique space slug"
       );
     }
 
     return await this.spaceRepo.insertSpace(
       {
-        name: createSpaceDto.name ?? 'untitled space',
-        description: createSpaceDto.description ?? '',
         creatorId: userId,
-        workspaceId: workspaceId,
-        slug: createSpaceDto.slug,
+        description: createSpaceDto.description ?? "",
         isPersonal: options?.isPersonal ?? false,
+        name: createSpaceDto.name ?? "untitled space",
+        slug: createSpaceDto.slug,
+        workspaceId,
       },
-      trx,
+      trx
     );
   }
 
   async updateSpace(
     updateSpaceDto: UpdateSpaceDto,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<Space> {
     if (updateSpaceDto?.slug) {
       const slugExists = await this.spaceRepo.slugExists(
         updateSpaceDto.slug,
-        workspaceId,
+        workspaceId
       );
 
       if (slugExists) {
         throw new BadRequestException(
-          'Space slug exists. Please use a unique space slug',
+          "Space slug exists. Please use a unique space slug"
         );
       }
     }
 
     if (
-      typeof updateSpaceDto.disablePublicSharing !== 'undefined' ||
-      typeof updateSpaceDto.allowViewerComments !== 'undefined'
+      typeof updateSpaceDto.disablePublicSharing !== "undefined" ||
+      typeof updateSpaceDto.allowViewerComments !== "undefined"
     ) {
       const workspace = await this.workspaceRepo.findById(workspaceId, {
         withLicenseKey: true,
       });
 
       if (
-        typeof updateSpaceDto.disablePublicSharing !== 'undefined' &&
+        typeof updateSpaceDto.disablePublicSharing !== "undefined" &&
         !this.licenseCheckService.hasFeature(
           workspace.licenseKey,
           Feature.SECURITY_SETTINGS,
-          workspace.plan,
+          workspace.plan
         )
       ) {
-        throw new ForbiddenException('This feature requires a valid license');
+        throw new ForbiddenException("This feature requires a valid license");
       }
 
       if (
-        typeof updateSpaceDto.allowViewerComments !== 'undefined' &&
+        typeof updateSpaceDto.allowViewerComments !== "undefined" &&
         !this.licenseCheckService.hasFeature(
           workspace.licenseKey,
           Feature.VIEWER_COMMENTS,
-          workspace.plan,
+          workspace.plan
         )
       ) {
-        throw new ForbiddenException('This feature requires a valid license');
+        throw new ForbiddenException("This feature requires a valid license");
       }
     }
 
     const spaceBefore = await this.spaceRepo.findById(
       updateSpaceDto.spaceId,
-      workspaceId,
+      workspaceId
     );
     const settingsBefore = (spaceBefore?.settings ?? {}) as Record<string, any>;
 
@@ -182,7 +182,7 @@ export class SpaceService {
     let updatedSpace: Space;
 
     await executeTx(this.db, async (trx) => {
-      if (typeof updateSpaceDto.disablePublicSharing !== 'undefined') {
+      if (typeof updateSpaceDto.disablePublicSharing !== "undefined") {
         const prev = settingsBefore?.sharing?.disabled ?? false;
         if (prev !== updateSpaceDto.disablePublicSharing) {
           before.disablePublicSharing = prev;
@@ -192,9 +192,9 @@ export class SpaceService {
         await this.spaceRepo.updateSharingSettings(
           updateSpaceDto.spaceId,
           workspaceId,
-          'disabled',
+          "disabled",
           updateSpaceDto.disablePublicSharing,
-          trx,
+          trx
         );
 
         if (updateSpaceDto.disablePublicSharing) {
@@ -202,7 +202,7 @@ export class SpaceService {
         }
       }
 
-      if (typeof updateSpaceDto.allowViewerComments !== 'undefined') {
+      if (typeof updateSpaceDto.allowViewerComments !== "undefined") {
         const prev = settingsBefore?.comments?.allowViewerComments ?? false;
         if (prev !== updateSpaceDto.allowViewerComments) {
           before.allowViewerComments = prev;
@@ -212,29 +212,29 @@ export class SpaceService {
         await this.spaceRepo.updateCommentSettings(
           updateSpaceDto.spaceId,
           workspaceId,
-          'allowViewerComments',
+          "allowViewerComments",
           updateSpaceDto.allowViewerComments,
-          trx,
+          trx
         );
       }
 
       updatedSpace = await this.spaceRepo.updateSpace(
         {
-          name: updateSpaceDto.name,
           description: updateSpaceDto.description,
+          name: updateSpaceDto.name,
           slug: updateSpaceDto.slug,
         },
         updateSpaceDto.spaceId,
         workspaceId,
-        trx,
+        trx
       );
     });
 
     const columnChanges = diffAuditTrackedFields(
-      ['name', 'slug', 'description'],
+      ["name", "slug", "description"],
       updateSpaceDto,
       spaceBefore,
-      updatedSpace,
+      updatedSpace
     );
     if (columnChanges) {
       Object.assign(before, columnChanges.before);
@@ -243,11 +243,11 @@ export class SpaceService {
 
     if (Object.keys(after).length > 0) {
       this.auditService.log({
+        changes: { after, before },
         event: AuditEvent.SPACE_UPDATED,
-        resourceType: AuditResource.SPACE,
         resourceId: updateSpaceDto.spaceId,
+        resourceType: AuditResource.SPACE,
         spaceId: updateSpaceDto.spaceId,
-        changes: { before, after },
       });
     }
 
@@ -259,7 +259,7 @@ export class SpaceService {
       includeMemberCount: true,
     });
     if (!space) {
-      throw new NotFoundException('Space not found');
+      throw new NotFoundException("Space not found");
     }
 
     return space;
@@ -267,7 +267,7 @@ export class SpaceService {
 
   async getWorkspaceSpaces(
     workspaceId: string,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ): Promise<CursorPaginationResult<Space>> {
     return this.spaceRepo.getSpacesInWorkspace(workspaceId, pagination);
   }
@@ -275,24 +275,24 @@ export class SpaceService {
   async deleteSpace(spaceId: string, workspaceId: string): Promise<void> {
     const space = await this.spaceRepo.findById(spaceId, workspaceId);
     if (!space) {
-      throw new NotFoundException('Space not found');
+      throw new NotFoundException("Space not found");
     }
 
     await this.spaceRepo.deleteSpace(spaceId, workspaceId);
     await this.attachmentQueue.add(QueueJob.DELETE_SPACE_ATTACHMENTS, space);
 
     this.auditService.log({
-      event: AuditEvent.SPACE_DELETED,
-      resourceType: AuditResource.SPACE,
-      resourceId: spaceId,
-      spaceId: spaceId,
       changes: {
         before: {
+          description: space.description,
           name: space.name,
           slug: space.slug,
-          description: space.description,
         },
       },
+      event: AuditEvent.SPACE_DELETED,
+      resourceId: spaceId,
+      resourceType: AuditResource.SPACE,
+      spaceId,
     });
   }
 }

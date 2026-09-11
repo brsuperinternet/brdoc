@@ -1,12 +1,11 @@
-import { jsonToNode } from 'src/collaboration/collaboration.util';
-import { Logger } from '@nestjs/common';
-import { ExportFormat } from './dto/export-dto';
-import { Node } from '@tiptap/pm/model';
-import { validate as isValidUUID } from 'uuid';
-import * as path from 'path';
-import { Page } from '@docmost/db/types/entity.types';
-import { isAttachmentNode } from '../../common/helpers/prosemirror/utils';
-import { sanitizeFileName } from '../../common/helpers';
+import * as path from "node:path";
+import { Page } from "@docmost/db/types/entity.types";
+import { Logger } from "@nestjs/common";
+import { Node } from "@tiptap/pm/model";
+import { jsonToNode } from "src/collaboration/collaboration.util";
+import { sanitizeFileName } from "../../common/helpers";
+import { isAttachmentNode } from "../../common/helpers/prosemirror/utils";
+import { ExportFormat } from "./dto/export-dto";
 
 export type PageExportTree = Record<string, Page[]>;
 
@@ -15,36 +14,38 @@ export const INTERNAL_LINK_REGEX =
 
 export function getExportExtension(format: string) {
   if (format === ExportFormat.HTML) {
-    return '.html';
+    return ".html";
   }
 
   if (format === ExportFormat.Markdown) {
-    return '.md';
+    return ".md";
   }
   return;
 }
 
 export function getPageTitle(title: string) {
-  return title ? title : 'untitled';
+  return title ? title : "untitled";
 }
 
 export function getSafePageTitle(title: string): string {
   const sanitized = sanitizeFileName(getPageTitle(title), {
     preserveSpaces: true,
   });
-  return sanitized || 'untitled';
+  return sanitized || "untitled";
 }
 
 export function updateAttachmentUrlsToLocalPaths(prosemirrorJson: any) {
   const doc = jsonToNode(prosemirrorJson);
-  if (!doc) return null;
+  if (!doc) {
+    return null;
+  }
 
   // Helper function to replace specific URL prefixes
   const replacePrefix = (url: string): string => {
-    const prefixes = ['/files', '/api/files'];
+    const prefixes = ["/files", "/api/files"];
     for (const prefix of prefixes) {
       if (url.startsWith(prefix)) {
-        return url.replace(prefix, 'files');
+        return url.replace(prefix, "files");
       }
     }
     return url;
@@ -70,13 +71,13 @@ export function replaceInternalLinks(
   prosemirrorJson: any,
   slugIdToPath: Record<string, string>,
   currentPagePath: string,
-  baseUrl?: string,
+  baseUrl?: string
 ) {
   const doc = jsonToNode(prosemirrorJson);
 
   doc.descendants((node: Node) => {
     for (const mark of node.marks) {
-      if (mark.type.name === 'link' && mark.attrs.href) {
+      if (mark.type.name === "link" && mark.attrs.href) {
         const match = mark.attrs.href.match(INTERNAL_LINK_REGEX);
         if (match) {
           const markLink = mark.attrs.href;
@@ -85,7 +86,7 @@ export function replaceInternalLinks(
           const localPath = slugIdToPath[slugId];
 
           if (!localPath) {
-            if (baseUrl && mark.attrs.href.startsWith('/')) {
+            if (baseUrl && mark.attrs.href.startsWith("/")) {
               //@ts-expect-error
               mark.attrs.href = `${baseUrl}${mark.attrs.href}`;
             }
@@ -97,12 +98,15 @@ export function replaceInternalLinks(
           //@ts-expect-error
           mark.attrs.href = relativePath;
           //@ts-expect-error
-          mark.attrs.target = '_self';
+          mark.attrs.target = "_self";
           if (node.isText) {
             // if link and text are same, use page title
             if (markLink === node.text) {
               //@ts-expect-error
-              node.text = getInternalLinkPageName(relativePath, currentPagePath);
+              node.text = getInternalLinkPageName(
+                relativePath,
+                currentPagePath
+              );
             }
           }
         }
@@ -113,15 +117,18 @@ export function replaceInternalLinks(
   return doc.toJSON();
 }
 
-export function getInternalLinkPageName(path: string, currentFilePath?: string): string {
-  const name = path?.split('/').pop().split('.').slice(0, -1).join('.');
+export function getInternalLinkPageName(
+  path: string,
+  currentFilePath?: string
+): string {
+  const name = path?.split("/").pop().split(".").slice(0, -1).join(".");
   try {
     return decodeURIComponent(name);
   } catch (err) {
     if (currentFilePath) {
       Logger.warn(
         `URI malformed in page ${currentFilePath}: ${name}. Falling back to raw name.`,
-        'ExportUtils',
+        "ExportUtils"
       );
     }
     return name;
@@ -132,8 +139,8 @@ export function extractPageSlugId(input: string): string {
   if (!input) {
     return undefined;
   }
-  const parts = input.split('-');
-  return parts.length > 1 ? parts[parts.length - 1] : input;
+  const parts = input.split("-");
+  return parts.length > 1 ? parts.at(-1) : input;
 }
 
 export function buildTree(pages: Page[]): PageExportTree {
@@ -170,7 +177,7 @@ export function computeLocalPath(
   format: string,
   parentPageId: string | null,
   currentPath: string,
-  slugIdToPath: Record<string, string>,
+  slugIdToPath: Record<string, string>
 ) {
   const children = tree[parentPageId] || [];
 

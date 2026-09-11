@@ -5,13 +5,13 @@
 export function getBasename(path: string) {
   // make sure the basename is not empty, if string ends with separator
   let end = path.length - 1;
-  while (path[end] === '/' || path[end] === '\\') {
+  while (path[end] === "/" || path[end] === "\\") {
     --end;
   }
 
   // support mixing of Win + Unix path separators
-  const i1 = path.lastIndexOf('/', end);
-  const i2 = path.lastIndexOf('\\', end);
+  const i1 = path.lastIndexOf("/", end);
+  const i2 = path.lastIndexOf("\\", end);
 
   let start: number;
   if (i1 === -1) {

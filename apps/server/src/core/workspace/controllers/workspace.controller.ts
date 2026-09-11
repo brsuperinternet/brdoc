@@ -1,3 +1,6 @@
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { WorkspaceRepo } from "@docmost/db/repos/workspace/workspace.repo";
+import { User, Workspace } from "@docmost/db/types/entity.types";
 import {
   Body,
   Controller,
@@ -8,38 +11,35 @@ import {
   Req,
   Res,
   UseGuards,
-} from '@nestjs/common';
-import { WorkspaceService } from '../services/workspace.service';
-import { UpdateWorkspaceDto } from '../dto/update-workspace.dto';
-import { UpdateWorkspaceUserRoleDto } from '../dto/update-workspace-user-role.dto';
-import { AuthUser } from '../../../common/decorators/auth-user.decorator';
-import { AuthWorkspace } from '../../../common/decorators/auth-workspace.decorator';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { WorkspaceInvitationService } from '../services/workspace-invitation.service';
-import { Public } from '../../../common/decorators/public.decorator';
+} from "@nestjs/common";
+import { FastifyReply } from "fastify";
+import { AuthUser } from "../../../common/decorators/auth-user.decorator";
+import { AuthWorkspace } from "../../../common/decorators/auth-workspace.decorator";
+import { OAuthScope } from "../../../common/decorators/oauth-scope.decorator";
+import { Public } from "../../../common/decorators/public.decorator";
+import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
+import { EnvironmentService } from "../../../integrations/environment/environment.service";
+import { LicenseCheckService } from "../../../integrations/environment/license-check.service";
+import WorkspaceAbilityFactory from "../../casl/abilities/workspace-ability.factory";
+import {
+  WorkspaceCaslAction,
+  WorkspaceCaslSubject,
+} from "../../casl/interfaces/workspace-ability.type";
+import { CheckHostnameDto } from "../dto/check-hostname.dto";
 import {
   AcceptInviteDto,
   InvitationIdDto,
   InviteUserDto,
   RevokeInviteDto,
-} from '../dto/invitation.dto';
-import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { OAuthScope } from '../../../common/decorators/oauth-scope.decorator';
-import { User, Workspace } from '@docmost/db/types/entity.types';
-import WorkspaceAbilityFactory from '../../casl/abilities/workspace-ability.factory';
-import {
-  WorkspaceCaslAction,
-  WorkspaceCaslSubject,
-} from '../../casl/interfaces/workspace-ability.type';
-import { FastifyReply } from 'fastify';
-import { EnvironmentService } from '../../../integrations/environment/environment.service';
-import { LicenseCheckService } from '../../../integrations/environment/license-check.service';
-import { CheckHostnameDto } from '../dto/check-hostname.dto';
-import { RemoveWorkspaceUserDto } from '../dto/remove-workspace-user.dto';
-import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
+} from "../dto/invitation.dto";
+import { RemoveWorkspaceUserDto } from "../dto/remove-workspace-user.dto";
+import { UpdateWorkspaceDto } from "../dto/update-workspace.dto";
+import { UpdateWorkspaceUserRoleDto } from "../dto/update-workspace-user-role.dto";
+import { WorkspaceService } from "../services/workspace.service";
+import { WorkspaceInvitationService } from "../services/workspace-invitation.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('workspace')
+@Controller("workspace")
 export class WorkspaceController {
   constructor(
     private readonly workspaceService: WorkspaceService,
@@ -47,7 +47,7 @@ export class WorkspaceController {
     private readonly workspaceAbility: WorkspaceAbilityFactory,
     private readonly workspaceRepo: WorkspaceRepo,
     private environmentService: EnvironmentService,
-    private licenseCheckService: LicenseCheckService,
+    private licenseCheckService: LicenseCheckService
   ) {}
 
   @Public()
@@ -76,18 +76,18 @@ export class WorkspaceController {
 
     return {
       cloud: this.environmentService.isCloud(),
-      tier: this.licenseCheckService.resolveTier(licenseKey, plan),
       features: this.licenseCheckService.resolveFeatures(licenseKey, plan),
+      tier: this.licenseCheckService.resolveTier(licenseKey, plan),
     };
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('update')
+  @Post("update")
   async updateWorkspace(
     @Res({ passthrough: true }) res: FastifyReply,
     @Body() dto: UpdateWorkspaceDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -98,7 +98,7 @@ export class WorkspaceController {
 
     const updatedWorkspace = await this.workspaceService.update(
       workspace.id,
-      dto,
+      dto
     );
 
     if (
@@ -107,20 +107,20 @@ export class WorkspaceController {
       workspace.hostname !== updatedWorkspace.hostname
     ) {
       // log user out of old hostname
-      res.clearCookie('authToken');
+      res.clearCookie("authToken");
     }
 
     return updatedWorkspace;
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members')
-  @OAuthScope('read')
+  @Post("members")
+  @OAuthScope("read")
   async getWorkspaceMembers(
     @Body()
     pagination: PaginationOptions,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (ability.cannot(WorkspaceCaslAction.Read, WorkspaceCaslSubject.Member)) {
@@ -131,11 +131,11 @@ export class WorkspaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members/deactivate')
+  @Post("members/deactivate")
   async deactivateWorkspaceMember(
     @Body() dto: RemoveWorkspaceUserDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -147,11 +147,11 @@ export class WorkspaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members/activate')
+  @Post("members/activate")
   async activateWorkspaceMember(
     @Body() dto: RemoveWorkspaceUserDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -163,11 +163,11 @@ export class WorkspaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members/delete')
+  @Post("members/delete")
   async deleteWorkspaceMember(
     @Body() dto: RemoveWorkspaceUserDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -179,11 +179,11 @@ export class WorkspaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members/change-role')
+  @Post("members/change-role")
   async updateWorkspaceMemberRole(
     @Body() workspaceUserRoleDto: UpdateWorkspaceUserRoleDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -195,17 +195,17 @@ export class WorkspaceController {
     return this.workspaceService.updateWorkspaceUserRole(
       user,
       workspaceUserRoleDto,
-      workspace.id,
+      workspace.id
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('invites')
+  @Post("invites")
   async getInvitations(
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
     @Body()
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (ability.cannot(WorkspaceCaslAction.Read, WorkspaceCaslSubject.Member)) {
@@ -214,29 +214,29 @@ export class WorkspaceController {
 
     return this.workspaceInvitationService.getInvitations(
       workspace.id,
-      pagination,
+      pagination
     );
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('invites/info')
+  @Post("invites/info")
   async getInvitationById(
     @Body() dto: InvitationIdDto,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     return this.workspaceInvitationService.getInvitationById(
       dto.invitationId,
-      workspace,
+      workspace
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('invites/create')
+  @Post("invites/create")
   async inviteUser(
     @Body() inviteUserDto: InviteUserDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -248,16 +248,16 @@ export class WorkspaceController {
     return this.workspaceInvitationService.createInvitation(
       inviteUserDto,
       workspace,
-      user,
+      user
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('invites/resend')
+  @Post("invites/resend")
   async resendInvite(
     @Body() revokeInviteDto: RevokeInviteDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -268,16 +268,16 @@ export class WorkspaceController {
 
     return this.workspaceInvitationService.resendInvitation(
       revokeInviteDto.invitationId,
-      workspace,
+      workspace
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('invites/revoke')
+  @Post("invites/revoke")
   async revokeInvite(
     @Body() revokeInviteDto: RevokeInviteDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -288,21 +288,21 @@ export class WorkspaceController {
 
     return this.workspaceInvitationService.revokeInvitation(
       revokeInviteDto.invitationId,
-      workspace.id,
+      workspace.id
     );
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('invites/accept')
+  @Post("invites/accept")
   async acceptInvite(
     @Body() acceptInviteDto: AcceptInviteDto,
     @AuthWorkspace() workspace: Workspace,
-    @Res({ passthrough: true }) res: FastifyReply,
+    @Res({ passthrough: true }) res: FastifyReply
   ) {
     const result = await this.workspaceInvitationService.acceptInvitation(
       acceptInviteDto,
-      workspace,
+      workspace
     );
 
     if (result.requiresLogin) {
@@ -311,10 +311,10 @@ export class WorkspaceController {
       };
     }
 
-    res.setCookie('authToken', result.authToken, {
-      httpOnly: true,
-      path: '/',
+    res.setCookie("authToken", result.authToken, {
       expires: this.environmentService.getCookieExpiresIn(),
+      httpOnly: true,
+      path: "/",
       secure: this.environmentService.isHttps(),
     });
 
@@ -331,11 +331,11 @@ export class WorkspaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('invites/link')
+  @Post("invites/link")
   async getInviteLink(
     @Body() inviteDto: InvitationIdDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     if (this.environmentService.isCloud()) {
       throw new ForbiddenException();
@@ -350,7 +350,7 @@ export class WorkspaceController {
     const inviteLink =
       await this.workspaceInvitationService.getInvitationLinkById(
         inviteDto.invitationId,
-        workspace,
+        workspace
       );
 
     return { inviteLink };

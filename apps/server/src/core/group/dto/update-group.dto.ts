@@ -1,6 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateGroupDto } from './create-group.dto';
-import { IsNotEmpty, IsUUID } from 'class-validator';
+import { PartialType } from "@nestjs/mapped-types";
+import { IsNotEmpty, IsUUID } from "class-validator";
+import { CreateGroupDto } from "./create-group.dto";
 
 export class UpdateGroupDto extends PartialType(CreateGroupDto) {
   @IsNotEmpty()

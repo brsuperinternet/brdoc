@@ -15,7 +15,7 @@ declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     transclusionSource: {
       insertTransclusionSource: (
-        attributes?: TransclusionSourceAttributes,
+        attributes?: TransclusionSourceAttributes
       ) => ReturnType;
       toggleTransclusionSource: () => ReturnType;
       unsyncTransclusionSource: () => ReturnType;
@@ -24,46 +24,14 @@ declare module "@tiptap/core" {
 }
 
 export const TransclusionSource = Node.create<TransclusionSourceOptions>({
-  name: "transclusionSource",
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-    };
-  },
-
-  group: "block",
-  // Schema-enforced allow-list. Excludes `transclusionSource` (no nesting)
-  content: TRANSCLUSION_SOURCE_CONTENT_EXPRESSION,
-  defining: true,
-  isolating: true,
-
   addAttributes() {
     return {
       id: {
         default: null,
         parseHTML: (el) => el.getAttribute("data-id"),
-        renderHTML: (attrs) =>
-          attrs.id ? { "data-id": attrs.id } : {},
+        renderHTML: (attrs) => (attrs.id ? { "data-id": attrs.id } : {}),
       },
     };
-  },
-
-  parseHTML() {
-    return [{ tag: `div[data-type="${this.name}"]` }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "div",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
-      0,
-    ];
   },
 
   addCommands() {
@@ -73,13 +41,15 @@ export const TransclusionSource = Node.create<TransclusionSourceOptions>({
         ({ commands, state, chain }) => {
           const { $from } = state.selection;
           for (let depth = $from.depth; depth > 0; depth -= 1) {
-            if ($from.node(depth).type.name === this.name) return false;
+            if ($from.node(depth).type.name === this.name) {
+              return false;
+            }
           }
 
           const node = {
-            type: this.name,
             attrs: attributes ?? {},
             content: [{ type: "paragraph" }],
+            type: this.name,
           };
 
           const parent = $from.parent;
@@ -90,7 +60,7 @@ export const TransclusionSource = Node.create<TransclusionSourceOptions>({
             return chain()
               .insertContentAt(
                 { from: $from.before(), to: $from.after() },
-                node,
+                node
               )
               .run();
           }
@@ -110,7 +80,9 @@ export const TransclusionSource = Node.create<TransclusionSourceOptions>({
           while (depth > 0 && $from.node(depth).type.name !== this.name) {
             depth -= 1;
           }
-          if (depth === 0) return false;
+          if (depth === 0) {
+            return false;
+          }
 
           const node = $from.node(depth);
           const start = $from.before(depth);
@@ -126,9 +98,41 @@ export const TransclusionSource = Node.create<TransclusionSourceOptions>({
   },
 
   addNodeView() {
-    if (!this.options.view) return null;
+    if (!this.options.view) {
+      return null;
+    }
     // Force the react node view to render immediately using flush sync
     this.editor.isInitialized = true;
     return ReactNodeViewRenderer(this.options.view);
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      view: null,
+    };
+  },
+  // Schema-enforced allow-list. Excludes `transclusionSource` (no nesting)
+  content: TRANSCLUSION_SOURCE_CONTENT_EXPRESSION,
+  defining: true,
+
+  group: "block",
+  isolating: true,
+  name: "transclusionSource",
+
+  parseHTML() {
+    return [{ tag: `div[data-type="${this.name}"]` }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(
+        { "data-type": this.name },
+        this.options.HTMLAttributes,
+        HTMLAttributes
+      ),
+      0,
+    ];
   },
 });

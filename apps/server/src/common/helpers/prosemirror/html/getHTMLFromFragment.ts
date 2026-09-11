@@ -1,6 +1,6 @@
-import type { Node, Schema } from '@tiptap/pm/model';
-import { DOMSerializer } from '@tiptap/pm/model';
-import { Window } from 'happy-dom';
+import type { Node, Schema } from "@tiptap/pm/model";
+import { DOMSerializer } from "@tiptap/pm/model";
+import { Window } from "happy-dom";
 
 /**
  * Returns the HTML string representation of a given document node.
@@ -18,15 +18,15 @@ import { Window } from 'happy-dom';
 export function getHTMLFromFragment(
   doc: Node,
   schema: Schema,
-  options?: { document?: Document },
+  options?: { document?: Document }
 ): string {
   if (options?.document) {
-    const wrap = options.document.createElement('div');
+    const wrap = options.document.createElement("div");
 
     DOMSerializer.fromSchema(schema).serializeFragment(
       doc.content,
       { document: options.document },
-      wrap,
+      wrap
     );
     return wrap.innerHTML;
   }
@@ -39,7 +39,7 @@ export function getHTMLFromFragment(
       doc.content,
       {
         document: localWindow.document as unknown as Document,
-      },
+      }
     );
 
     const serializer = new localWindow.XMLSerializer();

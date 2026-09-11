@@ -15,27 +15,13 @@ declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     transclusionReference: {
       insertTransclusionReference: (
-        attributes: TransclusionReferenceAttributes,
+        attributes: TransclusionReferenceAttributes
       ) => ReturnType;
     };
   }
 }
 
 export const TransclusionReference = Node.create<TransclusionReferenceOptions>({
-  name: "transclusionReference",
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-    };
-  },
-
-  group: "block",
-  atom: true,
-  selectable: true,
-  draggable: false,
-
   addAttributes() {
     return {
       sourcePageId: {
@@ -57,6 +43,38 @@ export const TransclusionReference = Node.create<TransclusionReferenceOptions>({
     };
   },
 
+  addCommands() {
+    return {
+      insertTransclusionReference:
+        (attributes) =>
+        ({ commands }) =>
+          commands.insertContent({
+            attrs: attributes,
+            type: this.name,
+          }),
+    };
+  },
+
+  addNodeView() {
+    if (!this.options.view) {
+      return null;
+    }
+    this.editor.isInitialized = true;
+    return ReactNodeViewRenderer(this.options.view);
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      view: null,
+    };
+  },
+  atom: true,
+  draggable: false,
+
+  group: "block",
+  name: "transclusionReference",
+
   parseHTML() {
     return [{ tag: `div[data-type="${this.name}"]` }];
   },
@@ -67,26 +85,9 @@ export const TransclusionReference = Node.create<TransclusionReferenceOptions>({
       mergeAttributes(
         { "data-type": this.name },
         this.options.HTMLAttributes,
-        HTMLAttributes,
+        HTMLAttributes
       ),
     ];
   },
-
-  addCommands() {
-    return {
-      insertTransclusionReference:
-        (attributes) =>
-        ({ commands }) =>
-          commands.insertContent({
-            type: this.name,
-            attrs: attributes,
-          }),
-    };
-  },
-
-  addNodeView() {
-    if (!this.options.view) return null;
-    this.editor.isInitialized = true;
-    return ReactNodeViewRenderer(this.options.view);
-  },
+  selectable: true,
 });

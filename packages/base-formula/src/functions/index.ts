@@ -3,5 +3,6 @@ import "./math";
 import "./string";
 import "./date";
 import "./coercion";
-export { registry, register } from "./registry";
+
 export type { FormulaFn } from "./registry";
+export { register, registry } from "./registry";

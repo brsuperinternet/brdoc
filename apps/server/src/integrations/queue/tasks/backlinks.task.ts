@@ -1,23 +1,23 @@
-import { Logger } from '@nestjs/common';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { BacklinkRepo } from '@docmost/db/repos/backlink/backlink.repo';
-import { IPageBacklinkJob } from '../constants/queue.interface';
-import { executeTx } from '@docmost/db/utils';
+import { BacklinkRepo } from "@docmost/db/repos/backlink/backlink.repo";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { executeTx } from "@docmost/db/utils";
+import { Logger } from "@nestjs/common";
+import { IPageBacklinkJob } from "../constants/queue.interface";
 
-const logger = new Logger('BacklinksTask');
+const logger = new Logger("BacklinksTask");
 
 export async function processBacklinks(
   db: KyselyDB,
   backlinkRepo: BacklinkRepo,
-  data: IPageBacklinkJob,
+  data: IPageBacklinkJob
 ): Promise<void> {
   const { pageId, mentions, workspaceId, internalLinkSlugIds = [] } = data;
 
   await executeTx(db, async (trx) => {
     const existingBacklinks = await trx
-      .selectFrom('backlinks')
-      .select('targetPageId')
-      .where('sourcePageId', '=', pageId)
+      .selectFrom("backlinks")
+      .select("targetPageId")
+      .where("sourcePageId", "=", pageId)
       .execute();
 
     const mentionTargetPageIds = mentions
@@ -27,10 +27,10 @@ export async function processBacklinks(
     let resolvedLinkPageIds: string[] = [];
     if (internalLinkSlugIds.length > 0) {
       const resolvedPages = await trx
-        .selectFrom('pages')
-        .select('id')
-        .where('slugId', 'in', internalLinkSlugIds)
-        .where('workspaceId', '=', workspaceId)
+        .selectFrom("pages")
+        .select("id")
+        .where("slugId", "in", internalLinkSlugIds)
+        .where("workspaceId", "=", workspaceId)
         .execute();
       resolvedLinkPageIds = resolvedPages
         .map((p) => p.id)
@@ -46,51 +46,49 @@ export async function processBacklinks(
     }
 
     const existingTargetPageIds = existingBacklinks.map(
-      (backlink) => backlink.targetPageId,
+      (backlink) => backlink.targetPageId
     );
 
     let validTargetPages = [];
     if (allTargetPageIds.length > 0) {
       validTargetPages = await trx
-        .selectFrom('pages')
-        .select('id')
-        .where('id', 'in', allTargetPageIds)
-        .where('workspaceId', '=', workspaceId)
+        .selectFrom("pages")
+        .select("id")
+        .where("id", "in", allTargetPageIds)
+        .where("workspaceId", "=", workspaceId)
         .execute();
     }
 
     const validTargetPageIds = validTargetPages.map((page) => page.id);
 
     const backlinksToAdd = validTargetPageIds.filter(
-      (id) => !existingTargetPageIds.includes(id),
+      (id) => !existingTargetPageIds.includes(id)
     );
 
     const backlinksToRemove = existingTargetPageIds.filter(
-      (existingId) => !validTargetPageIds.includes(existingId),
+      (existingId) => !validTargetPageIds.includes(existingId)
     );
 
     if (backlinksToAdd.length > 0) {
       const newBacklinks = backlinksToAdd.map((targetPageId) => ({
         sourcePageId: pageId,
-        targetPageId: targetPageId,
-        workspaceId: workspaceId,
+        targetPageId,
+        workspaceId,
       }));
 
       await backlinkRepo.insertBacklink(newBacklinks, trx);
-      logger.debug(
-        `Added ${newBacklinks.length} new backlinks to ${pageId}`,
-      );
+      logger.debug(`Added ${newBacklinks.length} new backlinks to ${pageId}`);
     }
 
     if (backlinksToRemove.length > 0) {
       await db
-        .deleteFrom('backlinks')
-        .where('sourcePageId', '=', pageId)
-        .where('targetPageId', 'in', backlinksToRemove)
+        .deleteFrom("backlinks")
+        .where("sourcePageId", "=", pageId)
+        .where("targetPageId", "in", backlinksToRemove)
         .execute();
 
       logger.debug(
-        `Removed ${backlinksToRemove.length} outdated backlinks from ${pageId}.`,
+        `Removed ${backlinksToRemove.length} outdated backlinks from ${pageId}.`
       );
     }
   });

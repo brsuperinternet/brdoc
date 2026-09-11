@@ -1,4 +1,4 @@
-import { Node, defaultBlockAt, mergeAttributes } from "@tiptap/core";
+import { defaultBlockAt, mergeAttributes, Node } from "@tiptap/core";
 import { Selection } from "@tiptap/pm/state";
 
 export interface DetailsSummaryOptions {
@@ -6,35 +6,6 @@ export interface DetailsSummaryOptions {
 }
 
 export const DetailsSummary = Node.create<DetailsSummaryOptions>({
-  name: "detailsSummary",
-  group: "block",
-  content: "inline*",
-  defining: true,
-  isolating: true,
-  selectable: false,
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-  parseHTML() {
-    return [
-      {
-        tag: "summary",
-      },
-    ];
-  },
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "summary",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
-      0,
-    ];
-  },
   addKeyboardShortcuts() {
     return {
       Backspace: ({ editor }) => {
@@ -93,4 +64,33 @@ export const DetailsSummary = Node.create<DetailsSummaryOptions>({
       },
     };
   },
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+    };
+  },
+  content: "inline*",
+  defining: true,
+  group: "block",
+  isolating: true,
+  name: "detailsSummary",
+  parseHTML() {
+    return [
+      {
+        tag: "summary",
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "summary",
+      mergeAttributes(
+        { "data-type": this.name },
+        this.options.HTMLAttributes,
+        HTMLAttributes
+      ),
+      0,
+    ];
+  },
+  selectable: false,
 });

@@ -1,3 +1,19 @@
+import { isPageEmbeddingsTableExists } from "@docmost/db/helpers/helpers";
+import { CursorPaginationResult } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { FavoriteRepo } from "@docmost/db/repos/favorite/favorite.repo";
+import { GroupRepo } from "@docmost/db/repos/group/group.repo";
+import { GroupUserRepo } from "@docmost/db/repos/group/group-user.repo";
+import { PublicSpaceRepo } from "@docmost/db/repos/public-space/public-space.repo";
+import { UserSessionRepo } from "@docmost/db/repos/session/user-session.repo";
+import { ShareRepo } from "@docmost/db/repos/share/share.repo";
+import { UserRepo } from "@docmost/db/repos/user/user.repo";
+import { WatcherRepo } from "@docmost/db/repos/watcher/watcher.repo";
+import { WorkspaceRepo } from "@docmost/db/repos/workspace/workspace.repo";
+import { User } from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { executeTx } from "@docmost/db/utils";
+import { InjectQueue } from "@nestjs/bullmq";
 import {
   BadRequestException,
   ForbiddenException,
@@ -5,51 +21,35 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-} from '@nestjs/common';
-import { LicenseCheckService } from '../../../integrations/environment/license-check.service';
-import { UserSessionRepo } from '@docmost/db/repos/session/user-session.repo';
-import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
-import { UpdateWorkspaceDto } from '../dto/update-workspace.dto';
-import { SpaceService } from '../../space/services/space.service';
-import { CreateSpaceDto } from '../../space/dto/create-space.dto';
-import { SpaceRole, UserRole } from '../../../common/helpers/types/permission';
-import { SpaceMemberService } from '../../space/services/space-member.service';
-import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { executeTx } from '@docmost/db/utils';
-import { InjectKysely } from 'nestjs-kysely';
-import { Feature } from '../../../common/features';
-import { User } from '@docmost/db/types/entity.types';
-import { GroupUserRepo } from '@docmost/db/repos/group/group-user.repo';
-import { GroupRepo } from '@docmost/db/repos/group/group.repo';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { UpdateWorkspaceUserRoleDto } from '../dto/update-workspace-user-role.dto';
-import { UserRepo } from '@docmost/db/repos/user/user.repo';
-import { EnvironmentService } from '../../../integrations/environment/environment.service';
-import { DomainService } from '../../../integrations/environment/domain.service';
-import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { addDays } from 'date-fns';
-import { DISALLOWED_HOSTNAMES, WorkspaceStatus } from '../workspace.constants';
-import { isAdminActingOnOwner } from '../workspace.util';
-import { v4 } from 'uuid';
-import { InjectQueue } from '@nestjs/bullmq';
-import { QueueJob, QueueName } from '../../../integrations/queue/constants';
-import { Queue } from 'bullmq';
+} from "@nestjs/common";
+import { Queue } from "bullmq";
+import { addDays } from "date-fns";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { InjectKysely } from "nestjs-kysely";
+import { v4 } from "uuid";
+import { AuditEvent, AuditResource } from "../../../common/events/audit-events";
+import { Feature } from "../../../common/features";
 import {
-  generateRandomSuffixNumbers,
   diffAuditTrackedFields,
-} from '../../../common/helpers';
-import { isPageEmbeddingsTableExists } from '@docmost/db/helpers/helpers';
-import { CursorPaginationResult } from '@docmost/db/pagination/cursor-pagination';
-import { ShareRepo } from '@docmost/db/repos/share/share.repo';
-import { PublicSpaceRepo } from '@docmost/db/repos/public-space/public-space.repo';
-import { WatcherRepo } from '@docmost/db/repos/watcher/watcher.repo';
-import { FavoriteRepo } from '@docmost/db/repos/favorite/favorite.repo';
-import { AuditEvent, AuditResource } from '../../../common/events/audit-events';
+  generateRandomSuffixNumbers,
+} from "../../../common/helpers";
+import { SpaceRole, UserRole } from "../../../common/helpers/types/permission";
 import {
   AUDIT_SERVICE,
   IAuditService,
-} from '../../../integrations/audit/audit.service';
+} from "../../../integrations/audit/audit.service";
+import { DomainService } from "../../../integrations/environment/domain.service";
+import { EnvironmentService } from "../../../integrations/environment/environment.service";
+import { LicenseCheckService } from "../../../integrations/environment/license-check.service";
+import { QueueJob, QueueName } from "../../../integrations/queue/constants";
+import { CreateSpaceDto } from "../../space/dto/create-space.dto";
+import { SpaceService } from "../../space/services/space.service";
+import { SpaceMemberService } from "../../space/services/space-member.service";
+import { CreateWorkspaceDto } from "../dto/create-workspace.dto";
+import { UpdateWorkspaceDto } from "../dto/update-workspace.dto";
+import { UpdateWorkspaceUserRoleDto } from "../dto/update-workspace-user-role.dto";
+import { DISALLOWED_HOSTNAMES, WorkspaceStatus } from "../workspace.constants";
+import { isAdminActingOnOwner } from "../workspace.util";
 
 @Injectable()
 export class WorkspaceService {
@@ -84,7 +84,7 @@ export class WorkspaceService {
   async getWorkspaceInfo(workspaceId: string) {
     const workspace = await this.workspaceRepo.findById(workspaceId);
     if (!workspace) {
-      throw new NotFoundException('Workspace not found');
+      throw new NotFoundException("Workspace not found");
     }
 
     return workspace;
@@ -92,26 +92,34 @@ export class WorkspaceService {
 
   async getWorkspacePublicData(workspaceId: string) {
     const workspace = await this.db
-      .selectFrom('workspaces')
-      .select(['id', 'name', 'logo', 'hostname', 'enforceSso', 'licenseKey', 'plan'])
+      .selectFrom("workspaces")
+      .select([
+        "id",
+        "name",
+        "logo",
+        "hostname",
+        "enforceSso",
+        "licenseKey",
+        "plan",
+      ])
       .select((eb) =>
         jsonArrayFrom(
           eb
-            .selectFrom('authProviders')
+            .selectFrom("authProviders")
             .select([
-              'authProviders.id',
-              'authProviders.name',
-              'authProviders.type',
+              "authProviders.id",
+              "authProviders.name",
+              "authProviders.type",
             ])
-            .where('authProviders.isEnabled', '=', true)
-            .where('workspaceId', '=', workspaceId),
-        ).as('authProviders'),
+            .where("authProviders.isEnabled", "=", true)
+            .where("workspaceId", "=", workspaceId)
+        ).as("authProviders")
       )
-      .where('id', '=', workspaceId)
+      .where("id", "=", workspaceId)
       .executeTakeFirst();
 
     if (!workspace) {
-      throw new NotFoundException('Workspace not found');
+      throw new NotFoundException("Workspace not found");
     }
 
     const { licenseKey, plan, ...rest } = workspace;
@@ -122,7 +130,7 @@ export class WorkspaceService {
   async create(
     user: User,
     createWorkspaceDto: CreateWorkspaceDto,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     let trialEndAt = undefined;
 
@@ -138,69 +146,69 @@ export class WorkspaceService {
         if (this.environmentService.isCloud()) {
           // generate unique hostname
           hostname = await this.generateHostname(
-            createWorkspaceDto.hostname ?? createWorkspaceDto.name,
+            createWorkspaceDto.hostname ?? createWorkspaceDto.name
           );
           trialEndAt = addDays(
             new Date(),
-            this.environmentService.getBillingTrialDays(),
+            this.environmentService.getBillingTrialDays()
           );
           status = WorkspaceStatus.Active;
-          plan = 'standard';
+          plan = "standard";
           billingEmail = user.email;
-          settings = { ai: { generative: true, chat: true } };
+          settings = { ai: { chat: true, generative: true } };
         }
 
         // create workspace
         const workspace = await this.workspaceRepo.insertWorkspace(
           {
-            name: createWorkspaceDto.name,
+            billingEmail,
             description: createWorkspaceDto.description,
             hostname,
+            name: createWorkspaceDto.name,
+            plan,
+            settings,
             status,
             trialEndAt,
-            plan,
-            billingEmail,
-            settings,
           },
-          trx,
+          trx
         );
 
         // create default group
         const group = await this.groupRepo.createDefaultGroup(workspace.id, {
+          trx,
           userId: user.id,
-          trx: trx,
         });
 
         // add user to workspace
         await trx
-          .updateTable('users')
+          .updateTable("users")
           .set({
-            workspaceId: workspace.id,
             role: UserRole.OWNER,
+            workspaceId: workspace.id,
           })
-          .where('users.id', '=', user.id)
+          .where("users.id", "=", user.id)
           .execute();
 
         // add user to default group created above
         await this.groupUserRepo.insertGroupUser(
           {
-            userId: user.id,
             groupId: group.id,
+            userId: user.id,
           },
-          trx,
+          trx
         );
 
         // create default space
         const spaceInfo: CreateSpaceDto = {
-          name: 'General',
-          slug: 'general',
+          name: "General",
+          slug: "general",
         };
 
         const createdSpace = await this.spaceService.create(
           user.id,
           workspace.id,
           spaceInfo,
-          trx,
+          trx
         );
 
         // and add user to space as owner
@@ -209,7 +217,7 @@ export class WorkspaceService {
           createdSpace.id,
           SpaceRole.ADMIN,
           workspace.id,
-          trx,
+          trx
         );
 
         // add default group to space as writer
@@ -218,7 +226,7 @@ export class WorkspaceService {
           createdSpace.id,
           SpaceRole.WRITER,
           workspace.id,
-          trx,
+          trx
         );
 
         // update default spaceId
@@ -228,12 +236,12 @@ export class WorkspaceService {
             defaultSpaceId: createdSpace.id,
           },
           workspace.id,
-          trx,
+          trx
         );
 
         return workspace;
       },
-      trx,
+      trx
     );
 
     if (this.environmentService.isCloud() && trialEndAt) {
@@ -243,13 +251,13 @@ export class WorkspaceService {
         await this.billingQueue.add(
           QueueJob.TRIAL_ENDED,
           { workspaceId: createdWorkspace.id },
-          { delay },
+          { delay }
         );
 
         await this.billingQueue.add(
           QueueJob.WELCOME_EMAIL,
           { userId: user.id },
-          { delay: 30 * 60 * 1000 }, // 30m
+          { delay: 30 * 60 * 1000 } // 30m
         );
       } catch (err) {
         this.logger.error(err);
@@ -263,46 +271,46 @@ export class WorkspaceService {
     userId: string,
     workspaceId: string,
     assignedRole?: UserRole,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     return await executeTx(
       this.db,
       async (trx) => {
         const workspace = await trx
-          .selectFrom('workspaces')
-          .select(['id', 'defaultRole'])
-          .where('workspaces.id', '=', workspaceId)
+          .selectFrom("workspaces")
+          .select(["id", "defaultRole"])
+          .where("workspaces.id", "=", workspaceId)
           .executeTakeFirst();
 
         if (!workspace) {
-          throw new BadRequestException('Workspace not found');
+          throw new BadRequestException("Workspace not found");
         }
 
         await trx
-          .updateTable('users')
+          .updateTable("users")
           .set({
             role: assignedRole ?? workspace.defaultRole,
             workspaceId: workspace.id,
           })
-          .where('id', '=', userId)
+          .where("id", "=", userId)
           .execute();
       },
-      trx,
+      trx
     );
   }
 
   async update(workspaceId: string, updateWorkspaceDto: UpdateWorkspaceDto) {
     if (updateWorkspaceDto.enforceSso) {
       const sso = await this.db
-        .selectFrom('authProviders')
-        .select(['id'])
-        .where('isEnabled', '=', true)
-        .where('workspaceId', '=', workspaceId)
+        .selectFrom("authProviders")
+        .select(["id"])
+        .where("isEnabled", "=", true)
+        .where("workspaceId", "=", workspaceId)
         .execute();
 
       if (sso && sso?.length === 0) {
         throw new BadRequestException(
-          'There must be at least one active SSO provider to enforce SSO.',
+          "There must be at least one active SSO provider to enforce SSO."
         );
       }
     }
@@ -319,10 +327,10 @@ export class WorkspaceService {
     if (updateWorkspaceDto.hostname) {
       const hostname = updateWorkspaceDto.hostname;
       if (DISALLOWED_HOSTNAMES.includes(hostname)) {
-        throw new BadRequestException('Hostname already exists.');
+        throw new BadRequestException("Hostname already exists.");
       }
       if (await this.workspaceRepo.hostnameExists(hostname)) {
-        throw new BadRequestException('Hostname already exists.');
+        throw new BadRequestException("Hostname already exists.");
       }
     }
 
@@ -330,97 +338,96 @@ export class WorkspaceService {
     const after: Record<string, any> = {};
 
     if (
-      typeof updateWorkspaceDto.disablePublicSharing !== 'undefined' ||
-      typeof updateWorkspaceDto.trashRetentionDays !== 'undefined' ||
-      typeof updateWorkspaceDto.mcpEnabled !== 'undefined' ||
-      typeof updateWorkspaceDto.restrictApiToAdmins !== 'undefined' ||
-      typeof updateWorkspaceDto.allowMemberTemplates !== 'undefined' ||
-      typeof updateWorkspaceDto.isScimEnabled !== 'undefined' ||
-      typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined' ||
-      typeof updateWorkspaceDto.aiChatReadOnly !== 'undefined' ||
-      typeof updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly !== 'undefined' ||
-      typeof updateWorkspaceDto.enforceMcpOauth !== 'undefined'
+      typeof updateWorkspaceDto.disablePublicSharing !== "undefined" ||
+      typeof updateWorkspaceDto.trashRetentionDays !== "undefined" ||
+      typeof updateWorkspaceDto.mcpEnabled !== "undefined" ||
+      typeof updateWorkspaceDto.restrictApiToAdmins !== "undefined" ||
+      typeof updateWorkspaceDto.allowMemberTemplates !== "undefined" ||
+      typeof updateWorkspaceDto.isScimEnabled !== "undefined" ||
+      typeof updateWorkspaceDto.allowPersonalSpaces !== "undefined" ||
+      typeof updateWorkspaceDto.aiChatReadOnly !== "undefined" ||
+      typeof updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly !== "undefined" ||
+      typeof updateWorkspaceDto.enforceMcpOauth !== "undefined"
     ) {
       const ws = await this.db
-        .selectFrom('workspaces')
-        .select(['id', 'licenseKey', 'plan', 'trashRetentionDays'])
-        .where('id', '=', workspaceId)
+        .selectFrom("workspaces")
+        .select(["id", "licenseKey", "plan", "trashRetentionDays"])
+        .where("id", "=", workspaceId)
         .executeTakeFirst();
 
       if (!ws) {
-        throw new NotFoundException('Workspace not found');
-      }
-
-      if (typeof updateWorkspaceDto.mcpEnabled !== 'undefined') {
-        if (!this.licenseCheckService.hasFeature(ws.licenseKey, 'mcp', ws.plan)) {
-          throw new ForbiddenException(
-            'This feature requires a valid license',
-          );
-        }
-      }
-
-      if (typeof updateWorkspaceDto.isScimEnabled !== 'undefined') {
-        if (!this.licenseCheckService.hasFeature(ws.licenseKey, Feature.SCIM, ws.plan)) {
-          throw new ForbiddenException(
-            'This feature requires a valid license',
-          );
-        }
-      }
-
-      if (typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined') {
-        if (
-          !this.licenseCheckService.hasFeature(
-            ws.licenseKey,
-            Feature.PERSONAL_SPACES,
-            ws.plan,
-          )
-        ) {
-          throw new ForbiddenException('This feature requires a valid license');
-        }
+        throw new NotFoundException("Workspace not found");
       }
 
       if (
-        typeof updateWorkspaceDto.aiChatReadOnly !== 'undefined' ||
-        typeof updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly !== 'undefined'
+        typeof updateWorkspaceDto.mcpEnabled !== "undefined" &&
+        !this.licenseCheckService.hasFeature(ws.licenseKey, "mcp", ws.plan)
       ) {
-        if (
-          !this.licenseCheckService.hasFeature(
-            ws.licenseKey,
-            Feature.AI_CONTROLS,
-            ws.plan,
-          )
-        ) {
-          throw new ForbiddenException('This feature requires a valid license');
-        }
-      }
-
-      if (typeof updateWorkspaceDto.enforceMcpOauth !== 'undefined') {
-        if (
-          !this.licenseCheckService.hasFeature(
-            ws.licenseKey,
-            Feature.MCP_CONTROLS,
-            ws.plan,
-          )
-        ) {
-          throw new ForbiddenException('This feature requires a valid license');
-        }
+        throw new ForbiddenException("This feature requires a valid license");
       }
 
       if (
-        typeof updateWorkspaceDto.disablePublicSharing !== 'undefined' ||
-        typeof updateWorkspaceDto.trashRetentionDays !== 'undefined' ||
-        typeof updateWorkspaceDto.restrictApiToAdmins !== 'undefined' ||
-        typeof updateWorkspaceDto.allowMemberTemplates !== 'undefined'
+        typeof updateWorkspaceDto.isScimEnabled !== "undefined" &&
+        !this.licenseCheckService.hasFeature(
+          ws.licenseKey,
+          Feature.SCIM,
+          ws.plan
+        )
       ) {
-        if (!this.licenseCheckService.hasFeature(ws.licenseKey, Feature.SECURITY_SETTINGS, ws.plan)) {
-          throw new ForbiddenException(
-            'This feature requires a valid license',
-          );
-        }
+        throw new ForbiddenException("This feature requires a valid license");
       }
 
       if (
-        typeof updateWorkspaceDto.trashRetentionDays !== 'undefined' &&
+        typeof updateWorkspaceDto.allowPersonalSpaces !== "undefined" &&
+        !this.licenseCheckService.hasFeature(
+          ws.licenseKey,
+          Feature.PERSONAL_SPACES,
+          ws.plan
+        )
+      ) {
+        throw new ForbiddenException("This feature requires a valid license");
+      }
+
+      if (
+        (typeof updateWorkspaceDto.aiChatReadOnly !== "undefined" ||
+          typeof updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly !==
+            "undefined") &&
+        !this.licenseCheckService.hasFeature(
+          ws.licenseKey,
+          Feature.AI_CONTROLS,
+          ws.plan
+        )
+      ) {
+        throw new ForbiddenException("This feature requires a valid license");
+      }
+
+      if (
+        typeof updateWorkspaceDto.enforceMcpOauth !== "undefined" &&
+        !this.licenseCheckService.hasFeature(
+          ws.licenseKey,
+          Feature.MCP_CONTROLS,
+          ws.plan
+        )
+      ) {
+        throw new ForbiddenException("This feature requires a valid license");
+      }
+
+      if (
+        (typeof updateWorkspaceDto.disablePublicSharing !== "undefined" ||
+          typeof updateWorkspaceDto.trashRetentionDays !== "undefined" ||
+          typeof updateWorkspaceDto.restrictApiToAdmins !== "undefined" ||
+          typeof updateWorkspaceDto.allowMemberTemplates !== "undefined") &&
+        !this.licenseCheckService.hasFeature(
+          ws.licenseKey,
+          Feature.SECURITY_SETTINGS,
+          ws.plan
+        )
+      ) {
+        throw new ForbiddenException("This feature requires a valid license");
+      }
+
+      if (
+        typeof updateWorkspaceDto.trashRetentionDays !== "undefined" &&
         updateWorkspaceDto.trashRetentionDays !== ws.trashRetentionDays
       ) {
         before.trashRetentionDays = ws.trashRetentionDays;
@@ -430,12 +437,12 @@ export class WorkspaceService {
 
     if (
       updateWorkspaceDto.aiSearch &&
-      this.environmentService.getAiVectorDriver() !== 'turbopuffer'
+      this.environmentService.getAiVectorDriver() !== "turbopuffer"
     ) {
       const tableExists = await isPageEmbeddingsTableExists(this.db);
       if (!tableExists) {
         throw new BadRequestException(
-          'Failed to activate. Make sure pgvector postgres extension is installed.',
+          "Failed to activate. Make sure pgvector postgres extension is installed."
         );
       }
     }
@@ -447,7 +454,7 @@ export class WorkspaceService {
     >;
 
     await executeTx(this.db, async (trx) => {
-      if (typeof updateWorkspaceDto.restrictApiToAdmins !== 'undefined') {
+      if (typeof updateWorkspaceDto.restrictApiToAdmins !== "undefined") {
         const prev = settingsBefore?.api?.restrictToAdmins ?? false;
         if (prev !== updateWorkspaceDto.restrictApiToAdmins) {
           before.restrictApiToAdmins = prev;
@@ -455,13 +462,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateApiSettings(
           workspaceId,
-          'restrictToAdmins',
+          "restrictToAdmins",
           updateWorkspaceDto.restrictApiToAdmins,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.aiSearch !== 'undefined') {
+      if (typeof updateWorkspaceDto.aiSearch !== "undefined") {
         const prev = settingsBefore?.ai?.search ?? false;
         if (prev !== updateWorkspaceDto.aiSearch) {
           before.aiSearch = prev;
@@ -469,13 +476,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateAiSettings(
           workspaceId,
-          'search',
+          "search",
           updateWorkspaceDto.aiSearch,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.generativeAi !== 'undefined') {
+      if (typeof updateWorkspaceDto.generativeAi !== "undefined") {
         const prev = settingsBefore?.ai?.generative ?? false;
         if (prev !== updateWorkspaceDto.generativeAi) {
           before.generativeAi = prev;
@@ -483,13 +490,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateAiSettings(
           workspaceId,
-          'generative',
+          "generative",
           updateWorkspaceDto.generativeAi,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.disablePublicSharing !== 'undefined') {
+      if (typeof updateWorkspaceDto.disablePublicSharing !== "undefined") {
         const prev = settingsBefore?.sharing?.disabled ?? false;
         if (prev !== updateWorkspaceDto.disablePublicSharing) {
           before.disablePublicSharing = prev;
@@ -497,9 +504,9 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateSharingSettings(
           workspaceId,
-          'disabled',
+          "disabled",
           updateWorkspaceDto.disablePublicSharing,
-          trx,
+          trx
         );
         if (updateWorkspaceDto.disablePublicSharing) {
           await this.shareRepo.deleteByWorkspaceId(workspaceId, trx);
@@ -508,15 +515,15 @@ export class WorkspaceService {
 
       if (
         !this.environmentService.isBetaPublicSpaces() &&
-        (typeof updateWorkspaceDto.allowPublicSpaces !== 'undefined' ||
-          typeof updateWorkspaceDto.publicSpacesDirectory !== 'undefined')
+        (typeof updateWorkspaceDto.allowPublicSpaces !== "undefined" ||
+          typeof updateWorkspaceDto.publicSpacesDirectory !== "undefined")
       ) {
         throw new ForbiddenException(
-          'Public spaces are not enabled on this instance',
+          "Public spaces are not enabled on this instance"
         );
       }
 
-      if (typeof updateWorkspaceDto.allowPublicSpaces !== 'undefined') {
+      if (typeof updateWorkspaceDto.allowPublicSpaces !== "undefined") {
         const prev = settingsBefore?.publicSpaces?.enabled ?? false;
         if (prev !== updateWorkspaceDto.allowPublicSpaces) {
           before.allowPublicSpaces = prev;
@@ -524,30 +531,31 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updatePublicSpacesSettings(
           workspaceId,
-          'enabled',
+          "enabled",
           updateWorkspaceDto.allowPublicSpaces,
-          trx,
+          trx
         );
         if (!updateWorkspaceDto.allowPublicSpaces) {
           await this.publicSpaceRepo.disableByWorkspaceId(workspaceId, trx);
         }
       }
 
-      if (typeof updateWorkspaceDto.publicSpacesDirectory !== 'undefined') {
+      if (typeof updateWorkspaceDto.publicSpacesDirectory !== "undefined") {
         const prev = settingsBefore?.publicSpaces?.directory ?? false;
         if (prev !== updateWorkspaceDto.publicSpacesDirectory) {
           before.publicSpacesDirectory = prev;
-          after.publicSpacesDirectory = updateWorkspaceDto.publicSpacesDirectory;
+          after.publicSpacesDirectory =
+            updateWorkspaceDto.publicSpacesDirectory;
         }
         await this.workspaceRepo.updatePublicSpacesSettings(
           workspaceId,
-          'directory',
+          "directory",
           updateWorkspaceDto.publicSpacesDirectory,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.mcpEnabled !== 'undefined') {
+      if (typeof updateWorkspaceDto.mcpEnabled !== "undefined") {
         const prev = settingsBefore?.ai?.mcp ?? false;
         if (prev !== updateWorkspaceDto.mcpEnabled) {
           before.mcpEnabled = prev;
@@ -555,13 +563,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateAiSettings(
           workspaceId,
-          'mcp',
+          "mcp",
           updateWorkspaceDto.mcpEnabled,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.allowMemberTemplates !== 'undefined') {
+      if (typeof updateWorkspaceDto.allowMemberTemplates !== "undefined") {
         const prev = settingsBefore?.templates?.allowMemberTemplates ?? false;
         if (prev !== updateWorkspaceDto.allowMemberTemplates) {
           before.allowMemberTemplates = prev;
@@ -569,13 +577,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateTemplateSettings(
           workspaceId,
-          'allowMemberTemplates',
+          "allowMemberTemplates",
           updateWorkspaceDto.allowMemberTemplates,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.aiChat !== 'undefined') {
+      if (typeof updateWorkspaceDto.aiChat !== "undefined") {
         const prev = settingsBefore?.ai?.chat ?? false;
         if (prev !== updateWorkspaceDto.aiChat) {
           before.aiChat = prev;
@@ -583,13 +591,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateAiSettings(
           workspaceId,
-          'chat',
+          "chat",
           updateWorkspaceDto.aiChat,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.aiChatReadOnly !== 'undefined') {
+      if (typeof updateWorkspaceDto.aiChatReadOnly !== "undefined") {
         const prev = settingsBefore?.ai?.chatReadOnly ?? false;
         if (prev !== updateWorkspaceDto.aiChatReadOnly) {
           before.aiChatReadOnly = prev;
@@ -597,27 +605,30 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateAiSettings(
           workspaceId,
-          'chatReadOnly',
+          "chatReadOnly",
           updateWorkspaceDto.aiChatReadOnly,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly !== 'undefined') {
+      if (
+        typeof updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly !== "undefined"
+      ) {
         const prev = settingsBefore?.ai?.chatWorkspaceKnowledgeOnly ?? false;
         if (prev !== updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly) {
           before.aiChatWorkspaceKnowledgeOnly = prev;
-          after.aiChatWorkspaceKnowledgeOnly = updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly;
+          after.aiChatWorkspaceKnowledgeOnly =
+            updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly;
         }
         await this.workspaceRepo.updateAiSettings(
           workspaceId,
-          'chatWorkspaceKnowledgeOnly',
+          "chatWorkspaceKnowledgeOnly",
           updateWorkspaceDto.aiChatWorkspaceKnowledgeOnly,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.enforceMcpOauth !== 'undefined') {
+      if (typeof updateWorkspaceDto.enforceMcpOauth !== "undefined") {
         const prev = settingsBefore?.ai?.enforceMcpOauth ?? false;
         if (prev !== updateWorkspaceDto.enforceMcpOauth) {
           before.enforceMcpOauth = prev;
@@ -625,13 +636,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateAiSettings(
           workspaceId,
-          'enforceMcpOauth',
+          "enforceMcpOauth",
           updateWorkspaceDto.enforceMcpOauth,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined') {
+      if (typeof updateWorkspaceDto.allowPersonalSpaces !== "undefined") {
         const prev = settingsBefore?.spaces?.allowPersonal ?? false;
         if (prev !== updateWorkspaceDto.allowPersonalSpaces) {
           before.allowPersonalSpaces = prev;
@@ -639,13 +650,13 @@ export class WorkspaceService {
         }
         await this.workspaceRepo.updateSpaceSettings(
           workspaceId,
-          'allowPersonal',
+          "allowPersonal",
           updateWorkspaceDto.allowPersonalSpaces,
-          trx,
+          trx
         );
       }
 
-      if (typeof updateWorkspaceDto.defaultPageEditMode !== 'undefined') {
+      if (typeof updateWorkspaceDto.defaultPageEditMode !== "undefined") {
         const prev = settingsBefore?.defaultPageEditMode ?? null;
         const next = updateWorkspaceDto.defaultPageEditMode.toLowerCase();
         if (prev !== next) {
@@ -655,7 +666,7 @@ export class WorkspaceService {
         await this.workspaceRepo.updateDefaultPageEditMode(
           workspaceId,
           next,
-          trx,
+          trx
         );
       }
 
@@ -677,7 +688,7 @@ export class WorkspaceService {
       await this.workspaceRepo.updateWorkspace(
         updateWorkspaceDto,
         workspaceId,
-        trx,
+        trx
       );
     });
 
@@ -691,31 +702,31 @@ export class WorkspaceService {
         QueueJob.WORKSPACE_DELETE_EMBEDDINGS,
         { workspaceId },
         {
-          jobId: deleteJobId,
           delay: 24 * 60 * 60 * 1000,
+          jobId: deleteJobId,
           removeOnComplete: true,
           removeOnFail: true,
-        },
+        }
       );
     }
 
     const workspace = await this.workspaceRepo.findById(workspaceId, {
-      withMemberCount: true,
       withLicenseKey: true,
+      withMemberCount: true,
     });
 
     const columnChanges = diffAuditTrackedFields(
       [
-        'name',
-        'logo',
-        'enforceSso',
-        'enforceMfa',
-        'emailDomains',
-        'isScimEnabled',
+        "name",
+        "logo",
+        "enforceSso",
+        "enforceMfa",
+        "emailDomains",
+        "isScimEnabled",
       ],
       updateWorkspaceDto,
       workspaceBefore,
-      workspace,
+      workspace
     );
     if (columnChanges) {
       Object.assign(before, columnChanges.before);
@@ -724,10 +735,10 @@ export class WorkspaceService {
 
     if (Object.keys(after).length > 0) {
       this.auditService.log({
+        changes: { after, before },
         event: AuditEvent.WORKSPACE_UPDATED,
-        resourceType: AuditResource.WORKSPACE,
         resourceId: workspaceId,
-        changes: { before, after },
+        resourceType: AuditResource.WORKSPACE,
       });
     }
 
@@ -737,7 +748,7 @@ export class WorkspaceService {
 
   async getWorkspaceUsers(
     workspaceId: string,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ): Promise<CursorPaginationResult<User>> {
     return this.userRepo.getUsersPaginated(workspaceId, pagination);
   }
@@ -745,25 +756,25 @@ export class WorkspaceService {
   async updateWorkspaceUserRole(
     authUser: User,
     userRoleDto: UpdateWorkspaceUserRoleDto,
-    workspaceId: string,
+    workspaceId: string
   ) {
     const newRole = userRoleDto.role.toLowerCase();
     const result = await executeTx(this.db, async (trx) => {
       const workspace = await this.workspaceRepo.findById(workspaceId, {
-        withLock: true,
         trx,
+        withLock: true,
       });
       if (!workspace) {
-        throw new NotFoundException('Workspace not found');
+        throw new NotFoundException("Workspace not found");
       }
 
       const user = await this.userRepo.findById(
         userRoleDto.userId,
         workspaceId,
-        { trx },
+        { trx }
       );
       if (!user) {
-        throw new BadRequestException('Workspace member not found');
+        throw new BadRequestException("Workspace member not found");
       }
 
       if (
@@ -791,7 +802,7 @@ export class WorkspaceService {
         },
         user.id,
         workspaceId,
-        trx,
+        trx
       );
 
       return { changed: true, user };
@@ -804,25 +815,25 @@ export class WorkspaceService {
     const { user } = result;
 
     this.auditService.log({
-      event: AuditEvent.USER_ROLE_CHANGED,
-      resourceType: AuditResource.USER,
-      resourceId: user.id,
       changes: {
-        before: { role: user.role },
         after: { role: newRole },
+        before: { role: user.role },
       },
+      event: AuditEvent.USER_ROLE_CHANGED,
+      resourceId: user.id,
+      resourceType: AuditResource.USER,
     });
   }
 
   async generateHostname(
     name: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<string> {
     let subdomain = name
       .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '')
+      .replace(/[^a-z0-9-]/g, "")
       .substring(0, 20)
-      .replace(/^-+|-+$/g, ''); //remove any hyphen at the start or end
+      .replace(/^-+|-+$/g, ""); //remove any hyphen at the start or end
     // Ensure we leave room for a random suffix.
     const maxSuffixLength = 6;
 
@@ -839,7 +850,7 @@ export class WorkspaceService {
     while (true) {
       const exists = await this.workspaceRepo.hostnameExists(
         uniqueHostname,
-        trx,
+        trx
       );
       if (!exists) {
         break;
@@ -855,7 +866,7 @@ export class WorkspaceService {
   async checkHostname(hostname: string) {
     const exists = await this.workspaceRepo.hostnameExists(hostname);
     if (!exists) {
-      throw new NotFoundException('Hostname not found');
+      throw new NotFoundException("Hostname not found");
     }
     return { hostname: this.domainService.getUrl(hostname) };
   }
@@ -863,33 +874,33 @@ export class WorkspaceService {
   async deactivateUser(
     authUser: User,
     userId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
     const user = await executeTx(this.db, async (trx) => {
       const workspace = await this.workspaceRepo.findById(workspaceId, {
-        withLock: true,
         trx,
+        withLock: true,
       });
       if (!workspace) {
-        throw new NotFoundException('Workspace not found');
+        throw new NotFoundException("Workspace not found");
       }
 
       const user = await this.userRepo.findById(userId, workspaceId, { trx });
       if (!user || user.deletedAt) {
-        throw new BadRequestException('Workspace member not found');
+        throw new BadRequestException("Workspace member not found");
       }
 
       if (user.deactivatedAt) {
-        throw new BadRequestException('User is already deactivated');
+        throw new BadRequestException("User is already deactivated");
       }
 
       if (authUser.id === userId) {
-        throw new BadRequestException('You cannot deactivate yourself');
+        throw new BadRequestException("You cannot deactivate yourself");
       }
 
       if (isAdminActingOnOwner(authUser.role, user.role)) {
         throw new BadRequestException(
-          'You cannot deactivate a user with owner role',
+          "You cannot deactivate a user with owner role"
         );
       }
 
@@ -901,7 +912,7 @@ export class WorkspaceService {
         { deactivatedAt: new Date() },
         userId,
         workspaceId,
-        trx,
+        trx
       );
       await this.userSessionRepo.revokeByUserId(userId, workspaceId, trx);
 
@@ -909,86 +920,86 @@ export class WorkspaceService {
     });
 
     this.auditService.log({
-      event: AuditEvent.USER_DEACTIVATED,
-      resourceType: AuditResource.USER,
-      resourceId: user.id,
       changes: {
         before: {
-          name: user.name,
           email: user.email,
+          name: user.name,
           role: user.role,
         },
       },
+      event: AuditEvent.USER_DEACTIVATED,
+      resourceId: user.id,
+      resourceType: AuditResource.USER,
     });
   }
 
   async activateUser(
     authUser: User,
     userId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
     const user = await this.userRepo.findById(userId, workspaceId);
 
     if (!user || user.deletedAt) {
-      throw new BadRequestException('Workspace member not found');
+      throw new BadRequestException("Workspace member not found");
     }
 
     if (!user.deactivatedAt) {
-      throw new BadRequestException('User is not deactivated');
+      throw new BadRequestException("User is not deactivated");
     }
 
     if (isAdminActingOnOwner(authUser.role, user.role)) {
       throw new BadRequestException(
-        'You cannot activate a user with owner role',
+        "You cannot activate a user with owner role"
       );
     }
 
     await this.userRepo.updateUser(
       { deactivatedAt: null },
       userId,
-      workspaceId,
+      workspaceId
     );
 
     this.auditService.log({
-      event: AuditEvent.USER_ACTIVATED,
-      resourceType: AuditResource.USER,
-      resourceId: user.id,
       changes: {
         before: {
-          name: user.name,
           email: user.email,
+          name: user.name,
           role: user.role,
         },
       },
+      event: AuditEvent.USER_ACTIVATED,
+      resourceId: user.id,
+      resourceType: AuditResource.USER,
     });
   }
 
   async deleteUser(
     authUser: User,
     userId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
     const user = await executeTx(this.db, async (trx) => {
       const workspace = await this.workspaceRepo.findById(workspaceId, {
-        withLock: true,
         trx,
+        withLock: true,
       });
       if (!workspace) {
-        throw new NotFoundException('Workspace not found');
+        throw new NotFoundException("Workspace not found");
       }
 
       const user = await this.userRepo.findById(userId, workspaceId, { trx });
       if (!user || user.deletedAt) {
-        throw new BadRequestException('Workspace member not found');
+        throw new BadRequestException("Workspace member not found");
       }
 
       if (authUser.id === userId) {
-        throw new BadRequestException('You cannot delete yourself');
+        throw new BadRequestException("You cannot delete yourself");
       }
 
       if (isAdminActingOnOwner(authUser.role, user.role)) {
         throw new BadRequestException(
-          'You cannot delete a user with owner role',
+          "You cannot delete a user with owner role"
         );
       }
 
@@ -998,25 +1009,25 @@ export class WorkspaceService {
 
       await this.userRepo.updateUser(
         {
-          name: 'Deleted user',
-          email: v4() + '@deleted.docmost.com',
           avatarUrl: null,
-          settings: null,
           deletedAt: new Date(),
+          email: v4() + "@deleted.docmost.com",
+          name: "Deleted user",
+          settings: null,
         },
         userId,
         workspaceId,
-        trx,
+        trx
       );
 
-      await trx.deleteFrom('groupUsers').where('userId', '=', userId).execute();
+      await trx.deleteFrom("groupUsers").where("userId", "=", userId).execute();
       await trx
-        .deleteFrom('spaceMembers')
-        .where('userId', '=', userId)
+        .deleteFrom("spaceMembers")
+        .where("userId", "=", userId)
         .execute();
       await trx
-        .deleteFrom('authAccounts')
-        .where('userId', '=', userId)
+        .deleteFrom("authAccounts")
+        .where("userId", "=", userId)
         .execute();
 
       await this.watcherRepo.deleteByUserAndWorkspace(userId, workspaceId, {
@@ -1033,16 +1044,16 @@ export class WorkspaceService {
     });
 
     this.auditService.log({
-      event: AuditEvent.USER_DELETED,
-      resourceType: AuditResource.USER,
-      resourceId: user.id,
       changes: {
         before: {
-          name: user.name,
           email: user.email,
+          name: user.name,
           role: user.role,
         },
       },
+      event: AuditEvent.USER_DELETED,
+      resourceId: user.id,
+      resourceType: AuditResource.USER,
     });
 
     try {
@@ -1054,16 +1065,16 @@ export class WorkspaceService {
 
   private async validateLastWorkspaceOwner(
     workspaceId: string,
-    trx: KyselyTransaction,
+    trx: KyselyTransaction
   ): Promise<void> {
     const workspaceOwnerCount = await this.userRepo.roleCountByWorkspaceId(
       UserRole.OWNER,
       workspaceId,
-      trx,
+      trx
     );
     if (workspaceOwnerCount <= 1) {
       throw new BadRequestException(
-        'There must be at least one workspace owner',
+        "There must be at least one workspace owner"
       );
     }
   }

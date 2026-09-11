@@ -1,15 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Interval } from '@nestjs/schedule';
-import { TokenService } from '../auth/services/token.service';
-import { UserSessionRepo } from '@docmost/db/repos/session/user-session.repo';
-import { EnvironmentService } from '../../integrations/environment/environment.service';
-import { User } from '@docmost/db/types/entity.types';
-import { ClsService } from 'nestjs-cls';
+import { UserSessionRepo } from "@docmost/db/repos/session/user-session.repo";
+import { User } from "@docmost/db/types/entity.types";
+import { Injectable, Logger } from "@nestjs/common";
+import { Interval } from "@nestjs/schedule";
+import * as Bowser from "bowser";
+import { ClsService } from "nestjs-cls";
 import {
-  AuditContext,
   AUDIT_CONTEXT_KEY,
-} from '../../common/middlewares/audit-context.middleware';
-import * as Bowser from 'bowser';
+  AuditContext,
+} from "../../common/middlewares/audit-context.middleware";
+import { EnvironmentService } from "../../integrations/environment/environment.service";
+import { TokenService } from "../auth/services/token.service";
 
 const MAX_SESSIONS_PER_USER = 25;
 const RETENTION_DAYS = 7;
@@ -22,17 +22,17 @@ export class SessionService {
     private readonly tokenService: TokenService,
     private readonly userSessionRepo: UserSessionRepo,
     private readonly environmentService: EnvironmentService,
-    private readonly cls: ClsService,
+    private readonly cls: ClsService
   ) {}
 
-  @Interval('session-cleanup', 24 * 60 * 60 * 1000)
+  @Interval("session-cleanup", 24 * 60 * 60 * 1000)
   async cleanupSessions() {
     try {
       await this.userSessionRepo.deleteStale(RETENTION_DAYS);
       await this.userSessionRepo.trimExcessSessions(MAX_SESSIONS_PER_USER);
-      this.logger.debug('Session cleanup completed');
+      this.logger.debug("Session cleanup completed");
     } catch (err) {
-      this.logger.error('Session cleanup failed', err);
+      this.logger.error("Session cleanup failed", err);
     }
   }
 
@@ -45,11 +45,11 @@ export class SessionService {
     const expiresAt = this.environmentService.getCookieExpiresIn();
 
     const session = await this.userSessionRepo.insertSession({
+      deviceName,
+      expiresAt,
+      ipAddress,
       userId: user.id,
       workspaceId: user.workspaceId,
-      deviceName,
-      ipAddress,
-      expiresAt,
     });
 
     return this.tokenService.generateAccessToken(user, session.id);
@@ -58,25 +58,29 @@ export class SessionService {
   async getActiveSessions(
     userId: string,
     workspaceId: string,
-    currentSessionId: string | null,
+    currentSessionId: string | null
   ) {
     const sessions = await this.userSessionRepo.findActiveByUser(
       userId,
-      workspaceId,
+      workspaceId
     );
 
     const mapped = sessions.map((s) => ({
-      id: s.id,
+      createdAt: s.createdAt,
       deviceName: s.deviceName,
       geoLocation: s.geoLocation,
-      lastActiveAt: s.lastActiveAt,
-      createdAt: s.createdAt,
+      id: s.id,
       isCurrentDevice: s.id === currentSessionId,
+      lastActiveAt: s.lastActiveAt,
     }));
 
     return mapped.sort((a, b) => {
-      if (a.isCurrentDevice) return -1;
-      if (b.isCurrentDevice) return 1;
+      if (a.isCurrentDevice) {
+        return -1;
+      }
+      if (b.isCurrentDevice) {
+        return 1;
+      }
       return 0;
     });
   }
@@ -84,7 +88,7 @@ export class SessionService {
   async revokeSession(
     sessionId: string,
     userId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
     await this.userSessionRepo.revokeById(sessionId, userId, workspaceId);
   }
@@ -92,17 +96,19 @@ export class SessionService {
   async revokeAllOtherSessions(
     currentSessionId: string,
     userId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<void> {
     await this.userSessionRepo.revokeAllExceptCurrent(
       currentSessionId,
       userId,
-      workspaceId,
+      workspaceId
     );
   }
 
   private parseDeviceName(userAgent: string | null): string | null {
-    if (!userAgent) return null;
+    if (!userAgent) {
+      return null;
+    }
 
     try {
       const parsed = Bowser.parse(userAgent);
@@ -111,8 +117,8 @@ export class SessionService {
       const browser = parsed.browser?.name;
       const platformType = parsed.platform?.type;
 
-      if (platformType === 'mobile' || platformType === 'tablet') {
-        return parsed.platform?.model || os || 'Mobile Device';
+      if (platformType === "mobile" || platformType === "tablet") {
+        return parsed.platform?.model || os || "Mobile Device";
       }
 
       if (os) {

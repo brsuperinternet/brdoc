@@ -1,2 +1,6 @@
-export { TableHeaderPin } from './extension';
-export { pinOffsetWatcher, EDITOR_PIN_OFFSET_VAR, computePinTop } from './offset';
+export { TableHeaderPin } from "./extension";
+export {
+  computePinTop,
+  EDITOR_PIN_OFFSET_VAR,
+  pinOffsetWatcher,
+} from "./offset";

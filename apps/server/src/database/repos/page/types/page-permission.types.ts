@@ -3,7 +3,7 @@ type PagePermissionUserMember = {
   name: string;
   email: string;
   avatarUrl: string | null;
-  type: 'user';
+  type: "user";
   role: string;
   createdAt: Date;
 };
@@ -13,7 +13,7 @@ type PagePermissionGroupMember = {
   name: string;
   memberCount: number;
   isDefault: boolean;
-  type: 'group';
+  type: "group";
   role: string;
   createdAt: Date;
 };

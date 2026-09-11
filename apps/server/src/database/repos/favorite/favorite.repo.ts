@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { InsertableFavorite, Favorite } from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
-import { jsonObjectFrom } from 'kysely/helpers/postgres';
-import { ExpressionBuilder, SelectQueryBuilder, sql } from 'kysely';
-import { DB } from '@docmost/db/types/db';
-import { dbOrTx } from '@docmost/db/utils';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { DB } from "@docmost/db/types/db";
+import { Favorite, InsertableFavorite } from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx } from "@docmost/db/utils";
+import { Injectable } from "@nestjs/common";
+import { ExpressionBuilder, SelectQueryBuilder, sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { InjectKysely } from "nestjs-kysely";
 
 export const FavoriteType = {
-  PAGE: 'page',
-  SPACE: 'space',
-  TEMPLATE: 'template',
+  PAGE: "page",
+  SPACE: "space",
+  TEMPLATE: "template",
 } as const;
 
 export type FavoriteType = (typeof FavoriteType)[keyof typeof FavoriteType];
@@ -28,41 +28,43 @@ export class FavoriteRepo {
   async insert(favorite: InsertableFavorite): Promise<Favorite | undefined> {
     try {
       return await this.db
-        .insertInto('favorites')
+        .insertInto("favorites")
         .values(favorite)
         .returningAll()
         .executeTakeFirst();
     } catch (err: any) {
-      if (err?.code === '23505') return undefined;
+      if (err?.code === "23505") {
+        return undefined;
+      }
       throw err;
     }
   }
 
   async deleteByUserAndPage(userId: string, pageId: string): Promise<void> {
     await this.db
-      .deleteFrom('favorites')
-      .where('userId', '=', userId)
-      .where('pageId', '=', pageId)
+      .deleteFrom("favorites")
+      .where("userId", "=", userId)
+      .where("pageId", "=", pageId)
       .execute();
   }
 
   async deleteByUserAndSpace(userId: string, spaceId: string): Promise<void> {
     await this.db
-      .deleteFrom('favorites')
-      .where('userId', '=', userId)
-      .where('spaceId', '=', spaceId)
-      .where('type', '=', FavoriteType.SPACE)
+      .deleteFrom("favorites")
+      .where("userId", "=", userId)
+      .where("spaceId", "=", spaceId)
+      .where("type", "=", FavoriteType.SPACE)
       .execute();
   }
 
   async deleteByUserAndTemplate(
     userId: string,
-    templateId: string,
+    templateId: string
   ): Promise<void> {
     await this.db
-      .deleteFrom('favorites')
-      .where('userId', '=', userId)
-      .where('templateId', '=', templateId)
+      .deleteFrom("favorites")
+      .where("userId", "=", userId)
+      .where("templateId", "=", templateId)
       .execute();
   }
 
@@ -70,21 +72,21 @@ export class FavoriteRepo {
     userId: string,
     workspaceId: string,
     type: FavoriteType,
-    spaceId?: string,
+    spaceId?: string
   ): Promise<{ items: string[]; meta: any }> {
     const idColumn =
       type === FavoriteType.PAGE
-        ? 'pageId'
+        ? "pageId"
         : type === FavoriteType.SPACE
-          ? 'spaceId'
-          : 'templateId';
+          ? "spaceId"
+          : "templateId";
 
     let query = this.db
-      .selectFrom('favorites')
-      .select(['favorites.id', `favorites.${idColumn} as entityId`])
-      .where('favorites.userId', '=', userId)
-      .where('favorites.workspaceId', '=', workspaceId)
-      .where('favorites.type', '=', type);
+      .selectFrom("favorites")
+      .select(["favorites.id", `favorites.${idColumn} as entityId`])
+      .where("favorites.userId", "=", userId)
+      .where("favorites.workspaceId", "=", workspaceId)
+      .where("favorites.type", "=", type);
 
     query = this.applyMembershipFilter(query, userId);
 
@@ -93,9 +95,9 @@ export class FavoriteRepo {
     }
 
     const result = await executeWithCursorPagination(query, {
-      perPage: 250,
-      fields: [{ expression: 'favorites.id', direction: 'desc' }],
+      fields: [{ direction: "desc", expression: "favorites.id" }],
       parseCursor: (cursor) => ({ id: cursor.id }),
+      perPage: 250,
     });
 
     return {
@@ -111,18 +113,18 @@ export class FavoriteRepo {
     workspaceId: string,
     pagination: PaginationOptions,
     type?: FavoriteType,
-    spaceId?: string,
+    spaceId?: string
   ) {
     let query = this.db
-      .selectFrom('favorites')
-      .selectAll('favorites')
-      .where('favorites.userId', '=', userId)
-      .where('favorites.workspaceId', '=', workspaceId);
+      .selectFrom("favorites")
+      .selectAll("favorites")
+      .where("favorites.userId", "=", userId)
+      .where("favorites.workspaceId", "=", workspaceId);
 
     query = this.applyMembershipFilter(query, userId);
 
     if (type) {
-      query = query.where('favorites.type', '=', type);
+      query = query.where("favorites.type", "=", type);
     }
 
     if (spaceId) {
@@ -146,216 +148,218 @@ export class FavoriteRepo {
     }
 
     return executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
-      fields: [{ expression: 'favorites.id', direction: 'desc' }],
+      cursor: pagination.cursor,
+      fields: [{ direction: "desc", expression: "favorites.id" }],
       parseCursor: (cursor) => ({
         id: cursor.id,
       }),
+      perPage: pagination.limit,
     });
   }
 
   async deleteByUsersWithoutSpaceAccess(
     userIds: string[],
     spaceId: string,
-    opts?: { trx?: KyselyTransaction },
+    opts?: { trx?: KyselyTransaction }
   ): Promise<void> {
-    if (userIds.length === 0) return;
+    if (userIds.length === 0) {
+      return;
+    }
 
     const { trx } = opts ?? {};
     const db = dbOrTx(this.db, trx);
 
     const usersWithAccess = db
-      .selectFrom('spaceMembers')
-      .select('userId')
-      .where('spaceId', '=', spaceId)
-      .where('userId', 'is not', null)
+      .selectFrom("spaceMembers")
+      .select("userId")
+      .where("spaceId", "=", spaceId)
+      .where("userId", "is not", null)
       .union(
         db
-          .selectFrom('spaceMembers')
-          .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
-          .select('groupUsers.userId')
-          .where('spaceMembers.spaceId', '=', spaceId),
+          .selectFrom("spaceMembers")
+          .innerJoin("groupUsers", "groupUsers.groupId", "spaceMembers.groupId")
+          .select("groupUsers.userId")
+          .where("spaceMembers.spaceId", "=", spaceId)
       );
 
     await db
-      .deleteFrom('favorites')
-      .where('userId', 'in', userIds)
+      .deleteFrom("favorites")
+      .where("userId", "in", userIds)
       .where((eb) =>
         eb.or([
-          eb('spaceId', '=', spaceId),
+          eb("spaceId", "=", spaceId),
           eb.exists(
             eb
-              .selectFrom('pages')
-              .select(sql`1`.as('one'))
-              .whereRef('pages.id', '=', 'favorites.pageId')
-              .where('pages.spaceId', '=', spaceId),
+              .selectFrom("pages")
+              .select(sql`1`.as("one"))
+              .whereRef("pages.id", "=", "favorites.pageId")
+              .where("pages.spaceId", "=", spaceId)
           ),
           eb.exists(
             eb
-              .selectFrom('templates')
-              .select(sql`1`.as('one'))
-              .whereRef('templates.id', '=', 'favorites.templateId')
-              .where('templates.spaceId', '=', spaceId),
+              .selectFrom("templates")
+              .select(sql`1`.as("one"))
+              .whereRef("templates.id", "=", "favorites.templateId")
+              .where("templates.spaceId", "=", spaceId)
           ),
-        ]),
+        ])
       )
-      .where('userId', 'not in', usersWithAccess)
+      .where("userId", "not in", usersWithAccess)
       .execute();
   }
 
   async deleteByUserAndWorkspace(
     userId: string,
     workspaceId: string,
-    opts?: { trx?: KyselyTransaction },
+    opts?: { trx?: KyselyTransaction }
   ): Promise<void> {
     const { trx } = opts;
     const db = dbOrTx(this.db, trx);
 
     await db
-      .deleteFrom('favorites')
-      .where('userId', '=', userId)
-      .where('workspaceId', '=', workspaceId)
+      .deleteFrom("favorites")
+      .where("userId", "=", userId)
+      .where("workspaceId", "=", workspaceId)
       .execute();
   }
 
   private applyMembershipFilter<Q extends SelectQueryBuilder<any, any, any>>(
     query: Q,
-    userId: string,
+    userId: string
   ): Q {
     const spaceIds = this.spaceMemberRepo.getUserSpaceIdsQuery(userId);
     return query.where((eb: any) =>
       eb.or([
         eb.and([
-          eb('favorites.type', '=', FavoriteType.SPACE),
-          eb('favorites.spaceId', 'in', spaceIds),
+          eb("favorites.type", "=", FavoriteType.SPACE),
+          eb("favorites.spaceId", "in", spaceIds),
         ]),
         eb.and([
-          eb('favorites.type', '=', FavoriteType.PAGE),
+          eb("favorites.type", "=", FavoriteType.PAGE),
           eb.exists(
             eb
-              .selectFrom('pages')
-              .select(sql`1`.as('one'))
-              .whereRef('pages.id', '=', 'favorites.pageId')
-              .where('pages.spaceId', 'in', spaceIds),
+              .selectFrom("pages")
+              .select(sql`1`.as("one"))
+              .whereRef("pages.id", "=", "favorites.pageId")
+              .where("pages.spaceId", "in", spaceIds)
           ),
         ]),
         eb.and([
-          eb('favorites.type', '=', FavoriteType.TEMPLATE),
+          eb("favorites.type", "=", FavoriteType.TEMPLATE),
           eb.exists(
             eb
-              .selectFrom('templates')
-              .select(sql`1`.as('one'))
-              .whereRef('templates.id', '=', 'favorites.templateId')
+              .selectFrom("templates")
+              .select(sql`1`.as("one"))
+              .whereRef("templates.id", "=", "favorites.templateId")
               .where((e: any) =>
                 e.or([
-                  e('templates.spaceId', 'is', null),
-                  e('templates.spaceId', 'in', spaceIds),
-                ]),
-              ),
+                  e("templates.spaceId", "is", null),
+                  e("templates.spaceId", "in", spaceIds),
+                ])
+              )
           ),
         ]),
-      ]),
+      ])
     ) as Q;
   }
 
   private applySpaceFilter<Q extends SelectQueryBuilder<any, any, any>>(
     query: Q,
     type: FavoriteType | undefined,
-    spaceId: string,
+    spaceId: string
   ): Q {
     if (type === FavoriteType.PAGE) {
       return query.where((eb: any) =>
         eb.exists(
           eb
-            .selectFrom('pages')
-            .select(sql`1`.as('one'))
-            .whereRef('pages.id', '=', 'favorites.pageId')
-            .where('pages.spaceId', '=', spaceId),
-        ),
+            .selectFrom("pages")
+            .select(sql`1`.as("one"))
+            .whereRef("pages.id", "=", "favorites.pageId")
+            .where("pages.spaceId", "=", spaceId)
+        )
       ) as Q;
     }
     if (type === FavoriteType.SPACE) {
-      return query.where('favorites.spaceId' as any, '=', spaceId) as Q;
+      return query.where("favorites.spaceId" as any, "=", spaceId) as Q;
     }
     if (type === FavoriteType.TEMPLATE) {
       return query.where((eb: any) =>
         eb.exists(
           eb
-            .selectFrom('templates')
-            .select(sql`1`.as('one'))
-            .whereRef('templates.id', '=', 'favorites.templateId')
-            .where('templates.spaceId', '=', spaceId),
-        ),
+            .selectFrom("templates")
+            .select(sql`1`.as("one"))
+            .whereRef("templates.id", "=", "favorites.templateId")
+            .where("templates.spaceId", "=", spaceId)
+        )
       ) as Q;
     }
     return query;
   }
 
-  private withPage(eb: ExpressionBuilder<DB, 'favorites'>) {
+  private withPage(eb: ExpressionBuilder<DB, "favorites">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('pages')
+        .selectFrom("pages")
         .select([
-          'pages.id',
-          'pages.slugId',
-          'pages.title',
-          'pages.icon',
-          'pages.isBase',
-          'pages.spaceId',
+          "pages.id",
+          "pages.slugId",
+          "pages.title",
+          "pages.icon",
+          "pages.isBase",
+          "pages.spaceId",
         ])
-        .whereRef('pages.id', '=', 'favorites.pageId')
-        .where(sql.ref('favorites.type'), '=', FavoriteType.PAGE),
-    ).as('page');
+        .whereRef("pages.id", "=", "favorites.pageId")
+        .where(sql.ref("favorites.type"), "=", FavoriteType.PAGE)
+    ).as("page");
   }
 
-  private withSpace(eb: ExpressionBuilder<DB, 'favorites'>) {
+  private withSpace(eb: ExpressionBuilder<DB, "favorites">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('spaces')
-        .select(['spaces.id', 'spaces.name', 'spaces.slug', 'spaces.logo'])
-        .whereRef('spaces.id', '=', 'favorites.spaceId'),
-    ).as('space');
+        .selectFrom("spaces")
+        .select(["spaces.id", "spaces.name", "spaces.slug", "spaces.logo"])
+        .whereRef("spaces.id", "=", "favorites.spaceId")
+    ).as("space");
   }
 
-  private withPageSpace(eb: ExpressionBuilder<DB, 'favorites'>) {
+  private withPageSpace(eb: ExpressionBuilder<DB, "favorites">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('spaces')
-        .innerJoin('pages', 'pages.spaceId', 'spaces.id')
-        .select(['spaces.id', 'spaces.name', 'spaces.slug', 'spaces.logo'])
-        .whereRef('pages.id', '=', 'favorites.pageId'),
-    ).as('space');
+        .selectFrom("spaces")
+        .innerJoin("pages", "pages.spaceId", "spaces.id")
+        .select(["spaces.id", "spaces.name", "spaces.slug", "spaces.logo"])
+        .whereRef("pages.id", "=", "favorites.pageId")
+    ).as("space");
   }
 
-  private withSpaceResolved(eb: ExpressionBuilder<DB, 'favorites'>) {
+  private withSpaceResolved(eb: ExpressionBuilder<DB, "favorites">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('spaces')
-        .select(['spaces.id', 'spaces.name', 'spaces.slug', 'spaces.logo'])
+        .selectFrom("spaces")
+        .select(["spaces.id", "spaces.name", "spaces.slug", "spaces.logo"])
         .where(({ or, ref }) =>
           or([
-            sql<boolean>`${ref('favorites.type')} = ${FavoriteType.SPACE} and ${ref('spaces.id')} = ${ref('favorites.spaceId')}`,
-            sql<boolean>`${ref('favorites.type')} = ${FavoriteType.PAGE} and ${ref('spaces.id')} = (SELECT pages.space_id FROM pages WHERE pages.id = ${ref('favorites.pageId')})`,
-          ]),
-        ),
-    ).as('space');
+            sql<boolean>`${ref("favorites.type")} = ${FavoriteType.SPACE} and ${ref("spaces.id")} = ${ref("favorites.spaceId")}`,
+            sql<boolean>`${ref("favorites.type")} = ${FavoriteType.PAGE} and ${ref("spaces.id")} = (SELECT pages.space_id FROM pages WHERE pages.id = ${ref("favorites.pageId")})`,
+          ])
+        )
+    ).as("space");
   }
 
-  private withTemplate(eb: ExpressionBuilder<DB, 'favorites'>) {
+  private withTemplate(eb: ExpressionBuilder<DB, "favorites">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('templates')
+        .selectFrom("templates")
         .select([
-          'templates.id',
-          'templates.title',
-          'templates.description',
-          'templates.icon',
-          'templates.spaceId',
+          "templates.id",
+          "templates.title",
+          "templates.description",
+          "templates.icon",
+          "templates.spaceId",
         ])
-        .whereRef('templates.id', '=', 'favorites.templateId')
-        .where(sql.ref('favorites.type'), '=', FavoriteType.TEMPLATE),
-    ).as('template');
+        .whereRef("templates.id", "=", "favorites.templateId")
+        .where(sql.ref("favorites.type"), "=", FavoriteType.TEMPLATE)
+    ).as("template");
   }
 }

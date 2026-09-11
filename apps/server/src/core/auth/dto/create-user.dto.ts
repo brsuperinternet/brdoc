@@ -1,3 +1,4 @@
+import { Transform, TransformFnParams } from "class-transformer";
 import {
   IsEmail,
   IsNotEmpty,
@@ -5,9 +6,8 @@ import {
   IsString,
   MaxLength,
   MinLength,
-} from 'class-validator';
-import { Transform, TransformFnParams } from 'class-transformer';
-import { NoUrls } from '../../../common/validators/no-urls.validator';
+} from "class-validator";
+import { NoUrls } from "../../../common/validators/no-urls.validator";
 
 export class CreateUserDto {
   @IsOptional()

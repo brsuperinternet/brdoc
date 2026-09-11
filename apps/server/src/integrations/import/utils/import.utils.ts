@@ -1,10 +1,10 @@
-import { Logger } from '@nestjs/common';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import { ExportMetadata } from '../../../common/helpers/types/export-metadata.types';
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { Logger } from "@nestjs/common";
+import { ExportMetadata } from "../../../common/helpers/types/export-metadata.types";
 
 export async function buildAttachmentCandidates(
-  extractDir: string,
+  extractDir: string
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   async function walk(dir: string) {
@@ -13,11 +13,11 @@ export async function buildAttachmentCandidates(
       if (ent.isDirectory()) {
         await walk(abs);
       } else {
-        if (['.md', '.html'].includes(path.extname(ent.name).toLowerCase())) {
+        if ([".md", ".html"].includes(path.extname(ent.name).toLowerCase())) {
           continue;
         }
 
-        const rel = path.relative(extractDir, abs).split(path.sep).join('/');
+        const rel = path.relative(extractDir, abs).split(path.sep).join("/");
         map.set(rel, abs);
       }
     }
@@ -30,15 +30,15 @@ export async function buildAttachmentCandidates(
 export function resolveRelativeAttachmentPath(
   raw: string,
   pageDir: string,
-  attachmentCandidates: Map<string, string>,
+  attachmentCandidates: Map<string, string>
 ): string | null {
-  let mainRel = raw.replace(/^\.?\/+/, '');
+  let mainRel = raw.replace(/^\.?\/+/, "");
   try {
     mainRel = decodeURIComponent(mainRel);
   } catch (err) {
     Logger.warn(
       `URI malformed for attachment path: ${mainRel}. Falling back to raw path.`,
-      'ImportUtils',
+      "ImportUtils"
     );
   }
 
@@ -47,18 +47,21 @@ export function resolveRelativeAttachmentPath(
   // the path can match candidates from the archive.
   const confluenceStripped = mainRel.replace(
     /^download\/attachments\//,
-    'attachments/',
+    "attachments/"
   );
 
   const fallback = path
     .normalize(path.join(pageDir, mainRel))
     .split(path.sep)
-    .join('/');
+    .join("/");
 
   if (attachmentCandidates.has(mainRel)) {
     return mainRel;
   }
-  if (confluenceStripped !== mainRel && attachmentCandidates.has(confluenceStripped)) {
+  if (
+    confluenceStripped !== mainRel &&
+    attachmentCandidates.has(confluenceStripped)
+  ) {
     return confluenceStripped;
   }
   if (attachmentCandidates.has(fallback)) {
@@ -69,7 +72,7 @@ export function resolveRelativeAttachmentPath(
 }
 
 export async function collectMarkdownAndHtmlFiles(
-  dir: string,
+  dir: string
 ): Promise<string[]> {
   const results: string[] = [];
 
@@ -80,7 +83,7 @@ export async function collectMarkdownAndHtmlFiles(
       if (ent.isDirectory()) {
         await walk(fullPath);
       } else if (
-        ['.md', '.html'].includes(path.extname(ent.name).toLowerCase())
+        [".md", ".html"].includes(path.extname(ent.name).toLowerCase())
       ) {
         results.push(fullPath);
       }
@@ -97,8 +100,8 @@ export function stripNotionID(fileName: string): string {
   // Handle partial UUID format used for duplicate names: "Name abcd-ef12"
   const partialIdPattern = / [a-f0-9]{4}-[a-f0-9]{4}$/i;
   return fileName
-    .replace(notionIdPattern, '')
-    .replace(partialIdPattern, '')
+    .replace(notionIdPattern, "")
+    .replace(partialIdPattern, "")
     .trim();
 }
 
@@ -108,28 +111,30 @@ export function stripNotionID(fileName: string): string {
  * e.g. "Cool 324d-35ab" → { prefix: "324d", suffix: "35ab" }
  */
 export function extractNotionPartialId(
-  folderName: string,
+  folderName: string
 ): { prefix: string; suffix: string } | null {
   const match = folderName.match(/ ([a-f0-9]{4})-([a-f0-9]{4})$/i);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
   return { prefix: match[1].toLowerCase(), suffix: match[2].toLowerCase() };
 }
 
 export function encodeFilePath(filePath: string): string {
   return filePath
-    .split('/')
+    .split("/")
     .map((segment) => encodeURIComponent(segment))
-    .join('/');
+    .join("/");
 }
 
 export async function readDocmostMetadata(
-  extractDir: string,
+  extractDir: string
 ): Promise<ExportMetadata | null> {
-  const metadataPath = path.join(extractDir, 'docmost-metadata.json');
+  const metadataPath = path.join(extractDir, "docmost-metadata.json");
   try {
-    const content = await fs.readFile(metadataPath, 'utf-8');
+    const content = await fs.readFile(metadataPath, "utf-8");
     const metadata = JSON.parse(content) as ExportMetadata;
-    if (metadata.source === 'docmost' && metadata.pages) {
+    if (metadata.source === "docmost" && metadata.pages) {
       return metadata;
     }
     return null;

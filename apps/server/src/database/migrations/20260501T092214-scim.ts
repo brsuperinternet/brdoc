@@ -1,77 +1,77 @@
-import { Kysely, sql } from 'kysely';
+import { Kysely, sql } from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('scim_tokens')
-    .addColumn('id', 'uuid', (col) =>
-      col.primaryKey().defaultTo(sql`gen_uuid_v7()`),
+    .createTable("scim_tokens")
+    .addColumn("id", "uuid", (col) =>
+      col.primaryKey().defaultTo(sql`gen_uuid_v7()`)
     )
-    .addColumn('name', 'varchar', (col) => col.notNull())
-    .addColumn('token_hash', 'varchar', (col) => col.notNull())
-    .addColumn('token_last_four', 'varchar(4)', (col) => col.notNull())
-    .addColumn('last_used_at', 'timestamptz')
-    .addColumn('is_enabled', 'boolean', (col) => col.notNull().defaultTo(true))
-    .addColumn('creator_id', 'uuid', (col) =>
-      col.references('users.id').onDelete('set null'),
+    .addColumn("name", "varchar", (col) => col.notNull())
+    .addColumn("token_hash", "varchar", (col) => col.notNull())
+    .addColumn("token_last_four", "varchar(4)", (col) => col.notNull())
+    .addColumn("last_used_at", "timestamptz")
+    .addColumn("is_enabled", "boolean", (col) => col.notNull().defaultTo(true))
+    .addColumn("creator_id", "uuid", (col) =>
+      col.references("users.id").onDelete("set null")
     )
-    .addColumn('workspace_id', 'uuid', (col) =>
-      col.references('workspaces.id').onDelete('cascade').notNull(),
+    .addColumn("workspace_id", "uuid", (col) =>
+      col.references("workspaces.id").onDelete("cascade").notNull()
     )
-    .addColumn('created_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
-    .addColumn('updated_at', 'timestamptz', (col) =>
-      col.notNull().defaultTo(sql`now()`),
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo(sql`now()`)
     )
-    .addColumn('deleted_at', 'timestamptz')
+    .addColumn("deleted_at", "timestamptz")
     .execute();
 
   await db.schema
-    .createIndex('idx_scim_tokens_token_hash')
+    .createIndex("idx_scim_tokens_token_hash")
     .ifNotExists()
-    .on('scim_tokens')
-    .column('token_hash')
+    .on("scim_tokens")
+    .column("token_hash")
     .execute();
 
   await db.schema
-    .createIndex('idx_scim_tokens_workspace_id')
+    .createIndex("idx_scim_tokens_workspace_id")
     .ifNotExists()
-    .on('scim_tokens')
-    .column('workspace_id')
+    .on("scim_tokens")
+    .column("workspace_id")
     .execute();
 
   await db.schema
-    .alterTable('users')
-    .addColumn('scim_external_id', 'text')
+    .alterTable("users")
+    .addColumn("scim_external_id", "text")
     .execute();
 
   await db.schema
-    .createIndex('idx_users_workspace_scim_external_id')
+    .createIndex("idx_users_workspace_scim_external_id")
     .ifNotExists()
-    .on('users')
-    .columns(['workspace_id', 'scim_external_id'])
-    .where('scim_external_id', 'is not', null)
+    .on("users")
+    .columns(["workspace_id", "scim_external_id"])
+    .where("scim_external_id", "is not", null)
     .unique()
     .execute();
 
   await db.schema
-    .alterTable('groups')
-    .addColumn('scim_external_id', 'text')
+    .alterTable("groups")
+    .addColumn("scim_external_id", "text")
     .execute();
 
   await db.schema
-    .createIndex('idx_groups_workspace_scim_external_id')
+    .createIndex("idx_groups_workspace_scim_external_id")
     .ifNotExists()
-    .on('groups')
-    .columns(['workspace_id', 'scim_external_id'])
-    .where('scim_external_id', 'is not', null)
+    .on("groups")
+    .columns(["workspace_id", "scim_external_id"])
+    .where("scim_external_id", "is not", null)
     .unique()
     .execute();
 
   await db.schema
-    .alterTable('groups')
-    .addColumn('is_external', 'boolean', (col) =>
-      col.notNull().defaultTo(false),
+    .alterTable("groups")
+    .addColumn("is_external", "boolean", (col) =>
+      col.notNull().defaultTo(false)
     )
     .execute();
 
@@ -85,26 +85,26 @@ export async function up(db: Kysely<any>): Promise<void> {
   `.execute(db);
 
   await db.schema
-    .alterTable('workspaces')
-    .addColumn('is_scim_enabled', 'boolean', (col) =>
-      col.notNull().defaultTo(false),
+    .alterTable("workspaces")
+    .addColumn("is_scim_enabled", "boolean", (col) =>
+      col.notNull().defaultTo(false)
     )
     .execute();
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema.dropTable('scim_tokens').execute();
+  await db.schema.dropTable("scim_tokens").execute();
 
-  await db.schema.dropIndex('idx_users_workspace_scim_external_id').execute();
-  await db.schema.alterTable('users').dropColumn('scim_external_id').execute();
+  await db.schema.dropIndex("idx_users_workspace_scim_external_id").execute();
+  await db.schema.alterTable("users").dropColumn("scim_external_id").execute();
 
-  await db.schema.dropIndex('idx_groups_workspace_scim_external_id').execute();
-  await db.schema.alterTable('groups').dropColumn('scim_external_id').execute();
+  await db.schema.dropIndex("idx_groups_workspace_scim_external_id").execute();
+  await db.schema.alterTable("groups").dropColumn("scim_external_id").execute();
 
-  await db.schema.alterTable('groups').dropColumn('is_external').execute();
+  await db.schema.alterTable("groups").dropColumn("is_external").execute();
 
   await db.schema
-    .alterTable('workspaces')
-    .dropColumn('is_scim_enabled')
+    .alterTable("workspaces")
+    .dropColumn("is_scim_enabled")
     .execute();
 }

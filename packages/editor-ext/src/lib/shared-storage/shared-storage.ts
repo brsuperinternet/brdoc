@@ -7,11 +7,10 @@ declare module "@tiptap/core" {
 }
 
 const SharedStorage = Extension.create({
-  name: "shared",
-
   addStorage() {
     return {};
   },
+  name: "shared",
 });
 
 export { SharedStorage };

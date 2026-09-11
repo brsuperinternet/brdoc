@@ -1,5 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateWorkspaceDto } from './create-workspace.dto';
+import { PartialType } from "@nestjs/mapped-types";
 import {
   IsArray,
   IsBoolean,
@@ -8,7 +7,8 @@ import {
   IsOptional,
   IsString,
   Min,
-} from 'class-validator';
+} from "class-validator";
+import { CreateWorkspaceDto } from "./create-workspace.dto";
 
 export class UpdateWorkspaceDto extends PartialType(CreateWorkspaceDto) {
   @IsOptional()
@@ -74,7 +74,7 @@ export class UpdateWorkspaceDto extends PartialType(CreateWorkspaceDto) {
 
   @IsOptional()
   @IsString()
-  @IsIn(['read', 'edit'])
+  @IsIn(["read", "edit"])
   defaultPageEditMode: string;
 
   @IsOptional()

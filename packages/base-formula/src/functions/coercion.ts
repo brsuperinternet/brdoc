@@ -1,17 +1,27 @@
-import { register } from "./registry";
 import { valueToString } from "../number";
+import { register } from "./registry";
 
 register({
-  name: "toNumber", arity: { min: 1, max: 1 }, paramTypes: "any", returnType: "number",
+  arity: { max: 1, min: 1 },
+  category: "coercion",
+  doc: "Parses the value as a number, or null.",
   eval: ([v]) => {
-    if (v == null) return null;
+    if (v == null) {
+      return null;
+    }
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   },
-  doc: "Parses the value as a number, or null.", category: "coercion",
+  name: "toNumber",
+  paramTypes: "any",
+  returnType: "number",
 });
 register({
-  name: "toString", arity: { min: 1, max: 1 }, paramTypes: "any", returnType: "string",
+  arity: { max: 1, min: 1 },
+  category: "coercion",
+  doc: "Converts the value to a string.",
   eval: ([v]) => valueToString(v),
-  doc: "Converts the value to a string.", category: "coercion",
+  name: "toString",
+  paramTypes: "any",
+  returnType: "string",
 });

@@ -1,13 +1,13 @@
 import { marked } from "marked";
 import { calloutExtension } from "./callout.marked";
-import { mathBlockExtension } from "./math-block.marked";
-import { mathInlineExtension } from "./math-inline.marked";
 import {
   footnoteDefExtension,
   footnoteRefExtension,
   renderFootnotesList,
   resetFootnotes,
 } from "./footnotes.marked";
+import { mathBlockExtension } from "./math-block.marked";
+import { mathInlineExtension } from "./math-inline.marked";
 
 marked.use({
   renderer: {
@@ -18,7 +18,7 @@ marked.use({
       }
 
       if (ordered) {
-        const startAttr = start !== 1 ? ` start="${start}"` : "";
+        const startAttr = start === 1 ? "" : ` start="${start}"`;
         return `<ol${startAttr}>\n${body}</ol>\n`;
       }
 
@@ -52,7 +52,7 @@ marked.use({
 marked.setOptions({ breaks: true });
 
 export function markdownToHtml(
-  markdownInput: string,
+  markdownInput: string
 ): string | Promise<string> {
   const YAML_FONT_MATTER_REGEX = /^\s*---[\s\S]*?---\s*/;
 

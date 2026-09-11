@@ -9,7 +9,7 @@ export function normalizeFileUrl(src: string): string {
 
 export function syncAltBadge(wrapper: HTMLElement, alt: unknown): void {
   const existing = wrapper.querySelector<HTMLElement>(
-    ":scope > .media-alt-badge",
+    ":scope > .media-alt-badge"
   );
 
   if (typeof alt !== "string" || !alt.trim()) {
@@ -34,10 +34,10 @@ export type UploadFn = (
   pos: number,
   pageId: string,
   // only applicable to file attachments
-  allowMedia?: boolean,
+  allowMedia?: boolean
 ) => void;
 
 export interface MediaUploadOptions {
-  validateFn?: (file: File, allowMedia?: boolean) => void;
   onUpload: (file: File, pageId: string) => Promise<any>;
+  validateFn?: (file: File, allowMedia?: boolean) => void;
 }

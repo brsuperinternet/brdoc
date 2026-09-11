@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { dbOrTx } from '@docmost/db/utils';
 import {
   InsertablePageTransclusionReference,
   PageTransclusionReference,
-} from '@docmost/db/types/entity.types';
+} from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx } from "@docmost/db/utils";
+import { Injectable } from "@nestjs/common";
+import { InjectKysely } from "nestjs-kysely";
 
 export type TransclusionReferenceKey = {
   sourcePageId: string;
@@ -18,12 +18,12 @@ export class PageTransclusionReferencesRepo {
 
   async findByReferencePageId(
     referencePageId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PageTransclusionReference[]> {
     return dbOrTx(this.db, trx)
-      .selectFrom('pageTransclusionReferences')
+      .selectFrom("pageTransclusionReferences")
       .selectAll()
-      .where('referencePageId', '=', referencePageId)
+      .where("referencePageId", "=", referencePageId)
       .execute();
   }
 
@@ -31,31 +31,33 @@ export class PageTransclusionReferencesRepo {
     sourcePageId: string,
     transclusionId: string,
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<string[]> {
     const rows = await dbOrTx(this.db, trx)
-      .selectFrom('pageTransclusionReferences')
-      .select('referencePageId')
+      .selectFrom("pageTransclusionReferences")
+      .select("referencePageId")
       .distinct()
-      .where('workspaceId', '=', workspaceId)
-      .where('sourcePageId', '=', sourcePageId)
-      .where('transclusionId', '=', transclusionId)
+      .where("workspaceId", "=", workspaceId)
+      .where("sourcePageId", "=", sourcePageId)
+      .where("transclusionId", "=", transclusionId)
       .execute();
     return rows.map((r) => r.referencePageId);
   }
 
   async insertMany(
     rows: InsertablePageTransclusionReference[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
-    if (rows.length === 0) return;
+    if (rows.length === 0) {
+      return;
+    }
     await dbOrTx(this.db, trx)
-      .insertInto('pageTransclusionReferences')
+      .insertInto("pageTransclusionReferences")
       .values(rows)
       .onConflict((oc) =>
         oc
-          .columns(['referencePageId', 'sourcePageId', 'transclusionId'])
-          .doNothing(),
+          .columns(["referencePageId", "sourcePageId", "transclusionId"])
+          .doNothing()
       )
       .execute();
   }
@@ -63,21 +65,23 @@ export class PageTransclusionReferencesRepo {
   async deleteByReferenceAndKeys(
     referencePageId: string,
     keys: TransclusionReferenceKey[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
-    if (keys.length === 0) return;
+    if (keys.length === 0) {
+      return;
+    }
     await dbOrTx(this.db, trx)
-      .deleteFrom('pageTransclusionReferences')
-      .where('referencePageId', '=', referencePageId)
+      .deleteFrom("pageTransclusionReferences")
+      .where("referencePageId", "=", referencePageId)
       .where((eb) =>
         eb.or(
           keys.map((k) =>
             eb.and([
-              eb('sourcePageId', '=', k.sourcePageId),
-              eb('transclusionId', '=', k.transclusionId),
-            ]),
-          ),
-        ),
+              eb("sourcePageId", "=", k.sourcePageId),
+              eb("transclusionId", "=", k.transclusionId),
+            ])
+          )
+        )
       )
       .execute();
   }
@@ -86,13 +90,13 @@ export class PageTransclusionReferencesRepo {
     referencePageId: string,
     sourcePageId: string,
     transclusionId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     await dbOrTx(this.db, trx)
-      .deleteFrom('pageTransclusionReferences')
-      .where('referencePageId', '=', referencePageId)
-      .where('sourcePageId', '=', sourcePageId)
-      .where('transclusionId', '=', transclusionId)
+      .deleteFrom("pageTransclusionReferences")
+      .where("referencePageId", "=", referencePageId)
+      .where("sourcePageId", "=", sourcePageId)
+      .where("transclusionId", "=", transclusionId)
       .execute();
   }
 }

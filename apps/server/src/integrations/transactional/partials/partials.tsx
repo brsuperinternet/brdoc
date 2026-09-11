@@ -1,14 +1,12 @@
-import { button as buttonStyle, container, footer, h1, logo, main } from '../css/styles';
+import * as React from "react";
+import { Body, Container, Head, Html, Row, Section, Text } from "react-email";
 import {
-  Body,
-  Container,
-  Head,
-  Html,
-  Row,
-  Section,
-  Text,
-} from 'react-email';
-import * as React from 'react';
+  button as buttonStyle,
+  container,
+  footer,
+  logo,
+  main,
+} from "../css/styles";
 
 interface MailBodyProps {
   children: React.ReactNode;
@@ -36,37 +34,37 @@ export function MailHeader() {
 }
 
 interface EmailButtonProps {
-  href: string;
   children: React.ReactNode;
+  href: string;
 }
 
 export function EmailButton({ href, children }: EmailButtonProps) {
   return (
     <table
-      role="presentation"
       cellPadding="0"
       cellSpacing="0"
-      style={{ margin: '0 0 15px 15px' }}
+      role="presentation"
+      style={{ margin: "0 0 15px 15px" }}
     >
       <tr>
         <td
           style={{
             backgroundColor: buttonStyle.backgroundColor,
             borderRadius: buttonStyle.borderRadius,
-            textAlign: 'center' as const,
+            textAlign: "center" as const,
           }}
         >
           <a
             href={href}
-            target="_blank"
             style={{
               color: buttonStyle.color,
+              display: "inline-block",
               fontFamily: buttonStyle.fontFamily,
               fontSize: buttonStyle.fontSize,
-              textDecoration: 'none',
-              display: 'inline-block',
-              padding: '8px 16px',
+              padding: "8px 16px",
+              textDecoration: "none",
             }}
+            target="_blank"
           >
             {children}
           </a>
@@ -80,7 +78,7 @@ export function MailFooter() {
   return (
     <Section style={footer}>
       <Row>
-        <Text style={{ textAlign: 'center', color: '#706a7b' }}>
+        <Text style={{ color: "#706a7b", textAlign: "center" }}>
           © {new Date().getFullYear()} Docmost, All Rights Reserved <br />
         </Text>
       </Row>
@@ -89,5 +87,5 @@ export function MailFooter() {
 }
 
 export function getGreetingName(name?: string): string {
-  return name?.split(' ')[0] || 'there';
+  return name?.split(" ")[0] || "there";
 }

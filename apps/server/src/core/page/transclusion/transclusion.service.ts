@@ -1,28 +1,28 @@
+import { isDeepStrictEqual } from "node:util";
+import { AttachmentRepo } from "@docmost/db/repos/attachment/attachment.repo";
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { PageTransclusionReferencesRepo } from "@docmost/db/repos/page-transclusions/page-transclusion-references.repo";
+import { PageTransclusionsRepo } from "@docmost/db/repos/page-transclusions/page-transclusions.repo";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { Page, User } from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
 import {
+  ForbiddenException,
   Injectable,
   Logger,
-  ForbiddenException,
   NotFoundException,
-} from '@nestjs/common';
-import { isDeepStrictEqual } from 'node:util';
-import { v7 as uuid7 } from 'uuid';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { PageTransclusionsRepo } from '@docmost/db/repos/page-transclusions/page-transclusions.repo';
-import { PageTransclusionReferencesRepo } from '@docmost/db/repos/page-transclusions/page-transclusion-references.repo';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
-import { AttachmentRepo } from '@docmost/db/repos/attachment/attachment.repo';
-import { StorageService } from '../../../integrations/storage/storage.service';
+} from "@nestjs/common";
+import { InjectKysely } from "nestjs-kysely";
+import { v7 as uuid7 } from "uuid";
+import { StorageService } from "../../../integrations/storage/storage.service";
+import { PageAccessService } from "../page-access/page-access.service";
+import { TransclusionLookup } from "./transclusion.types";
 import {
   collectReferencesFromPmJson,
   collectTransclusionsFromPmJson,
-} from './utils/transclusion-prosemirror.util';
-import { rewriteAttachmentsForUnsync } from './utils/transclusion-unsync.util';
-import { TransclusionLookup } from './transclusion.types';
-import { Page, User } from '@docmost/db/types/entity.types';
-import { PageAccessService } from '../page-access/page-access.service';
+} from "./utils/transclusion-prosemirror.util";
+import { rewriteAttachmentsForUnsync } from "./utils/transclusion-unsync.util";
 
 type ReferencingPageInfo = {
   id: string;
@@ -53,7 +53,7 @@ export class TransclusionService {
     pageId: string,
     workspaceId: string,
     pmJson: unknown,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<{ inserted: number; updated: number; deleted: number }> {
     const desired = collectTransclusionsFromPmJson(pmJson);
     const desiredById = new Map(desired.map((d) => [d.transclusionId, d]));
@@ -70,12 +70,12 @@ export class TransclusionService {
       if (!prev) {
         await this.pageTransclusionsRepo.insert(
           {
-            workspaceId,
+            content: d.content as any,
             pageId,
             transclusionId: d.transclusionId,
-            content: d.content as any,
+            workspaceId,
           },
-          trx,
+          trx
         );
         inserted += 1;
         continue;
@@ -87,7 +87,7 @@ export class TransclusionService {
           pageId,
           d.transclusionId,
           { content: d.content as any },
-          trx,
+          trx
         );
         updated += 1;
       }
@@ -100,40 +100,39 @@ export class TransclusionService {
       await this.pageTransclusionsRepo.deleteByPageAndTransclusionIds(
         pageId,
         removedIds,
-        trx,
+        trx
       );
       deleted = removedIds.length;
     }
 
-    return { inserted, updated, deleted };
+    return { deleted, inserted, updated };
   }
 
   async syncPageReferences(
     referencePageId: string,
     workspaceId: string,
     pmJson: unknown,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<{ inserted: number; deleted: number }> {
     const desired = collectReferencesFromPmJson(pmJson);
-    const keyOf = (s: {
-      sourcePageId: string;
-      transclusionId: string;
-    }) => `${s.sourcePageId}::${s.transclusionId}`;
+    const keyOf = (s: { sourcePageId: string; transclusionId: string }) =>
+      `${s.sourcePageId}::${s.transclusionId}`;
     const desiredKeys = new Set(desired.map(keyOf));
 
-    const existing = await this.pageTransclusionReferencesRepo.findByReferencePageId(
-      referencePageId,
-      trx,
-    );
+    const existing =
+      await this.pageTransclusionReferencesRepo.findByReferencePageId(
+        referencePageId,
+        trx
+      );
     const existingKeys = new Set(existing.map(keyOf));
 
     const toInsert = desired
       .filter((d) => !existingKeys.has(keyOf(d)))
       .map((d) => ({
-        workspaceId,
         referencePageId,
         sourcePageId: d.sourcePageId,
         transclusionId: d.transclusionId,
+        workspaceId,
       }));
 
     const toDelete = existing
@@ -150,13 +149,13 @@ export class TransclusionService {
       await this.pageTransclusionReferencesRepo.deleteByReferenceAndKeys(
         referencePageId,
         toDelete,
-        trx,
+        trx
       );
     }
 
     return {
-      inserted: toInsert.length,
       deleted: toDelete.length,
+      inserted: toInsert.length,
     };
   }
 
@@ -167,21 +166,23 @@ export class TransclusionService {
    */
   async insertTransclusionsForPages(
     pages: Array<{ id: string; workspaceId: string; content: unknown }>,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<{ inserted: number }> {
-    const rows: Parameters<PageTransclusionsRepo['insertMany']>[0] = [];
+    const rows: Parameters<PageTransclusionsRepo["insertMany"]>[0] = [];
     for (const page of pages) {
       const snapshots = collectTransclusionsFromPmJson(page.content);
       for (const s of snapshots) {
         rows.push({
-          workspaceId: page.workspaceId,
+          content: s.content as any,
           pageId: page.id,
           transclusionId: s.transclusionId,
-          content: s.content as any,
+          workspaceId: page.workspaceId,
         });
       }
     }
-    if (rows.length === 0) return { inserted: 0 };
+    if (rows.length === 0) {
+      return { inserted: 0 };
+    }
     await this.pageTransclusionsRepo.insertMany(rows, trx);
     return { inserted: rows.length };
   }
@@ -193,7 +194,7 @@ export class TransclusionService {
    */
   async insertReferencesForPages(
     pages: Array<{ id: string; workspaceId: string; content: unknown }>,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<{ inserted: number }> {
     const rows: Array<{
       workspaceId: string;
@@ -205,14 +206,16 @@ export class TransclusionService {
       const refs = collectReferencesFromPmJson(page.content);
       for (const r of refs) {
         rows.push({
-          workspaceId: page.workspaceId,
           referencePageId: page.id,
           sourcePageId: r.sourcePageId,
           transclusionId: r.transclusionId,
+          workspaceId: page.workspaceId,
         });
       }
     }
-    if (rows.length === 0) return { inserted: 0 };
+    if (rows.length === 0) {
+      return { inserted: 0 };
+    }
     await this.pageTransclusionReferencesRepo.insertMany(rows, trx);
     return { inserted: rows.length };
   }
@@ -227,23 +230,27 @@ export class TransclusionService {
   private async filterViewerAccessiblePageIds(
     pageIds: string[],
     viewerUserId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<string[]> {
-    if (pageIds.length === 0) return [];
+    if (pageIds.length === 0) {
+      return [];
+    }
 
     const spaceVisible = await this.db
-      .selectFrom('pages')
-      .select('id')
-      .where('id', 'in', pageIds)
-      .where('workspaceId', '=', workspaceId)
-      .where('deletedAt', 'is', null)
+      .selectFrom("pages")
+      .select("id")
+      .where("id", "in", pageIds)
+      .where("workspaceId", "=", workspaceId)
+      .where("deletedAt", "is", null)
       .where(
-        'spaceId',
-        'in',
-        this.spaceMemberRepo.getUserSpaceIdsQuery(viewerUserId),
+        "spaceId",
+        "in",
+        this.spaceMemberRepo.getUserSpaceIdsQuery(viewerUserId)
       )
       .execute();
-    if (spaceVisible.length === 0) return [];
+    if (spaceVisible.length === 0) {
+      return [];
+    }
 
     return this.pagePermissionRepo.filterAccessiblePageIds({
       pageIds: spaceVisible.map((r) => r.id),
@@ -254,19 +261,21 @@ export class TransclusionService {
   async lookup(
     references: Array<{ sourcePageId: string; transclusionId: string }>,
     viewerUserId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<{ items: TransclusionLookup[] }> {
-    if (references.length === 0) return { items: [] };
+    if (references.length === 0) {
+      return { items: [] };
+    }
 
     const candidatePageIds = Array.from(
-      new Set(references.map((r) => r.sourcePageId)),
+      new Set(references.map((r) => r.sourcePageId))
     );
     const accessibleSet = new Set(
       await this.filterViewerAccessiblePageIds(
         candidatePageIds,
         viewerUserId,
-        workspaceId,
-      ),
+        workspaceId
+      )
     );
 
     return this.lookupWithAccessSet(references, accessibleSet, workspaceId);
@@ -281,29 +290,31 @@ export class TransclusionService {
   async lookupWithAccessSet(
     references: Array<{ sourcePageId: string; transclusionId: string }>,
     accessibleSet: Set<string>,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<{ items: TransclusionLookup[] }> {
-    if (references.length === 0) return { items: [] };
+    if (references.length === 0) {
+      return { items: [] };
+    }
 
     const items: TransclusionLookup[] = new Array(references.length).fill(null);
     const pendingIdx = references.map((_, i) => i);
 
     const accessiblePending = pendingIdx.filter((i) =>
-      accessibleSet.has(references[i].sourcePageId),
+      accessibleSet.has(references[i].sourcePageId)
     );
     const rows = await this.pageTransclusionsRepo.findManyByPageAndTransclusion(
       accessiblePending.map((i) => ({
         pageId: references[i].sourcePageId,
         transclusionId: references[i].transclusionId,
       })),
-      workspaceId,
+      workspaceId
     );
     const rowKey = (r: { pageId: string; transclusionId: string }) =>
       `${r.pageId}::${r.transclusionId}`;
     const rowMap = new Map(rows.map((r) => [rowKey(r), r]));
 
     const accessiblePageIds = Array.from(
-      new Set(accessiblePending.map((i) => references[i].sourcePageId)),
+      new Set(accessiblePending.map((i) => references[i].sourcePageId))
     );
     const pages = await this.pageRepo.findManyByIds(accessiblePageIds, {
       workspaceId,
@@ -318,8 +329,8 @@ export class TransclusionService {
       if (!accessibleSet.has(ref.sourcePageId)) {
         items[i] = {
           sourcePageId: ref.sourcePageId,
+          status: "no_access",
           transclusionId: ref.transclusionId,
-          status: 'no_access',
         };
         continue;
       }
@@ -327,8 +338,8 @@ export class TransclusionService {
       if (!updatedAt) {
         items[i] = {
           sourcePageId: ref.sourcePageId,
+          status: "not_found",
           transclusionId: ref.transclusionId,
-          status: 'not_found',
         };
         continue;
       }
@@ -337,16 +348,16 @@ export class TransclusionService {
       if (!row) {
         items[i] = {
           sourcePageId: ref.sourcePageId,
+          status: "not_found",
           transclusionId: ref.transclusionId,
-          status: 'not_found',
         };
         continue;
       }
       items[i] = {
-        sourcePageId: ref.sourcePageId,
-        transclusionId: ref.transclusionId,
         content: row.content,
+        sourcePageId: ref.sourcePageId,
         sourceUpdatedAt: updatedAt,
+        transclusionId: ref.transclusionId,
       };
     }
 
@@ -368,43 +379,45 @@ export class TransclusionService {
       await this.pageTransclusionReferencesRepo.findReferencePageIdsByTransclusion(
         sourcePageId,
         transclusionId,
-        workspaceId,
+        workspaceId
       );
 
     const candidatePageIds = Array.from(
-      new Set([sourcePageId, ...referencePageIds]),
+      new Set([sourcePageId, ...referencePageIds])
     );
     const accessibleSet = new Set(
       await this.filterViewerAccessiblePageIds(
         candidatePageIds,
         viewerUserId,
-        workspaceId,
-      ),
+        workspaceId
+      )
     );
 
     const accessibleIds = candidatePageIds.filter((id) =>
-      accessibleSet.has(id),
+      accessibleSet.has(id)
     );
     if (accessibleIds.length === 0) {
-      return { source: null, references: [] };
+      return { references: [], source: null };
     }
 
     const rows = await Promise.all(
       accessibleIds.map((id) =>
-        this.pageRepo.findById(id, { includeSpace: true }),
-      ),
+        this.pageRepo.findById(id, { includeSpace: true })
+      )
     );
     const byId = new Map<string, ReferencingPageInfo>();
     for (const p of rows) {
-      if (!p || p.deletedAt || p.workspaceId !== workspaceId) continue;
+      if (!p || p.deletedAt || p.workspaceId !== workspaceId) {
+        continue;
+      }
       const space = (p as Page & { space?: { slug?: string } }).space;
       byId.set(p.id, {
+        icon: p.icon ?? null,
         id: p.id,
         slugId: p.slugId,
-        title: p.title ?? null,
-        icon: p.icon ?? null,
         spaceId: p.spaceId,
         spaceSlug: space?.slug ?? null,
+        title: p.title ?? null,
       });
     }
 
@@ -413,7 +426,7 @@ export class TransclusionService {
       .map((id) => byId.get(id))
       .filter((p): p is ReferencingPageInfo => Boolean(p));
 
-    return { source, references };
+    return { references, source };
   }
 
   /**
@@ -430,16 +443,16 @@ export class TransclusionService {
     referencePageId: string,
     sourcePageId: string,
     transclusionId: string,
-    user: User,
+    user: User
   ): Promise<{ content: unknown }> {
     const referencePage = await this.pageRepo.findById(referencePageId);
     if (!referencePage || referencePage.deletedAt) {
-      throw new NotFoundException('Reference page not found');
+      throw new NotFoundException("Reference page not found");
     }
 
     const sourcePage = await this.pageRepo.findById(sourcePageId);
     if (!sourcePage || sourcePage.deletedAt) {
-      throw new NotFoundException('Source page not found');
+      throw new NotFoundException("Source page not found");
     }
 
     if (
@@ -455,29 +468,29 @@ export class TransclusionService {
     const transclusion =
       await this.pageTransclusionsRepo.findByPageAndTransclusion(
         sourcePageId,
-        transclusionId,
+        transclusionId
       );
     if (!transclusion) {
-      throw new NotFoundException('Sync block not found');
+      throw new NotFoundException("Sync block not found");
     }
 
     const { content, copies } = rewriteAttachmentsForUnsync(
       transclusion.content,
-      () => uuid7(),
+      () => uuid7()
     );
 
     if (copies.length > 0) {
       const oldIds = copies.map((c) => c.oldAttachmentId);
       const oldRows = await this.attachmentRepo.findByIds(oldIds);
       const byOldId = new Map(
-        oldRows
-          .filter((a) => a.pageId === sourcePageId)
-          .map((a) => [a.id, a]),
+        oldRows.filter((a) => a.pageId === sourcePageId).map((a) => [a.id, a])
       );
 
       for (const plan of copies) {
         const old = byOldId.get(plan.oldAttachmentId);
-        if (!old) continue;
+        if (!old) {
+          continue;
+        }
 
         const newFilePath = old.filePath
           .split(plan.oldAttachmentId)
@@ -487,22 +500,22 @@ export class TransclusionService {
         } catch (err) {
           this.logger.error(
             `unsync: failed to copy attachment ${old.id}`,
-            err as Error,
+            err as Error
           );
           continue;
         }
         await this.attachmentRepo.insertAttachment({
-          id: plan.newAttachmentId,
-          type: old.type,
-          filePath: newFilePath,
-          fileName: old.fileName,
-          fileSize: old.fileSize,
-          mimeType: old.mimeType,
-          fileExt: old.fileExt,
           creatorId: user.id,
-          workspaceId: referencePage.workspaceId,
+          fileExt: old.fileExt,
+          fileName: old.fileName,
+          filePath: newFilePath,
+          fileSize: old.fileSize,
+          id: plan.newAttachmentId,
+          mimeType: old.mimeType,
           pageId: referencePageId,
           spaceId: referencePage.spaceId,
+          type: old.type,
+          workspaceId: referencePage.workspaceId,
         });
       }
     }
@@ -510,7 +523,7 @@ export class TransclusionService {
     await this.pageTransclusionReferencesRepo.deleteOne(
       referencePageId,
       sourcePageId,
-      transclusionId,
+      transclusionId
     );
 
     return { content };

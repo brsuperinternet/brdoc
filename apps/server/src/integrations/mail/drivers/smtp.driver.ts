@@ -1,10 +1,10 @@
-import { MailDriver } from './interfaces/mail-driver.interface';
-import { SMTPConfig } from '../interfaces';
-import { Transporter } from 'nodemailer';
-import * as nodemailer from 'nodemailer';
-import { MailMessage } from '../interfaces/mail.message';
-import { Logger } from '@nestjs/common';
-import { mailLogName } from '../mail.utils';
+import { Logger } from "@nestjs/common";
+import * as nodemailer from "nodemailer";
+import { Transporter } from "nodemailer";
+import { SMTPConfig } from "../interfaces";
+import { MailMessage } from "../interfaces/mail.message";
+import { mailLogName } from "../mail.utils";
+import { MailDriver } from "./interfaces/mail-driver.interface";
 
 export class SmtpDriver implements MailDriver {
   private readonly logger = new Logger(mailLogName(SmtpDriver.name));
@@ -18,10 +18,10 @@ export class SmtpDriver implements MailDriver {
     try {
       await this.transporter.sendMail({
         from: message.from,
-        to: message.to,
+        html: message.html,
         subject: message.subject,
         text: message.text,
-        html: message.html,
+        to: message.to,
       });
 
       this.logger.debug(`Sent mail to ${message.to}`);

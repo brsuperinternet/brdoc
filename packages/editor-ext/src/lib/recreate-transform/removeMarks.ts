@@ -1,5 +1,5 @@
-import { Transform } from "@tiptap/pm/transform";
 import { Node } from "@tiptap/pm/model";
+import { Transform } from "@tiptap/pm/transform";
 
 export function removeMarks(doc: Node) {
   const tr = new Transform(doc);

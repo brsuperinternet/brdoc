@@ -1,24 +1,25 @@
 // MIT - https://github.com/curvenote/prosemirror-docx/
-export type { SectionConfig, SerializationState } from './types';
+
+export {
+  type DocxImageResolver,
+  defaultAsyncNodes,
+  defaultMarks,
+  pageNodeToDocxBuffer,
+} from "./schema";
 export type {
   MarkSerializer,
   NodeSerializer,
   NodeSerializerAsync,
   Options,
   OptionsAsync,
-} from './serializer';
+} from "./serializer";
 
 export {
-  DocxSerializerStateAsync,
+  DocxSerializer,
   DocxSerializerAsync,
   DocxSerializerState,
-  DocxSerializer,
+  DocxSerializerStateAsync,
   MAX_IMAGE_WIDTH,
-} from './serializer';
-export {
-  defaultAsyncNodes,
-  defaultMarks,
-  pageNodeToDocxBuffer,
-  type DocxImageResolver,
-} from './schema';
-export { writeDocx, createDocFromState, buildDoc } from './utils';
+} from "./serializer";
+export type { SectionConfig, SerializationState } from "./types";
+export { buildDoc, createDocFromState, writeDocx } from "./utils";

@@ -1,9 +1,9 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreatePageDto, ContentFormat } from './create-page.dto';
-import { IsIn, IsOptional, IsString, ValidateIf } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { PartialType } from "@nestjs/mapped-types";
+import { Transform } from "class-transformer";
+import { IsIn, IsOptional, IsString, ValidateIf } from "class-validator";
+import { ContentFormat, CreatePageDto } from "./create-page.dto";
 
-export type ContentOperation = 'append' | 'prepend' | 'replace';
+export type ContentOperation = "append" | "prepend" | "replace";
 
 export class UpdatePageDto extends PartialType(CreatePageDto) {
   @IsString()
@@ -14,11 +14,11 @@ export class UpdatePageDto extends PartialType(CreatePageDto) {
 
   @ValidateIf((o) => o.content !== undefined)
   @Transform(({ value }) => value?.toLowerCase())
-  @IsIn(['append', 'prepend', 'replace'])
+  @IsIn(["append", "prepend", "replace"])
   operation?: ContentOperation;
 
   @ValidateIf((o) => o.content !== undefined)
-  @Transform(({ value }) => value?.toLowerCase() ?? 'json')
-  @IsIn(['json', 'markdown', 'html'])
+  @Transform(({ value }) => value?.toLowerCase() ?? "json")
+  @IsIn(["json", "markdown", "html"])
   format?: ContentFormat;
 }

@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
-import { ExportService } from './export.service';
-import { ExportController } from './export.controller';
-import { StorageModule } from '../storage/storage.module';
+import { Module } from "@nestjs/common";
+import { StorageModule } from "../storage/storage.module";
+import { ExportController } from "./export.controller";
+import { ExportService } from "./export.service";
 
 @Module({
+  controllers: [ExportController],
   imports: [StorageModule],
   providers: [ExportService],
-  controllers: [ExportController],
 })
 export class ExportModule {}

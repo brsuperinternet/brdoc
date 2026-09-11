@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '../../types/kysely.types';
-import { dbOrTx } from '../../utils';
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { DB } from "@docmost/db/types/db";
 import {
   InsertableShare,
   Share,
   UpdatableShare,
-} from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
-import { validate as isValidUUID } from 'uuid';
-import { ExpressionBuilder, sql } from 'kysely';
-import { DB } from '@docmost/db/types/db';
-import { jsonObjectFrom } from 'kysely/helpers/postgres';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
+} from "@docmost/db/types/entity.types";
+import { Injectable } from "@nestjs/common";
+import { ExpressionBuilder, sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { InjectKysely } from "nestjs-kysely";
+import { validate as isValidUUID } from "uuid";
+import { KyselyDB, KyselyTransaction } from "../../types/kysely.types";
+import { dbOrTx } from "../../utils";
 
 @Injectable()
 export class ShareRepo {
@@ -23,17 +23,17 @@ export class ShareRepo {
   ) {}
 
   private baseFields: Array<keyof Share> = [
-    'id',
-    'key',
-    'pageId',
-    'includeSubPages',
-    'searchIndexing',
-    'creatorId',
-    'spaceId',
-    'workspaceId',
-    'createdAt',
-    'updatedAt',
-    'deletedAt',
+    "id",
+    "key",
+    "pageId",
+    "includeSubPages",
+    "searchIndexing",
+    "creatorId",
+    "spaceId",
+    "workspaceId",
+    "createdAt",
+    "updatedAt",
+    "deletedAt",
   ];
 
   async findById(
@@ -43,11 +43,11 @@ export class ShareRepo {
       includeCreator?: boolean;
       withLock?: boolean;
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Share> {
     const db = dbOrTx(this.db, opts?.trx);
 
-    let query = db.selectFrom('shares').select(this.baseFields);
+    let query = db.selectFrom("shares").select(this.baseFields);
 
     if (opts?.includeSharedPage) {
       query = query.select((eb) => this.withSharedPage(eb));
@@ -62,9 +62,9 @@ export class ShareRepo {
     }
 
     if (isValidUUID(shareId)) {
-      query = query.where('id', '=', shareId);
+      query = query.where("id", "=", shareId);
     } else {
-      query = query.where(sql`LOWER(key)`, '=', shareId.toLowerCase());
+      query = query.where(sql`LOWER(key)`, "=", shareId.toLowerCase());
     }
 
     return query.executeTakeFirst();
@@ -76,14 +76,14 @@ export class ShareRepo {
       includeCreator?: boolean;
       withLock?: boolean;
       trx?: KyselyTransaction;
-    },
+    }
   ): Promise<Share> {
     const db = dbOrTx(this.db, opts?.trx);
 
     let query = db
-      .selectFrom('shares')
+      .selectFrom("shares")
       .select(this.baseFields)
-      .where('pageId', '=', pageId);
+      .where("pageId", "=", pageId);
 
     if (opts?.includeCreator) {
       query = query.select((eb) => this.withCreator(eb));
@@ -98,15 +98,15 @@ export class ShareRepo {
   async updateShare(
     updatableShare: UpdatableShare,
     shareId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     return dbOrTx(this.db, trx)
-      .updateTable('shares')
+      .updateTable("shares")
       .set({ ...updatableShare, updatedAt: new Date() })
       .where(
-        isValidUUID(shareId) ? 'id' : sql`LOWER(key)`,
-        '=',
-        shareId.toLowerCase(),
+        isValidUUID(shareId) ? "id" : sql`LOWER(key)`,
+        "=",
+        shareId.toLowerCase()
       )
       .returning(this.baseFields)
       .executeTakeFirst();
@@ -114,23 +114,23 @@ export class ShareRepo {
 
   async insertShare(
     insertableShare: InsertableShare,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<Share> {
     const db = dbOrTx(this.db, trx);
     return db
-      .insertInto('shares')
+      .insertInto("shares")
       .values(insertableShare)
       .returning(this.baseFields)
       .executeTakeFirst();
   }
 
   async deleteShare(shareId: string): Promise<void> {
-    let query = this.db.deleteFrom('shares');
+    let query = this.db.deleteFrom("shares");
 
     if (isValidUUID(shareId)) {
-      query = query.where('id', '=', shareId);
+      query = query.where("id", "=", shareId);
     } else {
-      query = query.where(sql`LOWER(key)`, '=', shareId.toLowerCase());
+      query = query.where(sql`LOWER(key)`, "=", shareId.toLowerCase());
     }
 
     await query.execute();
@@ -138,94 +138,95 @@ export class ShareRepo {
 
   async deleteBySpaceId(
     spaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
-    await db
-      .deleteFrom('shares')
-      .where('spaceId', '=', spaceId)
-      .execute();
+    await db.deleteFrom("shares").where("spaceId", "=", spaceId).execute();
   }
 
   async deleteByWorkspaceId(
     workspaceId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
     await db
-      .deleteFrom('shares')
-      .where('workspaceId', '=', workspaceId)
+      .deleteFrom("shares")
+      .where("workspaceId", "=", workspaceId)
       .execute();
   }
 
   async getShares(userId: string, pagination: PaginationOptions) {
     const query = this.db
-      .selectFrom('shares')
+      .selectFrom("shares")
       .select(this.baseFields)
       .select((eb) => this.withPage(eb))
       .select((eb) => this.withSpace(eb, userId))
       .select((eb) => this.withCreator(eb))
-      .where('spaceId', 'in', this.spaceMemberRepo.getUserSpaceIdsQuery(userId));
+      .where(
+        "spaceId",
+        "in",
+        this.spaceMemberRepo.getUserSpaceIdsQuery(userId)
+      );
 
     return executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
+      cursor: pagination.cursor,
       fields: [
-        { expression: 'updatedAt', direction: 'desc' },
-        { expression: 'id', direction: 'desc' },
+        { direction: "desc", expression: "updatedAt" },
+        { direction: "desc", expression: "id" },
       ],
       parseCursor: (cursor) => ({
-        updatedAt: new Date(cursor.updatedAt),
         id: cursor.id,
+        updatedAt: new Date(cursor.updatedAt),
       }),
+      perPage: pagination.limit,
     });
   }
 
-  withPage(eb: ExpressionBuilder<DB, 'shares'>) {
+  withPage(eb: ExpressionBuilder<DB, "shares">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('pages')
-        .select(['pages.id', 'pages.title', 'pages.slugId', 'pages.icon'])
-        .whereRef('pages.id', '=', 'shares.pageId'),
-    ).as('page');
+        .selectFrom("pages")
+        .select(["pages.id", "pages.title", "pages.slugId", "pages.icon"])
+        .whereRef("pages.id", "=", "shares.pageId")
+    ).as("page");
   }
 
-  withSpace(eb: ExpressionBuilder<DB, 'shares'>, userId?: string) {
+  withSpace(eb: ExpressionBuilder<DB, "shares">, userId?: string) {
     return jsonObjectFrom(
       eb
-        .selectFrom('spaces')
-        .select(['spaces.id', 'spaces.name', 'spaces.slug'])
+        .selectFrom("spaces")
+        .select(["spaces.id", "spaces.name", "spaces.slug"])
         .$if(Boolean(userId), (qb) =>
-          qb.select((eb) => this.withUserSpaceRole(eb, userId)),
+          qb.select((eb) => this.withUserSpaceRole(eb, userId))
         )
-        .whereRef('spaces.id', '=', 'shares.spaceId'),
-    ).as('space');
+        .whereRef("spaces.id", "=", "shares.spaceId")
+    ).as("space");
   }
 
-  withUserSpaceRole(eb: ExpressionBuilder<DB, 'spaces'>, userId: string) {
+  withUserSpaceRole(eb: ExpressionBuilder<DB, "spaces">, userId: string) {
     return eb
       .selectFrom(
         eb
-          .selectFrom('spaceMembers')
-          .select(['spaceMembers.role'])
-          .whereRef('spaceMembers.spaceId', '=', 'spaces.id')
-          .where('spaceMembers.userId', '=', userId)
+          .selectFrom("spaceMembers")
+          .select(["spaceMembers.role"])
+          .whereRef("spaceMembers.spaceId", "=", "spaces.id")
+          .where("spaceMembers.userId", "=", userId)
           .unionAll(
             eb
-              .selectFrom('spaceMembers')
+              .selectFrom("spaceMembers")
               .innerJoin(
-                'groupUsers',
-                'groupUsers.groupId',
-                'spaceMembers.groupId',
+                "groupUsers",
+                "groupUsers.groupId",
+                "spaceMembers.groupId"
               )
-              .select(['spaceMembers.role'])
-              .whereRef('spaceMembers.spaceId', '=', 'spaces.id')
-              .where('groupUsers.userId', '=', userId),
+              .select(["spaceMembers.role"])
+              .whereRef("spaceMembers.spaceId", "=", "spaces.id")
+              .where("groupUsers.userId", "=", userId)
           )
-          .as('roles_union'),
+          .as("roles_union")
       )
-      .select('roles_union.role')
+      .select("roles_union.role")
       .orderBy(
         sql`CASE roles_union.role
             WHEN 'admin' THEN 3
@@ -234,33 +235,33 @@ export class ShareRepo {
             ELSE 0
            END`,
 
-        'desc',
+        "desc"
       )
       .limit(1)
-      .as('userRole');
+      .as("userRole");
   }
 
-  withCreator(eb: ExpressionBuilder<DB, 'shares'>) {
+  withCreator(eb: ExpressionBuilder<DB, "shares">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('users')
-        .select(['users.id', 'users.name', 'users.avatarUrl'])
-        .whereRef('users.id', '=', 'shares.creatorId'),
-    ).as('creator');
+        .selectFrom("users")
+        .select(["users.id", "users.name", "users.avatarUrl"])
+        .whereRef("users.id", "=", "shares.creatorId")
+    ).as("creator");
   }
 
-  withSharedPage(eb: ExpressionBuilder<DB, 'shares'>) {
+  withSharedPage(eb: ExpressionBuilder<DB, "shares">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('pages')
+        .selectFrom("pages")
         .select([
-          'pages.id',
-          'pages.slugId',
-          'pages.title',
-          'pages.icon',
-          'pages.parentPageId',
+          "pages.id",
+          "pages.slugId",
+          "pages.title",
+          "pages.icon",
+          "pages.parentPageId",
         ])
-        .whereRef('pages.id', '=', 'shares.pageId'),
-    ).as('sharedPage');
+        .whereRef("pages.id", "=", "shares.pageId")
+    ).as("sharedPage");
   }
 }

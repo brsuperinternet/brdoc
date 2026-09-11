@@ -1,25 +1,23 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import type { StringValue } from 'ms';
-import { EnvironmentService } from '../../integrations/environment/environment.service';
-import { TokenService } from './services/token.service';
+import { Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import type { StringValue } from "ms";
+import { EnvironmentService } from "../../integrations/environment/environment.service";
+import { TokenService } from "./services/token.service";
 
 @Module({
+  exports: [TokenService],
   imports: [
     JwtModule.registerAsync({
-      useFactory: async (environmentService: EnvironmentService) => {
-        return {
-          secret: environmentService.getAppSecret(),
-          signOptions: {
-            expiresIn: environmentService.getJwtTokenExpiresIn() as StringValue,
-            issuer: 'Docmost',
-          },
-        };
-      },
       inject: [EnvironmentService],
+      useFactory: async (environmentService: EnvironmentService) => ({
+        secret: environmentService.getAppSecret(),
+        signOptions: {
+          expiresIn: environmentService.getJwtTokenExpiresIn() as StringValue,
+          issuer: "Docmost",
+        },
+      }),
     }),
   ],
   providers: [TokenService],
-  exports: [TokenService],
 })
 export class TokenModule {}

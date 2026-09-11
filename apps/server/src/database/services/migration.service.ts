@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import * as path from 'path';
-import { promises as fs } from 'fs';
-import { Migrator, FileMigrationProvider } from 'kysely';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { Injectable, Logger } from "@nestjs/common";
+import { FileMigrationProvider, Migrator } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
 
 @Injectable()
 export class MigrationService {
@@ -16,30 +16,30 @@ export class MigrationService {
       db: this.db,
       provider: new FileMigrationProvider({
         fs,
+        migrationFolder: path.join(import.meta.dirname, "..", "migrations"),
         path,
-        migrationFolder: path.join(__dirname, '..', 'migrations'),
       }),
     });
 
     const { error, results } = await migrator.migrateToLatest();
 
     if (results && results.length === 0) {
-      this.logger.log('No pending database migrations');
+      this.logger.log("No pending database migrations");
       return;
     }
 
     results?.forEach((it) => {
-      if (it.status === 'Success') {
+      if (it.status === "Success") {
         this.logger.log(
-          `Migration "${it.migrationName}" executed successfully`,
+          `Migration "${it.migrationName}" executed successfully`
         );
-      } else if (it.status === 'Error') {
+      } else if (it.status === "Error") {
         this.logger.error(`Failed to execute migration "${it.migrationName}"`);
       }
     });
 
     if (error) {
-      this.logger.error('Failed to run database migration. Exiting program.');
+      this.logger.error("Failed to run database migration. Exiting program.");
       this.logger.error(error);
       process.exit(1);
     }

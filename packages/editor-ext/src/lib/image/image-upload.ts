@@ -1,20 +1,22 @@
-import { imageDimensionsFromData } from 'image-dimensions';
-import { MediaUploadOptions, UploadFn } from '../media-utils';
-import { IAttachment } from '../types';
-import { generateNodeId } from '../utils';
-import { Node } from '@tiptap/pm/model';
-import { Command } from '@tiptap/core';
+import { Command } from "@tiptap/core";
+import { Node } from "@tiptap/pm/model";
+import { imageDimensionsFromData } from "image-dimensions";
+import { MediaUploadOptions, UploadFn } from "../media-utils";
+import { IAttachment } from "../types";
+import { generateNodeId } from "../utils";
 
 const findImageNodeByPlaceholderId = (
   doc: Node,
-  placeholderId: string,
+  placeholderId: string
 ): { node: Node; pos: number } | null => {
   let result: { node: Node; pos: number } | null = null;
 
   doc.descendants((node, pos) => {
-    if (result) return false;
+    if (result) {
+      return false;
+    }
     if (
-      node.type.name === 'image' &&
+      node.type.name === "image" &&
       node.attrs.placeholder?.id === placeholderId
     ) {
       result = { node, pos };
@@ -31,12 +33,14 @@ const handleImageUpload =
     // check if the file is an image
     const validated = validateFn?.(file);
     // @ts-ignore
-    if (!validated) return;
+    if (!validated) {
+      return;
+    }
 
     const objectUrl = URL.createObjectURL(file);
 
     const imageDimensions = imageDimensionsFromData(
-      new Uint8Array(await file.arrayBuffer()),
+      new Uint8Array(await file.arrayBuffer())
     );
 
     const placeholderId = generateNodeId();
@@ -55,16 +59,18 @@ const handleImageUpload =
     const insertPlaceholder = (): Command => {
       return ({ tr, state }) => {
         const initialPlaceholderNode = state.schema.nodes.image?.create({
+          aspectRatio,
+          height,
           placeholder: {
             id: placeholderId,
             name: file.name,
           },
           width,
-          height,
-          aspectRatio,
         });
 
-        if (!initialPlaceholderNode) return false;
+        if (!initialPlaceholderNode) {
+          return false;
+        }
 
         const { parent } = tr.doc.resolve(pos);
         const isEmptyTextBlock = parent.isTextblock && !parent.childCount;
@@ -85,16 +91,18 @@ const handleImageUpload =
           findImageNodeByPlaceholderId(tr.doc, placeholderId) || {};
 
         //  If the placeholder is not found or attachment is missing, abort the process
-        if (currentPos === null || !attachment) return false;
+        if (currentPos === null || !attachment) {
+          return false;
+        }
 
         // Update the placeholder node with the actual image data
         tr.setNodeMarkup(currentPos, undefined, {
-          src: `/api/files/${attachment.id}/${attachment.fileName}`,
-          attachmentId: attachment.id,
-          size: attachment.fileSize,
-          width,
-          height,
           aspectRatio,
+          attachmentId: attachment.id,
+          height,
+          size: attachment.fileSize,
+          src: `/api/files/${attachment.id}/${attachment.fileName}`,
+          width,
         });
 
         return true;
@@ -105,7 +113,9 @@ const handleImageUpload =
         const { pos: currentPos = null } =
           findImageNodeByPlaceholderId(tr.doc, placeholderId) || {};
 
-        if (currentPos === null) return false;
+        if (currentPos === null) {
+          return false;
+        }
 
         // Remove the placeholder node
         tr.delete(currentPos, currentPos + 2);

@@ -1,3 +1,4 @@
+import { User } from "@docmost/db/types/entity.types";
 import {
   Body,
   Controller,
@@ -5,36 +6,32 @@ import {
   HttpStatus,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { AuthUser } from '../../../common/decorators/auth-user.decorator';
-import { User } from '@docmost/db/types/entity.types';
-import { TransclusionService } from './transclusion.service';
-import { LookupDto } from './dto/lookup.dto';
-import { ReferencesDto } from './dto/references.dto';
-import { UnsyncReferenceDto } from './dto/unsync-reference.dto';
+} from "@nestjs/common";
+import { AuthUser } from "../../../common/decorators/auth-user.decorator";
+import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
+import { LookupDto } from "./dto/lookup.dto";
+import { ReferencesDto } from "./dto/references.dto";
+import { UnsyncReferenceDto } from "./dto/unsync-reference.dto";
+import { TransclusionService } from "./transclusion.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('pages/transclusion')
+@Controller("pages/transclusion")
 export class TransclusionController {
   constructor(private readonly transclusionService: TransclusionService) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('lookup')
+  @Post("lookup")
   async lookup(@Body() dto: LookupDto, @AuthUser() user: User) {
     return this.transclusionService.lookup(
       dto.references,
       user.id,
-      user.workspaceId,
+      user.workspaceId
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('references')
-  async references(
-    @Body() dto: ReferencesDto,
-    @AuthUser() user: User,
-  ) {
+  @Post("references")
+  async references(@Body() dto: ReferencesDto, @AuthUser() user: User) {
     return this.transclusionService.listReferences({
       sourcePageId: dto.sourcePageId,
       transclusionId: dto.transclusionId,
@@ -44,16 +41,16 @@ export class TransclusionController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('unsync-reference')
+  @Post("unsync-reference")
   async unsyncReference(
     @Body() dto: UnsyncReferenceDto,
-    @AuthUser() user: User,
+    @AuthUser() user: User
   ) {
     return this.transclusionService.unsyncReference(
       dto.referencePageId,
       dto.sourcePageId,
       dto.transclusionId,
-      user,
+      user
     );
   }
 }

@@ -1,17 +1,16 @@
-import { OmitType, PartialType } from '@nestjs/mapped-types';
+import { OmitType, PartialType } from "@nestjs/mapped-types";
 import {
   IsBoolean,
   IsIn,
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
-} from 'class-validator';
-import { CreateUserDto } from '../../auth/dto/create-user.dto';
+} from "class-validator";
+import { CreateUserDto } from "../../auth/dto/create-user.dto";
 
 export class UpdateUserDto extends PartialType(
-  OmitType(CreateUserDto, ['password'] as const),
+  OmitType(CreateUserDto, ["password"] as const)
 ) {
   @IsOptional()
   @IsBoolean()
@@ -19,7 +18,7 @@ export class UpdateUserDto extends PartialType(
 
   @IsOptional()
   @IsString()
-  @IsIn(['read', 'edit'])
+  @IsIn(["read", "edit"])
   pageEditMode: string;
 
   @IsOptional()

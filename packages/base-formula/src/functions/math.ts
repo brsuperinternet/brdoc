@@ -1,160 +1,265 @@
-import { register } from "./registry";
 import { makeErrorCell } from "../error";
 import type { Value } from "../types";
+import { register } from "./registry";
 
-const num = (v: unknown): number | null => v == null ? null : Number(v);
+const num = (v: unknown): number | null => (v == null ? null : Number(v));
 
 register({
-  name: "round", arity: { min: 1, max: 2 }, paramTypes: ["number", "number"], returnType: "number",
+  arity: { max: 2, min: 1 },
+  category: "math",
+  doc: "Rounds to the nearest integer, or to `places` decimals if given.",
   eval: ([v, places]) => {
     const n = num(v);
-    if (n == null) return null;
+    if (n == null) {
+      return null;
+    }
     const p = places == null ? 0 : Math.trunc(Number(places));
-    const factor = Math.pow(10, p);
+    const factor = 10 ** p;
     return Math.round(n * factor) / factor;
   },
-  doc: "Rounds to the nearest integer, or to `places` decimals if given.", category: "math",
+  name: "round",
+  paramTypes: ["number", "number"],
+  returnType: "number",
 });
 register({
-  name: "floor", arity: { min: 1, max: 1 }, paramTypes: ["number"], returnType: "number",
-  eval: ([v]) => { const n = num(v); return n == null ? null : Math.floor(n); },
-  doc: "Rounds down.", category: "math",
+  arity: { max: 1, min: 1 },
+  category: "math",
+  doc: "Rounds down.",
+  eval: ([v]) => {
+    const n = num(v);
+    return n == null ? null : Math.floor(n);
+  },
+  name: "floor",
+  paramTypes: ["number"],
+  returnType: "number",
 });
 register({
-  name: "ceil", arity: { min: 1, max: 1 }, paramTypes: ["number"], returnType: "number",
-  eval: ([v]) => { const n = num(v); return n == null ? null : Math.ceil(n); },
-  doc: "Rounds up.", category: "math",
+  arity: { max: 1, min: 1 },
+  category: "math",
+  doc: "Rounds up.",
+  eval: ([v]) => {
+    const n = num(v);
+    return n == null ? null : Math.ceil(n);
+  },
+  name: "ceil",
+  paramTypes: ["number"],
+  returnType: "number",
 });
 register({
-  name: "abs", arity: { min: 1, max: 1 }, paramTypes: ["number"], returnType: "number",
-  eval: ([v]) => { const n = num(v); return n == null ? null : Math.abs(n); },
-  doc: "Absolute value.", category: "math",
+  arity: { max: 1, min: 1 },
+  category: "math",
+  doc: "Absolute value.",
+  eval: ([v]) => {
+    const n = num(v);
+    return n == null ? null : Math.abs(n);
+  },
+  name: "abs",
+  paramTypes: ["number"],
+  returnType: "number",
 });
 register({
-  name: "min", arity: { min: 1, max: null }, paramTypes: "variadic-any", returnType: "number",
+  arity: { max: null, min: 1 },
+  category: "math",
+  doc: "Minimum of the arguments.",
   eval: (args) => {
     const nums = args.map(num).filter((n): n is number => n != null);
     return nums.length ? Math.min(...nums) : null;
   },
-  doc: "Minimum of the arguments.", category: "math",
+  name: "min",
+  paramTypes: "variadic-any",
+  returnType: "number",
 });
 register({
-  name: "max", arity: { min: 1, max: null }, paramTypes: "variadic-any", returnType: "number",
+  arity: { max: null, min: 1 },
+  category: "math",
+  doc: "Maximum of the arguments.",
   eval: (args) => {
     const nums = args.map(num).filter((n): n is number => n != null);
     return nums.length ? Math.max(...nums) : null;
   },
-  doc: "Maximum of the arguments.", category: "math",
+  name: "max",
+  paramTypes: "variadic-any",
+  returnType: "number",
 });
 register({
-  name: "mod", arity: { min: 2, max: 2 }, paramTypes: ["number", "number"], returnType: "number",
+  arity: { max: 2, min: 2 },
+  category: "math",
+  doc: "Remainder after division.",
   eval: ([a, b]) => {
-    const na = num(a), nb = num(b);
-    if (na == null || nb == null) return null;
-    if (nb === 0) return makeErrorCell("DIV_BY_ZERO", "modulo by zero");
+    const na = num(a),
+      nb = num(b);
+    if (na == null || nb == null) {
+      return null;
+    }
+    if (nb === 0) {
+      return makeErrorCell("DIV_BY_ZERO", "modulo by zero");
+    }
     return na % nb;
   },
-  doc: "Remainder after division.", category: "math",
+  name: "mod",
+  paramTypes: ["number", "number"],
+  returnType: "number",
 });
 register({
-  name: "add", arity: { min: 2, max: 2 }, paramTypes: ["number", "number"], returnType: "number",
+  arity: { max: 2, min: 2 },
+  category: "math",
+  doc: "Sum of two numbers.",
   eval: ([a, b]) => {
-    const na = num(a), nb = num(b);
+    const na = num(a),
+      nb = num(b);
     return na == null || nb == null ? null : na + nb;
   },
-  doc: "Sum of two numbers.", category: "math",
+  name: "add",
+  paramTypes: ["number", "number"],
+  returnType: "number",
 });
 register({
-  name: "subtract", arity: { min: 2, max: 2 }, paramTypes: ["number", "number"], returnType: "number",
+  arity: { max: 2, min: 2 },
+  category: "math",
+  doc: "Difference of two numbers.",
   eval: ([a, b]) => {
-    const na = num(a), nb = num(b);
+    const na = num(a),
+      nb = num(b);
     return na == null || nb == null ? null : na - nb;
   },
-  doc: "Difference of two numbers.", category: "math",
+  name: "subtract",
+  paramTypes: ["number", "number"],
+  returnType: "number",
 });
 register({
-  name: "multiply", arity: { min: 2, max: 2 }, paramTypes: ["number", "number"], returnType: "number",
+  arity: { max: 2, min: 2 },
+  category: "math",
+  doc: "Product of two numbers.",
   eval: ([a, b]) => {
-    const na = num(a), nb = num(b);
+    const na = num(a),
+      nb = num(b);
     return na == null || nb == null ? null : na * nb;
   },
-  doc: "Product of two numbers.", category: "math",
+  name: "multiply",
+  paramTypes: ["number", "number"],
+  returnType: "number",
 });
 register({
-  name: "divide", arity: { min: 2, max: 2 }, paramTypes: ["number", "number"], returnType: "number",
+  arity: { max: 2, min: 2 },
+  category: "math",
+  doc: "Quotient of two numbers.",
   eval: ([a, b]) => {
-    const na = num(a), nb = num(b);
-    if (na == null || nb == null) return null;
-    if (nb === 0) return makeErrorCell("DIV_BY_ZERO", "division by zero");
+    const na = num(a),
+      nb = num(b);
+    if (na == null || nb == null) {
+      return null;
+    }
+    if (nb === 0) {
+      return makeErrorCell("DIV_BY_ZERO", "division by zero");
+    }
     return na / nb;
   },
-  doc: "Quotient of two numbers.", category: "math",
+  name: "divide",
+  paramTypes: ["number", "number"],
+  returnType: "number",
 });
 register({
-  name: "pow", arity: { min: 2, max: 2 }, paramTypes: ["number", "number"], returnType: "number",
+  arity: { max: 2, min: 2 },
+  category: "math",
+  doc: "Base raised to an exponent.",
   eval: ([a, b]) => {
-    const na = num(a), nb = num(b);
-    return na == null || nb == null ? null : Math.pow(na, nb);
+    const na = num(a),
+      nb = num(b);
+    return na == null || nb == null ? null : na ** nb;
   },
-  doc: "Base raised to an exponent.", category: "math",
+  name: "pow",
+  paramTypes: ["number", "number"],
+  returnType: "number",
 });
 register({
-  name: "sqrt", arity: { min: 1, max: 1 }, paramTypes: ["number"], returnType: "number",
+  arity: { max: 1, min: 1 },
+  category: "math",
+  doc: "Positive square root.",
   eval: ([v]) => {
     const n = num(v);
-    if (n == null) return null;
-    if (n < 0) return makeErrorCell("TYPE_MISMATCH", "sqrt of negative number");
+    if (n == null) {
+      return null;
+    }
+    if (n < 0) {
+      return makeErrorCell("TYPE_MISMATCH", "sqrt of negative number");
+    }
     return Math.sqrt(n);
   },
-  doc: "Positive square root.", category: "math",
+  name: "sqrt",
+  paramTypes: ["number"],
+  returnType: "number",
 });
 register({
-  name: "sum", arity: { min: 1, max: null }, paramTypes: "variadic-any", returnType: "number",
+  arity: { max: null, min: 1 },
+  category: "math",
+  doc: "Sum of the arguments.",
   eval: (args) => {
     // Null propagates as 0 so `sum(prop("A"), prop("B"))` still works when
     // some cells are empty — matches Airtable/Notion semantics.
     let total = 0;
     for (const v of args) {
       const n = num(v);
-      if (n != null && Number.isFinite(n)) total += n;
+      if (n != null && Number.isFinite(n)) {
+        total += n;
+      }
     }
     return total;
   },
-  doc: "Sum of the arguments.", category: "math",
+  name: "sum",
+  paramTypes: "variadic-any",
+  returnType: "number",
 });
 const meanEval = (args: Value[]): Value => {
   const nums: number[] = [];
   for (const v of args) {
     const n = num(v);
-    if (n != null && Number.isFinite(n)) nums.push(n);
+    if (n != null && Number.isFinite(n)) {
+      nums.push(n);
+    }
   }
-  if (nums.length === 0) return null;
+  if (nums.length === 0) {
+    return null;
+  }
   return nums.reduce((a, b) => a + b, 0) / nums.length;
 };
 register({
-  name: "mean", arity: { min: 1, max: null }, paramTypes: "variadic-any", returnType: "number",
+  arity: { max: null, min: 1 },
+  category: "math",
+  doc: "Arithmetic average of the arguments.",
   eval: meanEval,
-  doc: "Arithmetic average of the arguments.", category: "math",
+  name: "mean",
+  paramTypes: "variadic-any",
+  returnType: "number",
 });
 register({
-  name: "average", arity: { min: 1, max: null }, paramTypes: "variadic-any", returnType: "number",
+  arity: { max: null, min: 1 },
+  category: "math",
+  doc: "Arithmetic average of the arguments (alias of mean).",
   eval: meanEval,
-  doc: "Arithmetic average of the arguments (alias of mean).", category: "math",
+  name: "average",
+  paramTypes: "variadic-any",
+  returnType: "number",
 });
 register({
-  name: "median", arity: { min: 1, max: null }, paramTypes: "variadic-any", returnType: "number",
+  arity: { max: null, min: 1 },
+  category: "math",
+  doc: "Middle value of the arguments.",
   eval: (args) => {
     const nums: number[] = [];
     for (const v of args) {
       const n = num(v);
-      if (n != null && Number.isFinite(n)) nums.push(n);
+      if (n != null && Number.isFinite(n)) {
+        nums.push(n);
+      }
     }
-    if (nums.length === 0) return null;
+    if (nums.length === 0) {
+      return null;
+    }
     nums.sort((a, b) => a - b);
     const mid = Math.floor(nums.length / 2);
-    return nums.length % 2 === 0
-      ? (nums[mid - 1] + nums[mid]) / 2
-      : nums[mid];
+    return nums.length % 2 === 0 ? (nums[mid - 1] + nums[mid]) / 2 : nums[mid];
   },
-  doc: "Middle value of the arguments.", category: "math",
+  name: "median",
+  paramTypes: "variadic-any",
+  returnType: "number",
 });

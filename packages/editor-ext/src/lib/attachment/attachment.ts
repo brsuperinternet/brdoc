@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { sanitizeUrl } from "../utils";
 
@@ -8,12 +8,12 @@ export interface AttachmentOptions {
 }
 
 export interface AttachmentAttributes {
-  url?: string;
-  name?: string;
-  mime?: string; // e.g. application/zip
-  size?: number;
   attachmentId?: string;
+  mime?: string; // e.g. application/zip
+  name?: string;
   placeholder?: string;
+  size?: number;
+  url?: string;
 }
 
 declare module "@tiptap/core" {
@@ -25,22 +25,40 @@ declare module "@tiptap/core" {
 }
 
 export const Attachment = Node.create<AttachmentOptions>({
-  name: "attachment",
-  inline: false,
-  group: "block",
-  isolating: true,
-  atom: true,
-  defining: true,
-  draggable: true,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-    };
-  },
   addAttributes() {
     return {
+      attachmentId: {
+        default: undefined,
+        parseHTML: (element) => element.getAttribute("data-attachment-id"),
+        renderHTML: (attributes: AttachmentAttributes) => ({
+          "data-attachment-id": attributes.attachmentId,
+        }),
+      },
+      mime: {
+        default: undefined,
+        parseHTML: (element) => element.getAttribute("data-attachment-mime"),
+        renderHTML: (attributes: AttachmentAttributes) => ({
+          "data-attachment-mime": attributes.mime,
+        }),
+      },
+      name: {
+        default: undefined,
+        parseHTML: (element) => element.getAttribute("data-attachment-name"),
+        renderHTML: (attributes: AttachmentAttributes) => ({
+          "data-attachment-name": attributes.name,
+        }),
+      },
+      placeholder: {
+        default: null,
+        rendered: false,
+      },
+      size: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-attachment-size"),
+        renderHTML: (attributes: AttachmentAttributes) => ({
+          "data-attachment-size": attributes.size,
+        }),
+      },
       url: {
         default: "",
         parseHTML: (element) => {
@@ -51,40 +69,41 @@ export const Attachment = Node.create<AttachmentOptions>({
           "data-attachment-url": sanitizeUrl(attributes.url),
         }),
       },
-      name: {
-        default: undefined,
-        parseHTML: (element) => element.getAttribute("data-attachment-name"),
-        renderHTML: (attributes: AttachmentAttributes) => ({
-          "data-attachment-name": attributes.name,
-        }),
-      },
-      mime: {
-        default: undefined,
-        parseHTML: (element) => element.getAttribute("data-attachment-mime"),
-        renderHTML: (attributes: AttachmentAttributes) => ({
-          "data-attachment-mime": attributes.mime,
-        }),
-      },
-      size: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-attachment-size"),
-        renderHTML: (attributes: AttachmentAttributes) => ({
-          "data-attachment-size": attributes.size,
-        }),
-      },
-      attachmentId: {
-        default: undefined,
-        parseHTML: (element) => element.getAttribute("data-attachment-id"),
-        renderHTML: (attributes: AttachmentAttributes) => ({
-          "data-attachment-id": attributes.attachmentId,
-        }),
-      },
-      placeholder: {
-        default: null,
-        rendered: false,
-      },
     };
   },
+
+  addCommands() {
+    return {
+      setAttachment:
+        (attrs: AttachmentAttributes) =>
+        ({ commands }) =>
+          commands.insertContent({
+            attrs,
+            type: "attachment",
+          }),
+    };
+  },
+
+  addNodeView() {
+    // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
+    this.editor.isInitialized = true;
+
+    return ReactNodeViewRenderer(this.options.view);
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      view: null,
+    };
+  },
+  atom: true,
+  defining: true,
+  draggable: true,
+  group: "block",
+  inline: false,
+  isolating: true,
+  name: "attachment",
 
   parseHTML() {
     return [
@@ -105,32 +124,12 @@ export const Attachment = Node.create<AttachmentOptions>({
       [
         "a",
         {
-          href: sanitizeUrl(HTMLAttributes["data-attachment-url"]),
           class: "attachment",
+          href: sanitizeUrl(HTMLAttributes["data-attachment-url"]),
           target: "blank",
         },
         `${HTMLAttributes["data-attachment-name"]}`,
       ],
     ];
-  },
-
-  addCommands() {
-    return {
-      setAttachment:
-        (attrs: AttachmentAttributes) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: "attachment",
-            attrs: attrs,
-          });
-        },
-    };
-  },
-
-  addNodeView() {
-    // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
-    this.editor.isInitialized = true;
-
-    return ReactNodeViewRenderer(this.options.view);
   },
 });

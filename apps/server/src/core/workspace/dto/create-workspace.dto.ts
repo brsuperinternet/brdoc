@@ -1,11 +1,11 @@
+import { Transform, TransformFnParams } from "class-transformer";
 import {
   IsAlphanumeric,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
-} from 'class-validator';
-import { Transform, TransformFnParams } from 'class-transformer';
+} from "class-validator";
 
 export class CreateWorkspaceDto {
   @MinLength(1)

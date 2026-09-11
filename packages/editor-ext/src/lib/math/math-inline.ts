@@ -21,45 +21,36 @@ export interface MathInlineAttributes {
 export const inputRegex = /(?:^|\s)((?:\$\$)((?:[^$]+))(?:\$\$))$/;
 
 export const MathInline = Node.create<MathInlineOption>({
-  name: "mathInline",
-  group: "inline",
-  inline: true,
-  atom: true,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-    };
-  },
-
   addAttributes() {
     return {
       text: {
         default: "",
-        parseHTML: (element) => {
-          return element.innerHTML;
-        },
+        parseHTML: (element) => element.innerHTML,
       },
     };
   },
 
-  parseHTML() {
-    return [
-      {
-        tag: `span[data-type="${this.name}"]`,
-        getAttrs: (node: HTMLElement) => {
-          return node.hasAttribute("data-katex") ? {} : false;
-        },
-      },
-    ];
+  addCommands() {
+    return {
+      setMathInline:
+        (attributes?: Record<string, any>) =>
+        ({ commands }) =>
+          commands.insertContent({
+            attrs: attributes,
+            type: this.name,
+          }),
+    };
   },
 
-  renderHTML({ HTMLAttributes }) {
+  addInputRules() {
     return [
-      "span",
-      { "data-type": this.name, "data-katex": true },
-      `${HTMLAttributes.text}`,
+      nodeInputRule({
+        find: inputRegex,
+        getAttributes: (match) => ({
+          text: match[1].replaceAll("$", ""),
+        }),
+        type: this.type,
+      }),
     ];
   },
 
@@ -70,28 +61,32 @@ export const MathInline = Node.create<MathInlineOption>({
     return ReactNodeViewRenderer(this.options.view);
   },
 
-  addCommands() {
+  addOptions() {
     return {
-      setMathInline:
-        (attributes?: Record<string, any>) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: attributes,
-          });
-        },
+      HTMLAttributes: {},
+      view: null,
     };
   },
+  atom: true,
+  group: "inline",
+  inline: true,
+  name: "mathInline",
 
-  addInputRules() {
+  parseHTML() {
     return [
-      nodeInputRule({
-        find: inputRegex,
-        type: this.type,
-        getAttributes: (match) => ({
-          text: match[1].replaceAll("$", ""),
-        }),
-      }),
+      {
+        getAttrs: (node: HTMLElement) =>
+          node.hasAttribute("data-katex") ? {} : false,
+        tag: `span[data-type="${this.name}"]`,
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "span",
+      { "data-katex": true, "data-type": this.name },
+      `${HTMLAttributes.text}`,
     ];
   },
 });

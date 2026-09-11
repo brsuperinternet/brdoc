@@ -1,17 +1,19 @@
+import { Command } from "@tiptap/core";
+import { Node } from "@tiptap/pm/model";
 import { MediaUploadOptions, UploadFn } from "../media-utils";
 import { IAttachment } from "../types";
 import { generateNodeId } from "../utils";
-import { Node } from "@tiptap/pm/model";
-import { Command } from "@tiptap/core";
 
 const findAudioNodeByPlaceholderId = (
   doc: Node,
-  placeholderId: string,
+  placeholderId: string
 ): { node: Node; pos: number } | null => {
   let result: { node: Node; pos: number } | null = null;
 
   doc.descendants((node, pos) => {
-    if (result) return false;
+    if (result) {
+      return false;
+    }
 
     if (
       node.type.name === "audio" &&
@@ -32,7 +34,9 @@ const handleAudioUpload =
   async (file, editor, pos, pageId) => {
     const validated = validateFn?.(file);
     // @ts-ignore
-    if (!validated) return;
+    if (!validated) {
+      return;
+    }
 
     const objectUrl = URL.createObjectURL(file);
     const placeholderId = generateNodeId();
@@ -43,8 +47,9 @@ const handleAudioUpload =
       editor.storage.shared.audioPreviews || {};
     editor.storage.shared.audioPreviews[placeholderId] = objectUrl;
 
-    const insertPlaceholder = (): Command => {
-      return ({ tr, state }) => {
+    const insertPlaceholder =
+      (): Command =>
+      ({ tr, state }) => {
         const initialPlaceholderNode = state.schema.nodes.audio?.create({
           placeholder: {
             id: placeholderId,
@@ -52,7 +57,9 @@ const handleAudioUpload =
           },
         });
 
-        if (!initialPlaceholderNode) return false;
+        if (!initialPlaceholderNode) {
+          return false;
+        }
 
         const { parent } = tr.doc.resolve(pos);
         const isEmptyTextBlock = parent.isTextblock && !parent.childCount;
@@ -65,37 +72,40 @@ const handleAudioUpload =
 
         return true;
       };
-    };
 
-    const replacePlaceholderWithAudio = (attachment: IAttachment): Command => {
-      return ({ tr }) => {
+    const replacePlaceholderWithAudio =
+      (attachment: IAttachment): Command =>
+      ({ tr }) => {
         const { pos: currentPos = null } =
           findAudioNodeByPlaceholderId(tr.doc, placeholderId) || {};
 
-        if (currentPos === null || !attachment) return;
+        if (currentPos === null || !attachment) {
+          return;
+        }
 
         tr.setNodeMarkup(currentPos, undefined, {
-          src: `/api/files/${attachment.id}/${attachment.fileName}`,
           attachmentId: attachment.id,
           size: attachment.fileSize,
+          src: `/api/files/${attachment.id}/${attachment.fileName}`,
         });
 
         return true;
       };
-    };
 
-    const removePlaceholder = (): Command => {
-      return ({ tr }) => {
+    const removePlaceholder =
+      (): Command =>
+      ({ tr }) => {
         const { pos: currentPos = null } =
           findAudioNodeByPlaceholderId(tr.doc, placeholderId) || {};
 
-        if (currentPos === null) return false;
+        if (currentPos === null) {
+          return false;
+        }
 
         tr.delete(currentPos, currentPos + 2);
 
         return true;
       };
-    };
 
     const insertPlaceholderTimeout = setTimeout(() => {
       editor.commands.command(insertPlaceholder());

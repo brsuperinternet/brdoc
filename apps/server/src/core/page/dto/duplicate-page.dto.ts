@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class DuplicatePageDto {
   @IsNotEmpty()
@@ -17,8 +17,8 @@ export type CopyPageMapEntry = {
 };
 
 export type ICopyPageAttachment = {
-  newPageId: string,
-  oldPageId: string,
-  oldAttachmentId: string,
-  newAttachmentId: string,
+  newPageId: string;
+  oldPageId: string;
+  oldAttachmentId: string;
+  newAttachmentId: string;
 };

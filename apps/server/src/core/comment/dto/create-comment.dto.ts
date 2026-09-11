@@ -1,5 +1,12 @@
-import { IsIn, IsJSON, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
-import { z } from 'zod';
+import {
+  IsIn,
+  IsJSON,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from "class-validator";
+import { z } from "zod";
 
 const yjsIdSchema = z.object({
   client: z.number().int().nonnegative(),
@@ -7,10 +14,10 @@ const yjsIdSchema = z.object({
 });
 
 const yjsRelativePositionSchema = z.object({
-  type: yjsIdSchema,
-  tname: z.string().nullable(),
-  item: yjsIdSchema.nullable(),
   assoc: z.number().int(),
+  item: yjsIdSchema.nullable(),
+  tname: z.string().nullable(),
+  type: yjsIdSchema,
 });
 
 export const yjsSelectionSchema = z.object({
@@ -30,7 +37,7 @@ export class CreateCommentDto {
   selection: string;
 
   @IsOptional()
-  @IsIn(['inline', 'page'])
+  @IsIn(["inline", "page"])
   type: string;
 
   @IsOptional()

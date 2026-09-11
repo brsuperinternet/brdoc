@@ -1,11 +1,11 @@
+import { Injectable, Logger } from "@nestjs/common";
 import {
   HealthIndicatorResult,
   HealthIndicatorService,
-} from '@nestjs/terminus';
-import { Injectable, Logger } from '@nestjs/common';
-import { EnvironmentService } from '../environment/environment.service';
-import { Redis } from 'ioredis';
-import { parseRedisUrl } from '../../common/helpers';
+} from "@nestjs/terminus";
+import { Redis } from "ioredis";
+import { parseRedisUrl } from "../../common/helpers";
+import { EnvironmentService } from "../environment/environment.service";
 
 @Injectable()
 export class RedisHealthIndicator {
@@ -13,7 +13,7 @@ export class RedisHealthIndicator {
 
   constructor(
     private readonly healthIndicatorService: HealthIndicatorService,
-    private environmentService: EnvironmentService,
+    private environmentService: EnvironmentService
   ) {}
 
   async pingCheck(key: string): Promise<HealthIndicatorResult> {

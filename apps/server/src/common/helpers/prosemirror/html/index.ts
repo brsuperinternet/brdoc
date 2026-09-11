@@ -1,2 +1,2 @@
-export * from './generateHTML';
-export * from './generateJSON';
+export * from "./generateHTML";
+export * from "./generateJSON";

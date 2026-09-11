@@ -1,9 +1,9 @@
-import { Kysely } from 'kysely';
+import { Kysely } from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {
-  await db.schema.alterTable('spaces').addColumn('settings', 'jsonb').execute();
+  await db.schema.alterTable("spaces").addColumn("settings", "jsonb").execute();
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema.alterTable('spaces').dropColumn('settings').execute();
+  await db.schema.alterTable("spaces").dropColumn("settings").execute();
 }

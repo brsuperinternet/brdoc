@@ -1,8 +1,8 @@
+import { Node, Range } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { Range, Node, mergeAttributes } from "@tiptap/core";
-import { ResizableNodeView } from "../resizable-nodeview";
-import type { ResizableNodeViewDirection } from "../resizable-nodeview";
 import { normalizeFileUrl } from "../media-utils";
+import type { ResizableNodeViewDirection } from "../resizable-nodeview";
+import { ResizableNodeView } from "../resizable-nodeview";
 
 export type VideoResizeOptions = {
   enabled: boolean;
@@ -20,24 +20,24 @@ export type VideoResizeOptions = {
 };
 
 export interface VideoOptions {
-  view: any;
   HTMLAttributes: Record<string, any>;
   resize: VideoResizeOptions | false;
+  view: any;
 }
 
 export interface VideoAttributes {
-  src?: string;
-  alt?: string;
   align?: string;
-  attachmentId?: string;
-  size?: number;
-  width?: number | string;
-  height?: number;
+  alt?: string;
   aspectRatio?: number;
+  attachmentId?: string;
+  height?: number;
   placeholder?: {
     id: string;
     name: string;
   };
+  size?: number;
+  src?: string;
+  width?: number | string;
 }
 
 declare module "@tiptap/core" {
@@ -55,29 +55,13 @@ declare module "@tiptap/core" {
 }
 
 export const TiptapVideo = Node.create<VideoOptions>({
-  name: "video",
-
-  group: "block",
-  isolating: true,
-  atom: true,
-  defining: true,
-  draggable: true,
-
-  addOptions() {
-    return {
-      view: null,
-      HTMLAttributes: {},
-      resize: false,
-    };
-  },
-
   addAttributes() {
     return {
-      src: {
-        default: "",
-        parseHTML: (element) => element.getAttribute("src"),
-        renderHTML: (attributes) => ({
-          src: attributes.src,
+      align: {
+        default: "center",
+        parseHTML: (element) => element.getAttribute("data-align"),
+        renderHTML: (attributes: VideoAttributes) => ({
+          "data-align": attributes.align,
         }),
       },
       alt: {
@@ -87,6 +71,13 @@ export const TiptapVideo = Node.create<VideoOptions>({
           "aria-label": attributes.alt,
         }),
       },
+      aspectRatio: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-aspect-ratio"),
+        renderHTML: (attributes: VideoAttributes) => ({
+          "data-aspect-ratio": attributes.aspectRatio,
+        }),
+      },
       attachmentId: {
         default: undefined,
         parseHTML: (element) => element.getAttribute("data-attachment-id"),
@@ -94,30 +85,23 @@ export const TiptapVideo = Node.create<VideoOptions>({
           "data-attachment-id": attributes.attachmentId,
         }),
       },
-      width: {
-        default: null,
-        parseHTML: (element) => {
-          const raw = element.getAttribute("width");
-          if (!raw) return null;
-          if (raw.endsWith("%")) return raw;
-          const num = parseFloat(raw);
-          return isNaN(num) ? null : num;
-        },
-        renderHTML: (attributes: VideoAttributes) => ({
-          width: attributes.width,
-        }),
-      },
       height: {
         default: null,
         parseHTML: (element) => {
           const raw = element.getAttribute("height");
-          if (!raw) return null;
-          const num = parseFloat(raw);
+          if (!raw) {
+            return null;
+          }
+          const num = Number.parseFloat(raw);
           return isNaN(num) ? null : num;
         },
         renderHTML: (attributes: VideoAttributes) => ({
           height: attributes.height,
         }),
+      },
+      placeholder: {
+        default: null,
+        rendered: false,
       },
       size: {
         default: null,
@@ -126,58 +110,52 @@ export const TiptapVideo = Node.create<VideoOptions>({
           "data-size": attributes.size,
         }),
       },
-      align: {
-        default: "center",
-        parseHTML: (element) => element.getAttribute("data-align"),
-        renderHTML: (attributes: VideoAttributes) => ({
-          "data-align": attributes.align,
+      src: {
+        default: "",
+        parseHTML: (element) => element.getAttribute("src"),
+        renderHTML: (attributes) => ({
+          src: attributes.src,
         }),
       },
-      aspectRatio: {
+      width: {
         default: null,
-        parseHTML: (element) => element.getAttribute("data-aspect-ratio"),
+        parseHTML: (element) => {
+          const raw = element.getAttribute("width");
+          if (!raw) {
+            return null;
+          }
+          if (raw.endsWith("%")) {
+            return raw;
+          }
+          const num = Number.parseFloat(raw);
+          return isNaN(num) ? null : num;
+        },
         renderHTML: (attributes: VideoAttributes) => ({
-          "data-aspect-ratio": attributes.aspectRatio,
+          width: attributes.width,
         }),
-      },
-      placeholder: {
-        default: null,
-        rendered: false,
       },
     };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: "video",
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "video",
-      { controls: "true", ...HTMLAttributes },
-      ["source", HTMLAttributes],
-    ];
   },
 
   addCommands() {
     return {
       setVideo:
         (attrs: VideoAttributes) =>
-        ({ commands }) => {
-          return commands.insertContent({
+        ({ commands }) =>
+          commands.insertContent({
+            attrs,
             type: "video",
-            attrs: attrs,
-          });
-        },
+          }),
 
       setVideoAlign:
         (align) =>
         ({ commands }) =>
           commands.updateAttributes("video", { align }),
+
+      setVideoSize:
+        (width, height) =>
+        ({ commands }) =>
+          commands.updateAttributes("video", { height, width }),
 
       setVideoWidth:
         (width) =>
@@ -185,11 +163,6 @@ export const TiptapVideo = Node.create<VideoOptions>({
           commands.updateAttributes("video", {
             width: `${Math.max(0, Math.min(100, width))}%`,
           }),
-
-      setVideoSize:
-        (width, height) =>
-        ({ commands }) =>
-          commands.updateAttributes("video", { width, height }),
     };
   },
 
@@ -253,26 +226,28 @@ export const TiptapVideo = Node.create<VideoOptions>({
       let currentNode = node;
 
       const nodeView = new ResizableNodeView({
-        element: el,
         editor,
-        node,
+        element: el,
         getPos,
-        onResize: (w, h) => {
-          el.style.width = `${w}px`;
-          el.style.height = `${h}px`;
-        },
+        node,
         onCommit: () => {
           const pos = getPos();
-          if (pos === undefined) return;
+          if (pos === undefined) {
+            return;
+          }
 
           this.editor
             .chain()
             .setNodeSelection(pos)
             .updateAttributes(this.name, {
-              width: Math.round(el.offsetWidth),
               height: Math.round(el.offsetHeight),
+              width: Math.round(el.offsetWidth),
             })
             .run();
+        },
+        onResize: (w, h) => {
+          el.style.width = `${w}px`;
+          el.style.height = `${h}px`;
         },
         onUpdate: (updatedNode, _decorations, _innerDecorations) => {
           if (updatedNode.type !== currentNode.type) {
@@ -308,14 +283,14 @@ export const TiptapVideo = Node.create<VideoOptions>({
           return true;
         },
         options: {
+          className,
+          createCustomHandle,
           directions,
           min: {
-            width: minWidth,
             height: minHeight,
+            width: minWidth,
           },
           preserveAspectRatio: alwaysPreserveAspectRatio === true,
-          createCustomHandle,
-          className,
         },
       });
 
@@ -330,11 +305,9 @@ export const TiptapVideo = Node.create<VideoOptions>({
           const parentEl = dom.parentElement;
           if (parentEl) {
             const containerWidth = parentEl.clientWidth;
-            const pctValue = parseInt(widthAttr, 10);
+            const pctValue = Number.parseInt(widthAttr, 10);
             if (!isNaN(pctValue) && containerWidth > 0) {
-              const pxWidth = Math.round(
-                containerWidth * (pctValue / 100),
-              );
+              const pxWidth = Math.round(containerWidth * (pctValue / 100));
               el.style.width = `${pxWidth}px`;
               if (node.attrs.aspectRatio) {
                 el.style.height = `${Math.round(pxWidth / node.attrs.aspectRatio)}px`;
@@ -357,6 +330,37 @@ export const TiptapVideo = Node.create<VideoOptions>({
 
       return nodeView;
     };
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      resize: false,
+      view: null,
+    };
+  },
+  atom: true,
+  defining: true,
+  draggable: true,
+
+  group: "block",
+  isolating: true,
+  name: "video",
+
+  parseHTML() {
+    return [
+      {
+        tag: "video",
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "video",
+      { controls: "true", ...HTMLAttributes },
+      ["source", HTMLAttributes],
+    ];
   },
 });
 

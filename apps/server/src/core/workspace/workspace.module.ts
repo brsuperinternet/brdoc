@@ -1,14 +1,14 @@
-import { Module } from '@nestjs/common';
-import { WorkspaceService } from './services/workspace.service';
-import { WorkspaceController } from './controllers/workspace.controller';
-import { SpaceModule } from '../space/space.module';
-import { WorkspaceInvitationService } from './services/workspace-invitation.service';
-import { TokenModule } from '../auth/token.module';
+import { Module } from "@nestjs/common";
+import { TokenModule } from "../auth/token.module";
+import { SpaceModule } from "../space/space.module";
+import { WorkspaceController } from "./controllers/workspace.controller";
+import { WorkspaceService } from "./services/workspace.service";
+import { WorkspaceInvitationService } from "./services/workspace-invitation.service";
 
 @Module({
-  imports: [SpaceModule, TokenModule],
   controllers: [WorkspaceController],
-  providers: [WorkspaceService, WorkspaceInvitationService],
   exports: [WorkspaceService],
+  imports: [SpaceModule, TokenModule],
+  providers: [WorkspaceService, WorkspaceInvitationService],
 })
 export class WorkspaceModule {}

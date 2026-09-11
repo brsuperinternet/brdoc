@@ -1,18 +1,18 @@
 export enum WorkspaceCaslAction {
-  Manage = 'manage',
-  Create = 'create',
-  Read = 'read',
-  Edit = 'edit',
-  Delete = 'delete',
+  Manage = "manage",
+  Create = "create",
+  Read = "read",
+  Edit = "edit",
+  Delete = "delete",
 }
 export enum WorkspaceCaslSubject {
-  Settings = 'settings',
-  Member = 'member',
-  Space = 'space',
-  Group = 'group',
-  Attachment = 'attachment',
-  API = 'api_key',
-  Audit = 'audit',
+  Settings = "settings",
+  Member = "member",
+  Space = "space",
+  Group = "group",
+  Attachment = "attachment",
+  API = "api_key",
+  Audit = "audit",
 }
 
 export type IWorkspaceAbility =

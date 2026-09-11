@@ -1,20 +1,20 @@
-import { Logger, OnModuleDestroy } from '@nestjs/common';
-import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
-import { QueueJob, QueueName } from '../constants';
-import {
-  IAddPageWatchersJob,
-  IPageBacklinkJob,
-} from '../constants/queue.interface';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { BacklinkRepo } from '@docmost/db/repos/backlink/backlink.repo';
+import { BacklinkRepo } from "@docmost/db/repos/backlink/backlink.repo";
 import {
   WatcherRepo,
   WatcherType,
-} from '@docmost/db/repos/watcher/watcher.repo';
-import { InsertableWatcher } from '@docmost/db/types/entity.types';
-import { processBacklinks } from '../tasks/backlinks.task';
+} from "@docmost/db/repos/watcher/watcher.repo";
+import { InsertableWatcher } from "@docmost/db/types/entity.types";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Logger, OnModuleDestroy } from "@nestjs/common";
+import { Job } from "bullmq";
+import { InjectKysely } from "nestjs-kysely";
+import { QueueJob, QueueName } from "../constants";
+import {
+  IAddPageWatchersJob,
+  IPageBacklinkJob,
+} from "../constants/queue.interface";
+import { processBacklinks } from "../tasks/backlinks.task";
 
 @Processor(QueueName.GENERAL_QUEUE)
 export class GeneralQueueProcessor
@@ -37,12 +37,12 @@ export class GeneralQueueProcessor
           const { userIds, pageId, spaceId, workspaceId } =
             job.data as IAddPageWatchersJob;
           const watchers: InsertableWatcher[] = userIds.map((userId) => ({
-            userId,
+            addedById: userId,
             pageId,
             spaceId,
-            workspaceId,
             type: WatcherType.PAGE,
-            addedById: userId,
+            userId,
+            workspaceId,
           }));
           await this.watcherRepo.insertMany(watchers);
           break;
@@ -52,7 +52,7 @@ export class GeneralQueueProcessor
           await processBacklinks(
             this.db,
             this.backlinkRepo,
-            job.data as IPageBacklinkJob,
+            job.data as IPageBacklinkJob
           );
           break;
         }
@@ -62,19 +62,19 @@ export class GeneralQueueProcessor
     }
   }
 
-  @OnWorkerEvent('active')
+  @OnWorkerEvent("active")
   onActive(job: Job) {
     this.logger.debug(`Processing ${job.name} job`);
   }
 
-  @OnWorkerEvent('failed')
+  @OnWorkerEvent("failed")
   onError(job: Job) {
     this.logger.error(
-      `Error processing ${job.name} job. Reason: ${job.failedReason}`,
+      `Error processing ${job.name} job. Reason: ${job.failedReason}`
     );
   }
 
-  @OnWorkerEvent('completed')
+  @OnWorkerEvent("completed")
   onCompleted(job: Job) {
     this.logger.debug(`Completed ${job.name} job`);
   }

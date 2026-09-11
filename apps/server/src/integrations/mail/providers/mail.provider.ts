@@ -1,10 +1,14 @@
-import { EnvironmentService } from '../../environment/environment.service';
-import { MailOption, PostmarkConfig, SMTPConfig } from '../interfaces';
-import { SmtpDriver, PostmarkDriver, LogDriver } from '../drivers';
-import { MailDriver } from '../drivers/interfaces/mail-driver.interface';
-import { MailConfig } from '../interfaces';
-import { MAIL_CONFIG_TOKEN, MAIL_DRIVER_TOKEN } from '../mail.constants';
-import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import SMTPTransport from "nodemailer/lib/smtp-transport";
+import { EnvironmentService } from "../../environment/environment.service";
+import { LogDriver, PostmarkDriver, SmtpDriver } from "../drivers";
+import { MailDriver } from "../drivers/interfaces/mail-driver.interface";
+import {
+  MailConfig,
+  MailOption,
+  PostmarkConfig,
+  SMTPConfig,
+} from "../interfaces";
+import { MAIL_CONFIG_TOKEN, MAIL_DRIVER_TOKEN } from "../mail.constants";
 
 function createMailDriver(mail: MailConfig): MailDriver {
   switch (mail.driver) {
@@ -15,11 +19,12 @@ function createMailDriver(mail: MailConfig): MailDriver {
     case MailOption.Log:
       return new LogDriver();
     default:
-      throw new Error(`Unknown mail driver`);
+      throw new Error("Unknown mail driver");
   }
 }
 
 export const mailDriverConfigProvider = {
+  inject: [EnvironmentService],
   provide: MAIL_CONFIG_TOKEN,
   useFactory: async (environmentService: EnvironmentService) => {
     const driver = environmentService.getMailDriver().toLocaleLowerCase();
@@ -32,29 +37,29 @@ export const mailDriverConfigProvider = {
           environmentService.getSmtpPassword()
         ) {
           auth = {
-            user: environmentService.getSmtpUsername(),
             pass: environmentService.getSmtpPassword(),
+            user: environmentService.getSmtpUsername(),
           };
         }
         return {
-          driver,
           config: {
-            host: environmentService.getSmtpHost(),
-            port: environmentService.getSmtpPort(),
-            connectionTimeout: 30 * 1000, // 30 seconds
             auth,
-            secure: environmentService.getSmtpSecure(),
+            connectionTimeout: 30 * 1000, // 30 seconds
+            host: environmentService.getSmtpHost(),
             ignoreTLS: environmentService.getSmtpIgnoreTLS(),
+            port: environmentService.getSmtpPort(),
+            secure: environmentService.getSmtpSecure(),
           } as SMTPTransport.Options,
+          driver,
         };
       }
 
       case MailOption.Postmark:
         return {
-          driver,
           config: {
             postmarkToken: environmentService.getPostmarkToken(),
           } as PostmarkConfig,
+          driver,
         };
 
       case MailOption.Log:
@@ -65,12 +70,10 @@ export const mailDriverConfigProvider = {
         throw new Error(`Unknown mail driver: ${driver}`);
     }
   },
-
-  inject: [EnvironmentService],
 };
 
 export const mailDriverProvider = {
+  inject: [MAIL_CONFIG_TOKEN],
   provide: MAIL_DRIVER_TOKEN,
   useFactory: (config: MailConfig) => createMailDriver(config),
-  inject: [MAIL_CONFIG_TOKEN],
 };

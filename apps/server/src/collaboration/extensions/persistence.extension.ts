@@ -1,38 +1,38 @@
+import { isDeepStrictEqual } from "node:util";
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { Page } from "@docmost/db/types/entity.types";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { executeTx } from "@docmost/db/utils";
 import {
   afterUnloadDocumentPayload,
   Extension,
   onChangePayload,
   onLoadDocumentPayload,
   onStoreDocumentPayload,
-} from '@hocuspocus/server';
-import * as Y from 'yjs';
-import { Injectable, Logger } from '@nestjs/common';
-import { TiptapTransformer } from '@hocuspocus/transformer';
-import { getPageId, jsonToText, tiptapExtensions } from '../collaboration.util';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { executeTx } from '@docmost/db/utils';
-import { InjectQueue } from '@nestjs/bullmq';
-import { QueueJob, QueueName } from '../../integrations/queue/constants';
-import { Queue } from 'bullmq';
+} from "@hocuspocus/server";
+import { TiptapTransformer } from "@hocuspocus/transformer";
+import { InjectQueue } from "@nestjs/bullmq";
+import { Injectable, Logger } from "@nestjs/common";
+import { Queue } from "bullmq";
+import { InjectKysely } from "nestjs-kysely";
+import * as Y from "yjs";
 import {
   extractMentions,
   extractUserMentions,
-} from '../../common/helpers/prosemirror/utils';
-import { isDeepStrictEqual } from 'node:util';
+} from "../../common/helpers/prosemirror/utils";
+import { TransclusionService } from "../../core/page/transclusion/transclusion.service";
+import { QueueJob, QueueName } from "../../integrations/queue/constants";
 import {
   IPageHistoryJob,
   IPageMentionNotificationJob,
-} from '../../integrations/queue/constants/queue.interface';
-import { Page } from '@docmost/db/types/entity.types';
-import { CollabHistoryService } from '../services/collab-history.service';
+} from "../../integrations/queue/constants/queue.interface";
+import { getPageId, jsonToText, tiptapExtensions } from "../collaboration.util";
 import {
   HISTORY_FAST_INTERVAL,
   HISTORY_FAST_THRESHOLD,
   HISTORY_INTERVAL,
-} from '../constants';
-import { TransclusionService } from '../../core/page/transclusion/transclusion.service';
+} from "../constants";
+import { CollabHistoryService } from "../services/collab-history.service";
 
 @Injectable()
 export class PersistenceExtension implements Extension {
@@ -53,7 +53,7 @@ export class PersistenceExtension implements Extension {
     const { documentName, document } = data;
     const pageId = getPageId(documentName);
 
-    if (!document.isEmpty('default')) {
+    if (!document.isEmpty("default")) {
       return;
     }
 
@@ -63,7 +63,7 @@ export class PersistenceExtension implements Extension {
     });
 
     if (!page) {
-      this.logger.warn('page not found');
+      this.logger.warn("page not found");
       return;
     }
 
@@ -83,8 +83,8 @@ export class PersistenceExtension implements Extension {
 
       const ydoc = TiptapTransformer.toYdoc(
         page.content,
-        'default',
-        tiptapExtensions,
+        "default",
+        tiptapExtensions
       );
 
       Y.encodeStateAsUpdate(ydoc);
@@ -100,7 +100,7 @@ export class PersistenceExtension implements Extension {
 
     const pageId = getPageId(documentName);
 
-    const tiptapJson = TiptapTransformer.fromYdoc(document, 'default');
+    const tiptapJson = TiptapTransformer.fromYdoc(document, "default");
     const ydocState = Buffer.from(Y.encodeStateAsUpdate(document));
 
     let textContent = null;
@@ -108,7 +108,7 @@ export class PersistenceExtension implements Extension {
     try {
       textContent = jsonToText(tiptapJson);
     } catch (err) {
-      this.logger.warn('jsonToText' + err?.['message']);
+      this.logger.warn("jsonToText" + err?.["message"]);
     }
 
     let page: Page = null;
@@ -117,9 +117,9 @@ export class PersistenceExtension implements Extension {
     try {
       await executeTx(this.db, async (trx) => {
         page = await this.pageRepo.findById(pageId, {
-          withLock: true,
           includeContent: true,
           trx,
+          withLock: true,
         });
 
         if (!page) {
@@ -140,7 +140,7 @@ export class PersistenceExtension implements Extension {
               ...existingContributors,
               ...editingUserIds,
               page.creatorId,
-            ]),
+            ])
           );
         } catch (err) {
           //this.logger.debug('Contributors error:' + err?.['message']);
@@ -149,13 +149,13 @@ export class PersistenceExtension implements Extension {
         await this.pageRepo.updatePage(
           {
             content: tiptapJson,
-            textContent: textContent,
-            ydoc: ydocState,
+            contributorIds,
             lastUpdatedById: lastContext.user.id,
-            contributorIds: contributorIds,
+            textContent,
+            ydoc: ydocState,
           },
           pageId,
-          trx,
+          trx
         );
 
         this.logger.debug(`Page updated: ${pageId} - SlugId: ${page.slugId}`);
@@ -167,17 +167,17 @@ export class PersistenceExtension implements Extension {
     if (page) {
       document.broadcastStateless(
         JSON.stringify({
-          type: 'page.updated',
-          updatedAt: new Date().toISOString(),
-          lastUpdatedById: lastContext?.user?.id,
           lastUpdatedBy: lastContext?.user
             ? {
+                avatarUrl: lastContext.user?.avatarUrl,
                 id: lastContext.user?.id,
                 name: lastContext.user?.name,
-                avatarUrl: lastContext.user?.avatarUrl,
               }
             : undefined,
-        }),
+          lastUpdatedById: lastContext?.user?.id,
+          type: "page.updated",
+          updatedAt: new Date().toISOString(),
+        })
       );
 
       await this.syncTransclusion(pageId, page.workspaceId, tiptapJson);
@@ -191,19 +191,19 @@ export class PersistenceExtension implements Extension {
       const userMentions = extractUserMentions(mentions);
       const oldMentions = page.content ? extractMentions(page.content) : [];
       const oldMentionedUserIds = extractUserMentions(oldMentions).map(
-        (m) => m.entityId,
+        (m) => m.entityId
       );
 
       if (userMentions.length > 0) {
         await this.notificationQueue.add(QueueJob.PAGE_MENTION_NOTIFICATION, {
-          userMentions: userMentions.map((m) => ({
-            userId: m.entityId,
-            mentionId: m.id,
-            creatorId: m.creatorId,
-          })),
           oldMentionedUserIds,
           pageId,
           spaceId: page.spaceId,
+          userMentions: userMentions.map((m) => ({
+            creatorId: m.creatorId,
+            mentionId: m.id,
+            userId: m.entityId,
+          })),
           workspaceId: page.workspaceId,
         } as IPageMentionNotificationJob);
       }
@@ -221,7 +221,9 @@ export class PersistenceExtension implements Extension {
     const documentName = data.documentName;
     const userId = data.context?.user?.id;
 
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
 
     if (!this.contributors.has(documentName)) {
       this.contributors.set(documentName, new Set());
@@ -237,7 +239,9 @@ export class PersistenceExtension implements Extension {
 
   private consumeContributors(documentName: string): string[] {
     const contributorSet = this.contributors.get(documentName);
-    if (!contributorSet) return [];
+    if (!contributorSet) {
+      return [];
+    }
     const userIds = [...contributorSet];
     this.contributors.delete(documentName);
     return userIds;
@@ -253,7 +257,7 @@ export class PersistenceExtension implements Extension {
     await this.historyQueue.add(
       QueueJob.PAGE_HISTORY,
       { pageId: page.id } as IPageHistoryJob,
-      { jobId: page.id, delay },
+      { delay, jobId: page.id }
     );
   }
 
@@ -266,30 +270,30 @@ export class PersistenceExtension implements Extension {
   private async syncTransclusion(
     pageId: string,
     workspaceId: string,
-    tiptapJson: unknown,
+    tiptapJson: unknown
   ): Promise<void> {
     try {
       await this.transclusionService.syncPageTransclusions(
         pageId,
         workspaceId,
-        tiptapJson,
+        tiptapJson
       );
     } catch (err) {
       this.logger.error(
         { err, pageId },
-        'Failed to sync transclusions for page',
+        "Failed to sync transclusions for page"
       );
     }
     try {
       await this.transclusionService.syncPageReferences(
         pageId,
         workspaceId,
-        tiptapJson,
+        tiptapJson
       );
     } catch (err) {
       this.logger.error(
         { err, pageId },
-        'Failed to sync transclusion references for page',
+        "Failed to sync transclusion references for page"
       );
     }
   }

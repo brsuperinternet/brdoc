@@ -3,8 +3,6 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 
 export const Selection = Extension.create({
-  name: "selection",
-
   addProseMirrorPlugins() {
     const { editor } = this;
 
@@ -31,6 +29,7 @@ export const Selection = Extension.create({
       }),
     ];
   },
+  name: "selection",
 });
 
 export default Selection;

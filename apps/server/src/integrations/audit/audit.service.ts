@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { AuditLogPayload, ActorType } from '../../common/events/audit-events';
+import { Injectable } from "@nestjs/common";
+import { ActorType, AuditLogPayload } from "../../common/events/audit-events";
 
 export type AuditLogContext = {
   workspaceId: string;
@@ -13,21 +13,21 @@ export type IAuditService = {
   log(payload: AuditLogPayload): void | Promise<void>;
   logWithContext(
     payload: AuditLogPayload,
-    context: AuditLogContext,
+    context: AuditLogContext
   ): void | Promise<void>;
   logBatchWithContext(
     payloads: AuditLogPayload[],
-    context: AuditLogContext,
+    context: AuditLogContext
   ): void | Promise<void>;
   setActorId(actorId: string): void;
   setActorType(actorType: ActorType): void;
   updateRetention(
     workspaceId: string,
-    retentionDays: number,
+    retentionDays: number
   ): void | Promise<void>;
 };
 
-export const AUDIT_SERVICE = Symbol('AUDIT_SERVICE');
+export const AUDIT_SERVICE = Symbol("AUDIT_SERVICE");
 
 @Injectable()
 export class NoopAuditService implements IAuditService {
@@ -41,7 +41,7 @@ export class NoopAuditService implements IAuditService {
 
   logBatchWithContext(
     _payloads: AuditLogPayload[],
-    _context: AuditLogContext,
+    _context: AuditLogContext
   ): void {
     // No-op: swallow the log when EE module is not available
   }
@@ -54,10 +54,7 @@ export class NoopAuditService implements IAuditService {
     // No-op
   }
 
-  updateRetention(
-    _workspaceId: string,
-    _retentionDays: number,
-  ): void {
+  updateRetention(_workspaceId: string, _retentionDays: number): void {
     // No-op
   }
 }

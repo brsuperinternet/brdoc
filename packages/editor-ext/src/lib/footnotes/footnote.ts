@@ -24,59 +24,17 @@ export interface FootnoteOptions extends ListItemOptions {
 }
 
 const Footnote = ListItem.extend<FootnoteOptions>({
-  name: "footnote",
-  content() {
-    return this.options.content;
-  },
-  isolating: true,
-  defining: true,
-  draggable: false,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      bulletListTypeName: 'bulletList',
-      orderedListTypeName: 'orderedList',
-      ...this.parent?.(),
-      content: "paragraph+",
-    };
-  },
-
   addAttributes() {
     return {
-      id: {
-        isRequired: true,
-      },
       // the data-id field should match the data-id field of a footnote reference.
       // it's used to link footnotes and references together.
       "data-id": {
         isRequired: true,
       },
-    };
-  },
-  parseHTML() {
-    return [
-      {
-        tag: "li",
-        getAttrs(node) {
-          const id = node.getAttribute("data-id");
-          if (id) {
-            return {
-              "data-id": node.getAttribute("data-id"),
-            };
-          }
-          return false;
-        },
-        priority: 1000,
+      id: {
+        isRequired: true,
       },
-    ];
-  },
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "li",
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-      0,
-    ];
+    };
   },
 
   addCommands() {
@@ -130,45 +88,13 @@ const Footnote = ListItem.extend<FootnoteOptions>({
           return false;
         }
       },
-      // when the user presses tab, adjust the text selection to be at the end of the next footnote
-      Tab: ({ editor }) => {
-        try {
-          const { selection } = editor.state;
-          const pos = editor.$pos(selection.anchor);
-          if (!pos.after) return false;
-          // if the next node  is "footnotes", place the text selection at the end of the first footnote
-          if (pos.after.node.type.name == "footnotes") {
-            const firstChild = pos.after.node.child(0);
-            editor
-              .chain()
-              .setTextSelection(pos.after.from + firstChild.content.size)
-              .scrollIntoView()
-              .run();
-            return true;
-          } else {
-            const startPos = selection.$from.start(2);
-            if (Number.isNaN(startPos)) return false;
-            const parent = editor.$pos(startPos);
-            if (parent.node.type.name != "footnote" || !parent.after) {
-              return false;
-            }
-            // if the next node is a footnote, place the text selection at the end of it
-            editor
-              .chain()
-              .setTextSelection(parent.after.to - 1)
-              .scrollIntoView()
-              .run();
-            return true;
-          }
-        } catch {
-          return false;
-        }
-      },
       // inverse of the tab command - place the text selection at the end of the previous footnote
       "Shift-Tab": ({ editor }) => {
         const { selection } = editor.state;
         const startPos = selection.$from.start(2);
-        if (Number.isNaN(startPos)) return false;
+        if (Number.isNaN(startPos)) {
+          return false;
+        }
         const parent = editor.$pos(startPos);
         if (parent.node.type.name != "footnote" || !parent.before) {
           return false;
@@ -181,9 +107,86 @@ const Footnote = ListItem.extend<FootnoteOptions>({
           .run();
         return true;
       },
+      // when the user presses tab, adjust the text selection to be at the end of the next footnote
+      Tab: ({ editor }) => {
+        try {
+          const { selection } = editor.state;
+          const pos = editor.$pos(selection.anchor);
+          if (!pos.after) {
+            return false;
+          }
+          // if the next node  is "footnotes", place the text selection at the end of the first footnote
+          if (pos.after.node.type.name == "footnotes") {
+            const firstChild = pos.after.node.child(0);
+            editor
+              .chain()
+              .setTextSelection(pos.after.from + firstChild.content.size)
+              .scrollIntoView()
+              .run();
+            return true;
+          }
+          const startPos = selection.$from.start(2);
+          if (Number.isNaN(startPos)) {
+            return false;
+          }
+          const parent = editor.$pos(startPos);
+          if (parent.node.type.name != "footnote" || !parent.after) {
+            return false;
+          }
+          // if the next node is a footnote, place the text selection at the end of it
+          editor
+            .chain()
+            .setTextSelection(parent.after.to - 1)
+            .scrollIntoView()
+            .run();
+          return true;
+        } catch {
+          return false;
+        }
+      },
     };
   },
 
+  addOptions() {
+    return {
+      bulletListTypeName: "bulletList",
+      HTMLAttributes: {},
+      orderedListTypeName: "orderedList",
+      ...this.parent?.(),
+      content: "paragraph+",
+    };
+  },
+  content() {
+    return this.options.content;
+  },
+  defining: true,
+  draggable: false,
+  isolating: true,
+  name: "footnote",
+  parseHTML() {
+    return [
+      {
+        getAttrs(node) {
+          const id = node.getAttribute("data-id");
+          if (id) {
+            return {
+              "data-id": node.getAttribute("data-id"),
+            };
+          }
+          return false;
+        },
+        priority: 1000,
+        tag: "li",
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "li",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0,
+    ];
+  },
 });
 
 export default Footnote;

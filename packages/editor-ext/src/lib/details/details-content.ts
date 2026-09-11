@@ -1,8 +1,8 @@
 import {
-  Node,
   defaultBlockAt,
   findParentNode,
   mergeAttributes,
+  Node,
 } from "@tiptap/core";
 import { Selection } from "@tiptap/pm/state";
 
@@ -11,37 +11,6 @@ export interface DetailsContentOptions {
 }
 
 export const DetailsContent = Node.create<DetailsContentOptions>({
-  name: "detailsContent",
-  group: "block",
-  content: "block*",
-  defining: true,
-  selectable: false,
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: `div[data-type="${this.name}"]`,
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "div",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
-      0,
-    ];
-  },
-
   addKeyboardShortcuts() {
     return {
       Enter: ({ editor }) => {
@@ -50,7 +19,7 @@ export const DetailsContent = Node.create<DetailsContentOptions>({
         const selection = state.selection;
 
         const findNode = findParentNode((node) => node.type.name === this.name)(
-          selection,
+          selection
         );
         if (!selection.empty || !findNode || !findNode.node.childCount) {
           return false;
@@ -108,4 +77,34 @@ export const DetailsContent = Node.create<DetailsContentOptions>({
       },
     };
   },
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+    };
+  },
+  content: "block*",
+  defining: true,
+  group: "block",
+  name: "detailsContent",
+
+  parseHTML() {
+    return [
+      {
+        tag: `div[data-type="${this.name}"]`,
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(
+        { "data-type": this.name },
+        this.options.HTMLAttributes,
+        HTMLAttributes
+      ),
+      0,
+    ];
+  },
+  selectable: false,
 });

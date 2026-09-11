@@ -1,3 +1,8 @@
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { ShareRepo } from "@docmost/db/repos/share/share.repo";
+import { User, Workspace } from "@docmost/db/types/entity.types";
 import {
   BadRequestException,
   Body,
@@ -9,35 +14,30 @@ import {
   NotFoundException,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
-import { User, Workspace } from '@docmost/db/types/entity.types';
-import { AuthWorkspace } from '../../common/decorators/auth-workspace.decorator';
-import { ShareService } from './share.service';
+} from "@nestjs/common";
+import { AuthUser } from "../../common/decorators/auth-user.decorator";
+import { AuthWorkspace } from "../../common/decorators/auth-workspace.decorator";
+import { Public } from "../../common/decorators/public.decorator";
+import { AuditEvent, AuditResource } from "../../common/events/audit-events";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import {
+  AUDIT_SERVICE,
+  IAuditService,
+} from "../../integrations/audit/audit.service";
+import { LicenseCheckService } from "../../integrations/environment/license-check.service";
+import { PageAccessService } from "../page/page-access/page-access.service";
 import {
   CreateShareDto,
   ShareIdDto,
   ShareInfoDto,
   SharePageIdDto,
   UpdateShareDto,
-} from './dto/share.dto';
-import { ShareTransclusionLookupDto } from './dto/share-transclusion-lookup.dto';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { PageAccessService } from '../page/page-access/page-access.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { Public } from '../../common/decorators/public.decorator';
-import { ShareRepo } from '@docmost/db/repos/share/share.repo';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { LicenseCheckService } from '../../integrations/environment/license-check.service';
-import { AuditEvent, AuditResource } from '../../common/events/audit-events';
-import {
-  AUDIT_SERVICE,
-  IAuditService,
-} from '../../integrations/audit/audit.service';
+} from "./dto/share.dto";
+import { ShareTransclusionLookupDto } from "./dto/share-transclusion-lookup.dto";
+import { ShareService } from "./share.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('shares')
+@Controller("shares")
 export class ShareController {
   constructor(
     private readonly shareService: ShareService,
@@ -50,20 +50,20 @@ export class ShareController {
   ) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('/')
+  @Post("/")
   async getShares(
     @AuthUser() user: User,
-    @Body() pagination: PaginationOptions,
+    @Body() pagination: PaginationOptions
   ) {
     return this.shareRepo.getShares(user.id, pagination);
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('/page-info')
+  @Post("/page-info")
   async getSharedPageInfo(
     @Body() dto: ShareInfoDto,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     if (!dto.pageId && !dto.shareId) {
       throw new BadRequestException();
@@ -73,17 +73,17 @@ export class ShareController {
 
     const sharingAllowed = await this.shareService.isSharingAllowed(
       workspace.id,
-      shareData.share.spaceId,
+      shareData.share.spaceId
     );
     if (!sharingAllowed) {
-      throw new NotFoundException('Shared page not found');
+      throw new NotFoundException("Shared page not found");
     }
 
     return {
       ...shareData,
       features: this.licenseCheckService.resolveFeatures(
         workspace.licenseKey,
-        workspace.plan,
+        workspace.plan
       ),
     };
   }
@@ -113,28 +113,28 @@ export class ShareController {
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('/transclusion/lookup')
+  @Post("/transclusion/lookup")
   async transclusionLookup(
     @Body() dto: ShareTransclusionLookupDto,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     return this.shareService.lookupTransclusionForShare(
       dto.shareId,
       dto.references,
-      workspace.id,
+      workspace.id
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('/for-page')
+  @Post("/for-page")
   async getShareForPage(
     @Body() dto: SharePageIdDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const page = await this.pageRepo.findById(dto.pageId);
     if (!page) {
-      throw new NotFoundException('Shared page not found');
+      throw new NotFoundException("Shared page not found");
     }
 
     await this.pageAccessService.validateCanView(page, user);
@@ -143,16 +143,16 @@ export class ShareController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('create')
+  @Post("create")
   async create(
     @Body() createShareDto: CreateShareDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const page = await this.pageRepo.findById(createShareDto.pageId);
 
     if (!page || workspace.id !== page.workspaceId) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     // User must be able to edit the page to create a share
@@ -162,53 +162,53 @@ export class ShareController {
 
     // Prevent sharing restricted pages
     const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
-      page.id,
+      page.id
     );
     if (isRestricted) {
-      throw new BadRequestException('Cannot share a restricted page');
+      throw new BadRequestException("Cannot share a restricted page");
     }
 
     const sharingAllowed = await this.shareService.isSharingAllowed(
       workspace.id,
-      page.spaceId,
+      page.spaceId
     );
     if (!sharingAllowed) {
-      throw new ForbiddenException('Public sharing is disabled');
+      throw new ForbiddenException("Public sharing is disabled");
     }
 
     const share = await this.shareService.createShare({
-      page,
       authUserId: user.id,
-      workspaceId: workspace.id,
       createShareDto,
+      page,
+      workspaceId: workspace.id,
     });
 
     this.auditService.log({
       event: AuditEvent.SHARE_CREATED,
-      resourceType: AuditResource.SHARE,
-      resourceId: share.id,
-      spaceId: page.spaceId,
       metadata: {
         pageId: page.id,
         spaceId: page.spaceId,
       },
+      resourceId: share.id,
+      resourceType: AuditResource.SHARE,
+      spaceId: page.spaceId,
     });
 
     return share;
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('update')
+  @Post("update")
   async update(@Body() updateShareDto: UpdateShareDto, @AuthUser() user: User) {
     const share = await this.shareRepo.findById(updateShareDto.shareId);
 
     if (!share) {
-      throw new NotFoundException('Share not found');
+      throw new NotFoundException("Share not found");
     }
 
     const page = await this.pageRepo.findById(share.pageId);
     if (!page) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     // User must be able to edit the page to update its share
@@ -218,17 +218,17 @@ export class ShareController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('delete')
+  @Post("delete")
   async delete(@Body() shareIdDto: ShareIdDto, @AuthUser() user: User) {
     const share = await this.shareRepo.findById(shareIdDto.shareId);
 
     if (!share) {
-      throw new NotFoundException('Share not found');
+      throw new NotFoundException("Share not found");
     }
 
     const page = await this.pageRepo.findById(share.pageId);
     if (!page) {
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     // User must be able to edit the page to delete its share
@@ -237,44 +237,44 @@ export class ShareController {
     await this.shareRepo.deleteShare(share.id);
 
     this.auditService.log({
-      event: AuditEvent.SHARE_DELETED,
-      resourceType: AuditResource.SHARE,
-      resourceId: share.id,
-      spaceId: share.spaceId,
       changes: {
         before: {
           pageId: share.pageId,
           spaceId: share.spaceId,
         },
       },
+      event: AuditEvent.SHARE_DELETED,
+      resourceId: share.id,
+      resourceType: AuditResource.SHARE,
+      spaceId: share.spaceId,
     });
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('/tree')
+  @Post("/tree")
   async getSharePageTree(
     @Body() dto: ShareIdDto,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const treeData = await this.shareService.getShareTree(
       dto.shareId,
-      workspace.id,
+      workspace.id
     );
 
     const sharingAllowed = await this.shareService.isSharingAllowed(
       workspace.id,
-      treeData.share.spaceId,
+      treeData.share.spaceId
     );
     if (!sharingAllowed) {
-      throw new NotFoundException('Share not found');
+      throw new NotFoundException("Share not found");
     }
 
     return {
       ...treeData,
       features: this.licenseCheckService.resolveFeatures(
         workspace.licenseKey,
-        workspace.plan,
+        workspace.plan
       ),
     };
   }

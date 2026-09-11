@@ -1,3 +1,7 @@
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { findHighestUserSpaceRole } from "@docmost/db/repos/space/utils";
+import { User, Workspace } from "@docmost/db/types/entity.types";
 import {
   BadRequestException,
   Body,
@@ -8,63 +12,59 @@ import {
   NotFoundException,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { SpaceService } from './services/space.service';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
-import { AuthWorkspace } from '../../common/decorators/auth-workspace.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { OAuthScope } from '../../common/decorators/oauth-scope.decorator';
-import { SpaceIdDto } from './dto/space-id.dto';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { SpaceMemberService } from './services/space-member.service';
-import { User, Workspace } from '@docmost/db/types/entity.types';
-import { AddSpaceMembersDto } from './dto/add-space-members.dto';
-import { RemoveSpaceMemberDto } from './dto/remove-space-member.dto';
-import { UpdateSpaceMemberRoleDto } from './dto/update-space-member-role.dto';
-import SpaceAbilityFactory from '../casl/abilities/space-ability.factory';
+} from "@nestjs/common";
+import { AuthUser } from "../../common/decorators/auth-user.decorator";
+import { AuthWorkspace } from "../../common/decorators/auth-workspace.decorator";
+import { OAuthScope } from "../../common/decorators/oauth-scope.decorator";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import SpaceAbilityFactory from "../casl/abilities/space-ability.factory";
+import WorkspaceAbilityFactory from "../casl/abilities/workspace-ability.factory";
 import {
   SpaceCaslAction,
   SpaceCaslSubject,
-} from '../casl/interfaces/space-ability.type';
-import { UpdateSpaceDto } from './dto/update-space.dto';
-import { findHighestUserSpaceRole } from '@docmost/db/repos/space/utils';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
+} from "../casl/interfaces/space-ability.type";
 import {
   WorkspaceCaslAction,
   WorkspaceCaslSubject,
-} from '../casl/interfaces/workspace-ability.type';
-import WorkspaceAbilityFactory from '../casl/abilities/workspace-ability.factory';
-import { CreateSpaceDto } from './dto/create-space.dto';
+} from "../casl/interfaces/workspace-ability.type";
+import { AddSpaceMembersDto } from "./dto/add-space-members.dto";
+import { CreateSpaceDto } from "./dto/create-space.dto";
+import { RemoveSpaceMemberDto } from "./dto/remove-space-member.dto";
+import { SpaceIdDto } from "./dto/space-id.dto";
+import { UpdateSpaceDto } from "./dto/update-space.dto";
+import { UpdateSpaceMemberRoleDto } from "./dto/update-space-member-role.dto";
+import { SpaceService } from "./services/space.service";
+import { SpaceMemberService } from "./services/space-member.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('spaces')
+@Controller("spaces")
 export class SpaceController {
   constructor(
     private readonly spaceService: SpaceService,
     private readonly spaceMemberService: SpaceMemberService,
     private readonly spaceMemberRepo: SpaceMemberRepo,
     private readonly spaceAbility: SpaceAbilityFactory,
-    private readonly workspaceAbility: WorkspaceAbilityFactory,
+    private readonly workspaceAbility: WorkspaceAbilityFactory
   ) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('/')
-  @OAuthScope('read')
+  @Post("/")
+  @OAuthScope("read")
   async getWorkspaceSpaces(
     @Body()
     pagination: PaginationOptions,
-    @AuthUser() user: User,
+    @AuthUser() user: User
   ) {
     const result = await this.spaceMemberService.getUserSpaces(
       user.id,
-      pagination,
+      pagination
     );
 
     if (result.items.length > 0) {
       const spaceIds = result.items.map((s) => s.id);
       const roles = await this.spaceMemberRepo.getUserRolesForSpaces(
         user.id,
-        spaceIds,
+        spaceIds
       );
 
       const roleMap = new Map<string, string[]>();
@@ -78,13 +78,13 @@ export class SpaceController {
         const spaceRoles = roleMap.get(space.id);
         const role = spaceRoles
           ? findHighestUserSpaceRole(
-              spaceRoles.map((r) => ({ userId: user.id, role: r })),
+              spaceRoles.map((r) => ({ role: r, userId: user.id }))
             )
           : undefined;
 
         return {
           ...space,
-          membership: { userId: user.id, role },
+          membership: { role, userId: user.id },
         };
       });
     }
@@ -93,20 +93,20 @@ export class SpaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('info')
-  @OAuthScope('read')
+  @Post("info")
+  @OAuthScope("read")
   async getSpaceInfo(
     @Body() spaceIdDto: SpaceIdDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const space = await this.spaceService.getSpaceInfo(
       spaceIdDto.spaceId,
-      workspace.id,
+      workspace.id
     );
 
     if (!space) {
-      throw new NotFoundException('Space not found');
+      throw new NotFoundException("Space not found");
     }
 
     const ability = await this.spaceAbility.createForUser(user, space.id);
@@ -116,27 +116,27 @@ export class SpaceController {
 
     const userSpaceRoles = await this.spaceMemberRepo.getUserSpaceRoles(
       user.id,
-      space.id,
+      space.id
     );
 
     const userSpaceRole = findHighestUserSpaceRole(userSpaceRoles);
 
     const membership = {
-      userId: user.id,
-      role: userSpaceRole,
       permissions: ability.rules,
+      role: userSpaceRole,
+      userId: user.id,
     };
 
     return { ...space, membership };
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('create')
-  @OAuthScope('write')
+  @Post("create")
+  @OAuthScope("write")
   createSpace(
     @Body() createSpaceDto: CreateSpaceDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = this.workspaceAbility.createForUser(user, workspace);
     if (
@@ -148,16 +148,16 @@ export class SpaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('update')
-  @OAuthScope('write')
+  @Post("update")
+  @OAuthScope("write")
   async updateSpace(
     @Body() updateSpaceDto: UpdateSpaceDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = await this.spaceAbility.createForUser(
       user,
-      updateSpaceDto.spaceId,
+      updateSpaceDto.spaceId
     );
     if (ability.cannot(SpaceCaslAction.Manage, SpaceCaslSubject.Settings)) {
       throw new ForbiddenException();
@@ -166,15 +166,15 @@ export class SpaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('delete')
+  @Post("delete")
   async deleteSpace(
     @Body() spaceIdDto: SpaceIdDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = await this.spaceAbility.createForUser(
       user,
-      spaceIdDto.spaceId,
+      spaceIdDto.spaceId
     );
     if (ability.cannot(SpaceCaslAction.Manage, SpaceCaslSubject.Settings)) {
       throw new ForbiddenException();
@@ -183,17 +183,17 @@ export class SpaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members')
+  @Post("members")
   async getSpaceMembers(
     @Body() spaceIdDto: SpaceIdDto,
     @Body()
     pagination: PaginationOptions,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const ability = await this.spaceAbility.createForUser(
       user,
-      spaceIdDto.spaceId,
+      spaceIdDto.spaceId
     );
 
     if (ability.cannot(SpaceCaslAction.Read, SpaceCaslSubject.Member)) {
@@ -203,22 +203,22 @@ export class SpaceController {
     return this.spaceMemberService.getSpaceMembers(
       spaceIdDto.spaceId,
       workspace.id,
-      pagination,
+      pagination
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members/add')
+  @Post("members/add")
   async addSpaceMember(
     @Body() dto: AddSpaceMembersDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     if (
       (!dto.userIds || dto.userIds.length === 0) &&
       (!dto.groupIds || dto.groupIds.length === 0)
     ) {
-      throw new BadRequestException('userIds or groupIds is required');
+      throw new BadRequestException("userIds or groupIds is required");
     }
 
     const ability = await this.spaceAbility.createForUser(user, dto.spaceId);
@@ -229,16 +229,16 @@ export class SpaceController {
     return this.spaceMemberService.addMembersToSpaceBatch(
       dto,
       user,
-      workspace.id,
+      workspace.id
     );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members/remove')
+  @Post("members/remove")
   async removeSpaceMember(
     @Body() dto: RemoveSpaceMemberDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     this.validateIds(dto);
 
@@ -251,11 +251,11 @@ export class SpaceController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('members/change-role')
+  @Post("members/change-role")
   async updateSpaceMemberRole(
     @Body() dto: UpdateSpaceMemberRoleDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     this.validateIds(dto);
 
@@ -269,11 +269,11 @@ export class SpaceController {
 
   validateIds(dto: RemoveSpaceMemberDto | UpdateSpaceMemberRoleDto) {
     if (!dto.userId && !dto.groupId) {
-      throw new BadRequestException('userId or groupId is required');
+      throw new BadRequestException("userId or groupId is required");
     }
     if (dto.userId && dto.groupId) {
       throw new BadRequestException(
-        'please provide either a userId or groupId and both',
+        "please provide either a userId or groupId and both"
       );
     }
   }

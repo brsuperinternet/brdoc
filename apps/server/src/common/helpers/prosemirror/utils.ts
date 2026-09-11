@@ -1,24 +1,24 @@
-import { Node } from '@tiptap/pm/model';
+import { TiptapTransformer } from "@hocuspocus/transformer";
+import { Node } from "@tiptap/pm/model";
+import { Transform } from "@tiptap/pm/transform";
+import { validate as isValidUUID } from "uuid";
+import * as Y from "yjs";
 import {
   jsonToNode,
   tiptapExtensions,
-} from '../../../collaboration/collaboration.util';
-import { validate as isValidUUID } from 'uuid';
-import { Transform } from '@tiptap/pm/transform';
-import { TiptapTransformer } from '@hocuspocus/transformer';
-import * as Y from 'yjs';
+} from "../../../collaboration/collaboration.util";
 import {
-  INTERNAL_LINK_REGEX,
   extractPageSlugId,
-} from '../../../integrations/export/utils';
-import { isAttachmentNode } from './attachment-node-types';
+  INTERNAL_LINK_REGEX,
+} from "../../../integrations/export/utils";
+import { isAttachmentNode } from "./attachment-node-types";
 
 export interface MentionNode {
+  creatorId: string;
+  entityId: string;
+  entityType: "user" | "page";
   id: string;
   label: string;
-  entityType: 'user' | 'page';
-  entityId: string;
-  creatorId: string;
 }
 
 export function extractMentions(prosemirrorJson: any) {
@@ -26,19 +26,18 @@ export function extractMentions(prosemirrorJson: any) {
   const doc = jsonToNode(prosemirrorJson);
 
   doc.descendants((node: Node) => {
-    if (node.type.name === 'mention') {
-      if (
-        node.attrs.id &&
-        !mentionList.some((mention) => mention.id === node.attrs.id)
-      ) {
-        mentionList.push({
-          id: node.attrs.id,
-          label: node.attrs.label,
-          entityType: node.attrs.entityType,
-          entityId: node.attrs.entityId,
-          creatorId: node.attrs.creatorId,
-        });
-      }
+    if (
+      node.type.name === "mention" &&
+      node.attrs.id &&
+      !mentionList.some((mention) => mention.id === node.attrs.id)
+    ) {
+      mentionList.push({
+        creatorId: node.attrs.creatorId,
+        entityId: node.attrs.entityId,
+        entityType: node.attrs.entityType,
+        id: node.attrs.id,
+        label: node.attrs.label,
+      });
     }
   });
   return mentionList;
@@ -47,7 +46,7 @@ export function extractMentions(prosemirrorJson: any) {
 export function extractUserMentions(mentionList: MentionNode[]): MentionNode[] {
   const userList = [];
   for (const mention of mentionList) {
-    if (mention.entityType === 'user') {
+    if (mention.entityType === "user") {
       userList.push(mention);
     }
   }
@@ -58,9 +57,9 @@ export function extractPageMentions(mentionList: MentionNode[]): MentionNode[] {
   const pageMentionList = [];
   for (const mention of mentionList) {
     if (
-      mention.entityType === 'page' &&
+      mention.entityType === "page" &&
       !pageMentionList.some(
-        (pageMention) => pageMention.entityId === mention.entityId,
+        (pageMention) => pageMention.entityId === mention.entityId
       )
     ) {
       pageMentionList.push(mention);
@@ -75,7 +74,7 @@ export function extractInternalLinkSlugIds(prosemirrorJson: any): string[] {
 
   doc.descendants((node: Node) => {
     for (const mark of node.marks) {
-      if (mark.type.name === 'link' && mark.attrs.internal && mark.attrs.href) {
+      if (mark.type.name === "link" && mark.attrs.internal && mark.attrs.href) {
         const match = mark.attrs.href.match(INTERNAL_LINK_REGEX);
         if (match) {
           const slugId = extractPageSlugId(match[5]);
@@ -94,10 +93,12 @@ export function extractUserMentionIdsFromJson(json: any): string[] {
   const userIds: string[] = [];
 
   function walk(node: any) {
-    if (!node) return;
+    if (!node) {
+      return;
+    }
     if (
-      node.type === 'mention' &&
-      node.attrs?.entityType === 'user' &&
+      node.type === "mention" &&
+      node.attrs?.entityType === "user" &&
       node.attrs?.entityId &&
       !userIds.includes(node.attrs.entityId)
     ) {
@@ -117,8 +118,8 @@ export function extractUserMentionIdsFromJson(json: any): string[] {
 export function getProsemirrorContent(content: any) {
   return (
     content ?? {
-      type: 'doc',
-      content: [{ type: 'paragraph', attrs: { textAlign: 'left' } }],
+      content: [{ attrs: { textAlign: "left" }, type: "paragraph" }],
+      type: "doc",
     }
   );
 }
@@ -130,12 +131,15 @@ export function getAttachmentIds(prosemirrorJson: any) {
   const attachmentIds = [];
 
   doc?.descendants((node: Node) => {
-    if (isAttachmentNode(node.type.name)) {
-      if (node.attrs.attachmentId && isValidUUID(node.attrs.attachmentId)) {
-        if (!attachmentIds.includes(node.attrs.attachmentId)) {
-          attachmentIds.push(node.attrs.attachmentId);
-        }
-      }
+    if (
+      isAttachmentNode(node.type.name) &&
+      node.attrs.attachmentId &&
+      isValidUUID(node.attrs.attachmentId) &&
+      node.attrs.attachmentId &&
+      isValidUUID(node.attrs.attachmentId) &&
+      !attachmentIds.includes(node.attrs.attachmentId)
+    ) {
+      attachmentIds.push(node.attrs.attachmentId);
     }
   });
 
@@ -158,8 +162,8 @@ export function createYdocFromJson(prosemirrorJson: any): Buffer | null {
   if (prosemirrorJson) {
     const ydoc = TiptapTransformer.toYdoc(
       prosemirrorJson,
-      'default',
-      tiptapExtensions,
+      "default",
+      tiptapExtensions
     );
 
     Y.encodeStateAsUpdate(ydoc);

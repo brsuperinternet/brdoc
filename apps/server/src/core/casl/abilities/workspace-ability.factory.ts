@@ -1,16 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   AbilityBuilder,
   createMongoAbility,
   MongoAbility,
-} from '@casl/ability';
-import { UserRole } from '../../../common/helpers/types/permission';
-import { User, Workspace } from '@docmost/db/types/entity.types';
+} from "@casl/ability";
+import { User, Workspace } from "@docmost/db/types/entity.types";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { UserRole } from "../../../common/helpers/types/permission";
 import {
   IWorkspaceAbility,
   WorkspaceCaslAction,
   WorkspaceCaslSubject,
-} from '../interfaces/workspace-ability.type';
+} from "../interfaces/workspace-ability.type";
 
 @Injectable()
 export default class WorkspaceAbilityFactory {
@@ -25,14 +25,14 @@ export default class WorkspaceAbilityFactory {
       case UserRole.MEMBER:
         return buildWorkspaceMemberAbility();
       default:
-        throw new NotFoundException('Workspace permissions not found');
+        throw new NotFoundException("Workspace permissions not found");
     }
   }
 }
 
 function buildWorkspaceOwnerAbility() {
   const { can, build } = new AbilityBuilder<MongoAbility<IWorkspaceAbility>>(
-    createMongoAbility,
+    createMongoAbility
   );
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Settings);
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Member);
@@ -48,7 +48,7 @@ function buildWorkspaceOwnerAbility() {
 
 function buildWorkspaceAdminAbility() {
   const { can, build } = new AbilityBuilder<MongoAbility<IWorkspaceAbility>>(
-    createMongoAbility,
+    createMongoAbility
   );
 
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Settings);
@@ -64,7 +64,7 @@ function buildWorkspaceAdminAbility() {
 
 function buildWorkspaceMemberAbility() {
   const { can, build } = new AbilityBuilder<MongoAbility<IWorkspaceAbility>>(
-    createMongoAbility,
+    createMongoAbility
   );
   can(WorkspaceCaslAction.Read, WorkspaceCaslSubject.Settings);
   can(WorkspaceCaslAction.Read, WorkspaceCaslSubject.Member);

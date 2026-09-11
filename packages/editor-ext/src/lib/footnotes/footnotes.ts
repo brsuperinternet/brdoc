@@ -3,15 +3,6 @@ import OrderedList from "@tiptap/extension-ordered-list";
 import FootnoteRules from "./rules";
 
 const Footnotes = OrderedList.extend({
-  name: "footnotes",
-  group: "", // removed the default group of the ordered list extension
-  isolating: true,
-  defining: true,
-  draggable: false,
-
-  content() {
-    return "footnote*";
-  },
   addAttributes() {
     return {
       class: {
@@ -19,27 +10,36 @@ const Footnotes = OrderedList.extend({
       },
     };
   },
-  parseHTML() {
-    return [
-      {
-        tag: "ol.footnotes",
-        priority: 1000,
-      },
-    ];
-  },
-
-  addKeyboardShortcuts() {
-    return {};
-  },
   addCommands() {
     return {};
+  },
+
+  addExtensions() {
+    return [FootnoteRules];
   },
   addInputRules() {
     return [];
   },
 
-  addExtensions() {
-    return [FootnoteRules];
+  addKeyboardShortcuts() {
+    return {};
+  },
+
+  content() {
+    return "footnote*";
+  },
+  defining: true,
+  draggable: false,
+  group: "", // removed the default group of the ordered list extension
+  isolating: true,
+  name: "footnotes",
+  parseHTML() {
+    return [
+      {
+        priority: 1000,
+        tag: "ol.footnotes",
+      },
+    ];
   },
 });
 

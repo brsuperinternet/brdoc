@@ -1,5 +1,5 @@
-import { MinLength } from 'class-validator';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { Transform, TransformFnParams } from "class-transformer";
+import { MinLength } from "class-validator";
 
 export class CheckHostnameDto {
   @MinLength(1)

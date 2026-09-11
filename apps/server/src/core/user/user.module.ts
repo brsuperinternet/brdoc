@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
-import { UserService } from './user.service';
-import { UserController } from './user.controller';
-import { UserRepo } from '@docmost/db/repos/user/user.repo';
+import { UserRepo } from "@docmost/db/repos/user/user.repo";
+import { Module } from "@nestjs/common";
+import { UserController } from "./user.controller";
+import { UserService } from "./user.service";
 
 @Module({
   controllers: [UserController],
-  providers: [UserService, UserRepo],
   exports: [UserService, UserRepo],
+  providers: [UserService, UserRepo],
 })
 export class UserModule {}

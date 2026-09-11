@@ -1,4 +1,9 @@
-export { Columns } from "./columns";
-export type { ColumnsOptions, ColumnsAttributes, ColumnsLayout, WidthMode } from "./columns";
+export type { ColumnAttributes, ColumnOptions } from "./column";
 export { Column } from "./column";
-export type { ColumnOptions, ColumnAttributes } from "./column";
+export type {
+  ColumnsAttributes,
+  ColumnsLayout,
+  ColumnsOptions,
+  WidthMode,
+} from "./columns";
+export { Columns } from "./columns";

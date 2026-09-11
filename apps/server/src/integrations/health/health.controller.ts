@@ -1,15 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
-import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
-import { PostgresHealthIndicator } from './postgres.health';
-import { RedisHealthIndicator } from './redis.health';
-import { SkipTransform } from '../../common/decorators/skip-transform.decorator';
+import { Controller, Get } from "@nestjs/common";
+import { HealthCheck, HealthCheckService } from "@nestjs/terminus";
+import { SkipTransform } from "../../common/decorators/skip-transform.decorator";
+import { PostgresHealthIndicator } from "./postgres.health";
+import { RedisHealthIndicator } from "./redis.health";
 
-@Controller('health')
+@Controller("health")
 export class HealthController {
   constructor(
     private health: HealthCheckService,
     private postgres: PostgresHealthIndicator,
-    private redis: RedisHealthIndicator,
+    private redis: RedisHealthIndicator
   ) {}
 
   @SkipTransform()
@@ -17,13 +17,13 @@ export class HealthController {
   @HealthCheck()
   async check() {
     return this.health.check([
-      () => this.postgres.pingCheck('database'),
-      () => this.redis.pingCheck('redis'),
+      () => this.postgres.pingCheck("database"),
+      () => this.redis.pingCheck("redis"),
     ]);
   }
 
-  @Get('live')
+  @Get("live")
   async checkLive() {
-    return 'ok';
+    return "ok";
   }
 }

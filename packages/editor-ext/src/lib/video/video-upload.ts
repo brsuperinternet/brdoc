@@ -1,17 +1,19 @@
+import { Command } from "@tiptap/core";
+import { Node } from "@tiptap/pm/model";
 import { MediaUploadOptions, UploadFn } from "../media-utils";
 import { IAttachment } from "../types";
 import { generateNodeId } from "../utils";
-import { Node } from "@tiptap/pm/model";
-import { Command } from "@tiptap/core";
 
 const findVideoNodeByPlaceholderId = (
   doc: Node,
-  placeholderId: string,
+  placeholderId: string
 ): { node: Node; pos: number } | null => {
   let result: { node: Node; pos: number } | null = null;
 
   doc.descendants((node, pos) => {
-    if (result) return false;
+    if (result) {
+      return false;
+    }
 
     if (
       node.type.name === "video" &&
@@ -27,11 +29,11 @@ const findVideoNodeByPlaceholderId = (
   return result;
 };
 const getVideoDimensions = (
-  url: string,
+  url: string
 ): Promise<
   { width: number; height: number; aspectRatio: number } | undefined
-> => {
-  return new Promise<
+> =>
+  new Promise<
     { width: number; height: number; aspectRatio: number } | undefined
   >((resolve) => {
     const video = document.createElement("video");
@@ -42,21 +44,22 @@ const getVideoDimensions = (
       const height = video.videoHeight;
       const aspectRatio = height > 0 ? width / height : 1;
 
-      resolve({ width, height, aspectRatio });
+      resolve({ aspectRatio, height, width });
     };
     video.onerror = () => {
       resolve(undefined);
     };
     video.src = url;
   });
-};
 const handleVideoUpload =
   ({ validateFn, onUpload }: MediaUploadOptions): UploadFn =>
   async (file, editor, pos, pageId) => {
     // check if the file is valid
     const validated = validateFn?.(file);
     // @ts-ignore
-    if (!validated) return;
+    if (!validated) {
+      return;
+    }
 
     const objectUrl = URL.createObjectURL(file);
     const videoDimensions = await getVideoDimensions(objectUrl);
@@ -74,16 +77,18 @@ const handleVideoUpload =
     const insertPlaceholder = (): Command => {
       return ({ tr, state }) => {
         const initialPlaceholderNode = state.schema.nodes.video?.create({
+          aspectRatio,
+          height,
           placeholder: {
             id: placeholderId,
             name: file.name,
           },
           width,
-          height,
-          aspectRatio,
         });
 
-        if (!initialPlaceholderNode) return false;
+        if (!initialPlaceholderNode) {
+          return false;
+        }
 
         const { parent } = tr.doc.resolve(pos);
         const isEmptyTextBlock = parent.isTextblock && !parent.childCount;
@@ -104,34 +109,38 @@ const handleVideoUpload =
           findVideoNodeByPlaceholderId(tr.doc, placeholderId) || {};
 
         //  If the placeholder is not found or attachment is missing, abort the process
-        if (currentPos === null || !attachment) return;
+        if (currentPos === null || !attachment) {
+          return;
+        }
 
         // Update the placeholder node with the actual video data
         tr.setNodeMarkup(currentPos, undefined, {
-          src: `/api/files/${attachment.id}/${attachment.fileName}`,
-          attachmentId: attachment.id,
-          title: attachment.fileName,
-          size: attachment.fileSize,
-          width,
-          height,
           aspectRatio,
+          attachmentId: attachment.id,
+          height,
+          size: attachment.fileSize,
+          src: `/api/files/${attachment.id}/${attachment.fileName}`,
+          title: attachment.fileName,
+          width,
         });
 
         return true;
       };
     };
-    const removePlaceholder = (): Command => {
-      return ({ tr }) => {
+    const removePlaceholder =
+      (): Command =>
+      ({ tr }) => {
         const { pos: currentPos = null } =
           findVideoNodeByPlaceholderId(tr.doc, placeholderId) || {};
 
-        if (currentPos === null) return false;
+        if (currentPos === null) {
+          return false;
+        }
 
         tr.delete(currentPos, currentPos + 2);
 
         return true;
       };
-    };
 
     // Only show the placeholder if the upload takes more than 250ms
     const insertPlaceholderTimeout = setTimeout(() => {

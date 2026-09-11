@@ -1,11 +1,11 @@
-import { getEmbedUrlAndProvider } from '@docmost/editor-ext';
-import { Logger } from '@nestjs/common';
-import * as path from 'path';
-import { v7 } from 'uuid';
-import { InsertableBacklink } from '@docmost/db/types/entity.types';
-import { Cheerio, CheerioAPI, load } from 'cheerio';
-import slugify from '@sindresorhus/slugify';
-import { normalizeTableColumnWidths } from './table-utils';
+import * as path from "node:path";
+import { InsertableBacklink } from "@docmost/db/types/entity.types";
+import { getEmbedUrlAndProvider } from "@docmost/editor-ext";
+import { Logger } from "@nestjs/common";
+import slugify from "@sindresorhus/slugify";
+import { Cheerio, CheerioAPI, load } from "cheerio";
+import { v7 } from "uuid";
+import { normalizeTableColumnWidths } from "./table-utils";
 
 // Check if text contains Unicode characters (for emojis/icons)
 function isUnicodeCharacter(text: string): boolean {
@@ -43,7 +43,7 @@ export async function formatImportHtml(opts: {
 
   let pageIcon: string | null = null;
   // extract notion page icon
-  const headerIconSpan = $root.find('header .page-header-icon .icon');
+  const headerIconSpan = $root.find("header .page-header-icon .icon");
 
   if (headerIconSpan.length > 0) {
     const iconText = headerIconSpan.text().trim();
@@ -62,12 +62,12 @@ export async function formatImportHtml(opts: {
     creatorId,
     sourcePageId,
     workspaceId,
-    opts.spaceSlug,
+    opts.spaceSlug
   );
 
   return {
-    html: $root.html() || '',
     backlinks,
+    html: $root.html() || "",
     pageIcon: pageIcon || undefined,
   };
 }
@@ -80,17 +80,14 @@ export async function formatImportHtml(opts: {
  *
  * Does NOT run rewriteInternalLinksToMentionHtml — that requires zip context.
  */
-export function normalizeImportHtml(
-  $: CheerioAPI,
-  $root: Cheerio<any>,
-): void {
+export function normalizeImportHtml($: CheerioAPI, $root: Cheerio<any>): void {
   notionFormatter($, $root);
   xwikiFormatter($, $root);
   defaultHtmlFormatter($, $root);
 }
 
 export function xwikiFormatter($: CheerioAPI, $root: Cheerio<any>) {
-  const $content = $root.find('#xwikicontent');
+  const $content = $root.find("#xwikicontent");
   if ($content.length) {
     $root.children().remove();
     $root.append($content.contents());
@@ -101,7 +98,9 @@ function isBareLink($el: Cheerio<any>): boolean {
   const href = $el.attr("href")?.trim();
   const text = $el.text().trim();
 
-  if(!text || !href) return false
+  if (!text || !href) {
+    return false;
+  }
 
   return text === href;
 }
@@ -109,11 +108,11 @@ function isBareLink($el: Cheerio<any>): boolean {
 export function defaultHtmlFormatter($: CheerioAPI, $root: Cheerio<any>) {
   normalizeTableColumnWidths($, $root);
 
-  $root.find('a[href]').each((_, el) => {
+  $root.find("a[href]").each((_, el) => {
     const $el = $(el);
-    const url = $el.attr('href')!;
+    const url = $el.attr("href")!;
     const { provider } = getEmbedUrlAndProvider(url);
-    if (provider === 'iframe' || !isBareLink($el)) {
+    if (provider === "iframe" || !isBareLink($el)) {
       return;
     }
 
@@ -121,9 +120,9 @@ export function defaultHtmlFormatter($: CheerioAPI, $root: Cheerio<any>) {
     $el.replaceWith(embed);
   });
 
-  $root.find('iframe[src]').each((_, el) => {
+  $root.find("iframe[src]").each((_, el) => {
     const $el = $(el);
-    const url = $el.attr('src')!;
+    const url = $el.attr("src")!;
     const { provider } = getEmbedUrlAndProvider(url);
 
     const embed = `<div data-type=\"embed\" data-src=\"${url}\" data-provider=\"${provider}\" data-align=\"center\" data-width=\"640\" data-height=\"480\"></div>`;
@@ -132,117 +131,125 @@ export function defaultHtmlFormatter($: CheerioAPI, $root: Cheerio<any>) {
 }
 
 const COLUMN_LAYOUTS = [
-  '',
-  '',
-  'two_equal',
-  'three_equal',
-  'four_equal',
-  'five_equal',
+  "",
+  "",
+  "two_equal",
+  "three_equal",
+  "four_equal",
+  "five_equal",
 ] as const;
 
 export function notionFormatter($: CheerioAPI, $root: Cheerio<any>) {
   // remove page header icon and cover image
-  $root.find('.page-header-icon').remove();
-  $root.find('.page-cover-image').remove();
+  $root.find(".page-header-icon").remove();
+  $root.find(".page-cover-image").remove();
 
   // remove empty description paragraphs
-  $root.find('p.page-description').each((_, el) => {
-    if (!$(el).text().trim()) $(el).remove();
+  $root.find("p.page-description").each((_, el) => {
+    if (!$(el).text().trim()) {
+      $(el).remove();
+    }
   });
 
   // columns
-  $root.find('div.column-list').each((_, el) => {
+  $root.find("div.column-list").each((_, el) => {
     const $list = $(el);
-    const $cols = $list.find('div.column');
+    const $cols = $list.find("div.column");
 
     if ($cols.length <= 1) {
-      $list.replaceWith($cols.html() || '');
+      $list.replaceWith($cols.html() || "");
       return;
     }
 
-    const layout = COLUMN_LAYOUTS[$cols.length] ?? 'two_equal';
-    let cells = '';
+    const layout = COLUMN_LAYOUTS[$cols.length] ?? "two_equal";
+    let cells = "";
     $cols.each((_, col) => {
       const $col = $(col);
       $col.children('div[style*="display:contents"]').each((_, wrapper) => {
-        $(wrapper).replaceWith($(wrapper).html() || '');
+        $(wrapper).replaceWith($(wrapper).html() || "");
       });
       cells += `<div data-type="column">${$col.html()}</div>`;
     });
 
     $list.replaceWith(
-      `<div data-type="columns" data-layout="${layout}">${cells}</div>`,
+      `<div data-type="columns" data-layout="${layout}">${cells}</div>`
     );
   });
 
   // block math → mathBlock
-  $root.find('figure.equation').each((_: any, fig: any) => {
+  $root.find("figure.equation").each((_: any, fig: any) => {
     const $fig = $(fig);
     const tex = $fig
       .find('annotation[encoding="application/x-tex"]')
       .text()
       .trim();
-    const $math = $('<div>')
-      .attr('data-type', 'mathBlock')
-      .attr('data-katex', 'true')
+    const $math = $("<div>")
+      .attr("data-type", "mathBlock")
+      .attr("data-katex", "true")
       .text(tex);
     $fig.replaceWith($math);
   });
 
   // inline math → mathInline
-  $root.find('span.notion-text-equation-token').each((_, tok) => {
+  $root.find("span.notion-text-equation-token").each((_, tok) => {
     const $tok = $(tok);
-    const $prev = $tok.prev('style');
-    if ($prev.length) $prev.remove();
+    const $prev = $tok.prev("style");
+    if ($prev.length) {
+      $prev.remove();
+    }
     const tex = $tok
       .find('annotation[encoding="application/x-tex"]')
       .text()
       .trim();
-    const $inline = $('<span>')
-      .attr('data-type', 'mathInline')
-      .attr('data-katex', 'true')
+    const $inline = $("<span>")
+      .attr("data-type", "mathInline")
+      .attr("data-katex", "true")
       .text(tex);
     $tok.replaceWith($inline);
   });
 
   // callouts
   $root
-    .find('figure.callout')
+    .find("figure.callout")
     .get()
     .reverse()
     .forEach((fig) => {
       const $fig = $(fig);
-      const $content = $fig.find('div').eq(1);
-      if (!$content.length) return;
-      const $wrapper = $('<div>')
-        .attr('data-type', 'callout')
-        .attr('data-callout-type', 'info');
+      const $content = $fig.find("div").eq(1);
+      if (!$content.length) {
+        return;
+      }
+      const $wrapper = $("<div>")
+        .attr("data-type", "callout")
+        .attr("data-callout-type", "info");
       // @ts-ignore
       $content.children().each((_, child) => $wrapper.append(child));
       $fig.replaceWith($wrapper);
     });
 
   // to-do lists
-  $root.find('ul.to-do-list').each((_, list) => {
+  $root.find("ul.to-do-list").each((_, list) => {
     const $old = $(list);
-    const $new = $('<ul>').attr('data-type', 'taskList');
-    $old.find('li').each((_, li) => {
+    const $new = $("<ul>").attr("data-type", "taskList");
+    $old.find("li").each((_, li) => {
       const $li = $(li);
-      const isChecked = $li.find('.checkbox.checkbox-on').length > 0;
+      const isChecked = $li.find(".checkbox.checkbox-on").length > 0;
       const text =
         $li
-          .find('span.to-do-children-unchecked, span.to-do-children-checked')
+          .find("span.to-do-children-unchecked, span.to-do-children-checked")
           .first()
           .text()
-          .trim() || '';
-      const $taskItem = $('<li>')
-        .attr('data-type', 'taskItem')
-        .attr('data-checked', String(isChecked));
-      const $label = $('<label>');
-      const $input = $('<input>').attr('type', 'checkbox');
-      if (isChecked) $input.attr('checked', '');
-      $label.append($input, $('<span>'));
-      const $container = $('<div>').append($('<p>').text(text));
+          .trim() || "";
+      const $taskItem = $("<li>")
+        .attr("data-type", "taskItem")
+        .attr("data-checked", String(isChecked));
+      const $label = $("<label>");
+      const $input = $("<input>").attr("type", "checkbox");
+      if (isChecked) {
+        $input.attr("checked", "");
+      }
+      $label.append($input, $("<span>"));
+      const $container = $("<div>").append($("<p>").text(text));
       $taskItem.append($label, $container);
       $new.append($taskItem);
     });
@@ -251,57 +258,63 @@ export function notionFormatter($: CheerioAPI, $root: Cheerio<any>) {
 
   // toggle blocks
   $root
-    .find('ul.toggle details')
+    .find("ul.toggle details")
     .get()
     .reverse()
     .forEach((det) => {
       const $det = $(det);
-      const $li = $det.closest('li');
+      const $li = $det.closest("li");
       if ($li.length) {
         $li.before($det);
-        if (!$li.children().length) $li.remove();
+        if (!$li.children().length) {
+          $li.remove();
+        }
       }
-      const $ul = $det.closest('ul.toggle');
+      const $ul = $det.closest("ul.toggle");
       if ($ul.length) {
         $ul.before($det);
-        if (!$ul.children().length) $ul.remove();
+        if (!$ul.children().length) {
+          $ul.remove();
+        }
       }
     });
 
   // bookmarks
   $root
-    .find('figure')
-    .filter((_, fig) => $(fig).find('a.bookmark.source').length > 0)
+    .find("figure")
+    .filter((_, fig) => $(fig).find("a.bookmark.source").length > 0)
     .get()
     .reverse()
     .forEach((fig) => {
       const $fig = $(fig);
-      const $link = $fig.find('a.bookmark.source').first();
-      if (!$link.length) return;
+      const $link = $fig.find("a.bookmark.source").first();
+      if (!$link.length) {
+        return;
+      }
 
-      const href = $link.attr('href')!;
-      const title = $link.find('.bookmark-title').text().trim() || href;
+      const href = $link.attr("href")!;
+      const title = $link.find(".bookmark-title").text().trim() || href;
 
-      const $newAnchor = $('<a>')
-        .addClass('bookmark source')
-        .attr('href', href)
-        .append($('<div>').addClass('bookmark-info').text(title));
+      const $newAnchor = $("<a>")
+        .addClass("bookmark source")
+        .attr("href", href)
+        .append($("<div>").addClass("bookmark-info").text(title));
 
       $fig.replaceWith($newAnchor);
     });
 
   // remove user icons
-  $root.find('span.user img.user-icon').remove();
+  $root.find("span.user img.user-icon").remove();
 
   // remove toc
-  $root.find('nav.table_of_contents').remove();
+  $root.find("nav.table_of_contents").remove();
 }
 
 export function unwrapFromParagraph($: CheerioAPI, $node: Cheerio<any>) {
   // Keep track of processed wrappers to avoid infinite loops
   const processedWrappers = new Set<any>();
 
-  let $wrapper = $node.closest('p, a');
+  let $wrapper = $node.closest("p, a");
   while ($wrapper.length) {
     const wrapperElement = $wrapper.get(0);
 
@@ -333,7 +346,7 @@ export function unwrapFromParagraph($: CheerioAPI, $node: Cheerio<any>) {
     }
 
     // look again for any new wrapper around $node
-    $wrapper = $node.closest('p, a');
+    $wrapper = $node.closest("p, a");
   }
 }
 
@@ -348,59 +361,62 @@ export async function rewriteInternalLinksToMentionHtml(
   creatorId: string,
   sourcePageId: string,
   workspaceId: string,
-  spaceSlug?: string,
+  spaceSlug?: string
 ): Promise<InsertableBacklink[]> {
-  const normalize = (p: string) => p.replace(/\\/g, '/');
+  const normalize = (p: string) => p.replace(/\\/g, "/");
   const backlinks: InsertableBacklink[] = [];
 
-  $root.find('a[href]').each((_, el) => {
+  $root.find("a[href]").each((_, el) => {
     const $a = $(el);
-    const raw = $a.attr('href')!;
-    if (raw.startsWith('http') || raw.startsWith('/api/')) return;
+    const raw = $a.attr("href")!;
+    if (raw.startsWith("http") || raw.startsWith("/api/")) {
+      return;
+    }
     let decodedRaw = raw;
     try {
       decodedRaw = decodeURIComponent(raw);
     } catch (err) {
       Logger.warn(
         `URI malformed in page ${currentFilePath}: ${raw}. Falling back to raw path.`,
-        'ImportFormatter',
+        "ImportFormatter"
       );
     }
 
     const resolved = normalize(
-      path.join(path.dirname(currentFilePath), decodedRaw),
+      path.join(path.dirname(currentFilePath), decodedRaw)
     );
     const meta = filePathToPageMetaMap.get(resolved);
-    if (!meta) return;
+    if (!meta) {
+      return;
+    }
 
     const linkText = $a.text().trim();
     const titleMatch =
-      linkText === meta.title ||
-      linkText === meta.title?.trim();
+      linkText === meta.title || linkText === meta.title?.trim();
 
     if (titleMatch) {
       const mentionId = v7();
-      const $mention = $('<span>')
+      const $mention = $("<span>")
         .attr({
-          'data-type': 'mention',
-          'data-id': mentionId,
-          'data-entity-type': 'page',
-          'data-entity-id': meta.id,
-          'data-label': meta.title,
-          'data-slug-id': meta.slugId,
-          'data-creator-id': creatorId,
+          "data-creator-id": creatorId,
+          "data-entity-id": meta.id,
+          "data-entity-type": "page",
+          "data-id": mentionId,
+          "data-label": meta.title,
+          "data-slug-id": meta.slugId,
+          "data-type": "mention",
         })
         .text(meta.title);
       $a.replaceWith($mention);
     } else {
-      const titleSlug = slugify(meta.title?.substring(0, 70) || 'untitled');
+      const titleSlug = slugify(meta.title?.substring(0, 70) || "untitled");
       const pageSlug = `${titleSlug}-${meta.slugId}`;
       const internalHref = spaceSlug
         ? `/s/${spaceSlug}/p/${pageSlug}`
         : `/p/${pageSlug}`;
 
-      $a.attr('href', internalHref);
-      $a.attr('data-internal', 'true');
+      $a.attr("href", internalHref);
+      $a.attr("data-internal", "true");
     }
 
     backlinks.push({ sourcePageId, targetPageId: meta.id, workspaceId });

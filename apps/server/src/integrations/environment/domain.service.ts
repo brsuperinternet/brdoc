@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { EnvironmentService } from './environment.service';
+import { Injectable } from "@nestjs/common";
+import { EnvironmentService } from "./environment.service";
 
 @Injectable()
 export class DomainService {
@@ -15,7 +15,7 @@ export class DomainService {
       return this.environmentService.getAppUrl();
     }
 
-    const protocol = this.environmentService.isHttps() ? 'https' : 'http';
+    const protocol = this.environmentService.isHttps() ? "https" : "http";
     return `${protocol}://${hostname}.${domain}`;
   }
 }

@@ -1,11 +1,13 @@
+import { User } from "@docmost/db/types/entity.types";
 import {
   ForbiddenException,
   Injectable,
   UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import type { StringValue } from 'ms';
-import { EnvironmentService } from '../../../integrations/environment/environment.service';
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import type { StringValue } from "ms";
+import { isUserDisabled } from "../../../common/helpers";
+import { EnvironmentService } from "../../../integrations/environment/environment.service";
 import {
   JwtApiKeyPayload,
   JwtAttachmentPayload,
@@ -16,15 +18,13 @@ import {
   JwtPdfExportDownloadPayload,
   JwtPdfRenderPayload,
   JwtType,
-} from '../dto/jwt-payload';
-import { User } from '@docmost/db/types/entity.types';
-import { isUserDisabled } from '../../../common/helpers';
+} from "../dto/jwt-payload";
 
 @Injectable()
 export class TokenService {
   constructor(
     private jwtService: JwtService,
-    private environmentService: EnvironmentService,
+    private environmentService: EnvironmentService
   ) {}
 
   async generateAccessToken(user: User, sessionId: string): Promise<string> {
@@ -33,11 +33,11 @@ export class TokenService {
     }
 
     const payload: JwtPayload = {
-      sub: user.id,
       email: user.email,
-      workspaceId: user.workspaceId,
-      type: JwtType.ACCESS,
       sessionId,
+      sub: user.id,
+      type: JwtType.ACCESS,
+      workspaceId: user.workspaceId,
     };
     return this.jwtService.sign(payload);
   }
@@ -49,23 +49,23 @@ export class TokenService {
 
     const payload: JwtCollabPayload = {
       sub: user.id,
-      workspaceId,
       type: JwtType.COLLAB,
+      workspaceId,
     };
-    const expiresIn = '24h';
+    const expiresIn = "24h";
     return this.jwtService.sign(payload, { expiresIn });
   }
 
   async generateExchangeToken(
     userId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<string> {
     const payload: JwtExchangePayload = {
       sub: userId,
-      workspaceId: workspaceId,
       type: JwtType.EXCHANGE,
+      workspaceId,
     };
-    return this.jwtService.sign(payload, { expiresIn: '10s' });
+    return this.jwtService.sign(payload, { expiresIn: "10s" });
   }
 
   async generateAttachmentToken(opts: {
@@ -75,12 +75,12 @@ export class TokenService {
   }): Promise<string> {
     const { attachmentId, pageId, workspaceId } = opts;
     const payload: JwtAttachmentPayload = {
-      attachmentId: attachmentId,
-      pageId: pageId,
-      workspaceId: workspaceId,
+      attachmentId,
+      pageId,
       type: JwtType.ATTACHMENT,
+      workspaceId,
     };
-    return this.jwtService.sign(payload, { expiresIn: '1h' });
+    return this.jwtService.sign(payload, { expiresIn: "1h" });
   }
 
   async generateMfaToken(user: User, workspaceId: string): Promise<string> {
@@ -90,10 +90,10 @@ export class TokenService {
 
     const payload: JwtMfaTokenPayload = {
       sub: user.id,
-      workspaceId,
       type: JwtType.MFA_TOKEN,
+      workspaceId,
     };
-    return this.jwtService.sign(payload, { expiresIn: '5m' });
+    return this.jwtService.sign(payload, { expiresIn: "5m" });
   }
 
   async generateApiToken(opts: {
@@ -108,10 +108,10 @@ export class TokenService {
     }
 
     const payload: JwtApiKeyPayload = {
+      apiKeyId,
       sub: user.id,
-      apiKeyId: apiKeyId,
-      workspaceId,
       type: JwtType.API_KEY,
+      workspaceId,
     };
 
     return this.jwtService.sign(payload, expiresIn ? { expiresIn } : {});
@@ -119,26 +119,26 @@ export class TokenService {
 
   async generatePdfRenderToken(
     pageId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<string> {
     const payload: JwtPdfRenderPayload = {
       pageId,
-      workspaceId,
       type: JwtType.PDF_RENDER,
+      workspaceId,
     };
-    return this.jwtService.sign(payload, { expiresIn: '60s' });
+    return this.jwtService.sign(payload, { expiresIn: "60s" });
   }
 
   async generatePdfExportDownloadToken(
     fileTaskId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<string> {
     const payload: JwtPdfExportDownloadPayload = {
       fileTaskId,
-      workspaceId,
       type: JwtType.PDF_EXPORT_DOWNLOAD,
+      workspaceId,
     };
-    return this.jwtService.sign(payload, { expiresIn: '1h' });
+    return this.jwtService.sign(payload, { expiresIn: "1h" });
   }
 
   async verifyJwt(token: string, tokenType: string) {
@@ -148,7 +148,7 @@ export class TokenService {
 
     if (payload.type !== tokenType) {
       throw new UnauthorizedException(
-        'Invalid JWT token. Token type does not match.',
+        "Invalid JWT token. Token type does not match."
       );
     }
 

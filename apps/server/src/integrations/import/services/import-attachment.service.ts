@@ -1,36 +1,35 @@
-import { Injectable, Logger } from '@nestjs/common';
-import * as path from 'path';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { cleanUrlString } from '../utils/file.utils';
-import { StorageService } from '../../storage/storage.service';
-import { createReadStream } from 'node:fs';
-import { promises as fs } from 'fs';
-import { Readable } from 'stream';
-import { getMimeType, sanitizeFileName } from '../../../common/helpers';
-import { v7 } from 'uuid';
-import { FileTask } from '@docmost/db/types/entity.types';
-import { getAttachmentFolderPath } from '../../../core/attachment/attachment.utils';
-import { AttachmentType } from '../../../core/attachment/attachment.constants';
-import { unwrapFromParagraph } from '../utils/import-formatter';
-import { resolveRelativeAttachmentPath } from '../utils/import.utils';
-import { imageDimensionsFromData } from 'image-dimensions';
-import { load } from 'cheerio';
-import pLimit from 'p-limit';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { QueueJob, QueueName } from '../../queue/constants';
+import { createReadStream, promises as fs } from "node:fs";
+import * as path from "node:path";
+import { Readable } from "node:stream";
+import { FileTask } from "@docmost/db/types/entity.types";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { InjectQueue } from "@nestjs/bullmq";
+import { Injectable, Logger } from "@nestjs/common";
+import { Queue } from "bullmq";
+import { load } from "cheerio";
+import { imageDimensionsFromData } from "image-dimensions";
+import { InjectKysely } from "nestjs-kysely";
+import pLimit from "p-limit";
+import { v7 } from "uuid";
+import { getMimeType, sanitizeFileName } from "../../../common/helpers";
+import { AttachmentType } from "../../../core/attachment/attachment.constants";
+import { getAttachmentFolderPath } from "../../../core/attachment/attachment.utils";
+import { QueueJob, QueueName } from "../../queue/constants";
+import { StorageService } from "../../storage/storage.service";
+import { cleanUrlString } from "../utils/file.utils";
+import { resolveRelativeAttachmentPath } from "../utils/import.utils";
+import { unwrapFromParagraph } from "../utils/import-formatter";
 
 interface AttachmentInfo {
-  href: string;
   fileName: string;
+  href: string;
   mimeType: string;
 }
 
 interface DrawioPair {
+  baseName: string;
   drawioFile?: AttachmentInfo;
   pngFile?: AttachmentInfo;
-  baseName: string;
 }
 
 @Injectable()
@@ -70,10 +69,10 @@ export class ImportAttachmentService {
     const attachmentTasks: (() => Promise<void>)[] = [];
     const limit = pLimit(this.CONCURRENT_UPLOADS);
     const uploadStats = {
-      total: 0,
       completed: 0,
       failed: 0,
       failedFiles: [] as string[],
+      total: 0,
     };
 
     /**
@@ -95,7 +94,7 @@ export class ImportAttachmentService {
     // Analyze attachments to identify Draw.io pairs
     const { drawioPairs, skipFiles } = this.analyzeAttachments(
       pageAttachments,
-      isConfluenceImport,
+      isConfluenceImport
     );
 
     // Map to store processed Draw.io SVGs
@@ -112,10 +111,14 @@ export class ImportAttachmentService {
 
     // Process Draw.io pairs and create combined SVG files
     for (const [drawioHref, pair] of drawioPairs) {
-      if (!pair.drawioFile) continue;
+      if (!pair.drawioFile) {
+        continue;
+      }
 
       const drawioAbsPath = attachmentCandidates.get(drawioHref);
-      if (!drawioAbsPath) continue;
+      if (!drawioAbsPath) {
+        continue;
+      }
 
       const pngAbsPath = pair.pngFile
         ? attachmentCandidates.get(pair.pngFile.href)
@@ -127,10 +130,10 @@ export class ImportAttachmentService {
 
         // Generate file details - always use "diagram.drawio.svg" as filename
         const attachmentId = v7();
-        const fileName = 'diagram.drawio.svg';
+        const fileName = "diagram.drawio.svg";
         const storageFilePath = `${getAttachmentFolderPath(
           AttachmentType.File,
-          fileTask.workspaceId,
+          fileTask.workspaceId
         )}/${attachmentId}/${fileName}`;
         const apiFilePath = `/api/files/${attachmentId}/${fileName}`;
 
@@ -146,19 +149,19 @@ export class ImportAttachmentService {
 
             // Insert into database
             await this.db
-              .insertInto('attachments')
+              .insertInto("attachments")
               .values({
-                id: attachmentId,
-                filePath: storageFilePath,
-                fileName: fileName,
-                fileSize: svgBuffer.length,
-                mimeType: 'image/svg+xml',
-                type: 'file',
-                fileExt: '.svg',
                 creatorId: fileTask.creatorId,
-                workspaceId: fileTask.workspaceId,
+                fileExt: ".svg",
+                fileName,
+                filePath: storageFilePath,
+                fileSize: svgBuffer.length,
+                id: attachmentId,
+                mimeType: "image/svg+xml",
                 pageId,
                 spaceId: fileTask.spaceId,
+                type: "file",
+                workspaceId: fileTask.workspaceId,
               })
               .execute();
 
@@ -168,24 +171,24 @@ export class ImportAttachmentService {
             uploadStats.failedFiles.push(fileName);
             this.logger.error(
               `Failed to upload Draw.io SVG ${fileName}:`,
-              error,
+              error
             );
           }
         });
 
         // Store the mapping for both Draw.io and PNG references
-        drawioSvgMap.set(drawioHref, { attachmentId, apiFilePath, fileName });
+        drawioSvgMap.set(drawioHref, { apiFilePath, attachmentId, fileName });
         if (pair.pngFile) {
           drawioSvgMap.set(pair.pngFile.href, {
-            attachmentId,
             apiFilePath,
+            attachmentId,
             fileName,
           });
         }
       } catch (error) {
         this.logger.error(
           `Failed to process Draw.io pair ${pair.baseName}:`,
-          error,
+          error
         );
       }
     }
@@ -201,7 +204,7 @@ export class ImportAttachmentService {
       const relPath = resolveRelativeAttachmentPath(
         attachment.href,
         pageDir,
-        attachmentCandidates,
+        attachmentCandidates
       );
       if (relPath && attachment.fileName) {
         attachmentNameByRelPath.set(relPath, attachment.fileName);
@@ -209,7 +212,10 @@ export class ImportAttachmentService {
         const dir = path.posix.dirname(relPath);
         const aliasKey = `${dir}/${attachment.fileName}`;
         if (!attachmentCandidates.has(aliasKey)) {
-          attachmentCandidates.set(aliasKey, attachmentCandidates.get(relPath)!);
+          attachmentCandidates.set(
+            aliasKey,
+            attachmentCandidates.get(relPath)!
+          );
           attachmentNameByRelPath.set(aliasKey, attachment.fileName);
         }
       }
@@ -228,7 +234,7 @@ export class ImportAttachmentService {
 
       const storageFilePath = `${getAttachmentFolderPath(
         AttachmentType.File,
-        fileTask.workspaceId,
+        fileTask.workspaceId
       )}/${attachmentId}/${fileNameWithExt}`;
 
       const apiFilePath = `/api/files/${attachmentId}/${fileNameWithExt}`;
@@ -236,22 +242,22 @@ export class ImportAttachmentService {
       attachmentTasks.push(() =>
         this.uploadWithRetry({
           abs,
-          storageFilePath,
           attachmentId,
-          fileNameWithExt,
           ext,
-          pageId,
+          fileNameWithExt,
           fileTask,
+          pageId,
+          storageFilePath,
           uploadStats,
-        }),
+        })
       );
 
       return {
-        attachmentId,
-        storageFilePath,
-        apiFilePath,
-        fileNameWithExt,
         abs,
+        apiFilePath,
+        attachmentId,
+        fileNameWithExt,
+        storageFilePath,
       };
     };
 
@@ -261,7 +267,9 @@ export class ImportAttachmentService {
      */
     const processFile = (relPath: string) => {
       const cached = processed.get(relPath);
-      if (cached) return cached;
+      if (cached) {
+        return cached;
+      }
 
       const fresh = uploadOnce(relPath);
       processed.set(relPath, fresh);
@@ -271,28 +279,32 @@ export class ImportAttachmentService {
     const $ = load(html);
 
     // image
-    for (const imgEl of $('img').toArray()) {
+    for (const imgEl of $("img").toArray()) {
       const $img = $(imgEl);
-      const src = cleanUrlString($img.attr('src') ?? '')!;
-      if (!src || src.startsWith('http')) continue;
+      const src = cleanUrlString($img.attr("src") ?? "")!;
+      if (!src || src.startsWith("http")) {
+        continue;
+      }
 
       const relPath = resolveRelativeAttachmentPath(
         src,
         pageDir,
-        attachmentCandidates,
+        attachmentCandidates
       );
-      if (!relPath) continue;
+      if (!relPath) {
+        continue;
+      }
 
       // Check if this image is part of a Draw.io pair
       const drawioSvg = drawioSvgMap.get(relPath);
       if (drawioSvg) {
-        const $drawio = $('<div>')
-          .attr('data-type', 'drawio')
-          .attr('data-src', drawioSvg.apiFilePath)
-          .attr('data-title', 'diagram')
-          .attr('data-width', '100%')
-          .attr('data-align', 'center')
-          .attr('data-attachment-id', drawioSvg.attachmentId);
+        const $drawio = $("<div>")
+          .attr("data-type", "drawio")
+          .attr("data-src", drawioSvg.apiFilePath)
+          .attr("data-title", "diagram")
+          .attr("data-width", "100%")
+          .attr("data-align", "center")
+          .attr("data-attachment-id", drawioSvg.attachmentId);
 
         $img.replaceWith($drawio);
         unwrapFromParagraph($, $drawio);
@@ -301,9 +313,9 @@ export class ImportAttachmentService {
 
       const { attachmentId, apiFilePath, abs } = processFile(relPath);
 
-      let width = $img.attr('width');
-      const height = $img.attr('height');
-      const align = $img.attr('data-align') ?? 'center';
+      let width = $img.attr("width");
+      const height = $img.attr("height");
+      const align = $img.attr("data-align") ?? "center";
 
       if (!width) {
         try {
@@ -312,7 +324,7 @@ export class ImportAttachmentService {
           if (natural) {
             width = height
               ? String(
-                  Math.round((natural.width / natural.height) * Number(height)),
+                  Math.round((natural.width / natural.height) * Number(height))
                 )
               : String(natural.width);
           }
@@ -321,65 +333,71 @@ export class ImportAttachmentService {
         }
 
         if (!width) {
-          width = '600';
+          width = "600";
         }
       }
 
       $img
-        .attr('src', apiFilePath)
-        .attr('data-attachment-id', attachmentId)
-        .attr('width', width)
-        .attr('height', height)
-        .attr('data-align', align);
+        .attr("src", apiFilePath)
+        .attr("data-attachment-id", attachmentId)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("data-align", align);
 
       unwrapFromParagraph($, $img);
     }
 
     // video
-    for (const vidEl of $('video').toArray()) {
+    for (const vidEl of $("video").toArray()) {
       const $vid = $(vidEl);
-      const src = cleanUrlString($vid.attr('src') ?? '')!;
-      if (!src || src.startsWith('http')) continue;
+      const src = cleanUrlString($vid.attr("src") ?? "")!;
+      if (!src || src.startsWith("http")) {
+        continue;
+      }
 
       const relPath = resolveRelativeAttachmentPath(
         src,
         pageDir,
-        attachmentCandidates,
+        attachmentCandidates
       );
-      if (!relPath) continue;
+      if (!relPath) {
+        continue;
+      }
 
       const { attachmentId, apiFilePath } = processFile(relPath);
 
-      const width = $vid.attr('width') ?? '100%';
-      const align = $vid.attr('data-align') ?? 'center';
+      const width = $vid.attr("width") ?? "100%";
+      const align = $vid.attr("data-align") ?? "center";
 
       $vid
-        .attr('src', apiFilePath)
-        .attr('data-attachment-id', attachmentId)
-        .attr('width', width)
-        .attr('data-align', align);
+        .attr("src", apiFilePath)
+        .attr("data-attachment-id", attachmentId)
+        .attr("width", width)
+        .attr("data-align", align);
 
       unwrapFromParagraph($, $vid);
     }
 
     // audio
-    for (const audEl of $('audio').toArray()) {
+    for (const audEl of $("audio").toArray()) {
       const $aud = $(audEl);
-      const src = cleanUrlString($aud.attr('src') ?? '')!;
-      if (!src || src.startsWith('http')) continue;
+      const src = cleanUrlString($aud.attr("src") ?? "")!;
+      if (!src || src.startsWith("http")) {
+        continue;
+      }
 
       const relPath = resolveRelativeAttachmentPath(
         src,
         pageDir,
-        attachmentCandidates,
+        attachmentCandidates
       );
-      if (!relPath) continue;
+      if (!relPath) {
+        continue;
+      }
 
       const { attachmentId, apiFilePath } = processFile(relPath);
 
-      $aud
-        .attr('src', apiFilePath)
-        .attr('data-attachment-id', attachmentId);
+      $aud.attr("src", apiFilePath).attr("data-attachment-id", attachmentId);
 
       unwrapFromParagraph($, $aud);
     }
@@ -387,54 +405,62 @@ export class ImportAttachmentService {
     // <div data-type="attachment">
     for (const el of $('div[data-type="attachment"]').toArray()) {
       const $oldDiv = $(el);
-      const rawUrl = cleanUrlString($oldDiv.attr('data-attachment-url') ?? '')!;
-      if (!rawUrl || rawUrl.startsWith('http')) continue;
+      const rawUrl = cleanUrlString($oldDiv.attr("data-attachment-url") ?? "")!;
+      if (!rawUrl || rawUrl.startsWith("http")) {
+        continue;
+      }
 
       const relPath = resolveRelativeAttachmentPath(
         rawUrl,
         pageDir,
-        attachmentCandidates,
+        attachmentCandidates
       );
-      if (!relPath) continue;
+      if (!relPath) {
+        continue;
+      }
 
       const { attachmentId, apiFilePath, abs } = processFile(relPath);
       const fileName = path.basename(abs);
       const mime = getMimeType(abs);
 
-      const $newDiv = $('<div>')
-        .attr('data-type', 'attachment')
-        .attr('data-attachment-url', apiFilePath)
-        .attr('data-attachment-name', fileName)
-        .attr('data-attachment-mime', mime)
-        .attr('data-attachment-id', attachmentId);
+      const $newDiv = $("<div>")
+        .attr("data-type", "attachment")
+        .attr("data-attachment-url", apiFilePath)
+        .attr("data-attachment-name", fileName)
+        .attr("data-attachment-mime", mime)
+        .attr("data-attachment-id", attachmentId);
 
       $oldDiv.replaceWith($newDiv);
       unwrapFromParagraph($, $newDiv);
     }
 
     // rewrite other attachments via <a>
-    for (const aEl of $('a').toArray()) {
+    for (const aEl of $("a").toArray()) {
       const $a = $(aEl);
-      const href = cleanUrlString($a.attr('href') ?? '')!;
-      if (!href || href.startsWith('http')) continue;
+      const href = cleanUrlString($a.attr("href") ?? "")!;
+      if (!href || href.startsWith("http")) {
+        continue;
+      }
 
       const relPath = resolveRelativeAttachmentPath(
         href,
         pageDir,
-        attachmentCandidates,
+        attachmentCandidates
       );
-      if (!relPath) continue;
+      if (!relPath) {
+        continue;
+      }
 
       // Check if this is a Draw.io file
       const drawioSvg = drawioSvgMap.get(relPath);
       if (drawioSvg) {
-        const $drawio = $('<div>')
-          .attr('data-type', 'drawio')
-          .attr('data-src', drawioSvg.apiFilePath)
-          .attr('data-title', 'diagram')
-          .attr('data-width', '100%')
-          .attr('data-align', 'center')
-          .attr('data-attachment-id', drawioSvg.attachmentId);
+        const $drawio = $("<div>")
+          .attr("data-type", "drawio")
+          .attr("data-src", drawioSvg.apiFilePath)
+          .attr("data-title", "diagram")
+          .attr("data-width", "100%")
+          .attr("data-align", "center")
+          .attr("data-attachment-id", drawioSvg.attachmentId);
 
         $a.replaceWith($drawio);
         unwrapFromParagraph($, $drawio);
@@ -450,42 +476,52 @@ export class ImportAttachmentService {
       const { attachmentId, apiFilePath, abs } = processFile(relPath);
       const ext = path.extname(relPath).toLowerCase();
 
-      const audioExtensions = new Set(['.mp3', '.wav', '.ogg', '.m4a', '.webm', '.flac', '.aac']);
+      const audioExtensions = new Set([
+        ".mp3",
+        ".wav",
+        ".ogg",
+        ".m4a",
+        ".webm",
+        ".flac",
+        ".aac",
+      ]);
 
-      if (ext === '.pdf') {
-        const $pdf = $('<div>')
-          .attr('data-type', 'pdf')
-          .attr('src', apiFilePath)
-          .attr('data-attachment-id', attachmentId)
-          .attr('width', '800')
-          .attr('height', '600');
+      if (ext === ".pdf") {
+        const $pdf = $("<div>")
+          .attr("data-type", "pdf")
+          .attr("src", apiFilePath)
+          .attr("data-attachment-id", attachmentId)
+          .attr("width", "800")
+          .attr("height", "600");
         $a.replaceWith($pdf);
         unwrapFromParagraph($, $pdf);
-      } else if (ext === '.mp4') {
-        const $video = $('<video>')
-          .attr('src', apiFilePath)
-          .attr('data-attachment-id', attachmentId)
-          .attr('width', '100%')
-          .attr('data-align', 'center');
+      } else if (ext === ".mp4") {
+        const $video = $("<video>")
+          .attr("src", apiFilePath)
+          .attr("data-attachment-id", attachmentId)
+          .attr("width", "100%")
+          .attr("data-align", "center");
         $a.replaceWith($video);
         unwrapFromParagraph($, $video);
       } else if (audioExtensions.has(ext)) {
-        const $audio = $('<audio>')
-          .attr('src', apiFilePath)
-          .attr('data-attachment-id', attachmentId);
+        const $audio = $("<audio>")
+          .attr("src", apiFilePath)
+          .attr("data-attachment-id", attachmentId);
         $a.replaceWith($audio);
         unwrapFromParagraph($, $audio);
       } else {
-        const confAliasName = $a.attr('data-linked-resource-default-alias');
+        const confAliasName = $a.attr("data-linked-resource-default-alias");
         let attachmentName = path.basename(abs);
-        if (confAliasName) attachmentName = confAliasName;
+        if (confAliasName) {
+          attachmentName = confAliasName;
+        }
 
-        const $div = $('<div>')
-          .attr('data-type', 'attachment')
-          .attr('data-attachment-url', apiFilePath)
-          .attr('data-attachment-name', attachmentName)
-          .attr('data-attachment-mime', getMimeType(abs))
-          .attr('data-attachment-id', attachmentId);
+        const $div = $("<div>")
+          .attr("data-type", "attachment")
+          .attr("data-attachment-url", apiFilePath)
+          .attr("data-attachment-name", attachmentName)
+          .attr("data-attachment-mime", getMimeType(abs))
+          .attr("data-attachment-id", attachmentId);
 
         $a.replaceWith($div);
         unwrapFromParagraph($, $div);
@@ -493,32 +529,36 @@ export class ImportAttachmentService {
     }
 
     // excalidraw and drawio
-    for (const type of ['excalidraw', 'drawio'] as const) {
+    for (const type of ["excalidraw", "drawio"] as const) {
       for (const el of $(`div[data-type="${type}"]`).toArray()) {
         const $oldDiv = $(el);
-        const rawSrc = cleanUrlString($oldDiv.attr('data-src') ?? '')!;
-        if (!rawSrc || rawSrc.startsWith('http')) continue;
+        const rawSrc = cleanUrlString($oldDiv.attr("data-src") ?? "")!;
+        if (!rawSrc || rawSrc.startsWith("http")) {
+          continue;
+        }
 
         const relPath = resolveRelativeAttachmentPath(
           rawSrc,
           pageDir,
-          attachmentCandidates,
+          attachmentCandidates
         );
-        if (!relPath) continue;
+        if (!relPath) {
+          continue;
+        }
 
         const { attachmentId, apiFilePath, abs } = processFile(relPath);
         const fileName = path.basename(abs);
 
-        const width = $oldDiv.attr('data-width') || '600';
-        const align = $oldDiv.attr('data-align') || 'center';
+        const width = $oldDiv.attr("data-width") || "600";
+        const align = $oldDiv.attr("data-align") || "center";
 
-        const $newDiv = $('<div>')
-          .attr('data-type', type)
-          .attr('data-src', apiFilePath)
-          .attr('data-title', fileName)
-          .attr('data-width', width)
-          .attr('data-align', align)
-          .attr('data-attachment-id', attachmentId);
+        const $newDiv = $("<div>")
+          .attr("data-type", type)
+          .attr("data-src", apiFilePath)
+          .attr("data-title", fileName)
+          .attr("data-width", width)
+          .attr("data-align", align)
+          .attr("data-attachment-id", attachmentId);
 
         $oldDiv.replaceWith($newDiv);
         unwrapFromParagraph($, $newDiv);
@@ -528,9 +568,9 @@ export class ImportAttachmentService {
     // Collect all attachment IDs in the HTML in a single DOM traversal - O(n)
     const usedAttachmentIds = new Set<string>();
     $.root()
-      .find('[data-attachment-id]')
+      .find("[data-attachment-id]")
       .each((_, el) => {
-        const attachmentId = $(el).attr('data-attachment-id');
+        const attachmentId = $(el).attr("data-attachment-id");
         if (attachmentId) {
           usedAttachmentIds.add(attachmentId);
         }
@@ -539,19 +579,21 @@ export class ImportAttachmentService {
     // Add Draw.io diagrams that weren't referenced in the HTML content
     for (const [drawioHref, pair] of drawioPairs) {
       const drawioSvg = drawioSvgMap.get(drawioHref);
-      if (!drawioSvg) continue;
+      if (!drawioSvg) {
+        continue;
+      }
 
       if (usedAttachmentIds.has(drawioSvg.attachmentId)) {
         continue; // Already in content
       }
 
-      const $drawio = $('<div>')
-        .attr('data-type', 'drawio')
-        .attr('data-src', drawioSvg.apiFilePath)
-        .attr('data-title', 'diagram')
-        .attr('data-width', '600')
-        .attr('data-align', 'center')
-        .attr('data-attachment-id', drawioSvg.attachmentId);
+      const $drawio = $("<div>")
+        .attr("data-type", "drawio")
+        .attr("data-src", drawioSvg.apiFilePath)
+        .attr("data-title", "diagram")
+        .attr("data-width", "600")
+        .attr("data-align", "center")
+        .attr("data-attachment-id", drawioSvg.attachmentId);
 
       $.root().append($drawio);
     }
@@ -575,9 +617,11 @@ export class ImportAttachmentService {
       const resolvedHref = resolveRelativeAttachmentPath(
         href,
         pageDir,
-        attachmentCandidates,
+        attachmentCandidates
       );
-      if (!resolvedHref) continue;
+      if (!resolvedHref) {
+        continue;
+      }
 
       // Check if already processed (was referenced in HTML).
       // Inline elements may have been processed under an alias key (original
@@ -588,7 +632,7 @@ export class ImportAttachmentService {
         processed.has(resolvedHref) ||
         (absPath &&
           Array.from(processed.values()).some(
-            (entry) => entry.abs === absPath,
+            (entry) => entry.abs === absPath
           ));
       if (alreadyProcessed) {
         continue;
@@ -599,12 +643,12 @@ export class ImportAttachmentService {
       const mime = mimeType || getMimeType(abs);
 
       // Add as attachment node at the end
-      const $attachmentDiv = $('<div>')
-        .attr('data-type', 'attachment')
-        .attr('data-attachment-url', apiFilePath)
-        .attr('data-attachment-name', fileName)
-        .attr('data-attachment-mime', mime)
-        .attr('data-attachment-id', attachmentId);
+      const $attachmentDiv = $("<div>")
+        .attr("data-type", "attachment")
+        .attr("data-attachment-url", apiFilePath)
+        .attr("data-attachment-name", fileName)
+        .attr("data-attachment-mime", mime)
+        .attr("data-attachment-id", attachmentId);
 
       $.root().append($attachmentDiv);
     }
@@ -616,17 +660,17 @@ export class ImportAttachmentService {
       try {
         await Promise.all(attachmentTasks.map((task) => limit(task)));
       } catch (err) {
-        this.logger.error('Import attachment upload error', err);
+        this.logger.error("Import attachment upload error", err);
       }
 
       this.logger.debug(
-        `Upload completed: ${uploadStats.completed}/${uploadStats.total} successful, ${uploadStats.failed} failed`,
+        `Upload completed: ${uploadStats.completed}/${uploadStats.total} successful, ${uploadStats.failed} failed`
       );
 
       if (uploadStats.failed > 0) {
         this.logger.warn(
           `Failed to upload ${uploadStats.failed} files:`,
-          uploadStats.failedFiles,
+          uploadStats.failedFiles
         );
       }
     }
@@ -634,44 +678,46 @@ export class ImportAttachmentService {
     // Post-process DOM elements to add file sizes after uploads complete
     // This avoids blocking file operations during initial DOM processing
     const elementsNeedingSize = $(
-      '[data-attachment-id]:not([data-attachment-size]):not([data-size])',
+      "[data-attachment-id]:not([data-attachment-size]):not([data-size])"
     );
     for (const element of elementsNeedingSize.toArray()) {
       const $el = $(element);
-      const attachmentId = $el.attr('data-attachment-id');
-      if (!attachmentId) continue;
+      const attachmentId = $el.attr("data-attachment-id");
+      if (!attachmentId) {
+        continue;
+      }
 
       // Find the corresponding processed file info
       const processedEntry = Array.from(processed.values()).find(
-        (entry) => entry.attachmentId === attachmentId,
+        (entry) => entry.attachmentId === attachmentId
       );
 
       if (processedEntry) {
         try {
           const stat = await fs.stat(processedEntry.abs);
           const sizeStr = stat.size.toString();
-          const tagName = $el.prop('tagName')?.toLowerCase();
+          const tagName = $el.prop("tagName")?.toLowerCase();
           // audio and pdf nodes use data-size, attachment nodes use data-attachment-size
-          if (tagName === 'audio' || $el.attr('data-type') === 'pdf') {
-            $el.attr('data-size', sizeStr);
+          if (tagName === "audio" || $el.attr("data-type") === "pdf") {
+            $el.attr("data-size", sizeStr);
           } else {
-            $el.attr('data-attachment-size', sizeStr);
+            $el.attr("data-attachment-size", sizeStr);
           }
         } catch (error) {
           this.logger.debug(
             `Could not get size for ${processedEntry.abs}:`,
-            error,
+            error
           );
         }
       }
     }
 
-    return $.root().html() || '';
+    return $.root().html() || "";
   }
 
   private analyzeAttachments(
     attachments: AttachmentInfo[],
-    isConfluenceImport?: boolean,
+    isConfluenceImport?: boolean
   ): {
     drawioPairs: Map<string, DrawioPair>;
     skipFiles: Set<string>;
@@ -688,21 +734,21 @@ export class ImportAttachmentService {
     const pngByBaseName = new Map<string, AttachmentInfo[]>();
 
     const nonDrawioExtensions = new Set([
-      '.png',
-      '.jpg',
-      '.jpeg',
-      '.gif',
-      '.svg',
-      '.txt',
-      '.pdf',
-      '.doc',
-      '.docx',
-      '.xls',
-      '.xlsx',
-      '.csv',
-      '.zip',
-      '.tar',
-      '.gz',
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".svg",
+      ".txt",
+      ".pdf",
+      ".doc",
+      ".docx",
+      ".xls",
+      ".xlsx",
+      ".csv",
+      ".zip",
+      ".tar",
+      ".gz",
     ]);
 
     // Single pass through attachments
@@ -711,28 +757,28 @@ export class ImportAttachmentService {
       const fileNameLower = fileName.toLowerCase();
 
       // Skip temporary files
-      if (fileName.endsWith('.tmp') || fileName.includes('~drawio~')) {
+      if (fileName.endsWith(".tmp") || fileName.includes("~drawio~")) {
         skipFiles.add(href);
         continue;
       }
 
       // Check for Draw.io files
-      if (mimeType === 'application/vnd.jgraph.mxfile') {
-        const ext = fileNameLower.substring(fileNameLower.lastIndexOf('.'));
-        if (!nonDrawioExtensions.has(ext)) {
-          drawioFiles.push(attachment);
-        } else {
+      if (mimeType === "application/vnd.jgraph.mxfile") {
+        const ext = fileNameLower.substring(fileNameLower.lastIndexOf("."));
+        if (nonDrawioExtensions.has(ext)) {
           //Skipped non-Draw.io file with mxfile MIME.
+        } else {
+          drawioFiles.push(attachment);
         }
       }
 
-      if (mimeType === 'image/png' || fileNameLower.endsWith('.png')) {
+      if (mimeType === "image/png" || fileNameLower.endsWith(".png")) {
         const baseNames: string[] = [];
 
-        if (fileName.endsWith('.drawio.png')) {
+        if (fileName.endsWith(".drawio.png")) {
           // Cloud format: "name.drawio.png" -> base is "name"
           baseNames.push(fileName.slice(0, -11)); // Remove .drawio.png
-        } else if (fileName.endsWith('.png')) {
+        } else if (fileName.endsWith(".png")) {
           // Server format: "name.png" -> base is "name"
           baseNames.push(fileName.slice(0, -4)); // Remove .png
         }
@@ -741,7 +787,7 @@ export class ImportAttachmentService {
           if (!pngByBaseName.has(baseName)) {
             pngByBaseName.set(baseName, []);
           }
-          pngByBaseName.get(baseName)!.push(attachment);
+          pngByBaseName.get(baseName)?.push(attachment);
         }
       }
     }
@@ -750,7 +796,7 @@ export class ImportAttachmentService {
     for (const drawio of drawioFiles) {
       let baseName: string;
 
-      if (drawio.fileName.endsWith('.drawio')) {
+      if (drawio.fileName.endsWith(".drawio")) {
         baseName = drawio.fileName.slice(0, -7); // Remove .drawio
       } else {
         // Confluence Server: no extension
@@ -776,13 +822,15 @@ export class ImportAttachmentService {
           // but seem to be the best option for now
           // to prevent reusing the first drawio preview image if there are more with the same name
           if (pngId && drawioId) {
-            const idDiff = Math.abs(parseInt(pngId) - parseInt(drawioId));
+            const idDiff = Math.abs(
+              Number.parseInt(pngId) - Number.parseInt(drawioId)
+            );
             // PNG is usually within ~30 IDs of the Draw.io file
             if (idDiff <= 30) {
               // Verify filename match
               if (
                 png.fileName === `${baseName}.drawio.png` ||
-                (!drawio.fileName.endsWith('.drawio') &&
+                (!drawio.fileName.endsWith(".drawio") &&
                   png.fileName === `${baseName}.png`)
               ) {
                 matchingPng = png;
@@ -801,7 +849,7 @@ export class ImportAttachmentService {
             break;
           }
           if (
-            !drawio.fileName.endsWith('.drawio') &&
+            !drawio.fileName.endsWith(".drawio") &&
             png.fileName === `${baseName}.png`
           ) {
             matchingPng = png;
@@ -812,16 +860,16 @@ export class ImportAttachmentService {
 
       if (matchingPng) {
         this.logger.debug(
-          `Found Draw.io pair: ${drawio.fileName} -> ${matchingPng.fileName}`,
+          `Found Draw.io pair: ${drawio.fileName} -> ${matchingPng.fileName}`
         );
       } else {
         this.logger.debug(`No PNG found for Draw.io file: ${drawio.fileName}`);
       }
 
       const pair: DrawioPair = {
+        baseName,
         drawioFile: drawio,
         pngFile: matchingPng,
-        baseName,
       };
 
       drawioPairs.set(drawio.href, pair);
@@ -845,24 +893,24 @@ export class ImportAttachmentService {
 
   private async createDrawioSvg(
     drawioPath: string,
-    pngPath?: string,
+    pngPath?: string
   ): Promise<Buffer> {
     try {
-      const drawioContent = await fs.readFile(drawioPath, 'utf-8');
-      const drawioBase64 = Buffer.from(drawioContent).toString('base64');
+      const drawioContent = await fs.readFile(drawioPath, "utf-8");
+      const drawioBase64 = Buffer.from(drawioContent).toString("base64");
 
-      let imageElement = '';
+      let imageElement = "";
       // If we have a PNG, include it in the SVG
       if (pngPath) {
         try {
           const pngBuffer = await fs.readFile(pngPath);
-          const pngBase64 = pngBuffer.toString('base64');
+          const pngBase64 = pngBuffer.toString("base64");
 
           imageElement = `<image href="data:image/png;base64,${pngBase64}" width="100%" height="100%"/>`;
         } catch (error) {
           this.logger.warn(
             `Could not read PNG file for Draw.io diagram: ${pngPath}`,
-            error,
+            error
           );
         }
       }
@@ -877,7 +925,7 @@ export class ImportAttachmentService {
       viewBox="0 0 600 400"
       content="${drawioBase64}">${imageElement}</svg>`;
 
-      return Buffer.from(svgContent, 'utf-8');
+      return Buffer.from(svgContent, "utf-8");
     } catch (error) {
       this.logger.error(`Failed to create Draw.io SVG: ${error}`);
       throw error;
@@ -922,24 +970,24 @@ export class ImportAttachmentService {
         const stat = await fs.stat(abs);
 
         await this.db
-          .insertInto('attachments')
+          .insertInto("attachments")
           .values({
-            id: attachmentId,
-            filePath: storageFilePath,
-            fileName: fileNameWithExt,
-            fileSize: stat.size,
-            mimeType: getMimeType(fileNameWithExt),
-            type: 'file',
-            fileExt: ext,
             creatorId: fileTask.creatorId,
-            workspaceId: fileTask.workspaceId,
+            fileExt: ext,
+            fileName: fileNameWithExt,
+            filePath: storageFilePath,
+            fileSize: stat.size,
+            id: attachmentId,
+            mimeType: getMimeType(fileNameWithExt),
             pageId,
             spaceId: fileTask.spaceId,
+            type: "file",
+            workspaceId: fileTask.workspaceId,
           })
           .execute();
 
         // Queue PDF and DOCX files for indexing
-        const supportedExtensions = ['.pdf', '.docx'];
+        const supportedExtensions = [".pdf", ".docx"];
         if (supportedExtensions.includes(ext.toLowerCase())) {
           try {
             await this.attachmentQueue.add(
@@ -948,22 +996,22 @@ export class ImportAttachmentService {
               {
                 attempts: 1,
                 backoff: {
-                  type: 'exponential',
                   delay: 3 * 60 * 1000,
+                  type: "exponential",
                 },
                 deduplication: {
                   id: attachmentId,
                 },
                 removeOnComplete: true,
                 removeOnFail: false,
-              },
+              }
             );
             this.logger.debug(
-              `Queued ${fileNameWithExt} for indexing (attachment ID: ${attachmentId})`,
+              `Queued ${fileNameWithExt} for indexing (attachment ID: ${attachmentId})`
             );
           } catch (err) {
             this.logger.error(
-              `Failed to queue indexing for imported attachment ${attachmentId}: ${err}`,
+              `Failed to queue indexing for imported attachment ${attachmentId}: ${err}`
             );
           }
         }
@@ -972,7 +1020,7 @@ export class ImportAttachmentService {
 
         if (uploadStats.completed % 10 === 0) {
           this.logger.debug(
-            `Upload progress: ${uploadStats.completed}/${uploadStats.total}`,
+            `Upload progress: ${uploadStats.completed}/${uploadStats.total}`
           );
         }
 
@@ -980,12 +1028,12 @@ export class ImportAttachmentService {
       } catch (error) {
         lastError = error as Error;
         this.logger.warn(
-          `Upload attempt ${attempt}/${this.MAX_RETRIES} failed for ${fileNameWithExt}: ${error instanceof Error ? error.message : String(error)}`,
+          `Upload attempt ${attempt}/${this.MAX_RETRIES} failed for ${fileNameWithExt}: ${error instanceof Error ? error.message : String(error)}`
         );
 
         if (attempt < this.MAX_RETRIES) {
           await new Promise((resolve) =>
-            setTimeout(resolve, this.RETRY_DELAY * attempt),
+            setTimeout(resolve, this.RETRY_DELAY * attempt)
           );
         }
       }
@@ -995,7 +1043,7 @@ export class ImportAttachmentService {
     uploadStats.failedFiles.push(fileNameWithExt);
     this.logger.error(
       `Failed to upload ${fileNameWithExt} after ${this.MAX_RETRIES} attempts:`,
-      lastError,
+      lastError
     );
   }
 }

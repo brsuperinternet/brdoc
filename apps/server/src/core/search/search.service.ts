@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { SearchDTO, SearchSuggestionDTO } from './dto/search.dto';
-import { SearchResponseDto } from './dto/search-response.dto';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { sql } from 'kysely';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
-import { ShareRepo } from '@docmost/db/repos/share/share.repo';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { ShareRepo } from "@docmost/db/repos/share/share.repo";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
+import { Injectable } from "@nestjs/common";
+import { sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
+import { SearchDTO, SearchSuggestionDTO } from "./dto/search.dto";
+import { SearchResponseDto } from "./dto/search-response.dto";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const tsquery = require('pg-tsquery')();
+const tsquery = require("pg-tsquery")();
 
 @Injectable()
 export class SearchService {
@@ -28,9 +28,9 @@ export class SearchService {
       userId?: string;
       workspaceId: string;
       publicPageIds?: string[];
-    },
+    }
   ): Promise<{ items: SearchResponseDto[] }> {
-    const query = searchParams.query?.trim() ?? '';
+    const query = searchParams.query?.trim() ?? "";
     const labelIds = [...new Set(searchParams.labelIds ?? [])];
     // selected filters (labels, creator) are browsable without a query
     const browseByFilters =
@@ -40,73 +40,74 @@ export class SearchService {
     if (query.length < 1 && !browseByFilters) {
       return { items: [] };
     }
-    const searchQuery = tsquery(query + '*');
+    const searchQuery = tsquery(query + "*");
     const titleOnly = searchParams.titleOnly === true;
     const titleQuery = query;
     // escape LIKE wildcards; ranking keeps the raw query
-    const titleLikeQuery = query.replace(/[\\%_]/g, '\\$&');
+    const titleLikeQuery = query.replace(/[\\%_]/g, "\\$&");
 
     const rankColumn = browseByFilters
-      ? sql<number>`0`.as('rank')
+      ? sql<number>`0`.as("rank")
       : titleOnly
         ? sql<number>`word_similarity(lower(${titleQuery}), lower(pages.title))`.as(
-            'rank',
+            "rank"
           )
         : sql<number>`ts_rank(tsv, to_tsquery('english', f_unaccent(${searchQuery})))`.as(
-            'rank',
+            "rank"
           );
-    const highlightColumn = browseByFilters || titleOnly
-      ? sql<string>`''`.as('highlight')
-      : sql<string>`ts_headline('english', text_content, to_tsquery('english', f_unaccent(${searchQuery})),'MinWords=9, MaxWords=10, MaxFragments=3')`.as(
-          'highlight',
-        );
+    const highlightColumn =
+      browseByFilters || titleOnly
+        ? sql<string>`''`.as("highlight")
+        : sql<string>`ts_headline('english', text_content, to_tsquery('english', f_unaccent(${searchQuery})),'MinWords=9, MaxWords=10, MaxFragments=3')`.as(
+            "highlight"
+          );
 
     let queryResults = this.db
-      .selectFrom('pages')
+      .selectFrom("pages")
       .select([
-        'id',
-        'slugId',
-        'title',
-        'icon',
-        'parentPageId',
-        'creatorId',
-        'createdAt',
-        'updatedAt',
+        "id",
+        "slugId",
+        "title",
+        "icon",
+        "parentPageId",
+        "creatorId",
+        "createdAt",
+        "updatedAt",
         rankColumn,
         highlightColumn,
       ])
       .$if(!browseByFilters && !titleOnly, (qb) =>
         qb.where(
-          'tsv',
-          '@@',
-          sql<string>`to_tsquery('english', f_unaccent(${searchQuery}))`,
-        ),
+          "tsv",
+          "@@",
+          sql<string>`to_tsquery('english', f_unaccent(${searchQuery}))`
+        )
       )
       .$if(!browseByFilters && titleOnly, (qb) =>
         qb.where((eb) =>
           eb(
             sql`lower(pages.title)`,
-            'like',
-            sql`lower(${`%${titleLikeQuery}%`})`,
-          ),
-        ),
+            "like",
+            sql`lower(${`%${titleLikeQuery}%`})`
+          )
+        )
       )
       .$if(Boolean(searchParams.creatorId), (qb) =>
-        qb.where('creatorId', '=', searchParams.creatorId),
+        qb.where("creatorId", "=", searchParams.creatorId)
       )
       .$if(labelIds?.length > 0, (qb) =>
         qb.where(
-          'id',
-          'in',
+          "id",
+          "in",
           this.db
-            .selectFrom('pageLabels')
-            .select('pageId')
-            .where('labelId', 'in', labelIds),
-        ),
+            .selectFrom("pageLabels")
+            .select("pageId")
+            .where("labelId", "in", labelIds)
+        )
       )
-      .where('deletedAt', 'is', null)
-      .$if(browseByFilters, (qb) => qb.orderBy('updatedAt', 'desc'))
-      .$if(!browseByFilters, (qb) => qb.orderBy('rank', 'desc'))
+      .where("deletedAt", "is", null)
+      .$if(browseByFilters, (qb) => qb.orderBy("updatedAt", "desc"))
+      .$if(!browseByFilters, (qb) => qb.orderBy("rank", "desc"))
       .limit(searchParams.limit || 25)
       .offset(searchParams.offset || 0);
 
@@ -115,16 +116,16 @@ export class SearchService {
     }
 
     if (searchParams.spaceId && opts.userId) {
-      queryResults = queryResults.where('spaceId', '=', searchParams.spaceId);
+      queryResults = queryResults.where("spaceId", "=", searchParams.spaceId);
     } else if (opts.userId && !searchParams.spaceId) {
       // only search spaces the user is a member of
       queryResults = queryResults
         .where(
-          'spaceId',
-          'in',
-          this.spaceMemberRepo.getUserSpaceIdsQuery(opts.userId),
+          "spaceId",
+          "in",
+          this.spaceMemberRepo.getUserSpaceIdsQuery(opts.userId)
         )
-        .where('workspaceId', '=', opts.workspaceId);
+        .where("workspaceId", "=", opts.workspaceId);
     } else if (opts.publicPageIds && !opts.userId) {
       // Public space search: the allowed id set is computed from live DB
       // state by the controller on every request.
@@ -132,8 +133,8 @@ export class SearchService {
         return { items: [] };
       }
       queryResults = queryResults
-        .where('id', 'in', opts.publicPageIds)
-        .where('workspaceId', '=', opts.workspaceId);
+        .where("id", "in", opts.publicPageIds)
+        .where("workspaceId", "=", opts.workspaceId);
     } else if (searchParams.shareId && !searchParams.spaceId && !opts.userId) {
       // search in shares
       const shareId = searchParams.shareId;
@@ -142,20 +143,22 @@ export class SearchService {
         return { items: [] };
       }
 
-      const isRestricted =
-        await this.pagePermissionRepo.hasRestrictedAncestor(share.pageId);
+      const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
+        share.pageId
+      );
       if (isRestricted) {
         return { items: [] };
       }
 
       const pageIdsToSearch = [];
       if (share.includeSubPages) {
-        const pageList = await this.pageRepo.getPageAndDescendantsExcludingRestricted(
-          share.pageId,
-          {
-            includeContent: false,
-          },
-        );
+        const pageList =
+          await this.pageRepo.getPageAndDescendantsExcludingRestricted(
+            share.pageId,
+            {
+              includeContent: false,
+            }
+          );
 
         pageIdsToSearch.push(...pageList.map((page) => page.id));
       } else {
@@ -164,8 +167,8 @@ export class SearchService {
 
       if (pageIdsToSearch.length > 0) {
         queryResults = queryResults
-          .where('id', 'in', pageIdsToSearch)
-          .where('workspaceId', '=', opts.workspaceId);
+          .where("id", "in", pageIdsToSearch)
+          .where("workspaceId", "=", opts.workspaceId);
       } else {
         return { items: [] };
       }
@@ -182,8 +185,8 @@ export class SearchService {
       const accessibleIds =
         await this.pagePermissionRepo.filterAccessiblePageIds({
           pageIds,
-          userId: opts.userId,
           spaceId: searchParams.spaceId,
+          userId: opts.userId,
         });
       const accessibleSet = new Set(accessibleIds);
       results = results.filter((r: any) => accessibleSet.has(r.id));
@@ -191,22 +194,22 @@ export class SearchService {
 
     //@ts-ignore
     const searchResults = results.map((result: SearchResponseDto) => {
-      result.wholeWord = true
+      result.wholeWord = true;
       if (!result.highlight) {
         result.matchedText = [];
         return result;
       }
 
       result.highlight = result.highlight
-        .replace(/\r\n|\r|\n/g, ' ')
-        .replace(/\s+/g, ' ');
+        .replace(/\r\n|\r|\n/g, " ")
+        .replace(/\s+/g, " ");
 
       result.matchedText = [
         ...new Set(
           Array.from(
             result.highlight.matchAll(/<b>([^<]*)<\/b>/gi),
-            (match) => match[1],
-          ),
+            (match) => match[1]
+          )
         ),
       ];
 
@@ -219,7 +222,7 @@ export class SearchService {
   async searchSuggestions(
     suggestion: SearchSuggestionDTO,
     userId: string,
-    workspaceId: string,
+    workspaceId: string
   ) {
     let users = [];
     let groups = [];
@@ -230,19 +233,19 @@ export class SearchService {
 
     if (suggestion.includeUsers) {
       const userQuery = this.db
-        .selectFrom('users')
-        .select(['id', 'name', 'email', 'avatarUrl'])
-        .where('workspaceId', '=', workspaceId)
-        .where('deletedAt', 'is', null)
+        .selectFrom("users")
+        .select(["id", "name", "email", "avatarUrl"])
+        .where("workspaceId", "=", workspaceId)
+        .where("deletedAt", "is", null)
         .where((eb) =>
           eb.or([
             eb(
               sql`LOWER(f_unaccent(users.name))`,
-              'like',
-              sql`LOWER(f_unaccent(${`%${query}%`}))`,
+              "like",
+              sql`LOWER(f_unaccent(${`%${query}%`}))`
             ),
-            eb(sql`users.email`, 'ilike', sql`f_unaccent(${`%${query}%`})`),
-          ]),
+            eb(sql`users.email`, "ilike", sql`f_unaccent(${`%${query}%`})`),
+          ])
         )
         .limit(limit);
 
@@ -251,46 +254,46 @@ export class SearchService {
 
     if (suggestion.includeGroups) {
       groups = await this.db
-        .selectFrom('groups')
-        .select(['id', 'name', 'description'])
+        .selectFrom("groups")
+        .select(["id", "name", "description"])
         .where((eb) =>
           eb(
             sql`LOWER(f_unaccent(groups.name))`,
-            'like',
-            sql`LOWER(f_unaccent(${`%${query}%`}))`,
-          ),
+            "like",
+            sql`LOWER(f_unaccent(${`%${query}%`}))`
+          )
         )
-        .where('workspaceId', '=', workspaceId)
+        .where("workspaceId", "=", workspaceId)
         .limit(limit)
         .execute();
     }
 
     if (suggestion.includePages) {
       let pageSearch = this.db
-        .selectFrom('pages')
-        .select(['id', 'slugId', 'title', 'icon', 'spaceId'])
+        .selectFrom("pages")
+        .select(["id", "slugId", "title", "icon", "spaceId"])
         .select((eb) => this.pageRepo.withSpace(eb))
         .where((eb) =>
           eb(
             sql`LOWER(f_unaccent(pages.title))`,
-            'like',
-            sql`LOWER(f_unaccent(${`%${query}%`}))`,
-          ),
+            "like",
+            sql`LOWER(f_unaccent(${`%${query}%`}))`
+          )
         )
-        .where('deletedAt', 'is', null)
-        .where('workspaceId', '=', workspaceId)
+        .where("deletedAt", "is", null)
+        .where("workspaceId", "=", workspaceId)
         .limit(limit);
 
       // search all spaces the user has access to, prioritizing the current space
       const userSpaceIds = await this.spaceMemberRepo.getUserSpaceIds(userId);
 
       if (userSpaceIds?.length > 0) {
-        pageSearch = pageSearch.where('spaceId', 'in', userSpaceIds);
+        pageSearch = pageSearch.where("spaceId", "in", userSpaceIds);
 
         if (suggestion?.spaceId) {
           pageSearch = pageSearch.orderBy(
             sql`CASE WHEN pages."space_id" = ${suggestion.spaceId} THEN 0 ELSE 1 END`,
-            'asc',
+            "asc"
           );
         }
 
@@ -310,6 +313,6 @@ export class SearchService {
       }
     }
 
-    return { users, groups, pages };
+    return { groups, pages, users };
   }
 }

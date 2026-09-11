@@ -21,45 +21,36 @@ export interface MathBlockAttributes {
 export const inputRegex = /(?:^|\s)((?:\$\$\$)((?:[^$]+))(?:\$\$\$))$/;
 
 export const MathBlock = Node.create({
-  name: "mathBlock",
-  group: "block",
-  atom: true,
-  isolating: true,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-    };
-  },
-
   addAttributes() {
     return {
       text: {
         default: "",
-        parseHTML: (element) => {
-          return element.innerHTML;
-        },
+        parseHTML: (element) => element.innerHTML,
       },
     };
   },
 
-  parseHTML() {
-    return [
-      {
-        tag: `div[data-type="${this.name}"]`,
-        getAttrs: (node: HTMLElement) => {
-          return node.hasAttribute("data-katex") ? {} : false;
-        },
-      },
-    ];
+  addCommands() {
+    return {
+      setMathBlock:
+        (attributes?: Record<string, any>) =>
+        ({ commands }) =>
+          commands.insertContent({
+            attrs: attributes,
+            type: this.name,
+          }),
+    };
   },
 
-  renderHTML({ HTMLAttributes }) {
+  addInputRules() {
     return [
-      "div",
-      { "data-type": this.name, "data-katex": true },
-      `${HTMLAttributes.text}`,
+      nodeInputRule({
+        find: inputRegex,
+        getAttributes: (match) => ({
+          text: match[1].replaceAll("$", ""),
+        }),
+        type: this.type,
+      }),
     ];
   },
 
@@ -70,28 +61,32 @@ export const MathBlock = Node.create({
     return ReactNodeViewRenderer(this.options.view);
   },
 
-  addCommands() {
+  addOptions() {
     return {
-      setMathBlock:
-        (attributes?: Record<string, any>) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: attributes,
-          });
-        },
+      HTMLAttributes: {},
+      view: null,
     };
   },
+  atom: true,
+  group: "block",
+  isolating: true,
+  name: "mathBlock",
 
-  addInputRules() {
+  parseHTML() {
     return [
-      nodeInputRule({
-        find: inputRegex,
-        type: this.type,
-        getAttributes: (match) => ({
-          text: match[1].replaceAll("$", ""),
-        }),
-      }),
+      {
+        getAttrs: (node: HTMLElement) =>
+          node.hasAttribute("data-katex") ? {} : false,
+        tag: `div[data-type="${this.name}"]`,
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      { "data-katex": true, "data-type": this.name },
+      `${HTMLAttributes.text}`,
     ];
   },
 });

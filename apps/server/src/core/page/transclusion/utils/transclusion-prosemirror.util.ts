@@ -1,7 +1,7 @@
-import { TransclusionNodeSnapshot } from '../transclusion.types';
+import { TransclusionNodeSnapshot } from "../transclusion.types";
 
-const TRANSCLUSION_TYPE = 'transclusionSource';
-const REFERENCE_TYPE = 'transclusionReference';
+const TRANSCLUSION_TYPE = "transclusionSource";
+const REFERENCE_TYPE = "transclusionReference";
 
 export type TransclusionReferenceSnapshot = {
   sourcePageId: string;
@@ -16,28 +16,34 @@ export type TransclusionReferenceSnapshot = {
  * deterministic.
  */
 export function collectTransclusionsFromPmJson(
-  doc: unknown,
+  doc: unknown
 ): TransclusionNodeSnapshot[] {
-  if (!doc || typeof doc !== 'object') return [];
+  if (!doc || typeof doc !== "object") {
+    return [];
+  }
 
   const byId = new Map<string, TransclusionNodeSnapshot>();
 
   const visit = (node: any): void => {
-    if (!node || typeof node !== 'object') return;
+    if (!node || typeof node !== "object") {
+      return;
+    }
 
     if (node.type === TRANSCLUSION_TYPE) {
       const id = node.attrs?.id;
-      if (typeof id === 'string' && id.length > 0) {
+      if (typeof id === "string" && id.length > 0) {
         byId.set(id, {
+          content: { content: node.content ?? [], type: "doc" },
           transclusionId: id,
-          content: { type: 'doc', content: node.content ?? [] },
         });
       }
       return; // do not recurse into transclusion children
     }
 
     if (Array.isArray(node.content)) {
-      for (const child of node.content) visit(child);
+      for (const child of node.content) {
+        visit(child);
+      }
     }
   };
 
@@ -53,23 +59,27 @@ export function collectTransclusionsFromPmJson(
  * Order preserved by first-seen.
  */
 export function collectReferencesFromPmJson(
-  doc: unknown,
+  doc: unknown
 ): TransclusionReferenceSnapshot[] {
-  if (!doc || typeof doc !== 'object') return [];
+  if (!doc || typeof doc !== "object") {
+    return [];
+  }
 
   const seen = new Set<string>();
   const out: TransclusionReferenceSnapshot[] = [];
 
   const visit = (node: any): void => {
-    if (!node || typeof node !== 'object') return;
+    if (!node || typeof node !== "object") {
+      return;
+    }
 
     if (node.type === REFERENCE_TYPE) {
       const sourcePageId = node.attrs?.sourcePageId;
       const transclusionId = node.attrs?.transclusionId;
       if (
-        typeof sourcePageId === 'string' &&
+        typeof sourcePageId === "string" &&
         sourcePageId.length > 0 &&
-        typeof transclusionId === 'string' &&
+        typeof transclusionId === "string" &&
         transclusionId.length > 0
       ) {
         const key = `${sourcePageId}::${transclusionId}`;
@@ -83,10 +93,14 @@ export function collectReferencesFromPmJson(
 
     // References cannot live inside a source (schema-enforced); skip recursing
     // so a malformed inbound doc can't sneak in a nested reference here.
-    if (node.type === TRANSCLUSION_TYPE) return;
+    if (node.type === TRANSCLUSION_TYPE) {
+      return;
+    }
 
     if (Array.isArray(node.content)) {
-      for (const child of node.content) visit(child);
+      for (const child of node.content) {
+        visit(child);
+      }
     }
   };
 

@@ -15,13 +15,13 @@ export interface CalloutOptions {
 
 export interface CalloutAttributes {
   /**
-   * The type of callout.
-   */
-  type: CalloutType;
-  /**
    * The custom icon name for the callout.
    */
   icon?: string;
+  /**
+   * The type of callout.
+   */
+  type: CalloutType;
 }
 
 declare module "@tiptap/core" {
@@ -41,29 +41,8 @@ declare module "@tiptap/core" {
 export const inputRegex = /^:::([a-z]+)?[\s\n]$/;
 
 export const Callout = Node.create<CalloutOptions>({
-  name: "callout",
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      view: null,
-    };
-  },
-
-  content: "block+",
-  group: "block",
-  defining: true,
-  isolating: true,
-
   addAttributes() {
     return {
-      type: {
-        default: "info",
-        parseHTML: (element) => element.getAttribute("data-callout-type"),
-        renderHTML: (attributes) => ({
-          "data-callout-type": attributes.type,
-        }),
-      },
       icon: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-callout-icon"),
@@ -71,55 +50,32 @@ export const Callout = Node.create<CalloutOptions>({
           "data-callout-icon": attributes.icon,
         }),
       },
-    };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: `div[data-type="${this.name}"]`,
+      type: {
+        default: "info",
+        parseHTML: (element) => element.getAttribute("data-callout-type"),
+        renderHTML: (attributes) => ({
+          "data-callout-type": attributes.type,
+        }),
       },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "div",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes
-      ),
-      0,
-    ];
+    };
   },
 
   addCommands() {
     return {
       setCallout:
         (attributes) =>
-        ({ commands }) => {
-          return commands.setNode(this.name, attributes);
-        },
-
-      unsetCallout:
-        () =>
-        ({ commands }) => {
-          return commands.lift(this.name);
-        },
+        ({ commands }) =>
+          commands.setNode(this.name, attributes),
 
       toggleCallout:
         (attributes) =>
-        ({ commands }) => {
-          return commands.toggleWrap(this.name, attributes);
-        },
-
-      updateCalloutType:
-        (type: string) =>
         ({ commands }) =>
-          commands.updateAttributes("callout", {
-            type: getValidCalloutType(type),
-          }),
+          commands.toggleWrap(this.name, attributes),
+
+      unsetCallout:
+        () =>
+        ({ commands }) =>
+          commands.lift(this.name),
 
       updateCalloutIcon:
         (icon: string) =>
@@ -127,14 +83,26 @@ export const Callout = Node.create<CalloutOptions>({
           commands.updateAttributes("callout", {
             icon: icon || null,
           }),
+
+      updateCalloutType:
+        (type: string) =>
+        ({ commands }) =>
+          commands.updateAttributes("callout", {
+            type: getValidCalloutType(type),
+          }),
     };
   },
 
-  addNodeView() {
-    // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
-    this.editor.isInitialized = true;
-
-    return ReactNodeViewRenderer(this.options.view);
+  addInputRules() {
+    return [
+      wrappingInputRule({
+        find: inputRegex,
+        getAttributes: (match) => ({
+          type: getValidCalloutType(match[1]),
+        }),
+        type: this.type,
+      }),
+    ];
   },
 
   addKeyboardShortcuts() {
@@ -176,9 +144,7 @@ export const Callout = Node.create<CalloutOptions>({
             const calloutPos = $from.before(calloutDepth);
             const { tr } = state;
             tr.delete(calloutPos, calloutPos + calloutNode.nodeSize);
-            tr.setSelection(
-              TextSelection.near(tr.doc.resolve(calloutPos), -1),
-            );
+            tr.setSelection(TextSelection.near(tr.doc.resolve(calloutPos), -1));
             view.dispatch(tr);
             return true;
           }
@@ -239,15 +205,23 @@ export const Callout = Node.create<CalloutOptions>({
       Enter: ({ editor }) => {
         const { state, view } = editor;
         const { selection } = state;
-        if (!selection.empty) return false;
+        if (!selection.empty) {
+          return false;
+        }
 
         const { $from } = selection;
         const calloutDepth = $from.depth - 1;
-        if (calloutDepth < 0) return false;
+        if (calloutDepth < 0) {
+          return false;
+        }
 
         const calloutNode = $from.node(calloutDepth);
-        if (calloutNode.type !== this.type) return false;
-        if ($from.parent.content.size !== 0) return false;
+        if (calloutNode.type !== this.type) {
+          return false;
+        }
+        if ($from.parent.content.size !== 0) {
+          return false;
+        }
         if ($from.index(calloutDepth) !== calloutNode.childCount - 1) {
           return false;
         }
@@ -256,9 +230,7 @@ export const Callout = Node.create<CalloutOptions>({
         const containerDepth = calloutDepth - 1;
         const container = $from.node(containerDepth);
         const indexAfter = $from.indexAfter(containerDepth);
-        if (
-          !container.canReplaceWith(indexAfter, indexAfter, paragraphType)
-        ) {
+        if (!container.canReplaceWith(indexAfter, indexAfter, paragraphType)) {
           return false;
         }
 
@@ -282,15 +254,43 @@ export const Callout = Node.create<CalloutOptions>({
     };
   },
 
-  addInputRules() {
+  addNodeView() {
+    // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
+    this.editor.isInitialized = true;
+
+    return ReactNodeViewRenderer(this.options.view);
+  },
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      view: null,
+    };
+  },
+
+  content: "block+",
+  defining: true,
+  group: "block",
+  isolating: true,
+  name: "callout",
+
+  parseHTML() {
     return [
-      wrappingInputRule({
-        find: inputRegex,
-        type: this.type,
-        getAttributes: (match) => ({
-          type: getValidCalloutType(match[1]),
-        }),
-      }),
+      {
+        tag: `div[data-type="${this.name}"]`,
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(
+        { "data-type": this.name },
+        this.options.HTMLAttributes,
+        HTMLAttributes
+      ),
+      0,
     ];
   },
 });

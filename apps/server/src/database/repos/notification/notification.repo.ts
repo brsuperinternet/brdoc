@@ -1,20 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '../../types/kysely.types';
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { DB } from "@docmost/db/types/db";
 import {
   InsertableNotification,
   Notification,
-} from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
-import { ExpressionBuilder } from 'kysely';
-import { DB } from '@docmost/db/types/db';
-import { jsonObjectFrom } from 'kysely/helpers/postgres';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
+} from "@docmost/db/types/entity.types";
+import { Injectable } from "@nestjs/common";
+import { ExpressionBuilder } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { InjectKysely } from "nestjs-kysely";
 import {
   NotificationTab,
   NotificationType,
-} from '../../../core/notification/notification.constants';
+} from "../../../core/notification/notification.constants";
+import { KyselyDB } from "../../types/kysely.types";
 
 @Injectable()
 export class NotificationRepo {
@@ -25,53 +25,53 @@ export class NotificationRepo {
 
   async findById(notificationId: string): Promise<Notification | undefined> {
     return this.db
-      .selectFrom('notifications')
-      .selectAll('notifications')
-      .where('id', '=', notificationId)
+      .selectFrom("notifications")
+      .selectAll("notifications")
+      .where("id", "=", notificationId)
       .executeTakeFirst();
   }
 
   async findByUserId(
     userId: string,
     pagination: PaginationOptions,
-    type: NotificationTab = 'all',
+    type: NotificationTab = "all"
   ) {
     let query = this.db
-      .selectFrom('notifications')
-      .selectAll('notifications')
+      .selectFrom("notifications")
+      .selectAll("notifications")
       .select((eb) => this.withActor(eb))
       .select((eb) => this.withPage(eb))
       .select((eb) => this.withSpace(eb))
-      .where('userId', '=', userId)
+      .where("userId", "=", userId)
       .where((eb) =>
         eb.or([
-          eb('spaceId', 'is', null),
+          eb("spaceId", "is", null),
           eb(
-            'spaceId',
-            'in',
-            this.spaceMemberRepo.getUserSpaceIdsQuery(userId),
+            "spaceId",
+            "in",
+            this.spaceMemberRepo.getUserSpaceIdsQuery(userId)
           ),
-        ]),
+        ])
       );
 
-    if (type === 'direct') {
-      query = query.where('type', '!=', NotificationType.PAGE_UPDATED);
-    } else if (type === 'updates') {
-      query = query.where('type', '=', NotificationType.PAGE_UPDATED);
+    if (type === "direct") {
+      query = query.where("type", "!=", NotificationType.PAGE_UPDATED);
+    } else if (type === "updates") {
+      query = query.where("type", "=", NotificationType.PAGE_UPDATED);
     }
 
     return executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
-      fields: [{ expression: 'id', direction: 'desc' }],
+      cursor: pagination.cursor,
+      fields: [{ direction: "desc", expression: "id" }],
       parseCursor: (cursor) => ({ id: cursor.id }),
+      perPage: pagination.limit,
     });
   }
 
   async insert(notification: InsertableNotification): Promise<Notification> {
     return this.db
-      .insertInto('notifications')
+      .insertInto("notifications")
       .values(notification)
       .returningAll()
       .executeTakeFirst();
@@ -79,19 +79,19 @@ export class NotificationRepo {
 
   async getUnreadCount(userId: string): Promise<number> {
     const result = await this.db
-      .selectFrom('notifications')
-      .select((eb) => eb.fn.count('id').as('count'))
-      .where('userId', '=', userId)
-      .where('readAt', 'is', null)
+      .selectFrom("notifications")
+      .select((eb) => eb.fn.count("id").as("count"))
+      .where("userId", "=", userId)
+      .where("readAt", "is", null)
       .where((eb) =>
         eb.or([
-          eb('spaceId', 'is', null),
+          eb("spaceId", "is", null),
           eb(
-            'spaceId',
-            'in',
-            this.spaceMemberRepo.getUserSpaceIdsQuery(userId),
+            "spaceId",
+            "in",
+            this.spaceMemberRepo.getUserSpaceIdsQuery(userId)
           ),
-        ]),
+        ])
       )
       .executeTakeFirst();
 
@@ -100,45 +100,45 @@ export class NotificationRepo {
 
   async markAsRead(notificationId: string, userId: string): Promise<void> {
     await this.db
-      .updateTable('notifications')
+      .updateTable("notifications")
       .set({ readAt: new Date() })
-      .where('id', '=', notificationId)
-      .where('userId', '=', userId)
-      .where('readAt', 'is', null)
+      .where("id", "=", notificationId)
+      .where("userId", "=", userId)
+      .where("readAt", "is", null)
       .execute();
   }
 
   async markMultipleAsRead(
     notificationIds: string[],
-    userId: string,
+    userId: string
   ): Promise<void> {
     if (notificationIds.length === 0) {
       return;
     }
     await this.db
-      .updateTable('notifications')
+      .updateTable("notifications")
       .set({ readAt: new Date() })
-      .where('id', 'in', notificationIds)
-      .where('userId', '=', userId)
-      .where('readAt', 'is', null)
+      .where("id", "in", notificationIds)
+      .where("userId", "=", userId)
+      .where("readAt", "is", null)
       .execute();
   }
 
   async markAllAsRead(userId: string): Promise<void> {
     await this.db
-      .updateTable('notifications')
+      .updateTable("notifications")
       .set({ readAt: new Date() })
-      .where('userId', '=', userId)
-      .where('readAt', 'is', null)
+      .where("userId", "=", userId)
+      .where("readAt", "is", null)
       .execute();
   }
 
   async markAsEmailed(notificationId: string): Promise<void> {
     await this.db
-      .updateTable('notifications')
+      .updateTable("notifications")
       .set({ emailedAt: new Date() })
-      .where('id', '=', notificationId)
-      .where('emailedAt', 'is', null)
+      .where("id", "=", notificationId)
+      .where("emailedAt", "is", null)
       .execute();
   }
 
@@ -146,49 +146,51 @@ export class NotificationRepo {
     userIds: string[],
     pageId: string,
     type: string,
-    withinHours: number,
+    withinHours: number
   ): Promise<Set<string>> {
-    if (userIds.length === 0) return new Set();
+    if (userIds.length === 0) {
+      return new Set();
+    }
 
     const cutoff = new Date(Date.now() - withinHours * 60 * 60 * 1000);
 
     const rows = await this.db
-      .selectFrom('notifications')
-      .select('userId')
-      .where('userId', 'in', userIds)
-      .where('pageId', '=', pageId)
-      .where('type', '=', type)
-      .where('createdAt', '>', cutoff)
-      .groupBy('userId')
+      .selectFrom("notifications")
+      .select("userId")
+      .where("userId", "in", userIds)
+      .where("pageId", "=", pageId)
+      .where("type", "=", type)
+      .where("createdAt", ">", cutoff)
+      .groupBy("userId")
       .execute();
 
     return new Set(rows.map((r) => r.userId));
   }
 
-  withActor(eb: ExpressionBuilder<DB, 'notifications'>) {
+  withActor(eb: ExpressionBuilder<DB, "notifications">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('users')
-        .select(['users.id', 'users.name', 'users.avatarUrl'])
-        .whereRef('users.id', '=', 'notifications.actorId'),
-    ).as('actor');
+        .selectFrom("users")
+        .select(["users.id", "users.name", "users.avatarUrl"])
+        .whereRef("users.id", "=", "notifications.actorId")
+    ).as("actor");
   }
 
-  withPage(eb: ExpressionBuilder<DB, 'notifications'>) {
+  withPage(eb: ExpressionBuilder<DB, "notifications">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('pages')
-        .select(['pages.id', 'pages.title', 'pages.slugId', 'pages.icon'])
-        .whereRef('pages.id', '=', 'notifications.pageId'),
-    ).as('page');
+        .selectFrom("pages")
+        .select(["pages.id", "pages.title", "pages.slugId", "pages.icon"])
+        .whereRef("pages.id", "=", "notifications.pageId")
+    ).as("page");
   }
 
-  withSpace(eb: ExpressionBuilder<DB, 'notifications'>) {
+  withSpace(eb: ExpressionBuilder<DB, "notifications">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('spaces')
-        .select(['spaces.id', 'spaces.name', 'spaces.slug'])
-        .whereRef('spaces.id', '=', 'notifications.spaceId'),
-    ).as('space');
+        .selectFrom("spaces")
+        .select(["spaces.id", "spaces.name", "spaces.slug"])
+        .whereRef("spaces.id", "=", "notifications.spaceId")
+    ).as("space");
   }
 }

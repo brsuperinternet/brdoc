@@ -1,15 +1,15 @@
-import { BadRequestException } from '@nestjs/common';
-import { Workspace } from '@docmost/db/types/entity.types';
-import { createHmac } from 'node:crypto';
+import { createHmac } from "node:crypto";
+import { Workspace } from "@docmost/db/types/entity.types";
+import { BadRequestException } from "@nestjs/common";
 
 export function computeEmailSignature(
   email: string,
   workspaceId: string,
-  appSecret: string,
+  appSecret: string
 ): string {
-  return createHmac('sha256', appSecret)
+  return createHmac("sha256", appSecret)
     .update(`${email.toLowerCase()}:${workspaceId}`)
-    .digest('hex');
+    .digest("hex");
 }
 
 export function throwIfEmailNotVerified(opts: {
@@ -19,35 +19,37 @@ export function throwIfEmailNotVerified(opts: {
   workspaceId: string;
   appSecret: string;
 }): void {
-  if (!opts.isCloud || opts.emailVerifiedAt) return;
+  if (!opts.isCloud || opts.emailVerifiedAt) {
+    return;
+  }
 
   const emailSignature = computeEmailSignature(
     opts.email,
     opts.workspaceId,
-    opts.appSecret,
+    opts.appSecret
   );
   throw new BadRequestException({
-    message:
-      'Please verify your email address. Check your inbox for the verification link.',
     emailSignature,
+    message:
+      "Please verify your email address. Check your inbox for the verification link.",
   });
 }
 
 export function validateSsoEnforcement(workspace: Workspace) {
   if (workspace.enforceSso) {
-    throw new BadRequestException('This workspace has enforced SSO login.');
+    throw new BadRequestException("This workspace has enforced SSO login.");
   }
 }
 
 export function validateAllowedEmail(userEmail: string, workspace: Workspace) {
-  const emailParts = userEmail.split('@');
+  const emailParts = userEmail.split("@");
   const emailDomain = emailParts[1].toLowerCase();
   if (
     workspace.emailDomains?.length > 0 &&
     !workspace.emailDomains.includes(emailDomain)
   ) {
     throw new BadRequestException(
-      `The email domain "${emailDomain}" is not approved for this workspace.`,
+      `The email domain "${emailDomain}" is not approved for this workspace.`
     );
   }
 }

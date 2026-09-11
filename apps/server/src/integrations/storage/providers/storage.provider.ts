@@ -1,8 +1,10 @@
+import { LOCAL_STORAGE_PATH } from "../../../common/helpers";
+import { EnvironmentService } from "../../environment/environment.service";
 import {
   STORAGE_CONFIG_TOKEN,
   STORAGE_DRIVER_TOKEN,
-} from '../constants/storage.constants';
-import { EnvironmentService } from '../../environment/environment.service';
+} from "../constants/storage.constants";
+import { AzureDriver, LocalDriver, S3Driver } from "../drivers";
 import {
   AzureStorageConfig,
   LocalStorageConfig,
@@ -10,11 +12,7 @@ import {
   StorageConfig,
   StorageDriver,
   StorageOption,
-} from '../interfaces';
-import { AzureDriver, LocalDriver, S3Driver } from '../drivers';
-import * as process from 'node:process';
-import { LOCAL_STORAGE_PATH } from '../../../common/helpers';
-import path from 'path';
+} from "../interfaces";
 
 function createStorageDriver(disk: StorageConfig): StorageDriver {
   switch (disk.driver) {
@@ -25,11 +23,12 @@ function createStorageDriver(disk: StorageConfig): StorageDriver {
     case StorageOption.AZURE:
       return new AzureDriver(disk.config as AzureStorageConfig);
     default:
-      throw new Error(`Unknown storage driver`);
+      throw new Error("Unknown storage driver");
   }
 }
 
 export const storageDriverConfigProvider = {
+  inject: [EnvironmentService],
   provide: STORAGE_CONFIG_TOKEN,
   useFactory: async (environmentService: EnvironmentService) => {
     const driver = environmentService.getStorageDriver().toLowerCase();
@@ -37,23 +36,23 @@ export const storageDriverConfigProvider = {
     switch (driver) {
       case StorageOption.LOCAL:
         return {
-          driver,
           config: {
             storagePath: LOCAL_STORAGE_PATH,
           },
+          driver,
         };
 
-      case StorageOption.S3:
-        { const s3Config = {
-          driver,
+      case StorageOption.S3: {
+        const s3Config = {
           config: {
-            region: environmentService.getAwsS3Region(),
-            endpoint: environmentService.getAwsS3Endpoint(),
-            bucket: environmentService.getAwsS3Bucket(),
             baseUrl: environmentService.getAwsS3Url(),
-            forcePathStyle: environmentService.getAwsS3ForcePathStyle(),
+            bucket: environmentService.getAwsS3Bucket(),
             credentials: undefined,
+            endpoint: environmentService.getAwsS3Endpoint(),
+            forcePathStyle: environmentService.getAwsS3ForcePathStyle(),
+            region: environmentService.getAwsS3Region(),
           },
+          driver,
         };
 
         /**
@@ -71,30 +70,29 @@ export const storageDriverConfigProvider = {
           };
         }
 
-        return s3Config; }
+        return s3Config;
+      }
 
       case StorageOption.AZURE:
         return {
-          driver,
           config: {
-            accountName: environmentService.getAzureStorageAccountName(),
-            container: environmentService.getAzureStorageContainer(),
             accountKey: environmentService.getAzureStorageAccountKey(),
-            endpoint: environmentService.getAzureStorageEndpoint() || undefined,
+            accountName: environmentService.getAzureStorageAccountName(),
             baseUrl: environmentService.getAzureStorageUrl() || undefined,
+            container: environmentService.getAzureStorageContainer(),
+            endpoint: environmentService.getAzureStorageEndpoint() || undefined,
           },
+          driver,
         };
 
       default:
         throw new Error(`Unknown storage driver: ${driver}`);
     }
   },
-
-  inject: [EnvironmentService],
 };
 
 export const storageDriverProvider = {
+  inject: [STORAGE_CONFIG_TOKEN],
   provide: STORAGE_DRIVER_TOKEN,
   useFactory: (config: StorageConfig) => createStorageDriver(config),
-  inject: [STORAGE_CONFIG_TOKEN],
 };

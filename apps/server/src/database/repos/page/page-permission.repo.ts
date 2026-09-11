@@ -1,31 +1,31 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
-import { dbOrTx } from '@docmost/db/utils';
+import {
+  CursorPaginationResult,
+  executeWithCursorPagination,
+} from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { GroupRepo } from "@docmost/db/repos/group/group.repo";
+import { DB } from "@docmost/db/types/db";
 import {
   InsertablePageAccess,
   InsertablePagePermission,
   PageAccess,
   PagePermission,
-} from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { ExpressionBuilder, sql, SqlBool } from 'kysely';
-import { GroupRepo } from '@docmost/db/repos/group/group.repo';
-import { DB } from '@docmost/db/types/db';
-import {
-  CursorPaginationResult,
-  executeWithCursorPagination,
-} from '@docmost/db/pagination/cursor-pagination';
-import { PagePermissionMember } from './types/page-permission.types';
-import { withCache } from '../../../common/helpers/with-cache';
+} from "@docmost/db/types/entity.types";
+import { KyselyDB, KyselyTransaction } from "@docmost/db/types/kysely.types";
+import { dbOrTx } from "@docmost/db/utils";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Inject, Injectable } from "@nestjs/common";
+import { Cache } from "cache-manager";
+import { ExpressionBuilder, SqlBool, sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
 import {
   CacheKey,
   PERMISSION_CACHE_TTL_MS,
-} from '../../../common/helpers/cache-keys';
+} from "../../../common/helpers/cache-keys";
+import { withCache } from "../../../common/helpers/with-cache";
+import { PagePermissionMember } from "./types/page-permission.types";
 
-export { PagePermissionMember } from './types/page-permission.types';
+export { PagePermissionMember } from "./types/page-permission.types";
 
 @Injectable()
 export class PagePermissionRepo {
@@ -37,23 +37,23 @@ export class PagePermissionRepo {
 
   async findPageAccessByPageId(
     pageId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PageAccess | undefined> {
     const db = dbOrTx(this.db, trx);
     return db
-      .selectFrom('pageAccess')
+      .selectFrom("pageAccess")
       .selectAll()
-      .where('pageId', '=', pageId)
+      .where("pageId", "=", pageId)
       .executeTakeFirst();
   }
 
   async insertPageAccess(
     data: InsertablePageAccess,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PageAccess> {
     const db = dbOrTx(this.db, trx);
     return db
-      .insertInto('pageAccess')
+      .insertInto("pageAccess")
       .values(data)
       .returningAll()
       .executeTakeFirst();
@@ -61,100 +61,106 @@ export class PagePermissionRepo {
 
   async deletePageAccess(
     pageId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
-    await db.deleteFrom('pageAccess').where('pageId', '=', pageId).execute();
+    await db.deleteFrom("pageAccess").where("pageId", "=", pageId).execute();
   }
 
   async insertPagePermissions(
     permissions: InsertablePagePermission[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
-    if (permissions.length === 0) return;
+    if (permissions.length === 0) {
+      return;
+    }
     const db = dbOrTx(this.db, trx);
-    await db.insertInto('pagePermissions').values(permissions).execute();
+    await db.insertInto("pagePermissions").values(permissions).execute();
   }
 
   async findPagePermissionByUserId(
     pageAccessId: string,
     userId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PagePermission | undefined> {
     const db = dbOrTx(this.db, trx);
     return db
-      .selectFrom('pagePermissions')
+      .selectFrom("pagePermissions")
       .selectAll()
-      .where('pageAccessId', '=', pageAccessId)
-      .where('userId', '=', userId)
+      .where("pageAccessId", "=", pageAccessId)
+      .where("userId", "=", userId)
       .executeTakeFirst();
   }
 
   async findPagePermissionByGroupId(
     pageAccessId: string,
     groupId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<PagePermission | undefined> {
     const db = dbOrTx(this.db, trx);
     return db
-      .selectFrom('pagePermissions')
+      .selectFrom("pagePermissions")
       .selectAll()
-      .where('pageAccessId', '=', pageAccessId)
-      .where('groupId', '=', groupId)
+      .where("pageAccessId", "=", pageAccessId)
+      .where("groupId", "=", groupId)
       .executeTakeFirst();
   }
 
   async deletePagePermissionByUserId(
     pageAccessId: string,
     userId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
     await db
-      .deleteFrom('pagePermissions')
-      .where('pageAccessId', '=', pageAccessId)
-      .where('userId', '=', userId)
+      .deleteFrom("pagePermissions")
+      .where("pageAccessId", "=", pageAccessId)
+      .where("userId", "=", userId)
       .execute();
   }
 
   async deletePagePermissionByGroupId(
     pageAccessId: string,
     groupId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
     await db
-      .deleteFrom('pagePermissions')
-      .where('pageAccessId', '=', pageAccessId)
-      .where('groupId', '=', groupId)
+      .deleteFrom("pagePermissions")
+      .where("pageAccessId", "=", pageAccessId)
+      .where("groupId", "=", groupId)
       .execute();
   }
 
   async deletePagePermissionsByUserIds(
     pageAccessId: string,
     userIds: string[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
-    if (userIds.length === 0) return;
+    if (userIds.length === 0) {
+      return;
+    }
     const db = dbOrTx(this.db, trx);
     await db
-      .deleteFrom('pagePermissions')
-      .where('pageAccessId', '=', pageAccessId)
-      .where('userId', 'in', userIds)
+      .deleteFrom("pagePermissions")
+      .where("pageAccessId", "=", pageAccessId)
+      .where("userId", "in", userIds)
       .execute();
   }
 
   async deletePagePermissionsByGroupIds(
     pageAccessId: string,
     groupIds: string[],
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
-    if (groupIds.length === 0) return;
+    if (groupIds.length === 0) {
+      return;
+    }
     const db = dbOrTx(this.db, trx);
     await db
-      .deleteFrom('pagePermissions')
-      .where('pageAccessId', '=', pageAccessId)
-      .where('groupId', 'in', groupIds)
+      .deleteFrom("pagePermissions")
+      .where("pageAccessId", "=", pageAccessId)
+      .where("groupId", "in", groupIds)
       .execute();
   }
 
@@ -162,18 +168,18 @@ export class PagePermissionRepo {
     pageAccessId: string,
     role: string,
     opts: { userId?: string; groupId?: string },
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<void> {
     const db = dbOrTx(this.db, trx);
     let query = db
-      .updateTable('pagePermissions')
+      .updateTable("pagePermissions")
       .set({ role, updatedAt: new Date() })
-      .where('pageAccessId', '=', pageAccessId);
+      .where("pageAccessId", "=", pageAccessId);
 
     if (opts.userId) {
-      query = query.where('userId', '=', opts.userId);
+      query = query.where("userId", "=", opts.userId);
     } else if (opts.groupId) {
-      query = query.where('groupId', '=', opts.groupId);
+      query = query.where("groupId", "=", opts.groupId);
     }
 
     await query.execute();
@@ -181,107 +187,106 @@ export class PagePermissionRepo {
 
   async countWritersByPageAccessId(
     pageAccessId: string,
-    opts?: { trx?: KyselyTransaction },
+    opts?: { trx?: KyselyTransaction }
   ): Promise<number> {
     const db = dbOrTx(this.db, opts?.trx);
     const result = await db
-      .selectFrom('pagePermissions')
-      .select((eb) => eb.fn.count('id').as('count'))
-      .where('pageAccessId', '=', pageAccessId)
-      .where('role', '=', 'writer')
+      .selectFrom("pagePermissions")
+      .select((eb) => eb.fn.count("id").as("count"))
+      .where("pageAccessId", "=", pageAccessId)
+      .where("role", "=", "writer")
       .executeTakeFirst();
     return Number(result?.count ?? 0);
   }
 
   async getPagePermissionsPaginated(
     pageAccessId: string,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ): Promise<CursorPaginationResult<PagePermissionMember>> {
     let baseQuery = this.db
-      .selectFrom('pagePermissions')
-      .leftJoin('users', 'users.id', 'pagePermissions.userId')
-      .leftJoin('groups', 'groups.id', 'pagePermissions.groupId')
+      .selectFrom("pagePermissions")
+      .leftJoin("users", "users.id", "pagePermissions.userId")
+      .leftJoin("groups", "groups.id", "pagePermissions.groupId")
       .select([
-        'pagePermissions.id',
-        'pagePermissions.role',
-        'pagePermissions.createdAt',
-        'users.id as userId',
-        'users.name as userName',
-        'users.avatarUrl as userAvatarUrl',
-        'users.email as userEmail',
-        'groups.id as groupId',
-        'groups.name as groupName',
-        'groups.isDefault as groupIsDefault',
+        "pagePermissions.id",
+        "pagePermissions.role",
+        "pagePermissions.createdAt",
+        "users.id as userId",
+        "users.name as userName",
+        "users.avatarUrl as userAvatarUrl",
+        "users.email as userEmail",
+        "groups.id as groupId",
+        "groups.name as groupName",
+        "groups.isDefault as groupIsDefault",
       ])
       .select((eb) => this.groupRepo.withMemberCount(eb))
       .select((eb) =>
         eb
           .case()
-          .when('groups.id', 'is not', null)
+          .when("groups.id", "is not", null)
           .then(1)
           .else(0)
           .end()
-          .as('isGroup'),
+          .as("isGroup")
       )
-      .where('pageAccessId', '=', pageAccessId);
+      .where("pageAccessId", "=", pageAccessId);
 
     if (pagination.query) {
       baseQuery = baseQuery.where((eb) =>
         eb(
           sql`f_unaccent(users.name)`,
-          'ilike',
-          sql`f_unaccent(${'%' + pagination.query + '%'})`,
+          "ilike",
+          sql`f_unaccent(${"%" + pagination.query + "%"})`
         )
           .or(
             sql`users.email`,
-            'ilike',
-            sql`f_unaccent(${'%' + pagination.query + '%'})`,
+            "ilike",
+            sql`f_unaccent(${"%" + pagination.query + "%"})`
           )
           .or(
             sql`f_unaccent(groups.name)`,
-            'ilike',
-            sql`f_unaccent(${'%' + pagination.query + '%'})`,
-          ),
+            "ilike",
+            sql`f_unaccent(${"%" + pagination.query + "%"})`
+          )
       );
     }
 
-    const query = this.db.selectFrom(baseQuery.as('sub')).selectAll('sub');
+    const query = this.db.selectFrom(baseQuery.as("sub")).selectAll("sub");
     const result = await executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
+      cursor: pagination.cursor,
       fields: [
-        { expression: 'sub.isGroup', direction: 'desc', key: 'isGroup' },
-        { expression: 'sub.id', direction: 'asc', key: 'id' },
+        { direction: "desc", expression: "sub.isGroup", key: "isGroup" },
+        { direction: "asc", expression: "sub.id", key: "id" },
       ],
       parseCursor: (cursor) => ({
-        isGroup: parseInt(cursor.isGroup, 10),
         id: cursor.id,
+        isGroup: Number.parseInt(cursor.isGroup, 10),
       }),
+      perPage: pagination.limit,
     });
 
     const items: PagePermissionMember[] = result.items.map((member) => {
       if (member.userId) {
         return {
+          avatarUrl: member.userAvatarUrl,
+          createdAt: member.createdAt,
+          email: member.userEmail,
           id: member.userId,
           name: member.userName,
-          email: member.userEmail,
-          avatarUrl: member.userAvatarUrl,
-          type: 'user' as const,
           role: member.role,
-          createdAt: member.createdAt,
-        };
-      } else {
-        return {
-          id: member.groupId,
-          name: member.groupName,
-          memberCount: member.memberCount as number,
-          isDefault: member.groupIsDefault,
-          type: 'group' as const,
-          role: member.role,
-          createdAt: member.createdAt,
+          type: "user" as const,
         };
       }
+      return {
+        createdAt: member.createdAt,
+        id: member.groupId,
+        isDefault: member.groupIsDefault,
+        memberCount: member.memberCount as number,
+        name: member.groupName,
+        role: member.role,
+        type: "group" as const,
+      };
     });
 
     return { items, meta: result.meta };
@@ -289,34 +294,34 @@ export class PagePermissionRepo {
 
   async getUserPagePermission(
     userId: string,
-    pageId: string,
+    pageId: string
   ): Promise<{ role: string } | undefined> {
     const result = await this.db
-      .selectFrom('pageAccess')
+      .selectFrom("pageAccess")
       .innerJoin(
-        'pagePermissions',
-        'pagePermissions.pageAccessId',
-        'pageAccess.id',
+        "pagePermissions",
+        "pagePermissions.pageAccessId",
+        "pageAccess.id"
       )
-      .select(['pagePermissions.role'])
-      .where('pageAccess.pageId', '=', pageId)
-      .where('pagePermissions.userId', '=', userId)
+      .select(["pagePermissions.role"])
+      .where("pageAccess.pageId", "=", pageId)
+      .where("pagePermissions.userId", "=", userId)
       .unionAll(
         this.db
-          .selectFrom('pageAccess')
+          .selectFrom("pageAccess")
           .innerJoin(
-            'pagePermissions',
-            'pagePermissions.pageAccessId',
-            'pageAccess.id',
+            "pagePermissions",
+            "pagePermissions.pageAccessId",
+            "pageAccess.id"
           )
           .innerJoin(
-            'groupUsers',
-            'groupUsers.groupId',
-            'pagePermissions.groupId',
+            "groupUsers",
+            "groupUsers.groupId",
+            "pagePermissions.groupId"
           )
-          .select(['pagePermissions.role'])
-          .where('pageAccess.pageId', '=', pageId)
-          .where('groupUsers.userId', '=', userId),
+          .select(["pagePermissions.role"])
+          .where("pageAccess.pageId", "=", pageId)
+          .where("groupUsers.userId", "=", userId)
       )
       .executeTakeFirst();
 
@@ -333,35 +338,35 @@ export class PagePermissionRepo {
     | undefined
   > {
     return this.db
-      .withRecursive('ancestors', (qb) =>
+      .withRecursive("ancestors", (qb) =>
         qb
-          .selectFrom('pages')
+          .selectFrom("pages")
           .select([
-            'pages.id as ancestorId',
-            'pages.parentPageId',
-            sql<number>`0`.as('depth'),
+            "pages.id as ancestorId",
+            "pages.parentPageId",
+            sql<number>`0`.as("depth"),
           ])
-          .where('pages.id', '=', pageId)
+          .where("pages.id", "=", pageId)
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
-              .innerJoin('ancestors', 'ancestors.parentPageId', 'pages.id')
+              .selectFrom("pages")
+              .innerJoin("ancestors", "ancestors.parentPageId", "pages.id")
               .select([
-                'pages.id as ancestorId',
-                'pages.parentPageId',
-                sql<number>`ancestors.depth + 1`.as('depth'),
-              ]),
-          ),
+                "pages.id as ancestorId",
+                "pages.parentPageId",
+                sql<number>`ancestors.depth + 1`.as("depth"),
+              ])
+          )
       )
-      .selectFrom('ancestors')
-      .innerJoin('pageAccess', 'pageAccess.pageId', 'ancestors.ancestorId')
+      .selectFrom("ancestors")
+      .innerJoin("pageAccess", "pageAccess.pageId", "ancestors.ancestorId")
       .select([
-        'pageAccess.id as pageAccessId',
-        'pageAccess.pageId',
-        'pageAccess.accessLevel',
-        'ancestors.depth',
+        "pageAccess.id as pageAccessId",
+        "pageAccess.pageId",
+        "pageAccess.accessLevel",
+        "ancestors.depth",
       ])
-      .orderBy('ancestors.depth', 'asc')
+      .orderBy("ancestors.depth", "asc")
       .executeTakeFirst();
   }
 
@@ -382,7 +387,7 @@ export class PagePermissionRepo {
    */
   async canUserEditPage(
     userId: string,
-    pageId: string,
+    pageId: string
   ): Promise<{
     hasAnyRestriction: boolean;
     canAccess: boolean;
@@ -423,14 +428,14 @@ export class PagePermissionRepo {
 
         const row = result.rows[0];
         if (!row || row.canAccess === null) {
-          return { hasAnyRestriction: false, canAccess: true, canEdit: true };
+          return { canAccess: true, canEdit: true, hasAnyRestriction: false };
         }
         return {
-          hasAnyRestriction: true,
           canAccess: row.canAccess,
           canEdit: row.canAccess && (row.canEdit ?? false),
+          hasAnyRestriction: true,
         };
-      },
+      }
     );
   }
 
@@ -445,7 +450,7 @@ export class PagePermissionRepo {
    */
   async getUserPageAccessLevel(
     userId: string,
-    pageId: string,
+    pageId: string
   ): Promise<{
     hasDirectRestriction: boolean;
     hasInheritedRestriction: boolean;
@@ -454,27 +459,27 @@ export class PagePermissionRepo {
     canEdit: boolean;
   }> {
     const result = await this.db
-      .withRecursive('ancestors', (qb) =>
+      .withRecursive("ancestors", (qb) =>
         qb
-          .selectFrom('pages')
+          .selectFrom("pages")
           .select([
-            'pages.id as ancestorId',
-            'pages.parentPageId',
-            sql<number>`0`.as('depth'),
+            "pages.id as ancestorId",
+            "pages.parentPageId",
+            sql<number>`0`.as("depth"),
           ])
-          .where('pages.id', '=', pageId)
+          .where("pages.id", "=", pageId)
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
-              .innerJoin('ancestors', 'ancestors.parentPageId', 'pages.id')
+              .selectFrom("pages")
+              .innerJoin("ancestors", "ancestors.parentPageId", "pages.id")
               .select([
-                'pages.id as ancestorId',
-                'pages.parentPageId',
-                sql<number>`ancestors.depth + 1`.as('depth'),
-              ]),
-          ),
+                "pages.id as ancestorId",
+                "pages.parentPageId",
+                sql<number>`ancestors.depth + 1`.as("depth"),
+              ])
+          )
       )
-      .selectFrom('pages')
+      .selectFrom("pages")
       .select((eb) => [
         // hasDirectRestriction: this page itself has page_access entry
         eb
@@ -482,35 +487,35 @@ export class PagePermissionRepo {
           .when(
             eb.exists(
               eb
-                .selectFrom('pageAccess')
-                .select('pageAccess.id')
-                .whereRef('pageAccess.pageId', '=', 'pages.id'),
-            ),
+                .selectFrom("pageAccess")
+                .select("pageAccess.id")
+                .whereRef("pageAccess.pageId", "=", "pages.id")
+            )
           )
           .then(true)
           .else(false)
           .end()
-          .as('hasDirectRestriction'),
+          .as("hasDirectRestriction"),
         // hasInheritedRestriction: any ancestor (depth > 0) has page_access entry
         eb
           .case()
           .when(
             eb.exists(
               eb
-                .selectFrom('ancestors')
+                .selectFrom("ancestors")
                 .innerJoin(
-                  'pageAccess',
-                  'pageAccess.pageId',
-                  'ancestors.ancestorId',
+                  "pageAccess",
+                  "pageAccess.pageId",
+                  "ancestors.ancestorId"
                 )
-                .select('pageAccess.id')
-                .where('ancestors.depth', '>', 0),
-            ),
+                .select("pageAccess.id")
+                .where("ancestors.depth", ">", 0)
+            )
           )
           .then(true)
           .else(false)
           .end()
-          .as('hasInheritedRestriction'),
+          .as("hasInheritedRestriction"),
         // canAccess: no restricted ancestor without ANY permission
         eb
           .case()
@@ -518,39 +523,39 @@ export class PagePermissionRepo {
             eb.not(
               eb.exists(
                 eb
-                  .selectFrom('ancestors')
+                  .selectFrom("ancestors")
                   .innerJoin(
-                    'pageAccess',
-                    'pageAccess.pageId',
-                    'ancestors.ancestorId',
+                    "pageAccess",
+                    "pageAccess.pageId",
+                    "ancestors.ancestorId"
                   )
-                  .leftJoin('pagePermissions', (join) =>
+                  .leftJoin("pagePermissions", (join) =>
                     join
                       .onRef(
-                        'pagePermissions.pageAccessId',
-                        '=',
-                        'pageAccess.id',
+                        "pagePermissions.pageAccessId",
+                        "=",
+                        "pageAccess.id"
                       )
                       .on((eb2) =>
                         eb2.or([
-                          eb2('pagePermissions.userId', '=', userId),
+                          eb2("pagePermissions.userId", "=", userId),
                           eb2(
-                            'pagePermissions.groupId',
-                            'in',
-                            this.userGroupIdsSubquery(eb2, userId),
+                            "pagePermissions.groupId",
+                            "in",
+                            this.userGroupIdsSubquery(eb2, userId)
                           ),
-                        ]),
-                      ),
+                        ])
+                      )
                   )
-                  .select('pageAccess.pageId')
-                  .where('pagePermissions.id', 'is', null),
-              ),
-            ),
+                  .select("pageAccess.pageId")
+                  .where("pagePermissions.id", "is", null)
+              )
+            )
           )
           .then(true)
           .else(false)
           .end()
-          .as('canAccess'),
+          .as("canAccess"),
         // canEdit: nearest restricted ancestor determines edit capability
         eb
           .case()
@@ -558,29 +563,29 @@ export class PagePermissionRepo {
           .when(
             eb.exists(
               eb
-                .selectFrom('ancestors')
+                .selectFrom("ancestors")
                 .innerJoin(
-                  'pageAccess',
-                  'pageAccess.pageId',
-                  'ancestors.ancestorId',
+                  "pageAccess",
+                  "pageAccess.pageId",
+                  "ancestors.ancestorId"
                 )
-                .leftJoin('pagePermissions', (join) =>
+                .leftJoin("pagePermissions", (join) =>
                   join
-                    .onRef('pagePermissions.pageAccessId', '=', 'pageAccess.id')
+                    .onRef("pagePermissions.pageAccessId", "=", "pageAccess.id")
                     .on((eb2) =>
                       eb2.or([
-                        eb2('pagePermissions.userId', '=', userId),
+                        eb2("pagePermissions.userId", "=", userId),
                         eb2(
-                          'pagePermissions.groupId',
-                          'in',
-                          this.userGroupIdsSubquery(eb2, userId),
+                          "pagePermissions.groupId",
+                          "in",
+                          this.userGroupIdsSubquery(eb2, userId)
                         ),
-                      ]),
-                    ),
+                      ])
+                    )
                 )
-                .select('pageAccess.pageId')
-                .where('pagePermissions.id', 'is', null),
-            ),
+                .select("pageAccess.pageId")
+                .where("pagePermissions.id", "is", null)
+            )
           )
           .then(false)
           // no restricted ancestors at all → defer to space permissions
@@ -588,63 +593,63 @@ export class PagePermissionRepo {
             eb.not(
               eb.exists(
                 eb
-                  .selectFrom('ancestors')
+                  .selectFrom("ancestors")
                   .innerJoin(
-                    'pageAccess',
-                    'pageAccess.pageId',
-                    'ancestors.ancestorId',
+                    "pageAccess",
+                    "pageAccess.pageId",
+                    "ancestors.ancestorId"
                   )
-                  .select('pageAccess.id'),
-              ),
-            ),
+                  .select("pageAccess.id")
+              )
+            )
           )
           .then(true)
           // nearest restricted ancestor has writer for this user
           .when(
             eb.exists(
               eb
-                .selectFrom('pagePermissions')
-                .select('pagePermissions.id')
-                .where('pagePermissions.role', '=', 'writer')
+                .selectFrom("pagePermissions")
+                .select("pagePermissions.id")
+                .where("pagePermissions.role", "=", "writer")
                 .where(
-                  'pagePermissions.pageAccessId',
-                  '=',
+                  "pagePermissions.pageAccessId",
+                  "=",
                   sql<string>`(
                     SELECT pa.id FROM ancestors a_nr
                     JOIN page_access pa ON pa.page_id = a_nr.ancestor_id
                     ORDER BY a_nr.depth ASC
                     LIMIT 1
-                  )`,
+                  )`
                 )
                 .where((eb2) =>
                   eb2.or([
-                    eb2('pagePermissions.userId', '=', userId),
+                    eb2("pagePermissions.userId", "=", userId),
                     eb2(
-                      'pagePermissions.groupId',
-                      'in',
-                      this.userGroupIdsSubquery(eb2, userId),
+                      "pagePermissions.groupId",
+                      "in",
+                      this.userGroupIdsSubquery(eb2, userId)
                     ),
-                  ]),
-                ),
-            ),
+                  ])
+                )
+            )
           )
           .then(true)
           .else(false)
           .end()
-          .as('canEdit'),
+          .as("canEdit"),
       ])
-      .where('pages.id', '=', pageId)
+      .where("pages.id", "=", pageId)
       .executeTakeFirst();
 
     const hasDirectRestriction = Boolean(result?.hasDirectRestriction);
     const hasInheritedRestriction = Boolean(result?.hasInheritedRestriction);
 
     return {
-      hasDirectRestriction,
-      hasInheritedRestriction,
-      hasAnyRestriction: hasDirectRestriction || hasInheritedRestriction,
       canAccess: Boolean(result?.canAccess),
       canEdit: Boolean(result?.canEdit),
+      hasAnyRestriction: hasDirectRestriction || hasInheritedRestriction,
+      hasDirectRestriction,
+      hasInheritedRestriction,
     };
   }
 
@@ -659,7 +664,9 @@ export class PagePermissionRepo {
     spaceId?: string;
   }): Promise<string[]> {
     const { pageIds, userId, spaceId } = opts;
-    if (pageIds.length === 0) return [];
+    if (pageIds.length === 0) {
+      return [];
+    }
 
     if (spaceId) {
       const hasRestrictions = await this.hasRestrictedPagesInSpace(spaceId);
@@ -669,61 +676,61 @@ export class PagePermissionRepo {
     }
 
     const results = await this.db
-      .withRecursive('allAncestors', (qb) =>
+      .withRecursive("allAncestors", (qb) =>
         qb
-          .selectFrom('pages')
+          .selectFrom("pages")
           .select([
-            'pages.id as pageId',
-            'pages.id as ancestorId',
-            'pages.parentPageId',
+            "pages.id as pageId",
+            "pages.id as ancestorId",
+            "pages.parentPageId",
           ])
           .where(sql<SqlBool>`pages.id = ANY(${pageIds}::uuid[])`)
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
+              .selectFrom("pages")
               .innerJoin(
-                'allAncestors',
-                'allAncestors.parentPageId',
-                'pages.id',
+                "allAncestors",
+                "allAncestors.parentPageId",
+                "pages.id"
               )
               .select([
-                'allAncestors.pageId',
-                'pages.id as ancestorId',
-                'pages.parentPageId',
-              ]),
-          ),
+                "allAncestors.pageId",
+                "pages.id as ancestorId",
+                "pages.parentPageId",
+              ])
+          )
       )
-      .selectFrom('pages')
-      .select('pages.id')
+      .selectFrom("pages")
+      .select("pages.id")
       .where(sql<SqlBool>`pages.id = ANY(${pageIds}::uuid[])`)
       .where(({ not, exists, selectFrom }) =>
         not(
           exists(
-            selectFrom('allAncestors')
+            selectFrom("allAncestors")
               .innerJoin(
-                'pageAccess',
-                'pageAccess.pageId',
-                'allAncestors.ancestorId',
+                "pageAccess",
+                "pageAccess.pageId",
+                "allAncestors.ancestorId"
               )
-              .leftJoin('pagePermissions', (join) =>
+              .leftJoin("pagePermissions", (join) =>
                 join
-                  .onRef('pagePermissions.pageAccessId', '=', 'pageAccess.id')
+                  .onRef("pagePermissions.pageAccessId", "=", "pageAccess.id")
                   .on((eb) =>
                     eb.or([
-                      eb('pagePermissions.userId', '=', userId),
+                      eb("pagePermissions.userId", "=", userId),
                       eb(
-                        'pagePermissions.groupId',
-                        'in',
-                        this.userGroupIdsSubquery(eb, userId),
+                        "pagePermissions.groupId",
+                        "in",
+                        this.userGroupIdsSubquery(eb, userId)
                       ),
-                    ]),
-                  ),
+                    ])
+                  )
               )
-              .select('pageAccess.pageId')
-              .whereRef('allAncestors.pageId', '=', 'pages.id')
-              .where('pagePermissions.id', 'is', null),
-          ),
-        ),
+              .select("pageAccess.pageId")
+              .whereRef("allAncestors.pageId", "=", "pages.id")
+              .where("pagePermissions.id", "is", null)
+          )
+        )
       )
       .execute();
 
@@ -732,39 +739,41 @@ export class PagePermissionRepo {
 
   async filterAccessiblePageIdsWithPermissions(
     pageIds: string[],
-    userId: string,
+    userId: string
   ): Promise<Array<{ id: string; canEdit: boolean }>> {
-    if (pageIds.length === 0) return [];
+    if (pageIds.length === 0) {
+      return [];
+    }
 
     const results = await this.db
-      .withRecursive('allAncestors', (qb) =>
+      .withRecursive("allAncestors", (qb) =>
         qb
-          .selectFrom('pages')
+          .selectFrom("pages")
           .select([
-            'pages.id as pageId',
-            'pages.id as ancestorId',
-            'pages.parentPageId',
-            sql<number>`0`.as('depth'),
+            "pages.id as pageId",
+            "pages.id as ancestorId",
+            "pages.parentPageId",
+            sql<number>`0`.as("depth"),
           ])
           .where(sql<SqlBool>`pages.id = ANY(${pageIds}::uuid[])`)
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
+              .selectFrom("pages")
               .innerJoin(
-                'allAncestors',
-                'allAncestors.parentPageId',
-                'pages.id',
+                "allAncestors",
+                "allAncestors.parentPageId",
+                "pages.id"
               )
               .select([
-                'allAncestors.pageId',
-                'pages.id as ancestorId',
-                'pages.parentPageId',
-                sql<number>`all_ancestors.depth + 1`.as('depth'),
-              ]),
-          ),
+                "allAncestors.pageId",
+                "pages.id as ancestorId",
+                "pages.parentPageId",
+                sql<number>`all_ancestors.depth + 1`.as("depth"),
+              ])
+          )
       )
-      .selectFrom('pages')
-      .select('pages.id')
+      .selectFrom("pages")
+      .select("pages.id")
       .select((eb) =>
         eb
           .case()
@@ -773,87 +782,87 @@ export class PagePermissionRepo {
             eb.not(
               eb.exists(
                 eb
-                  .selectFrom('allAncestors')
+                  .selectFrom("allAncestors")
                   .innerJoin(
-                    'pageAccess',
-                    'pageAccess.pageId',
-                    'allAncestors.ancestorId',
+                    "pageAccess",
+                    "pageAccess.pageId",
+                    "allAncestors.ancestorId"
                   )
-                  .select('pageAccess.id')
-                  .whereRef('allAncestors.pageId', '=', 'pages.id'),
-              ),
-            ),
+                  .select("pageAccess.id")
+                  .whereRef("allAncestors.pageId", "=", "pages.id")
+              )
+            )
           )
           .then(true)
           // nearest restricted ancestor has writer for this user
           .when(
             eb.exists(
               eb
-                .selectFrom('pagePermissions')
-                .select('pagePermissions.id')
-                .where('pagePermissions.role', '=', 'writer')
+                .selectFrom("pagePermissions")
+                .select("pagePermissions.id")
+                .where("pagePermissions.role", "=", "writer")
                 .where(
-                  'pagePermissions.pageAccessId',
-                  '=',
+                  "pagePermissions.pageAccessId",
+                  "=",
                   sql<string>`(
                     SELECT pa.id FROM all_ancestors aa
                     JOIN page_access pa ON pa.page_id = aa.ancestor_id
                     WHERE aa.page_id = pages.id
                     ORDER BY aa.depth ASC
                     LIMIT 1
-                  )`,
+                  )`
                 )
                 .where((eb2) =>
                   eb2.or([
-                    eb2('pagePermissions.userId', '=', userId),
+                    eb2("pagePermissions.userId", "=", userId),
                     eb2(
-                      'pagePermissions.groupId',
-                      'in',
-                      this.userGroupIdsSubquery(eb2, userId),
+                      "pagePermissions.groupId",
+                      "in",
+                      this.userGroupIdsSubquery(eb2, userId)
                     ),
-                  ]),
-                ),
-            ),
+                  ])
+                )
+            )
           )
           .then(true)
           .else(false)
           .end()
-          .as('canEdit'),
+          .as("canEdit")
       )
       .where(sql<SqlBool>`pages.id = ANY(${pageIds}::uuid[])`)
       // view filter: no restricted ancestor without any permission
       .where(({ not, exists, selectFrom }) =>
         not(
           exists(
-            selectFrom('allAncestors')
+            selectFrom("allAncestors")
               .innerJoin(
-                'pageAccess',
-                'pageAccess.pageId',
-                'allAncestors.ancestorId',
+                "pageAccess",
+                "pageAccess.pageId",
+                "allAncestors.ancestorId"
               )
-              .leftJoin('pagePermissions', (join) =>
+              .leftJoin("pagePermissions", (join) =>
                 join
-                  .onRef('pagePermissions.pageAccessId', '=', 'pageAccess.id')
+                  .onRef("pagePermissions.pageAccessId", "=", "pageAccess.id")
                   .on((eb) =>
                     eb.or([
-                      eb('pagePermissions.userId', '=', userId),
+                      eb("pagePermissions.userId", "=", userId),
                       eb(
-                        'pagePermissions.groupId',
-                        'in',
-                        this.userGroupIdsSubquery(eb, userId),
+                        "pagePermissions.groupId",
+                        "in",
+                        this.userGroupIdsSubquery(eb, userId)
                       ),
-                    ]),
-                  ),
+                    ])
+                  )
               )
-              .select('pageAccess.pageId')
-              .whereRef('allAncestors.pageId', '=', 'pages.id')
-              .where('pagePermissions.id', 'is', null),
-          ),
-        ),
+              .select("pageAccess.pageId")
+              .whereRef("allAncestors.pageId", "=", "pages.id")
+              .where("pagePermissions.id", "is", null)
+          )
+        )
       )
       .execute();
 
-    return results.map((r) => ({ id: r.id, canEdit: Boolean(r.canEdit) }));
+    return results.map((r) => ({ canEdit: Boolean(r.canEdit), id: r.id }));
   }
 
   /**
@@ -862,21 +871,21 @@ export class PagePermissionRepo {
    */
   async hasRestrictedAncestor(pageId: string): Promise<boolean> {
     const result = await this.db
-      .withRecursive('ancestors', (qb) =>
+      .withRecursive("ancestors", (qb) =>
         qb
-          .selectFrom('pages')
-          .select(['pages.id as ancestorId', 'pages.parentPageId'])
-          .where('pages.id', '=', pageId)
+          .selectFrom("pages")
+          .select(["pages.id as ancestorId", "pages.parentPageId"])
+          .where("pages.id", "=", pageId)
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
-              .innerJoin('ancestors', 'ancestors.parentPageId', 'pages.id')
-              .select(['pages.id as ancestorId', 'pages.parentPageId']),
-          ),
+              .selectFrom("pages")
+              .innerJoin("ancestors", "ancestors.parentPageId", "pages.id")
+              .select(["pages.id as ancestorId", "pages.parentPageId"])
+          )
       )
-      .selectFrom('ancestors')
-      .innerJoin('pageAccess', 'pageAccess.pageId', 'ancestors.ancestorId')
-      .select('pageAccess.id')
+      .selectFrom("ancestors")
+      .innerJoin("pageAccess", "pageAccess.pageId", "ancestors.ancestorId")
+      .select("pageAccess.id")
       .executeTakeFirst();
 
     return !!result;
@@ -892,11 +901,11 @@ export class PagePermissionRepo {
         eb
           .exists(
             eb
-              .selectFrom('pageAccess')
-              .select(sql`1`.as('one'))
-              .where('pageAccess.spaceId', '=', spaceId),
+              .selectFrom("pageAccess")
+              .select(sql`1`.as("one"))
+              .where("pageAccess.spaceId", "=", spaceId)
           )
-          .as('exists'),
+          .as("exists")
       )
       .executeTakeFirst();
 
@@ -909,69 +918,71 @@ export class PagePermissionRepo {
    */
   async getParentIdsWithAccessibleChildren(
     parentIds: string[],
-    userId: string,
+    userId: string
   ): Promise<string[]> {
-    if (parentIds.length === 0) return [];
+    if (parentIds.length === 0) {
+      return [];
+    }
 
     const results = await this.db
-      .withRecursive('childAncestors', (qb) =>
+      .withRecursive("childAncestors", (qb) =>
         qb
-          .selectFrom('pages as child')
+          .selectFrom("pages as child")
           .select([
-            'child.id as childId',
-            'child.id as ancestorId',
-            'child.parentPageId as ancestorParentId',
+            "child.id as childId",
+            "child.id as ancestorId",
+            "child.parentPageId as ancestorParentId",
           ])
-          .where('child.parentPageId', 'in', parentIds)
-          .where('child.deletedAt', 'is', null)
+          .where("child.parentPageId", "in", parentIds)
+          .where("child.deletedAt", "is", null)
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
+              .selectFrom("pages")
               .innerJoin(
-                'childAncestors',
-                'childAncestors.ancestorParentId',
-                'pages.id',
+                "childAncestors",
+                "childAncestors.ancestorParentId",
+                "pages.id"
               )
               .select([
-                'childAncestors.childId',
-                'pages.id as ancestorId',
-                'pages.parentPageId as ancestorParentId',
-              ]),
-          ),
+                "childAncestors.childId",
+                "pages.id as ancestorId",
+                "pages.parentPageId as ancestorParentId",
+              ])
+          )
       )
-      .selectFrom('pages as child')
-      .select('child.parentPageId')
+      .selectFrom("pages as child")
+      .select("child.parentPageId")
       .distinct()
-      .where('child.parentPageId', 'in', parentIds)
-      .where('child.deletedAt', 'is', null)
+      .where("child.parentPageId", "in", parentIds)
+      .where("child.deletedAt", "is", null)
       .where(({ not, exists, selectFrom }) =>
         not(
           exists(
-            selectFrom('childAncestors')
+            selectFrom("childAncestors")
               .innerJoin(
-                'pageAccess',
-                'pageAccess.pageId',
-                'childAncestors.ancestorId',
+                "pageAccess",
+                "pageAccess.pageId",
+                "childAncestors.ancestorId"
               )
-              .leftJoin('pagePermissions', (join) =>
+              .leftJoin("pagePermissions", (join) =>
                 join
-                  .onRef('pagePermissions.pageAccessId', '=', 'pageAccess.id')
+                  .onRef("pagePermissions.pageAccessId", "=", "pageAccess.id")
                   .on((eb) =>
                     eb.or([
-                      eb('pagePermissions.userId', '=', userId),
+                      eb("pagePermissions.userId", "=", userId),
                       eb(
-                        'pagePermissions.groupId',
-                        'in',
-                        this.userGroupIdsSubquery(eb, userId),
+                        "pagePermissions.groupId",
+                        "in",
+                        this.userGroupIdsSubquery(eb, userId)
                       ),
-                    ]),
-                  ),
+                    ])
+                  )
               )
-              .select('pageAccess.pageId')
-              .whereRef('childAncestors.childId', '=', 'child.id')
-              .where('pagePermissions.id', 'is', null),
-          ),
-        ),
+              .select("pageAccess.pageId")
+              .whereRef("childAncestors.childId", "=", "child.id")
+              .where("pagePermissions.id", "is", null)
+          )
+        )
       )
       .execute();
 
@@ -985,54 +996,54 @@ export class PagePermissionRepo {
    */
   async getRestrictedSubtreeIds(rootPageId: string): Promise<string[]> {
     const results = await this.db
-      .withRecursive('descendants', (qb) =>
+      .withRecursive("descendants", (qb) =>
         qb
-          .selectFrom('pages')
-          .select(['pages.id as descendantId', 'pages.parentPageId'])
-          .where('pages.id', '=', rootPageId)
+          .selectFrom("pages")
+          .select(["pages.id as descendantId", "pages.parentPageId"])
+          .where("pages.id", "=", rootPageId)
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
+              .selectFrom("pages")
               .innerJoin(
-                'descendants',
-                'descendants.descendantId',
-                'pages.parentPageId',
+                "descendants",
+                "descendants.descendantId",
+                "pages.parentPageId"
               )
-              .select(['pages.id as descendantId', 'pages.parentPageId'])
-              .where('pages.deletedAt', 'is', null),
-          ),
+              .select(["pages.id as descendantId", "pages.parentPageId"])
+              .where("pages.deletedAt", "is", null)
+          )
       )
-      .withRecursive('descendantAncestors', (qb) =>
+      .withRecursive("descendantAncestors", (qb) =>
         qb
-          .selectFrom('descendants')
-          .innerJoin('pages', 'pages.id', 'descendants.descendantId')
+          .selectFrom("descendants")
+          .innerJoin("pages", "pages.id", "descendants.descendantId")
           .select([
-            'descendants.descendantId',
-            'pages.id as ancestorId',
-            'pages.parentPageId as ancestorParentId',
+            "descendants.descendantId",
+            "pages.id as ancestorId",
+            "pages.parentPageId as ancestorParentId",
           ])
           .unionAll((eb) =>
             eb
-              .selectFrom('pages')
+              .selectFrom("pages")
               .innerJoin(
-                'descendantAncestors',
-                'descendantAncestors.ancestorParentId',
-                'pages.id',
+                "descendantAncestors",
+                "descendantAncestors.ancestorParentId",
+                "pages.id"
               )
               .select([
-                'descendantAncestors.descendantId',
-                'pages.id as ancestorId',
-                'pages.parentPageId as ancestorParentId',
-              ]),
-          ),
+                "descendantAncestors.descendantId",
+                "pages.id as ancestorId",
+                "pages.parentPageId as ancestorParentId",
+              ])
+          )
       )
-      .selectFrom('descendantAncestors')
+      .selectFrom("descendantAncestors")
       .innerJoin(
-        'pageAccess',
-        'pageAccess.pageId',
-        'descendantAncestors.ancestorId',
+        "pageAccess",
+        "pageAccess.pageId",
+        "descendantAncestors.ancestorId"
       )
-      .select('descendantAncestors.descendantId')
+      .select("descendantAncestors.descendantId")
       .distinct()
       .execute();
 
@@ -1046,9 +1057,11 @@ export class PagePermissionRepo {
    */
   async getUserIdsWithPageAccess(
     pageId: string,
-    userIds: string[],
+    userIds: string[]
   ): Promise<string[]> {
-    if (userIds.length === 0) return [];
+    if (userIds.length === 0) {
+      return [];
+    }
 
     const results = await sql<{ userId: string }>`
       WITH RECURSIVE ancestors AS (
@@ -1082,11 +1095,11 @@ export class PagePermissionRepo {
 
   private userGroupIdsSubquery(
     eb: ExpressionBuilder<any, keyof DB>,
-    userId: string,
+    userId: string
   ) {
     return eb
-      .selectFrom('groupUsers')
-      .select('groupUsers.groupId')
-      .where('groupUsers.userId', '=', userId);
+      .selectFrom("groupUsers")
+      .select("groupUsers.groupId")
+      .where("groupUsers.userId", "=", userId);
   }
 }

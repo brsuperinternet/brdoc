@@ -1,20 +1,20 @@
-import { Extension, onAuthenticatePayload } from '@hocuspocus/server';
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { SpaceMemberRepo } from "@docmost/db/repos/space/space-member.repo";
+import { findHighestUserSpaceRole } from "@docmost/db/repos/space/utils";
+import { UserRepo } from "@docmost/db/repos/user/user.repo";
+import { Extension, onAuthenticatePayload } from "@hocuspocus/server";
 import {
   Injectable,
   Logger,
   NotFoundException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { TokenService } from '../../core/auth/services/token.service';
-import { UserRepo } from '@docmost/db/repos/user/user.repo';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { findHighestUserSpaceRole } from '@docmost/db/repos/space/utils';
-import { SpaceRole } from '../../common/helpers/types/permission';
-import { isUserDisabled } from '../../common/helpers';
-import { getPageId } from '../collaboration.util';
-import { JwtCollabPayload, JwtType } from '../../core/auth/dto/jwt-payload';
+} from "@nestjs/common";
+import { isUserDisabled } from "../../common/helpers";
+import { SpaceRole } from "../../common/helpers/types/permission";
+import { JwtCollabPayload, JwtType } from "../../core/auth/dto/jwt-payload";
+import { TokenService } from "../../core/auth/services/token.service";
+import { getPageId } from "../collaboration.util";
 
 @Injectable()
 export class AuthenticationExtension implements Extension {
@@ -25,7 +25,7 @@ export class AuthenticationExtension implements Extension {
     private userRepo: UserRepo,
     private pageRepo: PageRepo,
     private readonly spaceMemberRepo: SpaceMemberRepo,
-    private readonly pagePermissionRepo: PagePermissionRepo,
+    private readonly pagePermissionRepo: PagePermissionRepo
   ) {}
 
   async onAuthenticate(data: onAuthenticatePayload) {
@@ -37,7 +37,7 @@ export class AuthenticationExtension implements Extension {
     try {
       jwtPayload = await this.tokenService.verifyJwt(token, JwtType.COLLAB);
     } catch (error) {
-      throw new UnauthorizedException('Invalid collab token');
+      throw new UnauthorizedException("Invalid collab token");
     }
 
     const userId = jwtPayload.sub;
@@ -56,12 +56,12 @@ export class AuthenticationExtension implements Extension {
     const page = await this.pageRepo.findById(pageId);
     if (!page) {
       this.logger.debug(`Page not found: ${pageId}`);
-      throw new NotFoundException('Page not found');
+      throw new NotFoundException("Page not found");
     }
 
     const userSpaceRoles = await this.spaceMemberRepo.getUserSpaceRoles(
       user.id,
-      page.spaceId,
+      page.spaceId
     );
 
     const userSpaceRole = findHighestUserSpaceRole(userSpaceRoles);
@@ -78,7 +78,7 @@ export class AuthenticationExtension implements Extension {
     if (hasAnyRestriction) {
       if (!canAccess) {
         this.logger.warn(
-          `User ${user.id} denied page-level access to page: ${pageId}`,
+          `User ${user.id} denied page-level access to page: ${pageId}`
         );
         throw new UnauthorizedException();
       }
@@ -86,7 +86,7 @@ export class AuthenticationExtension implements Extension {
       if (!canEdit) {
         data.connectionConfig.readOnly = true;
         this.logger.debug(
-          `User ${user.id} granted readonly access to restricted page: ${pageId}`,
+          `User ${user.id} granted readonly access to restricted page: ${pageId}`
         );
       }
     } else {

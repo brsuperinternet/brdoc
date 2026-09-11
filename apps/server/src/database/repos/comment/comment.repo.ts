@@ -1,17 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB, KyselyTransaction } from '../../types/kysely.types';
-import { dbOrTx } from '../../utils';
+import { executeWithCursorPagination } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { DB } from "@docmost/db/types/db";
 import {
   Comment,
   InsertableComment,
   UpdatableComment,
-} from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
-import { ExpressionBuilder } from 'kysely';
-import { DB } from '@docmost/db/types/db';
-import { jsonObjectFrom } from 'kysely/helpers/postgres';
+} from "@docmost/db/types/entity.types";
+import { Injectable } from "@nestjs/common";
+import { ExpressionBuilder } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { InjectKysely } from "nestjs-kysely";
+import { KyselyDB, KyselyTransaction } from "../../types/kysely.types";
+import { dbOrTx } from "../../utils";
 
 @Injectable()
 export class CommentRepo {
@@ -20,97 +20,100 @@ export class CommentRepo {
   // todo, add workspaceId
   async findById(
     commentId: string,
-    opts?: { includeCreator: boolean; includeResolvedBy: boolean },
+    opts?: { includeCreator: boolean; includeResolvedBy: boolean }
   ): Promise<Comment> {
     return await this.db
-      .selectFrom('comments')
-      .selectAll('comments')
+      .selectFrom("comments")
+      .selectAll("comments")
       .$if(opts?.includeCreator, (qb) => qb.select(this.withCreator))
       .$if(opts?.includeResolvedBy, (qb) => qb.select(this.withResolvedBy))
-      .where('id', '=', commentId)
+      .where("id", "=", commentId)
       .executeTakeFirst();
   }
 
   async findPageComments(pageId: string, pagination: PaginationOptions) {
     const query = this.db
-      .selectFrom('comments')
-      .selectAll('comments')
+      .selectFrom("comments")
+      .selectAll("comments")
       .select((eb) => this.withCreator(eb))
       .select((eb) => this.withResolvedBy(eb))
-      .where('pageId', '=', pageId);
+      .where("pageId", "=", pageId);
 
     return executeWithCursorPagination(query, {
-      perPage: pagination.limit,
-      cursor: pagination.cursor,
       beforeCursor: pagination.beforeCursor,
-      fields: [{ expression: 'id', direction: 'asc' }],
+      cursor: pagination.cursor,
+      fields: [{ direction: "asc", expression: "id" }],
       parseCursor: (cursor) => ({ id: cursor.id }),
+      perPage: pagination.limit,
     });
   }
 
   async updateComment(
     updatableComment: UpdatableComment,
     commentId: string,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ) {
     const db = dbOrTx(this.db, trx);
     await db
-      .updateTable('comments')
+      .updateTable("comments")
       .set(updatableComment)
-      .where('id', '=', commentId)
+      .where("id", "=", commentId)
       .execute();
   }
 
   async insertComment(
     insertableComment: InsertableComment,
-    trx?: KyselyTransaction,
+    trx?: KyselyTransaction
   ): Promise<Comment> {
     const db = dbOrTx(this.db, trx);
     return db
-      .insertInto('comments')
+      .insertInto("comments")
       .values(insertableComment)
       .returningAll()
       .executeTakeFirst();
   }
 
-  withCreator(eb: ExpressionBuilder<DB, 'comments'>) {
+  withCreator(eb: ExpressionBuilder<DB, "comments">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('users')
-        .select(['users.id', 'users.name', 'users.avatarUrl'])
-        .whereRef('users.id', '=', 'comments.creatorId'),
-    ).as('creator');
+        .selectFrom("users")
+        .select(["users.id", "users.name", "users.avatarUrl"])
+        .whereRef("users.id", "=", "comments.creatorId")
+    ).as("creator");
   }
 
-  withResolvedBy(eb: ExpressionBuilder<DB, 'comments'>) {
+  withResolvedBy(eb: ExpressionBuilder<DB, "comments">) {
     return jsonObjectFrom(
       eb
-        .selectFrom('users')
-        .select(['users.id', 'users.name', 'users.avatarUrl'])
-        .whereRef('users.id', '=', 'comments.resolvedById'),
-    ).as('resolvedBy');
+        .selectFrom("users")
+        .select(["users.id", "users.name", "users.avatarUrl"])
+        .whereRef("users.id", "=", "comments.resolvedById")
+    ).as("resolvedBy");
   }
 
   async deleteComment(commentId: string): Promise<void> {
-    await this.db.deleteFrom('comments').where('id', '=', commentId).execute();
+    await this.db.deleteFrom("comments").where("id", "=", commentId).execute();
   }
 
   async hasChildren(commentId: string): Promise<boolean> {
     const result = await this.db
-      .selectFrom('comments')
-      .select((eb) => eb.fn.count('id').as('count'))
-      .where('parentCommentId', '=', commentId)
+      .selectFrom("comments")
+      .select((eb) => eb.fn.count("id").as("count"))
+      .where("parentCommentId", "=", commentId)
       .executeTakeFirst();
 
     return Number(result?.count) > 0;
   }
 
-  async hasChildrenFromOtherUsers(commentId: string, userId: string): Promise<boolean> {
+  async hasChildrenFromOtherUsers(
+    commentId: string,
+    userId: string
+  ): Promise<boolean> {
     const result = await this.db
-      .selectFrom('comments')
-      .select((eb) => eb.fn.count('id').as('count'))
-      .where('parentCommentId', '=', commentId)
-      .where('creatorId', '!=', userId)
+      .selectFrom("comments")
+      .select((eb) => eb.fn.count("id").as("count"))
+      .where("parentCommentId", "=", commentId)
+      .where("creatorId", "!=", userId)
       .executeTakeFirst();
 
     return Number(result?.count) > 0;

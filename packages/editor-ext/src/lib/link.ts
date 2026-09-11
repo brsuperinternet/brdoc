@@ -1,19 +1,17 @@
-import TiptapLink from '@tiptap/extension-link';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { EditorView } from '@tiptap/pm/view';
+import TiptapLink from "@tiptap/extension-link";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { EditorView } from "@tiptap/pm/view";
 
 export const LinkExtension = TiptapLink.extend({
-  inclusive: false,
-
   addAttributes() {
     return {
       ...this.parent?.(),
       internal: {
         default: false,
         parseHTML: (element: HTMLElement) =>
-          element.getAttribute('data-internal') === 'true',
+          element.getAttribute("data-internal") === "true",
         renderHTML: (attributes) =>
-          attributes.internal ? { 'data-internal': 'true' } : {},
+          attributes.internal ? { "data-internal": "true" } : {},
       },
     };
   },
@@ -28,7 +26,7 @@ export const LinkExtension = TiptapLink.extend({
           handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
             const { selection } = editor.state;
 
-            if (event.key === 'Escape' && selection.empty !== true) {
+            if (event.key === "Escape" && selection.empty !== true) {
               editor.commands.focus(selection.to, { scrollIntoView: false });
             }
 
@@ -46,26 +44,33 @@ export const LinkExtension = TiptapLink.extend({
       //   - left boundary: cursor just before a link, e.g. at the start of a
       //     line (#1748), where Firefox places new text inside the link node
       new Plugin({
-        key: new PluginKey('linkBoundaryInput'),
+        key: new PluginKey("linkBoundaryInput"),
         props: {
           handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
             // Only handle single printable characters
-            if (event.key.length !== 1) return false;
+            if (event.key.length !== 1) {
+              return false;
+            }
             // Don't handle modified keys (shortcuts) or composing (IME)
             if (
               event.ctrlKey ||
               event.metaKey ||
               event.altKey ||
               event.isComposing
-            )
+            ) {
               return false;
+            }
 
             const { state } = view;
             const linkType = state.schema.marks.link;
-            if (!linkType) return false;
+            if (!linkType) {
+              return false;
+            }
 
             // Don't interfere if the user has explicitly set storedMarks
-            if (state.storedMarks !== null) return false;
+            if (state.storedMarks !== null) {
+              return false;
+            }
 
             const { from, to } = state.selection;
             const $from = state.doc.resolve(from);
@@ -76,10 +81,14 @@ export const LinkExtension = TiptapLink.extend({
             const linkAfter = nodeAfter && linkType.isInSet(nodeAfter.marks);
 
             // If both sides have link marks we're in the middle — don't interfere
-            if (linkBefore && linkAfter) return false;
+            if (linkBefore && linkAfter) {
+              return false;
+            }
 
             // Not at any link boundary — nothing to do
-            if (!linkBefore && !linkAfter) return false;
+            if (!linkBefore && !linkAfter) {
+              return false;
+            }
 
             // We're at a link boundary (left or right).
             // Prevent native input and insert text without the link mark.
@@ -93,4 +102,5 @@ export const LinkExtension = TiptapLink.extend({
       }),
     ];
   },
+  inclusive: false,
 });

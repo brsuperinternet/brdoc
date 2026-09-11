@@ -1,11 +1,11 @@
-import { Node } from '@tiptap/core';
-import { ReactNodeViewRenderer } from '@tiptap/react';
+import { Node } from "@tiptap/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 
 export type StatusStorage = {
   autoOpen: boolean;
 };
 
-declare module '@tiptap/core' {
+declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     status: {
       setStatus: (attributes?: { text?: string; color?: string }) => ReturnType;
@@ -18,12 +18,12 @@ declare module '@tiptap/core' {
 }
 
 export type StatusColor =
-  | 'gray'
-  | 'blue'
-  | 'green'
-  | 'yellow'
-  | 'red'
-  | 'purple';
+  | "gray"
+  | "blue"
+  | "green"
+  | "yellow"
+  | "red"
+  | "purple";
 
 export interface StatusOption {
   HTMLAttributes: Record<string, any>;
@@ -31,12 +31,41 @@ export interface StatusOption {
 }
 
 export const Status = Node.create<StatusOption, StatusStorage>({
-  name: 'status',
-  group: 'inline',
-  inline: true,
-  atom: true,
-  selectable: true,
-  draggable: true,
+  addAttributes() {
+    return {
+      color: {
+        default: "gray",
+        parseHTML: (element: HTMLElement) =>
+          element.getAttribute("data-color") || "gray",
+      },
+      text: {
+        default: "",
+        parseHTML: (element: HTMLElement) => element.textContent || "",
+      },
+    };
+  },
+
+  addCommands() {
+    return {
+      setStatus:
+        (attributes) =>
+        ({ commands }) => {
+          this.storage.autoOpen = true;
+          return commands.insertContent({
+            attrs: {
+              color: attributes?.color || "gray",
+              text: attributes?.text ?? "",
+            },
+            type: this.name,
+          });
+        },
+    };
+  },
+
+  addNodeView() {
+    this.editor.isInitialized = true;
+    return ReactNodeViewRenderer(this.options.view);
+  },
 
   addOptions() {
     return {
@@ -50,20 +79,11 @@ export const Status = Node.create<StatusOption, StatusStorage>({
       autoOpen: false,
     };
   },
-
-  addAttributes() {
-    return {
-      text: {
-        default: '',
-        parseHTML: (element: HTMLElement) => element.textContent || '',
-      },
-      color: {
-        default: 'gray',
-        parseHTML: (element: HTMLElement) =>
-          element.getAttribute('data-color') || 'gray',
-      },
-    };
-  },
+  atom: true,
+  draggable: true,
+  group: "inline",
+  inline: true,
+  name: "status",
 
   parseHTML() {
     return [
@@ -75,34 +95,13 @@ export const Status = Node.create<StatusOption, StatusStorage>({
 
   renderHTML({ HTMLAttributes }) {
     return [
-      'span',
+      "span",
       {
-        'data-type': this.name,
-        'data-color': HTMLAttributes.color,
+        "data-color": HTMLAttributes.color,
+        "data-type": this.name,
       },
       HTMLAttributes.text,
     ];
   },
-
-  addNodeView() {
-    this.editor.isInitialized = true;
-    return ReactNodeViewRenderer(this.options.view);
-  },
-
-  addCommands() {
-    return {
-      setStatus:
-        (attributes) =>
-        ({ commands }) => {
-          this.storage.autoOpen = true;
-          return commands.insertContent({
-            type: this.name,
-            attrs: {
-              text: attributes?.text ?? '',
-              color: attributes?.color || 'gray',
-            },
-          });
-        },
-    };
-  },
+  selectable: true,
 });

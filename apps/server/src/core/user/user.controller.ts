@@ -1,3 +1,5 @@
+import { WorkspaceRepo } from "@docmost/db/repos/workspace/workspace.repo";
+import { User, Workspace } from "@docmost/db/types/entity.types";
 import {
   Body,
   Controller,
@@ -5,33 +7,31 @@ import {
   HttpStatus,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { UserService } from './user.service';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { OAuthScope } from '../../common/decorators/oauth-scope.decorator';
-import { AuthWorkspace } from '../../common/decorators/auth-workspace.decorator';
-import { User, Workspace } from '@docmost/db/types/entity.types';
-import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
+} from "@nestjs/common";
+import { AuthUser } from "../../common/decorators/auth-user.decorator";
+import { AuthWorkspace } from "../../common/decorators/auth-workspace.decorator";
+import { OAuthScope } from "../../common/decorators/oauth-scope.decorator";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { UserService } from "./user.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('users')
+@Controller("users")
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly workspaceRepo: WorkspaceRepo,
+    private readonly workspaceRepo: WorkspaceRepo
   ) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('me')
-  @OAuthScope('read')
+  @Post("me")
+  @OAuthScope("read")
   async getUserInfo(
     @AuthUser() authUser: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     const memberCount = await this.workspaceRepo.getActiveUserCount(
-      workspace.id,
+      workspace.id
     );
 
     const { licenseKey, ...rest } = workspace;
@@ -45,11 +45,11 @@ export class UserController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('update')
+  @Post("update")
   async updateUser(
     @Body() updateUserDto: UpdateUserDto,
     @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() workspace: Workspace
   ) {
     return this.userService.update(updateUserDto, user.id, workspace);
   }

@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 import {
   RedisModuleOptions,
   RedisOptionsFactory,
-} from '@nestjs-labs/nestjs-ioredis';
-import { createRetryStrategy, parseRedisUrl } from '../../common/helpers';
-import { EnvironmentService } from '../environment/environment.service';
+} from "@nestjs-labs/nestjs-ioredis";
+import { createRetryStrategy, parseRedisUrl } from "../../common/helpers";
+import { EnvironmentService } from "../environment/environment.service";
 
 @Injectable()
 export class RedisConfigService implements RedisOptionsFactory {
@@ -12,17 +12,17 @@ export class RedisConfigService implements RedisOptionsFactory {
   createRedisOptions(): RedisModuleOptions {
     const redisConfig = parseRedisUrl(this.environmentService.getRedisUrl());
     return {
-      readyLog: true,
       config: {
-        host: redisConfig.host,
-        port: redisConfig.port,
-        username: redisConfig.username,
-        password: redisConfig.password,
         db: redisConfig.db,
         family: redisConfig.family,
-        tls: redisConfig.tls,
+        host: redisConfig.host,
+        password: redisConfig.password,
+        port: redisConfig.port,
         retryStrategy: createRetryStrategy(),
+        tls: redisConfig.tls,
+        username: redisConfig.username,
       },
+      readyLog: true,
     };
   }
 }

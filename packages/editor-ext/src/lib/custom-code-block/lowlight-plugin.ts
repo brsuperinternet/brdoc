@@ -1,13 +1,13 @@
-import { findChildren } from '@tiptap/core';
-import type { Node as ProsemirrorNode } from '@tiptap/pm/model';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { findChildren } from "@tiptap/core";
+import type { Node as ProsemirrorNode } from "@tiptap/pm/model";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 // @ts-ignore
-import highlight from 'highlight.js/lib/core';
+import highlight from "highlight.js/lib/core";
 
 function parseNodes(
   nodes: any[],
-  className: string[] = [],
+  className: string[] = []
 ): { text: string; classes: string[] }[] {
   return nodes
     .map((node) => {
@@ -21,8 +21,8 @@ function parseNodes(
       }
 
       return {
-        text: node.value,
         classes,
+        text: node.value,
       };
     })
     .flat();
@@ -78,7 +78,7 @@ function getDecorations({
       const detectedLanguage = autoResult.data?.language;
       if (detectedLanguage && textContent.length > AUTO_DETECT_SAMPLE_SIZE) {
         nodes = getHighlightNodes(
-          lowlight.highlight(detectedLanguage, textContent),
+          lowlight.highlight(detectedLanguage, textContent)
         );
       } else {
         nodes = getHighlightNodes(autoResult);
@@ -90,7 +90,7 @@ function getDecorations({
 
       if (node.classes.length) {
         const decoration = Decoration.inline(from, to, {
-          class: node.classes.join(' '),
+          class: node.classes.join(" "),
         });
 
         decorations.push(decoration);
@@ -105,7 +105,7 @@ function getDecorations({
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 function isFunction(param: any): param is Function {
-  return typeof param === 'function';
+  return typeof param === "function";
 }
 
 export function LowlightPlugin({
@@ -118,36 +118,35 @@ export function LowlightPlugin({
   defaultLanguage: string | null | undefined;
 }) {
   if (
-    !['highlight', 'highlightAuto', 'listLanguages'].every((api) =>
-      isFunction(lowlight[api]),
+    !["highlight", "highlightAuto", "listLanguages"].every((api) =>
+      isFunction(lowlight[api])
     )
   ) {
     throw Error(
-      'You should provide an instance of lowlight to use the code-block-lowlight extension',
+      "You should provide an instance of lowlight to use the code-block-lowlight extension"
     );
   }
 
   const lowlightPlugin: Plugin<any> = new Plugin({
-    key: new PluginKey('lowlight'),
+    key: new PluginKey("lowlight"),
+
+    props: {
+      decorations(state) {
+        return lowlightPlugin.getState(state);
+      },
+    },
 
     state: {
-      init: (_, { doc }) =>
-        getDecorations({
-          doc,
-          name,
-          lowlight,
-          defaultLanguage,
-        }),
       apply: (transaction, decorationSet, oldState, newState) => {
         const oldNodeName = oldState.selection.$head.parent.type.name;
         const newNodeName = newState.selection.$head.parent.type.name;
         const oldNodes = findChildren(
           oldState.doc,
-          (node) => node.type.name === name,
+          (node) => node.type.name === name
         );
         const newNodes = findChildren(
           newState.doc,
-          (node) => node.type.name === name,
+          (node) => node.type.name === name
         );
 
         if (
@@ -180,21 +179,22 @@ export function LowlightPlugin({
             }))
         ) {
           return getDecorations({
-            doc: transaction.doc,
-            name,
-            lowlight,
             defaultLanguage,
+            doc: transaction.doc,
+            lowlight,
+            name,
           });
         }
 
         return decorationSet.map(transaction.mapping, transaction.doc);
       },
-    },
-
-    props: {
-      decorations(state) {
-        return lowlightPlugin.getState(state);
-      },
+      init: (_, { doc }) =>
+        getDecorations({
+          defaultLanguage,
+          doc,
+          lowlight,
+          name,
+        }),
     },
   });
 

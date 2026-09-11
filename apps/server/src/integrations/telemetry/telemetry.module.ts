@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { TelemetryService } from './telemetry.service';
-import { ScheduleModule } from '@nestjs/schedule';
+import { Module } from "@nestjs/common";
+import { ScheduleModule } from "@nestjs/schedule";
+import { TelemetryService } from "./telemetry.service";
 
 @Module({
-  providers: [TelemetryService],
   imports: [ScheduleModule.forRoot()],
+  providers: [TelemetryService],
 })
 export class TelemetryModule {}

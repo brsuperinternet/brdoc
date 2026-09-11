@@ -4,11 +4,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-} from 'class-validator';
+} from "class-validator";
 
 export enum ExportFormat {
-  HTML = 'html',
-  Markdown = 'markdown',
+  HTML = "html",
+  Markdown = "markdown",
 }
 
 export class ExportPageDto {
@@ -17,7 +17,7 @@ export class ExportPageDto {
   pageId: string;
 
   @IsString()
-  @IsIn(['html', 'markdown'])
+  @IsIn(["html", "markdown"])
   format: ExportFormat;
 
   @IsOptional()
@@ -35,7 +35,7 @@ export class ExportSpaceDto {
   spaceId: string;
 
   @IsString()
-  @IsIn(['html', 'markdown'])
+  @IsIn(["html", "markdown"])
   format: ExportFormat;
 
   @IsOptional()

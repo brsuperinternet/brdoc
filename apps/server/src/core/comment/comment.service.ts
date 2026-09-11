@@ -1,24 +1,24 @@
+import { CursorPaginationResult } from "@docmost/db/pagination/cursor-pagination";
+import { PaginationOptions } from "@docmost/db/pagination/pagination-options";
+import { CommentRepo } from "@docmost/db/repos/comment/comment.repo";
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { Comment, Page, User } from "@docmost/db/types/entity.types";
+import { InjectQueue } from "@nestjs/bullmq";
 import {
   BadRequestException,
   ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { CreateCommentDto, yjsSelectionSchema } from './dto/create-comment.dto';
-import { CollaborationGateway } from '../../collaboration/collaboration.gateway';
-import { UpdateCommentDto } from './dto/update-comment.dto';
-import { CommentRepo } from '@docmost/db/repos/comment/comment.repo';
-import { Comment, Page, User } from '@docmost/db/types/entity.types';
-import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { CursorPaginationResult } from '@docmost/db/pagination/cursor-pagination';
-import { QueueJob, QueueName } from '../../integrations/queue/constants';
-import { extractUserMentionIdsFromJson } from '../../common/helpers/prosemirror/utils';
-import { ICommentNotificationJob } from '../../integrations/queue/constants/queue.interface';
-import { WsService } from '../../ws/ws.service';
+} from "@nestjs/common";
+import { Queue } from "bullmq";
+import { CollaborationGateway } from "../../collaboration/collaboration.gateway";
+import { extractUserMentionIdsFromJson } from "../../common/helpers/prosemirror/utils";
+import { QueueJob, QueueName } from "../../integrations/queue/constants";
+import { ICommentNotificationJob } from "../../integrations/queue/constants/queue.interface";
+import { WsService } from "../../ws/ws.service";
+import { CreateCommentDto, yjsSelectionSchema } from "./dto/create-comment.dto";
+import { UpdateCommentDto } from "./dto/update-comment.dto";
 
 @Injectable()
 export class CommentService {
@@ -41,68 +41,70 @@ export class CommentService {
       includeResolvedBy: true,
     });
     if (!comment) {
-      throw new NotFoundException('Comment not found');
+      throw new NotFoundException("Comment not found");
     }
     return comment;
   }
 
   async create(
     opts: { page: Page; workspaceId: string; user: User },
-    createCommentDto: CreateCommentDto,
+    createCommentDto: CreateCommentDto
   ) {
     const { page, workspaceId, user } = opts;
     const commentContent = JSON.parse(createCommentDto.content);
 
     if (createCommentDto.parentCommentId) {
       const parentComment = await this.commentRepo.findById(
-        createCommentDto.parentCommentId,
+        createCommentDto.parentCommentId
       );
 
       if (!parentComment || parentComment.pageId !== page.id) {
-        throw new BadRequestException('Parent comment not found');
+        throw new BadRequestException("Parent comment not found");
       }
 
       if (parentComment.parentCommentId !== null) {
-        throw new BadRequestException('You cannot reply to a reply');
+        throw new BadRequestException("You cannot reply to a reply");
       }
     }
 
     const inserted = await this.commentRepo.insertComment({
-      pageId: page.id,
       content: commentContent,
-      selection: createCommentDto?.selection?.substring(0, 250) ?? null,
-      type: createCommentDto.type ?? 'page',
-      parentCommentId: createCommentDto?.parentCommentId,
       creatorId: user.id,
-      workspaceId: workspaceId,
+      pageId: page.id,
+      parentCommentId: createCommentDto?.parentCommentId,
+      selection: createCommentDto?.selection?.substring(0, 250) ?? null,
       spaceId: page.spaceId,
+      type: createCommentDto.type ?? "page",
+      workspaceId,
     });
 
     if (createCommentDto.yjsSelection) {
-      const parsed = yjsSelectionSchema.safeParse(createCommentDto.yjsSelection);
-      if (!parsed.success) {
-        this.logger.warn(
-          `Invalid yjsSelection for comment ${inserted.id}: ${parsed.error.message}`,
-        );
-      } else {
+      const parsed = yjsSelectionSchema.safeParse(
+        createCommentDto.yjsSelection
+      );
+      if (parsed.success) {
         const documentName = `page.${page.id}`;
         try {
           await this.collaborationGateway.handleYjsEvent(
-            'setCommentMark',
+            "setCommentMark",
             documentName,
             {
-              yjsSelection: parsed.data,
               commentId: inserted.id,
               resolved: false,
               user,
-            },
+              yjsSelection: parsed.data,
+            }
           );
         } catch (error) {
           this.logger.warn(
             `Failed to apply comment mark for comment ${inserted.id}, comment saved without inline highlight`,
-            error,
+            error
           );
         }
+      } else {
+        this.logger.warn(
+          `Invalid yjsSelection for comment ${inserted.id}: ${parsed.error.message}`
+        );
       }
     }
 
@@ -113,13 +115,13 @@ export class CommentService {
 
     this.generalQueue
       .add(QueueJob.ADD_PAGE_WATCHERS, {
-        userIds: [user.id],
         pageId: page.id,
         spaceId: page.spaceId,
+        userIds: [user.id],
         workspaceId,
       })
       .catch((err) =>
-        this.logger.warn(`Failed to queue add-page-watchers: ${err.message}`),
+        this.logger.warn(`Failed to queue add-page-watchers: ${err.message}`)
       );
 
     const isReply = !!createCommentDto.parentCommentId;
@@ -133,13 +135,13 @@ export class CommentService {
       workspaceId,
       user.id,
       !isReply,
-      createCommentDto.parentCommentId,
+      createCommentDto.parentCommentId
     );
 
     this.wsService.emitCommentEvent(page.spaceId, page.id, {
-      operation: 'commentCreated',
-      pageId: page.id,
       comment,
+      operation: "commentCreated",
+      pageId: page.id,
     });
 
     return comment;
@@ -147,12 +149,12 @@ export class CommentService {
 
   async findByPageId(
     pageId: string,
-    pagination: PaginationOptions,
+    pagination: PaginationOptions
   ): Promise<CursorPaginationResult<Comment>> {
     const page = await this.pageRepo.findById(pageId);
 
     if (!page) {
-      throw new BadRequestException('Page not found');
+      throw new BadRequestException("Page not found");
     }
 
     return this.commentRepo.findPageComments(pageId, pagination);
@@ -161,12 +163,12 @@ export class CommentService {
   async update(
     comment: Comment,
     updateCommentDto: UpdateCommentDto,
-    authUser: User,
+    authUser: User
   ): Promise<Comment> {
     const commentContent = JSON.parse(updateCommentDto.content);
 
     if (comment.creatorId !== authUser.id) {
-      throw new ForbiddenException('You can only edit your own comments');
+      throw new ForbiddenException("You can only edit your own comments");
     }
 
     const oldMentionIds = extractUserMentionIdsFromJson(comment.content);
@@ -176,10 +178,10 @@ export class CommentService {
     await this.commentRepo.updateComment(
       {
         content: commentContent,
-        editedAt: editedAt,
+        editedAt,
         updatedAt: editedAt,
       },
-      comment.id,
+      comment.id
     );
 
     await this.queueCommentNotification(
@@ -190,7 +192,7 @@ export class CommentService {
       comment.spaceId,
       comment.workspaceId,
       authUser.id,
-      false,
+      false
     );
 
     comment.content = commentContent;
@@ -198,9 +200,9 @@ export class CommentService {
     comment.updatedAt = editedAt;
 
     this.wsService.emitCommentEvent(comment.spaceId, comment.pageId, {
-      operation: 'commentUpdated',
-      pageId: comment.pageId,
       comment,
+      operation: "commentUpdated",
+      pageId: comment.pageId,
     });
 
     return comment;
@@ -215,29 +217,28 @@ export class CommentService {
     workspaceId: string,
     actorId: string,
     notifyWatchers: boolean,
-    parentCommentId?: string,
+    parentCommentId?: string
   ) {
     const mentionedUserIds = extractUserMentionIdsFromJson(content);
     const newMentionIds = mentionedUserIds.filter(
-      (id) => id !== actorId && !oldMentionIds.includes(id),
+      (id) => id !== actorId && !oldMentionIds.includes(id)
     );
 
-    if (newMentionIds.length === 0 && !notifyWatchers && !parentCommentId) return;
+    if (newMentionIds.length === 0 && !notifyWatchers && !parentCommentId) {
+      return;
+    }
 
     const jobData: ICommentNotificationJob = {
-      commentId,
-      parentCommentId,
-      pageId,
-      spaceId,
-      workspaceId,
       actorId,
+      commentId,
       mentionedUserIds: newMentionIds,
       notifyWatchers,
+      pageId,
+      parentCommentId,
+      spaceId,
+      workspaceId,
     };
 
-    await this.notificationQueue.add(
-      QueueJob.COMMENT_NOTIFICATION,
-      jobData,
-    );
+    await this.notificationQueue.add(QueueJob.COMMENT_NOTIFICATION, jobData);
   }
 }

@@ -1,3 +1,4 @@
+import { Type } from "class-transformer";
 import {
   IsBoolean,
   IsNotEmpty,
@@ -6,9 +7,8 @@ import {
   IsUUID,
   Matches,
   ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { LookupDto } from '../../page/transclusion/dto/lookup.dto';
+} from "class-validator";
+import { LookupDto } from "../../page/transclusion/dto/lookup.dto";
 
 export const APPEARANCE_HEX_REGEX = /^#[0-9a-fA-F]{6}$/;
 

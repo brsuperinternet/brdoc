@@ -1,22 +1,22 @@
-import { Global, Module } from '@nestjs/common';
-import { EnvironmentService } from './environment.service';
-import { ConfigModule } from '@nestjs/config';
-import { validate } from './environment.validation';
-import { envPath } from '../../common/helpers';
-import { DomainService } from './domain.service';
-import { LicenseCheckService } from './license-check.service';
+import { Global, Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { envPath } from "../../common/helpers";
+import { DomainService } from "./domain.service";
+import { EnvironmentService } from "./environment.service";
+import { validate } from "./environment.validation";
+import { LicenseCheckService } from "./license-check.service";
 
 @Global()
 @Module({
+  exports: [EnvironmentService, DomainService, LicenseCheckService],
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
-      expandVariables: true,
       envFilePath: envPath,
+      expandVariables: true,
+      isGlobal: true,
       validate,
     }),
   ],
   providers: [EnvironmentService, DomainService, LicenseCheckService],
-  exports: [EnvironmentService, DomainService, LicenseCheckService],
 })
 export class EnvironmentModule {}

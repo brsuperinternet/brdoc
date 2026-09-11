@@ -1,11 +1,11 @@
 // https://github.com/ueberdosis/tiptap/blob/91c51be53c4655ef07e29ec489471524debfa0ca/packages/core/src/lib/ResizableNodeView.ts - MIT
-import type { Node as PMNode } from '@tiptap/pm/model';
-import type { Decoration, DecorationSource, NodeView } from '@tiptap/pm/view';
-import type { Editor } from '@tiptap/core';
 
-const isTouchEvent = (e: MouseEvent | TouchEvent): e is TouchEvent => {
-  return 'touches' in e;
-};
+import type { Editor } from "@tiptap/core";
+import type { Node as PMNode } from "@tiptap/pm/model";
+import type { Decoration, DecorationSource, NodeView } from "@tiptap/pm/view";
+
+const isTouchEvent = (e: MouseEvent | TouchEvent): e is TouchEvent =>
+  "touches" in e;
 
 /**
  * Directions where resize handles can be placed
@@ -15,14 +15,14 @@ const isTouchEvent = (e: MouseEvent | TouchEvent): e is TouchEvent => {
  * - `'bottom-right'` - Bottom-right corner handle
  */
 export type ResizableNodeViewDirection =
-  | 'top'
-  | 'right'
-  | 'bottom'
-  | 'left'
-  | 'top-right'
-  | 'top-left'
-  | 'bottom-right'
-  | 'bottom-left';
+  | "top"
+  | "right"
+  | "bottom"
+  | "left"
+  | "top-right"
+  | "top-left"
+  | "bottom-right"
+  | "bottom-left";
 
 /**
  * Dimensions for the resizable node in pixels
@@ -133,7 +133,7 @@ export type ResizableNodeViewOptions = {
    * }
    * ```
    */
-  onUpdate: NodeView['update'];
+  onUpdate: NodeView["update"];
 
   /**
    * Optional configuration for resize behavior and styling
@@ -324,14 +324,14 @@ export class ResizableNodeView {
   onCommit: (width: number, height: number) => void;
 
   /** Callback for node updates */
-  onUpdate?: NodeView['update'];
+  onUpdate?: NodeView["update"];
 
   /** Active resize handle directions */
   directions: ResizableNodeViewDirection[] = [
-    'bottom-left',
-    'bottom-right',
-    'top-left',
-    'top-right',
+    "bottom-left",
+    "bottom-right",
+    "top-left",
+    "top-right",
   ];
 
   /** Minimum allowed dimensions */
@@ -344,48 +344,48 @@ export class ResizableNodeView {
   maxSize?: Partial<ResizableNodeDimensions>;
 
   /** Whether to always preserve aspect ratio */
-  preserveAspectRatio: boolean = false;
+  preserveAspectRatio = false;
 
   /** CSS class names for elements */
   classNames = {
-    container: '',
-    wrapper: '',
-    handle: '',
-    resizing: '',
+    container: "",
+    handle: "",
+    resizing: "",
+    wrapper: "",
   };
 
   /** Optional callback for creating custom resize handles */
   createCustomHandle?: (direction: ResizableNodeViewDirection) => HTMLElement;
 
   /** Initial width of the element (for aspect ratio calculation) */
-  private initialWidth: number = 0;
+  private initialWidth = 0;
 
   /** Initial height of the element (for aspect ratio calculation) */
-  private initialHeight: number = 0;
+  private initialHeight = 0;
 
   /** Calculated aspect ratio (width / height) */
-  private aspectRatio: number = 1;
+  private aspectRatio = 1;
 
   /** Whether a resize operation is currently active */
-  private isResizing: boolean = false;
+  private isResizing = false;
 
   /** The handle currently being dragged */
   private activeHandle: ResizableNodeViewDirection | null = null;
 
   /** Starting mouse X position when resize began */
-  private startX: number = 0;
+  private startX = 0;
 
   /** Starting mouse Y position when resize began */
-  private startY: number = 0;
+  private startY = 0;
 
   /** Element width when resize began */
-  private startWidth: number = 0;
+  private startWidth = 0;
 
   /** Element height when resize began */
-  private startHeight: number = 0;
+  private startHeight = 0;
 
   /** Whether Shift key is currently pressed (for temporary aspect ratio lock) */
-  private isShiftKeyPressed: boolean = false;
+  private isShiftKeyPressed = false;
 
   /** Last known editable state of the editor */
   private lastEditableState: boolean | undefined = undefined;
@@ -434,10 +434,10 @@ export class ResizableNodeView {
 
     if (options.options?.className) {
       this.classNames = {
-        container: options.options.className.container || '',
-        wrapper: options.options.className.wrapper || '',
-        handle: options.options.className.handle || '',
-        resizing: options.options.className.resizing || '',
+        container: options.options.className.container || "",
+        handle: options.options.className.handle || "",
+        resizing: options.options.className.resizing || "",
+        wrapper: options.options.className.wrapper || "",
       };
     }
 
@@ -454,7 +454,7 @@ export class ResizableNodeView {
       this.attachHandles();
     }
 
-    this.editor.on('update', this.handleEditorUpdate.bind(this));
+    this.editor.on("update", this.handleEditorUpdate.bind(this));
   }
 
   /**
@@ -504,7 +504,7 @@ export class ResizableNodeView {
   update(
     node: PMNode,
     decorations: readonly Decoration[],
-    innerDecorations: DecorationSource,
+    innerDecorations: DecorationSource
   ): boolean {
     if (node.type !== this.node.type) {
       return false;
@@ -528,24 +528,24 @@ export class ResizableNodeView {
    */
   destroy() {
     if (this.isResizing) {
-      this.container.dataset.resizeState = 'false';
+      this.container.dataset.resizeState = "false";
 
       if (this.classNames.resizing) {
         this.container.classList.remove(this.classNames.resizing);
       }
 
-      document.removeEventListener('mousemove', this.handleMouseMove);
-      document.removeEventListener('touchmove', this.handleTouchMove);
-      document.removeEventListener('mouseup', this.handleMouseUp);
-      document.removeEventListener('touchend', this.handleMouseUp);
-      window.removeEventListener('blur', this.handleMouseUp);
-      document.removeEventListener('keydown', this.handleKeyDown);
-      document.removeEventListener('keyup', this.handleKeyUp);
+      document.removeEventListener("mousemove", this.handleMouseMove);
+      document.removeEventListener("touchmove", this.handleTouchMove);
+      document.removeEventListener("mouseup", this.handleMouseUp);
+      document.removeEventListener("touchend", this.handleMouseUp);
+      window.removeEventListener("blur", this.handleMouseUp);
+      document.removeEventListener("keydown", this.handleKeyDown);
+      document.removeEventListener("keyup", this.handleKeyUp);
       this.isResizing = false;
       this.activeHandle = null;
     }
 
-    this.editor.off('update', this.handleEditorUpdate.bind(this));
+    this.editor.off("update", this.handleEditorUpdate.bind(this));
 
     this.container.remove();
   }
@@ -560,10 +560,10 @@ export class ResizableNodeView {
    * @returns The container element
    */
   createContainer() {
-    const element = document.createElement('div');
-    element.dataset.resizeContainer = '';
+    const element = document.createElement("div");
+    element.dataset.resizeContainer = "";
     element.dataset.node = this.node.type.name;
-    element.style.display = 'flex';
+    element.style.display = "flex";
 
     if (this.classNames.container) {
       element.className = this.classNames.container;
@@ -584,10 +584,10 @@ export class ResizableNodeView {
    * @returns The wrapper element
    */
   createWrapper() {
-    const element = document.createElement('div');
-    element.style.position = 'relative';
-    element.style.display = 'block';
-    element.dataset.resizeWrapper = '';
+    const element = document.createElement("div");
+    element.style.position = "relative";
+    element.style.display = "block";
+    element.dataset.resizeWrapper = "";
 
     if (this.classNames.wrapper) {
       element.className = this.classNames.wrapper;
@@ -608,9 +608,9 @@ export class ResizableNodeView {
    * @returns The handle element
    */
   private createHandle(direction: ResizableNodeViewDirection): HTMLElement {
-    const handle = document.createElement('div');
+    const handle = document.createElement("div");
     handle.dataset.resizeHandle = direction;
-    handle.style.position = 'absolute';
+    handle.style.position = "absolute";
 
     if (this.classNames.handle) {
       handle.className = this.classNames.handle;
@@ -630,38 +630,38 @@ export class ResizableNodeView {
    */
   private positionHandle(
     handle: HTMLElement,
-    direction: ResizableNodeViewDirection,
+    direction: ResizableNodeViewDirection
   ): void {
-    const isTop = direction.includes('top');
-    const isBottom = direction.includes('bottom');
-    const isLeft = direction.includes('left');
-    const isRight = direction.includes('right');
+    const isTop = direction.includes("top");
+    const isBottom = direction.includes("bottom");
+    const isLeft = direction.includes("left");
+    const isRight = direction.includes("right");
 
     if (isTop) {
-      handle.style.top = '0';
+      handle.style.top = "0";
     }
 
     if (isBottom) {
-      handle.style.bottom = '0';
+      handle.style.bottom = "0";
     }
 
     if (isLeft) {
-      handle.style.left = '0';
+      handle.style.left = "0";
     }
 
     if (isRight) {
-      handle.style.right = '0';
+      handle.style.right = "0";
     }
 
     // Edge handles span the full width or height
-    if (direction === 'top' || direction === 'bottom') {
-      handle.style.left = '0';
-      handle.style.right = '0';
+    if (direction === "top" || direction === "bottom") {
+      handle.style.left = "0";
+      handle.style.right = "0";
     }
 
-    if (direction === 'left' || direction === 'right') {
-      handle.style.top = '0';
-      handle.style.bottom = '0';
+    if (direction === "left" || direction === "right") {
+      handle.style.top = "0";
+      handle.style.bottom = "0";
     }
   }
 
@@ -683,7 +683,7 @@ export class ResizableNodeView {
 
       if (!(handle instanceof HTMLElement)) {
         console.warn(
-          `[ResizableNodeView] createCustomHandle("${direction}") did not return an HTMLElement. Falling back to default handle.`,
+          `[ResizableNodeView] createCustomHandle("${direction}") did not return an HTMLElement. Falling back to default handle.`
         );
         handle = this.createHandle(direction);
       }
@@ -692,11 +692,11 @@ export class ResizableNodeView {
         this.positionHandle(handle, direction);
       }
 
-      handle.addEventListener('mousedown', (event) =>
-        this.handleResizeStart(event, direction),
+      handle.addEventListener("mousedown", (event) =>
+        this.handleResizeStart(event, direction)
       );
-      handle.addEventListener('touchstart', (event) =>
-        this.handleResizeStart(event as unknown as MouseEvent, direction),
+      handle.addEventListener("touchstart", (event) =>
+        this.handleResizeStart(event as unknown as MouseEvent, direction)
       );
 
       this.handleMap.set(direction, handle);
@@ -758,7 +758,7 @@ export class ResizableNodeView {
    */
   private handleResizeStart(
     event: MouseEvent | TouchEvent,
-    direction: ResizableNodeViewDirection,
+    direction: ResizableNodeViewDirection
   ): void {
     event.preventDefault();
     event.stopPropagation();
@@ -789,20 +789,20 @@ export class ResizableNodeView {
     }
 
     // Update UI state
-    this.container.dataset.resizeState = 'true';
+    this.container.dataset.resizeState = "true";
 
     if (this.classNames.resizing) {
       this.container.classList.add(this.classNames.resizing);
     }
 
     // Attach document-level listeners for resize
-    document.addEventListener('mousemove', this.handleMouseMove);
-    document.addEventListener('touchmove', this.handleTouchMove);
-    document.addEventListener('mouseup', this.handleMouseUp);
-    document.addEventListener('touchend', this.handleMouseUp);
-    window.addEventListener('blur', this.handleMouseUp);
-    document.addEventListener('keydown', this.handleKeyDown);
-    document.addEventListener('keyup', this.handleKeyUp);
+    document.addEventListener("mousemove", this.handleMouseMove);
+    document.addEventListener("touchmove", this.handleTouchMove);
+    document.addEventListener("mouseup", this.handleMouseUp);
+    document.addEventListener("touchend", this.handleMouseUp);
+    window.addEventListener("blur", this.handleMouseUp);
+    document.addEventListener("keydown", this.handleKeyDown);
+    document.addEventListener("keyup", this.handleKeyUp);
   }
 
   /**
@@ -851,12 +851,12 @@ export class ResizableNodeView {
     const { width, height } = this.calculateNewDimensions(
       this.activeHandle,
       deltaX,
-      deltaY,
+      deltaY
     );
     const constrained = this.applyConstraints(
       width,
       height,
-      shouldPreserveAspectRatio,
+      shouldPreserveAspectRatio
     );
 
     this.element.style.width = `${constrained.width}px`;
@@ -887,20 +887,20 @@ export class ResizableNodeView {
     this.activeHandle = null;
 
     // Remove UI state
-    this.container.dataset.resizeState = 'false';
+    this.container.dataset.resizeState = "false";
 
     if (this.classNames.resizing) {
       this.container.classList.remove(this.classNames.resizing);
     }
 
     // Clean up document-level listeners
-    document.removeEventListener('mousemove', this.handleMouseMove);
-    document.removeEventListener('touchmove', this.handleTouchMove);
-    document.removeEventListener('mouseup', this.handleMouseUp);
-    document.removeEventListener('touchend', this.handleMouseUp);
-    window.removeEventListener('blur', this.handleMouseUp);
-    document.removeEventListener('keydown', this.handleKeyDown);
-    document.removeEventListener('keyup', this.handleKeyUp);
+    document.removeEventListener("mousemove", this.handleMouseMove);
+    document.removeEventListener("touchmove", this.handleTouchMove);
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("touchend", this.handleMouseUp);
+    window.removeEventListener("blur", this.handleMouseUp);
+    document.removeEventListener("keydown", this.handleKeyDown);
+    document.removeEventListener("keyup", this.handleKeyUp);
   };
 
   /**
@@ -912,7 +912,7 @@ export class ResizableNodeView {
    * @param event - The keyboard event
    */
   private handleKeyDown = (event: KeyboardEvent): void => {
-    if (event.key === 'Shift') {
+    if (event.key === "Shift") {
       this.isShiftKeyPressed = true;
     }
   };
@@ -923,7 +923,7 @@ export class ResizableNodeView {
    * @param event - The keyboard event
    */
   private handleKeyUp = (event: KeyboardEvent): void => {
-    if (event.key === 'Shift') {
+    if (event.key === "Shift") {
       this.isShiftKeyPressed = false;
     }
   };
@@ -944,15 +944,15 @@ export class ResizableNodeView {
   private calculateNewDimensions(
     direction: ResizableNodeViewDirection,
     deltaX: number,
-    deltaY: number,
+    deltaY: number
   ): ResizableNodeDimensions {
     let newWidth = this.startWidth;
     let newHeight = this.startHeight;
 
-    const isRight = direction.includes('right');
-    const isLeft = direction.includes('left');
-    const isBottom = direction.includes('bottom');
-    const isTop = direction.includes('top');
+    const isRight = direction.includes("right");
+    const isLeft = direction.includes("left");
+    const isBottom = direction.includes("bottom");
+    const isTop = direction.includes("top");
 
     // Apply horizontal delta
     if (isRight) {
@@ -969,11 +969,11 @@ export class ResizableNodeView {
     }
 
     // For pure horizontal/vertical handles, only one dimension changes
-    if (direction === 'right' || direction === 'left') {
+    if (direction === "right" || direction === "left") {
       newWidth = this.startWidth + (isRight ? deltaX : -deltaX);
     }
 
-    if (direction === 'top' || direction === 'bottom') {
+    if (direction === "top" || direction === "bottom") {
       newHeight = this.startHeight + (isBottom ? deltaY : -deltaY);
     }
 
@@ -984,7 +984,7 @@ export class ResizableNodeView {
       return this.applyAspectRatio(newWidth, newHeight, direction);
     }
 
-    return { width: newWidth, height: newHeight };
+    return { height: newHeight, width: newWidth };
   }
 
   /**
@@ -1005,7 +1005,7 @@ export class ResizableNodeView {
   private applyConstraints(
     width: number,
     height: number,
-    preserveAspectRatio: boolean,
+    preserveAspectRatio: boolean
   ): ResizableNodeDimensions {
     if (!preserveAspectRatio) {
       // Independent constraints for each dimension
@@ -1020,7 +1020,7 @@ export class ResizableNodeView {
         constrainedHeight = Math.min(this.maxSize.height, constrainedHeight);
       }
 
-      return { width: constrainedWidth, height: constrainedHeight };
+      return { height: constrainedHeight, width: constrainedWidth };
     }
 
     // Aspect-ratio-aware constraints: adjust both dimensions proportionally
@@ -1049,7 +1049,7 @@ export class ResizableNodeView {
       constrainedWidth = constrainedHeight * this.aspectRatio;
     }
 
-    return { width: constrainedWidth, height: constrainedHeight };
+    return { height: constrainedHeight, width: constrainedWidth };
   }
 
   /**
@@ -1068,31 +1068,31 @@ export class ResizableNodeView {
   private applyAspectRatio(
     width: number,
     height: number,
-    direction: ResizableNodeViewDirection,
+    direction: ResizableNodeViewDirection
   ): ResizableNodeDimensions {
-    const isHorizontal = direction === 'left' || direction === 'right';
-    const isVertical = direction === 'top' || direction === 'bottom';
+    const isHorizontal = direction === "left" || direction === "right";
+    const isVertical = direction === "top" || direction === "bottom";
 
     if (isHorizontal) {
       // For horizontal resize, width is primary
       return {
-        width,
         height: width / this.aspectRatio,
+        width,
       };
     }
 
     if (isVertical) {
       // For vertical resize, height is primary
       return {
-        width: height * this.aspectRatio,
         height,
+        width: height * this.aspectRatio,
       };
     }
 
     // For corner resize, width is primary
     return {
-      width,
       height: width / this.aspectRatio,
+      width,
     };
   }
 }

@@ -1,31 +1,31 @@
+import { PageRepo } from "@docmost/db/repos/page/page.repo";
+import { PagePermissionRepo } from "@docmost/db/repos/page/page-permission.repo";
+import { ShareRepo } from "@docmost/db/repos/share/share.repo";
+import { Page } from "@docmost/db/types/entity.types";
+import { KyselyDB } from "@docmost/db/types/kysely.types";
 import {
   BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
-} from '@nestjs/common';
-import { CreateShareDto, ShareInfoDto, UpdateShareDto } from './dto/share.dto';
-import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
-import { nanoIdGen } from '../../common/helpers';
-import { PageRepo } from '@docmost/db/repos/page/page.repo';
-import { TokenService } from '../auth/services/token.service';
-import { jsonToNode } from '../../collaboration/collaboration.util';
+} from "@nestjs/common";
+import { Node } from "@tiptap/pm/model";
+import { sql } from "kysely";
+import { InjectKysely } from "nestjs-kysely";
+import { validate as isValidUUID } from "uuid";
+import { jsonToNode } from "../../collaboration/collaboration.util";
+import { nanoIdGen } from "../../common/helpers";
 import {
   getAttachmentIds,
   getProsemirrorContent,
   isAttachmentNode,
   removeMarkTypeFromDoc,
-} from '../../common/helpers/prosemirror/utils';
-import { Node } from '@tiptap/pm/model';
-import { ShareRepo } from '@docmost/db/repos/share/share.repo';
-import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { updateAttachmentAttr } from './share.util';
-import { Page } from '@docmost/db/types/entity.types';
-import { validate as isValidUUID } from 'uuid';
-import { sql } from 'kysely';
-import { TransclusionService } from '../page/transclusion/transclusion.service';
-import { TransclusionLookup } from '../page/transclusion/transclusion.types';
+} from "../../common/helpers/prosemirror/utils";
+import { TokenService } from "../auth/services/token.service";
+import { TransclusionService } from "../page/transclusion/transclusion.service";
+import { TransclusionLookup } from "../page/transclusion/transclusion.types";
+import { CreateShareDto, ShareInfoDto, UpdateShareDto } from "./dto/share.dto";
+import { updateAttachmentAttr } from "./share.util";
 
 @Injectable()
 export class ShareService {
@@ -43,27 +43,26 @@ export class ShareService {
   async getShareTree(shareId: string, workspaceId: string) {
     const share = await this.shareRepo.findById(shareId);
     if (!share || share.workspaceId !== workspaceId) {
-      throw new NotFoundException('Share not found');
+      throw new NotFoundException("Share not found");
     }
 
     const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
-      share.pageId,
+      share.pageId
     );
     if (isRestricted) {
-      throw new NotFoundException('Share not found');
+      throw new NotFoundException("Share not found");
     }
 
     if (share.includeSubPages) {
       const pageTree =
         await this.pageRepo.getPageAndDescendantsExcludingRestricted(
           share.pageId,
-          { includeContent: false },
+          { includeContent: false }
         );
 
-      return { share, pageTree };
-    } else {
-      return { share, pageTree: [] };
+      return { pageTree, share };
     }
+    return { pageTree: [], share };
   }
 
   async createShare(opts: {
@@ -81,17 +80,17 @@ export class ShareService {
       }
 
       return await this.shareRepo.insertShare({
+        creatorId: authUserId,
+        includeSubPages: createShareDto.includeSubPages ?? false,
         key: nanoIdGen().toLowerCase(),
         pageId: page.id,
-        includeSubPages: createShareDto.includeSubPages ?? false,
         searchIndexing: createShareDto.searchIndexing ?? false,
-        creatorId: authUserId,
         spaceId: page.spaceId,
         workspaceId,
       });
     } catch (err) {
       this.logger.error(err);
-      throw new BadRequestException('Failed to share page');
+      throw new BadRequestException("Failed to share page");
     }
   }
 
@@ -102,26 +101,28 @@ export class ShareService {
           includeSubPages: updateShareDto.includeSubPages,
           searchIndexing: updateShareDto.searchIndexing,
         },
-        shareId,
+        shareId
       );
     } catch (err) {
       this.logger.error(err);
-      throw new BadRequestException('Failed to update share');
+      throw new BadRequestException("Failed to update share");
     }
   }
 
   async getSharedPage(
     dto: ShareInfoDto,
     workspaceId: string,
-    opts?: { includeContent?: boolean },
+    opts?: { includeContent?: boolean }
   ) {
     //TODO: we should resolve the page from the share id
-    if (!dto.pageId) throw new NotFoundException('Shared page not found');
+    if (!dto.pageId) {
+      throw new NotFoundException("Shared page not found");
+    }
 
     const share = await this.getShareForPage(dto.pageId, workspaceId);
 
     if (!share) {
-      throw new NotFoundException('Shared page not found');
+      throw new NotFoundException("Shared page not found");
     }
 
     const includeContent = opts?.includeContent !== false;
@@ -133,15 +134,15 @@ export class ShareService {
       : await this.pageRepo.findById(dto.pageId);
 
     if (!page || page.deletedAt) {
-      throw new NotFoundException('Shared page not found');
+      throw new NotFoundException("Shared page not found");
     }
 
     // Block access to restricted pages
     const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
-      page.id,
+      page.id
     );
     if (isRestricted) {
-      throw new NotFoundException('Shared page not found');
+      throw new NotFoundException("Shared page not found");
     }
 
     if (includeContent) {
@@ -154,58 +155,58 @@ export class ShareService {
   async getShareForPage(pageId: string, workspaceId: string) {
     // here we try to check if a page was shared directly or if it inherits the share from its closest shared ancestor
     const share = await this.db
-      .withRecursive('page_hierarchy', (cte) =>
+      .withRecursive("page_hierarchy", (cte) =>
         cte
-          .selectFrom('pages')
-          .leftJoin('shares', 'shares.pageId', 'pages.id')
+          .selectFrom("pages")
+          .leftJoin("shares", "shares.pageId", "pages.id")
           .select([
-            'pages.id',
-            'pages.slugId',
-            'pages.title',
-            'pages.icon',
-            'pages.parentPageId',
-            sql`0`.as('level'),
-            'shares.id as shareId',
-            'shares.key as shareKey',
-            'shares.includeSubPages',
-            'shares.searchIndexing',
-            'shares.creatorId',
-            'shares.spaceId',
-            'shares.workspaceId',
-            'shares.createdAt',
+            "pages.id",
+            "pages.slugId",
+            "pages.title",
+            "pages.icon",
+            "pages.parentPageId",
+            sql`0`.as("level"),
+            "shares.id as shareId",
+            "shares.key as shareKey",
+            "shares.includeSubPages",
+            "shares.searchIndexing",
+            "shares.creatorId",
+            "shares.spaceId",
+            "shares.workspaceId",
+            "shares.createdAt",
           ])
-          .where(isValidUUID(pageId) ? 'pages.id' : 'pages.slugId', '=', pageId)
-          .where('pages.deletedAt', 'is', null)
+          .where(isValidUUID(pageId) ? "pages.id" : "pages.slugId", "=", pageId)
+          .where("pages.deletedAt", "is", null)
           .unionAll(
             (union) =>
               union
-                .selectFrom('pages as p')
-                .innerJoin('page_hierarchy as ph', 'ph.parentPageId', 'p.id')
-                .leftJoin('shares as s', 's.pageId', 'p.id')
+                .selectFrom("pages as p")
+                .innerJoin("page_hierarchy as ph", "ph.parentPageId", "p.id")
+                .leftJoin("shares as s", "s.pageId", "p.id")
                 .select([
-                  'p.id',
-                  'p.slugId',
-                  'p.title',
-                  'p.icon',
-                  'p.parentPageId',
-                  sql`ph.level + 1`.as('level'),
-                  's.id as shareId',
-                  's.key as shareKey',
-                  's.includeSubPages',
-                  's.searchIndexing',
-                  's.creatorId',
-                  's.spaceId',
-                  's.workspaceId',
-                  's.createdAt',
+                  "p.id",
+                  "p.slugId",
+                  "p.title",
+                  "p.icon",
+                  "p.parentPageId",
+                  sql`ph.level + 1`.as("level"),
+                  "s.id as shareId",
+                  "s.key as shareKey",
+                  "s.includeSubPages",
+                  "s.searchIndexing",
+                  "s.creatorId",
+                  "s.spaceId",
+                  "s.workspaceId",
+                  "s.createdAt",
                 ])
-                .where('p.deletedAt', 'is', null)
-                .where(sql`ph.share_id`, 'is', null) // stop if share found
-                .where(sql`ph.level`, '<', sql`25`), // prevent loop
-          ),
+                .where("p.deletedAt", "is", null)
+                .where(sql`ph.share_id`, "is", null) // stop if share found
+                .where(sql`ph.level`, "<", sql`25`) // prevent loop
+          )
       )
-      .selectFrom('page_hierarchy')
+      .selectFrom("page_hierarchy")
       .selectAll()
-      .where('shareId', 'is not', null)
+      .where("shareId", "is not", null)
       .limit(1)
       .executeTakeFirst();
 
@@ -218,77 +219,77 @@ export class ShareService {
     }
 
     return {
-      id: share.shareId,
-      key: share.shareKey,
-      includeSubPages: share.includeSubPages,
-      searchIndexing: share.searchIndexing,
-      pageId: share.id,
-      creatorId: share.creatorId,
-      spaceId: share.spaceId,
-      workspaceId: share.workspaceId,
       createdAt: share.createdAt,
+      creatorId: share.creatorId,
+      id: share.shareId,
+      includeSubPages: share.includeSubPages,
+      key: share.shareKey,
       level: share.level,
+      pageId: share.id,
+      searchIndexing: share.searchIndexing,
       sharedPage: {
+        icon: share.icon,
         id: share.id,
         slugId: share.slugId,
         title: share.title,
-        icon: share.icon,
       },
+      spaceId: share.spaceId,
+      workspaceId: share.workspaceId,
     };
   }
 
   async getShareAncestorPage(
     ancestorPageId: string,
-    childPageId: string,
+    childPageId: string
   ): Promise<any> {
     let ancestor = null;
     try {
       ancestor = await this.db
-        .withRecursive('page_ancestors', (db) =>
+        .withRecursive("page_ancestors", (db) =>
           db
-            .selectFrom('pages')
+            .selectFrom("pages")
             .select([
-              'id',
-              'slugId',
-              'title',
-              'parentPageId',
-              'spaceId',
+              "id",
+              "slugId",
+              "title",
+              "parentPageId",
+              "spaceId",
               (eb) =>
                 eb
                   .case()
-                  .when(eb.ref('id'), '=', ancestorPageId)
+                  .when(eb.ref("id"), "=", ancestorPageId)
                   .then(true)
                   .else(false)
                   .end()
-                  .as('found'),
+                  .as("found"),
             ])
-            .where(isValidUUID(childPageId) ? 'id' : 'slugId', '=', childPageId)
+            .where(isValidUUID(childPageId) ? "id" : "slugId", "=", childPageId)
             .unionAll((exp) =>
               exp
-                .selectFrom('pages as p')
+                .selectFrom("pages as p")
                 .select([
-                  'p.id',
-                  'p.slugId',
-                  'p.title',
-                  'p.parentPageId',
-                  'p.spaceId',
+                  "p.id",
+                  "p.slugId",
+                  "p.title",
+                  "p.parentPageId",
+                  "p.spaceId",
                   (eb) =>
                     eb
                       .case()
-                      .when(eb.ref('p.id'), '=', ancestorPageId)
+                      .when(eb.ref("p.id"), "=", ancestorPageId)
                       .then(true)
                       .else(false)
                       .end()
-                      .as('found'),
+                      .as("found"),
                 ])
-                .innerJoin('page_ancestors as pa', 'pa.parentPageId', 'p.id')
+                .innerJoin("page_ancestors as pa", "pa.parentPageId", "p.id")
                 // Continue recursing only when the target ancestor hasn't been found on that branch.
-                .where('pa.found', '=', false),
-            ),
+                .where("pa.found", "=", false)
+            )
         )
-        .selectFrom('page_ancestors')
+        .selectFrom("page_ancestors")
         .selectAll()
-        .where('found', '=', true)
+        .where("found", "=", true)
         .limit(1)
         .executeTakeFirst();
     } catch (err) {
@@ -311,22 +312,22 @@ export class ShareService {
   async lookupTransclusionForShare(
     shareId: string,
     references: Array<{ sourcePageId: string; transclusionId: string }>,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<{ items: TransclusionLookup[] }> {
     const share = await this.shareRepo.findById(shareId);
     if (!share || share.workspaceId !== workspaceId) {
-      throw new NotFoundException('Share not found');
+      throw new NotFoundException("Share not found");
     }
     const sharingAllowed = await this.isSharingAllowed(
       workspaceId,
-      share.spaceId,
+      share.spaceId
     );
     if (!sharingAllowed) {
-      throw new NotFoundException('Share not found');
+      throw new NotFoundException("Share not found");
     }
 
     const candidatePageIds = Array.from(
-      new Set(references.map((r) => r.sourcePageId)),
+      new Set(references.map((r) => r.sourcePageId))
     );
 
     // TODO: Reduce DB round trips at scale by replacing the per-page chain
@@ -344,7 +345,9 @@ export class ShareService {
     sharingAllowedCache.set(share.spaceId, Promise.resolve(true));
     const isSharingAllowedFor = (spaceId: string) => {
       const cached = sharingAllowedCache.get(spaceId);
-      if (cached) return cached;
+      if (cached) {
+        return cached;
+      }
       const p = this.isSharingAllowed(workspaceId, spaceId);
       sharingAllowedCache.set(spaceId, p);
       return p;
@@ -356,22 +359,28 @@ export class ShareService {
     const accessibleResults = await Promise.all(
       candidatePageIds.map(async (pageId) => {
         const sourceShare = await this.getShareForPage(pageId, workspaceId);
-        if (!sourceShare) return null;
-        if (!(await isSharingAllowedFor(sourceShare.spaceId))) return null;
+        if (!sourceShare) {
+          return null;
+        }
+        if (!(await isSharingAllowedFor(sourceShare.spaceId))) {
+          return null;
+        }
         const restricted =
           await this.pagePermissionRepo.hasRestrictedAncestor(pageId);
-        if (restricted) return null;
+        if (restricted) {
+          return null;
+        }
         return pageId;
-      }),
+      })
     );
     const accessibleSet = new Set<string>(
-      accessibleResults.filter((id): id is string => id !== null),
+      accessibleResults.filter((id): id is string => id !== null)
     );
 
     const { items } = await this.transclusionService.lookupWithAccessSet(
       references,
       accessibleSet,
-      workspaceId,
+      workspaceId
     );
 
     return {
@@ -381,20 +390,22 @@ export class ShareService {
 
   async isSharingAllowed(
     workspaceId: string,
-    spaceId: string,
+    spaceId: string
   ): Promise<boolean> {
     const result = await this.db
-      .selectFrom('workspaces')
-      .innerJoin('spaces', 'spaces.workspaceId', 'workspaces.id')
+      .selectFrom("workspaces")
+      .innerJoin("spaces", "spaces.workspaceId", "workspaces.id")
       .select([
-        'workspaces.settings as workspaceSettings',
-        'spaces.settings as spaceSettings',
+        "workspaces.settings as workspaceSettings",
+        "spaces.settings as spaceSettings",
       ])
-      .where('workspaces.id', '=', workspaceId)
-      .where('spaces.id', '=', spaceId)
+      .where("workspaces.id", "=", workspaceId)
+      .where("spaces.id", "=", spaceId)
       .executeTakeFirst();
 
-    if (!result) return false;
+    if (!result) {
+      return false;
+    }
 
     const workspaceDisabled =
       (result.workspaceSettings as any)?.sharing?.disabled === true;
@@ -408,7 +419,7 @@ export class ShareService {
     const doc = await this.prepareContentForShare(
       page.content,
       page.id,
-      page.workspaceId,
+      page.workspaceId
     );
     return doc?.toJSON() ?? page.content;
   }
@@ -419,29 +430,31 @@ export class ShareService {
    */
   async sanitizeTransclusionItemsForPublic(
     items: TransclusionLookup[],
-    workspaceId: string,
+    workspaceId: string
   ): Promise<TransclusionLookup[]> {
     const tokenized = await Promise.all(
       items.map(async (item) => {
-        if ('status' in item) return item;
+        if ("status" in item) {
+          return item;
+        }
         const doc = await this.prepareContentForShare(
           item.content,
           item.sourcePageId,
-          workspaceId,
+          workspaceId
         );
         return { ...item, content: doc?.toJSON() ?? item.content };
-      }),
+      })
     );
 
     // Collapse not_found to no_access so hidden sources are indistinguishable from missing ids.
     return tokenized.map((item) =>
-      'status' in item && item.status === 'not_found'
+      "status" in item && item.status === "not_found"
         ? {
             sourcePageId: item.sourcePageId,
+            status: "no_access" as const,
             transclusionId: item.transclusionId,
-            status: 'no_access' as const,
           }
-        : item,
+        : item
     );
   }
 
@@ -469,7 +482,7 @@ export class ShareService {
   private async prepareContentForShare(
     content: unknown,
     attachmentOwnerPageId: string,
-    workspaceId: string,
+    workspaceId: string
   ): Promise<Node | null> {
     const pmJson = getProsemirrorContent(content);
     const attachmentIds = getAttachmentIds(pmJson);
@@ -483,18 +496,22 @@ export class ShareService {
           workspaceId,
         });
         tokenMap.set(attachmentId, token);
-      }),
+      })
     );
 
     const doc = jsonToNode(pmJson);
     doc?.descendants((node: Node) => {
-      if (!isAttachmentNode(node.type.name)) return;
+      if (!isAttachmentNode(node.type.name)) {
+        return;
+      }
       const token = tokenMap.get(node.attrs.attachmentId);
-      if (!token) return;
-      updateAttachmentAttr(node, 'src', token);
-      updateAttachmentAttr(node, 'url', token);
+      if (!token) {
+        return;
+      }
+      updateAttachmentAttr(node, "src", token);
+      updateAttachmentAttr(node, "url", token);
     });
 
-    return doc ? removeMarkTypeFromDoc(doc, 'comment') : null;
+    return doc ? removeMarkTypeFromDoc(doc, "comment") : null;
   }
 }

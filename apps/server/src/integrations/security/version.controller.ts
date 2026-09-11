@@ -5,23 +5,25 @@ import {
   NotFoundException,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { VersionService } from './version.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { EnvironmentService } from '../environment/environment.service';
+} from "@nestjs/common";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { EnvironmentService } from "../environment/environment.service";
+import { VersionService } from "./version.service";
 
 @UseGuards(JwtAuthGuard)
-@Controller('version')
+@Controller("version")
 export class VersionController {
   constructor(
     private readonly versionService: VersionService,
-    private readonly environmentService: EnvironmentService,
+    private readonly environmentService: EnvironmentService
   ) {}
 
   @HttpCode(HttpStatus.OK)
   @Post()
   async getVersion() {
-    if (this.environmentService.isCloud()) throw new NotFoundException();
+    if (this.environmentService.isCloud()) {
+      throw new NotFoundException();
+    }
     return this.versionService.getVersion();
   }
 }

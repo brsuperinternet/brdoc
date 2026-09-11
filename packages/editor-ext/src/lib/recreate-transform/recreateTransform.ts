@@ -1,18 +1,18 @@
-import { Transform } from "@tiptap/pm/transform";
 import { Node, Schema } from "@tiptap/pm/model";
+import { Transform } from "@tiptap/pm/transform";
+import { diffChars, diffWordsWithSpace } from "diff";
 import { applyPatch, createPatch, Operation } from "rfc6902";
-import { diffWordsWithSpace, diffChars } from "diff";
-import { AnyObject } from "./types";
-import { getReplaceStep } from "./getReplaceStep";
-import { simplifyTransform } from "./simplifyTransform";
-import { removeMarks } from "./removeMarks";
-import { getFromPath } from "./getFromPath";
 import { copy } from "./copy";
+import { getFromPath } from "./getFromPath";
+import { getReplaceStep } from "./getReplaceStep";
+import { removeMarks } from "./removeMarks";
+import { simplifyTransform } from "./simplifyTransform";
+import { AnyObject } from "./types";
 
 export interface Options {
   complexSteps?: boolean;
-  wordDiffs?: boolean;
   simplifyDiff?: boolean;
+  wordDiffs?: boolean;
 }
 
 export class RecreateTransform {
@@ -32,8 +32,8 @@ export class RecreateTransform {
   constructor(fromDoc: Node, toDoc: Node, options: Options = {}) {
     const o = {
       complexSteps: true,
-      wordDiffs: false,
       simplifyDiff: true,
+      wordDiffs: false,
       ...options,
     };
 
@@ -117,7 +117,7 @@ export class RecreateTransform {
       } else if (
         ops.length === 1 &&
         op.op === "replace" &&
-        pathParts[pathParts.length - 1] === "text"
+        pathParts.at(-1) === "text"
       ) {
         // Text is being replaced, we apply text diffing to find the smallest possible diffs.
         this.addReplaceTextSteps(op, afterStepJSON);
@@ -204,7 +204,8 @@ export class RecreateTransform {
 
     if (!step) {
       return false;
-    } else if (!this.tr.maybeStep(step).failed) {
+    }
+    if (!this.tr.maybeStep(step).failed) {
       this.currentJSON = afterStepJSON;
       return true; // @change previously null
     }
@@ -239,7 +240,7 @@ export class RecreateTransform {
 
       if (diff.added) {
         const textNode = this.schema
-          .nodeFromJSON({ type: "text", text: diff.value })
+          .nodeFromJSON({ text: diff.value, type: "text" })
           .mark(marks);
 
         if (textDiffs.length && textDiffs[0].removed) {
@@ -253,7 +254,7 @@ export class RecreateTransform {
         if (textDiffs.length && textDiffs[0].added) {
           const nextDiff = textDiffs.shift();
           const textNode = this.schema
-            .nodeFromJSON({ type: "text", text: nextDiff.value })
+            .nodeFromJSON({ text: nextDiff.value, type: "text" })
             .mark(marks);
           this.tr.replaceWith(offset, offset + diff.value.length, textNode);
           offset += nextDiff.value.length;
@@ -272,7 +273,7 @@ export class RecreateTransform {
 export function recreateTransform(
   fromDoc: Node,
   toDoc: Node,
-  options: Options = {},
+  options: Options = {}
 ): Transform {
   const recreator = new RecreateTransform(fromDoc, toDoc, options);
   return recreator.init();
