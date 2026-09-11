@@ -11,7 +11,7 @@
 
 ## Getting started
 
-To get started with BrDoc, please refer to our [documentation](https://docmost.com/docs) or try our [cloud version](https://docmost.com/pricing) .
+To get started with BrDoc, please refer to our [documentation](https://docmost.com/docs).
 
 ## Features
 
