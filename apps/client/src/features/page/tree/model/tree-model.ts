@@ -200,7 +200,7 @@ export const treeModel = {
     if (!found) {
       return null;
     }
-    const parent = found.parents[found.parents.length - 1];
+    const parent = found.parents.at(-1);
     const siblings = parent ? parent.children! : tree;
     return {
       index: siblings.findIndex((n) => n.id === id),

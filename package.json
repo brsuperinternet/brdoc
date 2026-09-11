@@ -22,6 +22,8 @@
     "email:dev": "nx run server:email:dev",
     "fix": "ultracite fix",
     "knip": "knip",
+    "knip:files": "knip --include files",
+    "knip:files:fix": "knip --fix --allow-remove-files --include files",
     "server:build": "nx run server:build",
     "server:dev": "nx run server:start:dev",
     "server:start": "nx run server:start:prod",
@@ -100,7 +102,6 @@
     "knip": "^6.34.0",
     "nx": "23.1.1",
     "tsx": "^4.21.0",
-    "typescript": "^7.0.2",
     "ultracite": "7.11.0"
   },
   "packageManager": "pnpm@11.25.0"

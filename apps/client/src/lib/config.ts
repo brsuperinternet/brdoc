@@ -39,10 +39,6 @@ export function getSubdomainHost(): string {
   return getConfigValue("SUBDOMAIN_HOST");
 }
 
-export function isCloud(): boolean {
-  return castToBoolean(getConfigValue("CLOUD"));
-}
-
 export function isBetaPublicSpaces(): boolean {
   return castToBoolean(getConfigValue("BETA_PUBLIC_SPACES"));
 }
@@ -116,9 +112,9 @@ export function getPostHogKey() {
   return getConfigValue("POSTHOG_KEY");
 }
 
-function getConfigValue(key: string, defaultValue: string): string {
+function getConfigValue(key: string, defaultValue?: string): string {
   const rawValue = import.meta.env.DEV
     ? process?.env?.[key]
-    : window?.CONFIG?.[key];
+    : window.CONFIG?.[key];
   return rawValue ?? defaultValue;
 }

@@ -10,7 +10,6 @@ import {
 import { getInviteLink } from "@/features/workspace/services/workspace-service.ts";
 import { useClipboard } from "@/hooks/use-clipboard";
 import useUserRole from "@/hooks/use-user-role.tsx";
-import { isCloud } from "@/lib/config.ts";
 
 interface Props {
   invitationId: string;
@@ -62,54 +61,46 @@ export default function InviteActionMenu({ invitationId }: Props) {
     });
 
   return (
-    <>
-      <Menu
-        arrowPosition="center"
-        offset={20}
-        position="bottom-end"
-        shadow="xl"
-        width={200}
-        withArrow
-      >
-        <Menu.Target>
-          <ActionIcon
-            aria-label={t("Invite actions")}
-            c="gray"
-            variant="subtle"
-          >
-            <IconDots size={20} stroke={2} />
-          </ActionIcon>
-        </Menu.Target>
+    <Menu
+      arrowPosition="center"
+      offset={20}
+      position="bottom-end"
+      shadow="xl"
+      width={200}
+      withArrow
+    >
+      <Menu.Target>
+        <ActionIcon aria-label={t("Invite actions")} c="gray" variant="subtle">
+          <IconDots size={20} stroke={2} />
+        </ActionIcon>
+      </Menu.Target>
 
-        <Menu.Dropdown>
-          {!isCloud() && (
-            <Menu.Item
-              disabled={!isAdmin}
-              leftSection={<IconCopy size={16} />}
-              onClick={() => handleCopyLink(invitationId)}
-            >
-              {t("Copy link")}
-            </Menu.Item>
-          )}
+      <Menu.Dropdown>
+        <Menu.Item
+          disabled={!isAdmin}
+          leftSection={<IconCopy size={16} />}
+          onClick={() => handleCopyLink(invitationId)}
+        >
+          {t("Copy link")}
+        </Menu.Item>
 
-          <Menu.Item
-            disabled={!isAdmin}
-            leftSection={<IconSend size={16} />}
-            onClick={onResend}
-          >
-            {t("Resend invitation")}
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Item
-            c="red"
-            disabled={!isAdmin}
-            leftSection={<IconTrash size={16} />}
-            onClick={openRevokeModal}
-          >
-            {t("Revoke invitation")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-    </>
+        <Menu.Item
+          disabled={!isAdmin}
+          leftSection={<IconSend size={16} />}
+          onClick={onResend}
+        >
+          {t("Resend invitation")}
+        </Menu.Item>
+        <Menu.Divider />
+        <Menu.Item
+          c="red"
+          disabled={!isAdmin}
+          leftSection={<IconTrash size={16} />}
+          onClick={openRevokeModal}
+        >
+          {t("Revoke invitation")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }

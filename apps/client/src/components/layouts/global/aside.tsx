@@ -22,9 +22,7 @@ const TableOfContents = lazy(() =>
     "@/features/editor/components/table-of-contents/table-of-contents.tsx"
   ).then((m) => ({ default: m.TableOfContents }))
 );
-const AsideChatPanel = lazy(
-  () => import("@/ee/ai-chat/components/aside-chat-panel")
-);
+
 const PageDetailsAside = lazy(() =>
   import("@/features/page-details/components/page-details-aside.tsx").then(
     (m) => ({ default: m.PageDetailsAside })
@@ -55,10 +53,6 @@ export default function Aside() {
     case "toc":
       component = <TableOfContents editor={pageEditor} />;
       title = "Table of contents";
-      break;
-    case "chat":
-      component = <AsideChatPanel />;
-      title = "AI Chat";
       break;
     case "details":
       component = <PageDetailsAside />;

@@ -20,7 +20,7 @@ export function atomWithWebStorage<Value>(
     (get) => get(baseAtom) as Value,
     (_get, set, nextValue: Value) => {
       set(baseAtom, nextValue);
-      storage.setItem(key, nextValue!.toString());
+      storage.setItem(key, nextValue?.toString());
     }
   );
 }

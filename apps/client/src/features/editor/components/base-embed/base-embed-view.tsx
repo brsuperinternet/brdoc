@@ -4,11 +4,6 @@ import { IconDots, IconTable, IconX } from "@tabler/icons-react";
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BaseTableSkeleton } from "@/ee/base/components/base-table-skeleton";
-import { BaseView } from "@/ee/base/components/base-view";
-import { useBaseQuery } from "@/ee/base/queries/base-query";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import { usePageQuery } from "@/features/page/queries/page-query";
 import classes from "./base-embed.module.css";
 
@@ -57,15 +52,9 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
   const pageId = node.attrs.pageId as string | null;
   const pendingKey = node.attrs.pendingKey as string | null;
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const hasBases = useHasFeature(Feature.BASES);
+
   const [menuOpen, setMenuOpen] = useState(false);
-  // Suppress the query while the slash command awaits the server-assigned
-  // pageId; useBaseQuery would otherwise fire with an empty key.
-  const {
-    data: base,
-    isLoading,
-    isError,
-  } = useBaseQuery(pendingKey ? "" : (pageId ?? ""));
+
   const { data: page } = usePageQuery({ pageId: pageId ?? undefined });
 
   useEffect(() => {
@@ -91,7 +80,7 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
       ro.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [isLoading, isError, pageId]);
+  }, [pageId]);
 
   // Keep --editor-pin-offset published while the embed is mounted, so the
   // sticky column header clears the fixed toolbar even when this document
@@ -104,46 +93,16 @@ export function BaseEmbedView({ node, editor, deleteNode }: NodeViewProps) {
   // Error/invalid states render a compact message, not a tall reserved box.
   // The 200px min-height (which avoids a layout jump when the real table
   // mounts) is reserved only for the skeleton/loading/table states.
-  const isCompact = !pendingKey && (!pageId || isError);
+  const isCompact = !(pendingKey || pageId);
 
   const showControls = editor.isEditable && !pendingKey;
 
   let content: React.ReactNode;
-  if (pendingKey) {
-    // Slash command inserted the embed and is awaiting the server's
-    // assigned pageId. Match the shape the create endpoint will
-    // return for an inline-embed (Title + Text 1 + Text 2, one
-    // empty row — see BaseService.create's `defaults`) so the swap
-    // to the real table doesn't visibly collapse a large fake table
-    // down to a small empty one.
-    content = <BaseTableSkeleton columns={3} rows={1} />;
-  } else if (!pageId) {
+  if (!pendingKey) {
     content = (
       <Box p="md">
         <Text c="red">Invalid base embed (missing page id)</Text>
       </Box>
-    );
-  } else if (isLoading) {
-    content = (
-      <Box p="md">
-        <Text c="dimmed">Loading...</Text>
-      </Box>
-    );
-  } else if (isError) {
-    content = (
-      <Box bg="gray.0" p="md" style={{ borderRadius: 8 }}>
-        <Text c="dimmed">You don't have access to this base.</Text>
-      </Box>
-    );
-  } else {
-    content = (
-      <BaseView
-        editable={
-          hasBases && editor.isEditable && (base?.permissions?.canEdit ?? false)
-        }
-        embedded
-        pageId={pageId}
-      />
     );
   }
 

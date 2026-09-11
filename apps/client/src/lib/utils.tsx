@@ -18,7 +18,7 @@ export function extractPageSlugId(slug: string): string {
     return slug;
   }
   const parts = slug.split("-");
-  return parts.length > 1 ? parts[parts.length - 1] : slug;
+  return parts.length > 1 ? parts.at(-1) : slug;
 }
 
 export const computeSpaceSlug = (name: string) => {

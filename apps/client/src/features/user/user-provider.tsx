@@ -1,11 +1,9 @@
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { io } from "socket.io-client";
 import { Error404 } from "@/components/ui/error-404.tsx";
-import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
-import { useEntitlements } from "@/ee/entitlement/use-entitlements";
-import { useCollabToken } from "@/features/auth/queries/auth-query.tsx";
+
 import { useNotificationSocket } from "@/features/notification/hooks/use-notification-socket.ts";
 import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
 import useCurrentUser from "@/features/user/hooks/use-current-user";
@@ -16,13 +14,11 @@ import { useTreeSocket } from "@/features/websocket/use-tree-socket.ts";
 
 export function UserProvider({ children }: React.PropsWithChildren) {
   const [, setCurrentUser] = useAtom(currentUserAtom);
-  const setEntitlements = useSetAtom(entitlementAtom);
+
   const { data, isLoading, error, isError } = useCurrentUser();
-  const { data: entitlements } = useEntitlements();
+
   const { i18n } = useTranslation();
   const [, setSocket] = useAtom(socketAtom);
-  // fetch collab token on load
-  const { data: collab } = useCollabToken();
 
   useEffect(() => {
     if (isLoading || isError) {
@@ -65,14 +61,8 @@ export function UserProvider({ children }: React.PropsWithChildren) {
       i18n.resolvedLanguage || i18n.language || "en-US";
   }, [i18n.language, i18n.resolvedLanguage]);
 
-  useEffect(() => {
-    if (entitlements) {
-      setEntitlements(entitlements);
-    }
-  }, [entitlements]);
-
   if (isLoading) {
-    return <></>;
+    return null;
   }
 
   if (isError && error?.["response"]?.status === 404) {
@@ -80,8 +70,8 @@ export function UserProvider({ children }: React.PropsWithChildren) {
   }
 
   if (error) {
-    return <></>;
+    return null;
   }
 
-  return <>{children}</>;
+  return children;
 }

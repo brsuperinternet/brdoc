@@ -1,39 +1,21 @@
-import { ActionIcon, Menu, Tooltip } from "@mantine/core";
+import { ActionIcon, Menu } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import {
-  IconCircleCheck,
-  IconCircleCheckFilled,
-  IconDots,
-  IconEdit,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
 
 type CommentMenuProps = {
   onEditComment: () => void;
   onDeleteComment: () => void;
-  onResolveComment?: () => void;
   canEdit?: boolean;
-  isResolved?: boolean;
-  isParentComment?: boolean;
 };
 
 function CommentMenu({
   onEditComment,
   onDeleteComment,
-  onResolveComment,
   canEdit = true,
-  isResolved = false,
-  isParentComment = false,
 }: CommentMenuProps) {
   const { t } = useTranslation();
-  const canResolve = useHasFeature(Feature.COMMENT_RESOLUTION);
-  const upgradeLabel = useUpgradeLabel();
 
-  //@ts-expect-error
   const openDeleteModal = () =>
     modals.openConfirmModal({
       centered: true,
@@ -64,27 +46,7 @@ function CommentMenu({
             {t("Edit comment")}
           </Menu.Item>
         )}
-        {isParentComment &&
-          (canResolve ? (
-            <Menu.Item
-              leftSection={
-                isResolved ? (
-                  <IconCircleCheckFilled size={14} />
-                ) : (
-                  <IconCircleCheck size={14} />
-                )
-              }
-              onClick={onResolveComment}
-            >
-              {isResolved ? t("Re-open comment") : t("Resolve comment")}
-            </Menu.Item>
-          ) : (
-            <Tooltip label={upgradeLabel} position="left" withinPortal={false}>
-              <Menu.Item disabled leftSection={<IconCircleCheck size={14} />}>
-                {t("Resolve comment")}
-              </Menu.Item>
-            </Tooltip>
-          ))}
+
         <Menu.Item
           leftSection={<IconTrash size={14} />}
           onClick={openDeleteModal}

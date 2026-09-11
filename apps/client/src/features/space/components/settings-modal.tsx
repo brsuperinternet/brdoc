@@ -1,7 +1,6 @@
 import { Group, Modal, rem, ScrollArea, Tabs, Text } from "@mantine/core";
 import { useAtom } from "jotai";
 import { useTranslation } from "react-i18next";
-import PublishSpaceSettings from "@/features/public-space/components/publish-space-settings.tsx";
 import { isPublicSpacesAllowed } from "@/features/public-space/utils/public-space-access.ts";
 import AddSpaceMembersModal from "@/features/space/components/add-space-members-modal.tsx";
 import SpaceDetails from "@/features/space/components/space-details.tsx";
@@ -70,11 +69,6 @@ export default function SpaceSettingsModal({
                   <Tabs.Tab fw={500} value="members">
                     {t("Members")}
                   </Tabs.Tab>
-                  {canManageSettings && allowPublicSpaces && (
-                    <Tabs.Tab fw={500} value="publish">
-                      {t("Publish")}
-                    </Tabs.Tab>
-                  )}
                   {canManageSettings && (
                     <Tabs.Tab fw={500} value="security">
                       {t("Security")}
@@ -121,18 +115,7 @@ export default function SpaceSettingsModal({
                           SpaceCaslAction.Manage,
                           SpaceCaslSubject.Settings
                         )}
-                        space={space}
                       />
-                    </div>
-                  </ScrollArea>
-                </Tabs.Panel>
-
-                <Tabs.Panel value="publish">
-                  <ScrollArea h={580} pr={8} scrollbarSize={5}>
-                    <div style={{ paddingBottom: "100px" }}>
-                      {canManageSettings && allowPublicSpaces && (
-                        <PublishSpaceSettings space={space} />
-                      )}
                     </div>
                   </ScrollArea>
                 </Tabs.Panel>

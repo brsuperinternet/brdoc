@@ -2,7 +2,6 @@ import type { Editor } from "@tiptap/react";
 import { useAtomValue } from "jotai";
 import { FC } from "react";
 import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom";
 import classes from "./fixed-toolbar.module.css";
 import { AlignmentGroup } from "./groups/alignment-group";
 import { BlockTypeGroup } from "./groups/block-type-group";
@@ -27,8 +26,6 @@ export const FixedToolbar: FC<FixedToolbarProps> = ({
   const editorFromAtom = useAtomValue(pageEditorAtom);
   const editor = editorProp ?? editorFromAtom;
   const state = useToolbarState(editor);
-  const workspace = useAtomValue(workspaceAtom);
-  const isGenerativeAiEnabled = workspace?.settings?.ai?.generative === true;
 
   return (
     <>

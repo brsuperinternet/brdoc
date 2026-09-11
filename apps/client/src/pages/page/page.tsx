@@ -6,11 +6,8 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
 import { EmptyState } from "@/components/ui/empty-state.tsx";
-import { BaseView } from "@/ee/base/components/base-view";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
+
 import { FullEditor } from "@/features/editor/full-editor";
-import { TitleEditor } from "@/features/editor/title-editor";
 import PageHeader from "@/features/page/components/header/page-header.tsx";
 import { getPageTitle } from "@/features/page/page.utils";
 import { usePageQuery } from "@/features/page/queries/page-query";
@@ -19,7 +16,6 @@ import { useGetSpaceBySlugQuery } from "@/features/space/queries/space-query.ts"
 import { extractPageSlugId } from "@/lib";
 
 const MemoizedFullEditor = React.memo(FullEditor);
-const MemoizedTitleEditor = React.memo(TitleEditor);
 const MemoizedPageHeader = React.memo(PageHeader);
 const MemoizedHistoryModal = React.memo(HistoryModal);
 
@@ -63,13 +59,12 @@ function PageContent({ pageSlug }: { pageSlug: string | undefined }) {
   } = usePageQuery({ pageId: extractPageSlugId(pageSlug) });
   const { data: space } = useGetSpaceBySlugQuery(page?.space?.slug);
 
-  const hasBases = useHasFeature(Feature.BASES);
   const canEdit = !page?.deletedAt && (page?.permissions?.canEdit ?? false);
   const canComment =
     canEdit || space?.settings?.comments?.allowViewerComments === true;
 
   if (isLoading) {
-    return <></>;
+    return null;
   }
 
   if (isError || !page) {
@@ -122,44 +117,6 @@ function PageContent({ pageSlug }: { pageSlug: string | undefined }) {
           withAppName={false}
         />
         <MemoizedPageHeader readOnly={!canEdit} />
-        <div
-          style={{
-            display: "flex",
-            flex: 1,
-            flexDirection: "column",
-            minHeight: 0,
-            paddingInline: 24,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flex: 1,
-              flexDirection: "column",
-              minHeight: 0,
-            }}
-          >
-            <BaseView
-              editable={hasBases && canEdit}
-              pageId={page.id}
-              titleSlot={
-                <div
-                  className="base-page-title"
-                  style={{ paddingBottom: 6, paddingTop: 2 }}
-                >
-                  <MemoizedTitleEditor
-                    editable={hasBases && canEdit}
-                    isBase
-                    pageId={page.id}
-                    slugId={page.slugId}
-                    spaceSlug={page.space?.slug ?? ""}
-                    title={page.title}
-                  />
-                </div>
-              }
-            />
-          </div>
-        </div>
       </div>
     );
   }

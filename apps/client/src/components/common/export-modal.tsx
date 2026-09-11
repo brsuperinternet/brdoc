@@ -1,5 +1,4 @@
 import {
-  Badge,
   Button,
   Divider,
   Group,
@@ -7,76 +6,26 @@ import {
   Select,
   Switch,
   Text,
-  Tooltip,
 } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
-import {
-  exportPage,
-  exportPageToDocx,
-} from "@/features/page/services/page-service.ts";
+
 import { ExportFormat } from "@/features/page/types/page.types.ts";
-import { exportSpace } from "@/features/space/services/space-service";
 
 interface ExportModalProps {
-  id: string;
   onClose: () => void;
   open: boolean;
   type: "space" | "page";
 }
 
-export default function ExportModal({
-  id,
-  type,
-  open,
-  onClose,
-}: ExportModalProps) {
+export default function ExportModal({ type, open, onClose }: ExportModalProps) {
   const [format, setFormat] = useState<ExportFormat>(ExportFormat.Markdown);
   const [includeChildren, setIncludeChildren] = useState<boolean>(false);
   const [includeAttachments, setIncludeAttachments] = useState<boolean>(false);
-  const [isExporting, setIsExporting] = useState<boolean>(false);
-  const { t } = useTranslation();
-  const upgradeLabel = useUpgradeLabel();
-  const isDocx = format === ExportFormat.Docx;
-  const docxEntitled = useHasFeature(Feature.DOCX_EXPORT);
-  const blockedByLicense = isDocx && !docxEntitled;
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      if (type === "page") {
-        if (format === ExportFormat.Docx) {
-          await exportPageToDocx({ pageId: id });
-        } else {
-          await exportPage({
-            format,
-            includeAttachments,
-            includeChildren,
-            pageId: id,
-          });
-        }
-      }
-      if (type === "space") {
-        await exportSpace({ format, includeAttachments, spaceId: id });
-      }
-      notifications.show({
-        message: t("Export successful"),
-      });
-      onClose();
-    } catch (err) {
-      notifications.show({
-        color: "red",
-        message: "Export failed:" + err.response?.data.message,
-      });
-      console.error("export error", err);
-    } finally {
-      setIsExporting(false);
-    }
-  };
+  const { t } = useTranslation();
+
+  const isDocx = format === ExportFormat.Docx;
 
   const handleChange = (format: ExportFormat) => {
     setFormat(format);
@@ -104,12 +53,7 @@ export default function ExportModal({
             <div>
               <Text size="md">{t("Format")}</Text>
             </div>
-            <ExportFormatSelection
-              docxEntitled={docxEntitled}
-              format={format}
-              includeDocx={type === "page"}
-              onChange={handleChange}
-            />
+            <ExportFormatSelection format={format} onChange={handleChange} />
           </Group>
 
           {type === "page" && !isDocx && (
@@ -164,20 +108,6 @@ export default function ExportModal({
             <Button onClick={onClose} variant="default">
               {t("Cancel")}
             </Button>
-            <Tooltip
-              disabled={!blockedByLicense}
-              label={upgradeLabel}
-              withArrow
-            >
-              <Button
-                data-disabled={blockedByLicense || undefined}
-                disabled={blockedByLicense}
-                loading={isExporting}
-                onClick={handleExport}
-              >
-                {t("Export")}
-              </Button>
-            </Tooltip>
           </Group>
         </Modal.Body>
       </Modal.Content>
@@ -186,25 +116,15 @@ export default function ExportModal({
 }
 
 interface ExportFormatSelection {
-  docxEntitled?: boolean;
   format: ExportFormat;
-  includeDocx?: boolean;
   onChange: (value: string) => void;
 }
-function ExportFormatSelection({
-  format,
-  onChange,
-  includeDocx,
-  docxEntitled,
-}: ExportFormatSelection) {
+function ExportFormatSelection({ format, onChange }: ExportFormatSelection) {
   const { t } = useTranslation();
 
   const data = [
     { label: "Markdown", value: "markdown" },
     { label: "HTML", value: "html" },
-    ...(includeDocx
-      ? [{ disabled: !docxEntitled, label: "Word (.docx)", value: "docx" }]
-      : []),
   ];
 
   return (
@@ -215,20 +135,7 @@ function ExportFormatSelection({
       data={data}
       defaultValue={format}
       onChange={onChange}
-      renderOption={({ option }) =>
-        option.value === "docx" && !docxEntitled ? (
-          <div>
-            <Text c="dimmed" size="sm">
-              {option.label}
-            </Text>
-            <Badge mt={4} size="xs">
-              {t("Enterprise")}
-            </Badge>
-          </div>
-        ) : (
-          <Text size="sm">{option.label}</Text>
-        )
-      }
+      renderOption={({ option }) => <Text size="sm">{option.label}</Text>}
       styles={{ option: { opacity: 1 }, wrapper: { maxWidth: 140 } }}
       withCheckIcon={false}
     />

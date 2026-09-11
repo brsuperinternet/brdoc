@@ -31,7 +31,7 @@ export default function FavoritesPage() {
     fetchNextPage,
     isFetchingNextPage,
   } = useFavoritesQuery("page");
-  const favorites = data?.pages.flatMap((p) => p.items) ?? [];
+  const favorites = data?.pages.flatMap((p: any) => p.items) ?? [];
 
   if (isLoading) {
     return (

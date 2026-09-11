@@ -136,7 +136,7 @@ export function HistoryEditor({
                   wrapper.className = "history-diff-node-deleted";
                   wrapper.setAttribute("data-diff-index", String(currentIndex));
                   const serializer = DOMSerializer.fromSchema(schema);
-                  const dom = serializer.serializeNode(foundDeletedNode!.node);
+                  const dom = serializer.serializeNode(foundDeletedNode?.node);
                   wrapper.appendChild(dom);
                   return wrapper;
                 })

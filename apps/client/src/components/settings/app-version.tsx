@@ -3,11 +3,10 @@ import { useTranslation } from "react-i18next";
 import semverGt from "semver/functions/gt";
 import classes from "@/components/settings/settings.module.css";
 import { useAppVersion } from "@/features/workspace/queries/workspace-query.ts";
-import { isCloud } from "@/lib/config.ts";
 
 export default function AppVersion() {
   const { t } = useTranslation();
-  const { data: appVersion } = useAppVersion(!isCloud());
+  const { data: appVersion } = useAppVersion(true);
   let hasUpdate = false;
   try {
     hasUpdate =

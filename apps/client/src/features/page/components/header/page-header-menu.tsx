@@ -33,11 +33,7 @@ import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ExportModal from "@/components/common/export-modal";
-import { PageShareModal } from "@/ee/page-permission";
-import {
-  PageVerificationMenuItem,
-  PageVerificationModal,
-} from "@/ee/page-verification";
+
 import PageAttachmentsModal from "@/features/attachments/components/page-attachments-modal.tsx";
 import {
   pageEditorAtom,
@@ -112,8 +108,6 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
 
       {!(readOnly || page?.isBase) && <PageEditModeToggle size="xs" />}
 
-      <PageShareModal readOnly={readOnly} />
-
       <Tooltip label={t("Comments")} openDelay={250} withArrow>
         <ActionIcon
           aria-label={t("Comments")}
@@ -151,7 +145,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const [, setHistoryModalOpen] = useAtom(historyAtoms);
   const clipboard = useClipboard({ timeout: 500 });
   const { pageSlug, spaceSlug } = useParams();
-  const { data: page, isLoading } = usePageQuery({
+  const { data: page } = usePageQuery({
     pageId: extractPageSlugId(pageSlug),
   });
   const { openDeleteModal } = useDeletePageModal();
@@ -162,10 +156,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
     movePageModalOpened,
     { open: openMovePageModal, close: closeMoveSpaceModal },
   ] = useDisclosure(false);
-  const [
-    verificationOpened,
-    { open: openVerificationModal, close: closeVerificationModal },
-  ] = useDisclosure(false);
+
   const [
     attachmentsOpened,
     { open: openAttachmentsModal, close: closeAttachmentsModal },
@@ -322,13 +313,6 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
             </Menu.Item>
           )}
 
-          {!(readOnly || page?.isBase) && (
-            <PageVerificationMenuItem
-              onClick={openVerificationModal}
-              pageId={page?.id}
-            />
-          )}
-
           <Menu.Divider />
 
           {!readOnly && (
@@ -404,12 +388,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
         </Menu.Dropdown>
       </Menu>
 
-      <ExportModal
-        id={page.id}
-        onClose={closeExportModal}
-        open={exportOpened}
-        type="page"
-      />
+      <ExportModal onClose={closeExportModal} open={exportOpened} type="page" />
 
       <MovePageModal
         currentSpaceSlug={spaceSlug}
@@ -417,12 +396,6 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
         open={movePageModalOpened}
         pageId={page.id}
         slugId={page.slugId}
-      />
-
-      <PageVerificationModal
-        onClose={closeVerificationModal}
-        opened={verificationOpened}
-        pageId={page.id}
       />
 
       <PageAttachmentsModal

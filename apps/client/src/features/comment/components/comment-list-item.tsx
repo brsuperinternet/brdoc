@@ -5,10 +5,6 @@ import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import ResolveComment from "@/ee/comment/components/resolve-comment";
-import { useResolveCommentMutation } from "@/ee/comment/queries/comment-query";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
 import CommentActions from "@/features/comment/components/comment-actions";
 import CommentEditor from "@/features/comment/components/comment-editor";
 import CommentMenu from "@/features/comment/components/comment-menu";
@@ -23,18 +19,11 @@ import { useTimeAgo } from "@/hooks/use-time-ago";
 import classes from "./comment.module.css";
 
 interface CommentListItemProps {
-  canComment: boolean;
   comment: IComment;
-  pageId: string;
   userSpaceRole?: string;
 }
 
-function CommentListItem({
-  comment,
-  pageId,
-  canComment,
-  userSpaceRole,
-}: CommentListItemProps) {
+function CommentListItem({ comment, userSpaceRole }: CommentListItemProps) {
   const { t } = useTranslation();
   const { hovered, ref } = useHover();
   const [isEditing, setIsEditing] = useState(false);
@@ -44,9 +33,8 @@ function CommentListItem({
   const editContentRef = useRef<any>(null);
   const updateCommentMutation = useUpdateCommentMutation();
   const deleteCommentMutation = useDeleteCommentMutation(comment.pageId);
-  const resolveCommentMutation = useResolveCommentMutation();
+
   const [currentUser] = useAtom(currentUserAtom);
-  const canResolve = useHasFeature(Feature.COMMENT_RESOLUTION);
   const createdAtAgo = useTimeAgo(comment.createdAt);
 
   useEffect(() => {
@@ -81,28 +69,6 @@ function CommentListItem({
       }
     } catch (error) {
       console.error("Failed to delete comment:", error);
-    }
-  }
-
-  async function handleResolveComment() {
-    if (!canResolve) {
-      return;
-    }
-
-    try {
-      const isResolved = comment.resolvedAt != null;
-
-      await resolveCommentMutation.mutateAsync({
-        commentId: comment.id,
-        pageId: comment.pageId,
-        resolved: !isResolved,
-      });
-
-      if (isEditorReady(editor)) {
-        editor.commands.setCommentResolved(comment.id, !isResolved);
-      }
-    } catch (error) {
-      console.error("Failed to toggle resolved state:", error);
     }
   }
 
@@ -143,24 +109,12 @@ function CommentListItem({
             </Text>
 
             <div style={{ visibility: hovered ? "visible" : "hidden" }}>
-              {!comment.parentCommentId && canComment && canResolve && (
-                <ResolveComment
-                  commentId={comment.id}
-                  editor={editor}
-                  pageId={comment.pageId}
-                  resolvedAt={comment.resolvedAt}
-                />
-              )}
-
               {(currentUser?.user?.id === comment.creatorId ||
                 userSpaceRole === "admin") && (
                 <CommentMenu
                   canEdit={currentUser?.user?.id === comment.creatorId}
-                  isParentComment={!comment.parentCommentId}
-                  isResolved={comment.resolvedAt != null}
                   onDeleteComment={handleDeleteComment}
                   onEditComment={handleEditToggle}
-                  onResolveComment={handleResolveComment}
                 />
               )}
             </div>
@@ -175,7 +129,7 @@ function CommentListItem({
       </Group>
 
       <div>
-        {!comment.parentCommentId && comment?.selection && (
+        {!comment.parentCommentId && comment.selection && (
           <Box
             aria-label={t("Jump to comment selection")}
             className={classes.textSelection}
@@ -189,7 +143,7 @@ function CommentListItem({
             role="button"
             tabIndex={0}
           >
-            <Text size="sm">{comment?.selection}</Text>
+            <Text size="sm">{comment.selection}</Text>
           </Box>
         )}
 

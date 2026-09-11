@@ -1,10 +1,8 @@
 import { Outlet, useParams } from "react-router-dom";
 import GlobalAppShell from "@/components/layouts/global/global-app-shell.tsx";
-import { PosthogUser } from "@/ee/components/posthog-user.tsx";
 import { SearchSpotlight } from "@/features/search/components/search-spotlight.tsx";
 import { useGetSpaceBySlugQuery } from "@/features/space/queries/space-query.ts";
 import { UserProvider } from "@/features/user/user-provider.tsx";
-import { isCloud } from "@/lib/config.ts";
 
 export default function Layout() {
   const { spaceSlug } = useParams();
@@ -15,7 +13,6 @@ export default function Layout() {
       <GlobalAppShell>
         <Outlet />
       </GlobalAppShell>
-      {isCloud() && <PosthogUser />}
       <SearchSpotlight spaceId={space?.id} />
     </UserProvider>
   );

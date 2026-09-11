@@ -28,7 +28,7 @@ export function usePaginateAndSearch(initialQuery = "") {
   const goPrev = useCallback(() => {
     setCursorStack((prev) => {
       const next = prev.slice(0, -1);
-      setCursor(prev[prev.length - 1]);
+      setCursor(prev.at(-1));
       return next;
     });
   }, []);

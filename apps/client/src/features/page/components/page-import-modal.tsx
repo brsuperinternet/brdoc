@@ -5,15 +5,12 @@ import {
   Modal,
   SimpleGrid,
   Text,
-  Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
   IconBrandNotion,
   IconCheck,
   IconFileCode,
-  IconFileTypeDocx,
-  IconFileTypePdf,
   IconFileTypeZip,
   IconMarkdown,
   IconX,
@@ -22,10 +19,6 @@ import bytes from "bytes";
 import { useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ConfluenceIcon } from "@/components/icons/confluence-icon.tsx";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
 import { getFileTaskById } from "@/features/file-task/services/file-task-service.ts";
 import {
   importPage,
@@ -52,29 +45,27 @@ export default function PageImportModal({
 }: PageImportModalProps) {
   const { t } = useTranslation();
   return (
-    <>
-      <Modal.Root
-        keepMounted={true}
-        mah={400}
-        onClose={onClose}
-        opened={open}
-        padding="xl"
-        size={600}
-        xOffset={0}
-        yOffset="10vh"
-      >
-        <Modal.Overlay />
-        <Modal.Content style={{ overflow: "hidden" }}>
-          <Modal.Header py={0}>
-            <Modal.Title fw={500}>{t("Import pages")}</Modal.Title>
-            <Modal.CloseButton aria-label={t("Close")} />
-          </Modal.Header>
-          <Modal.Body>
-            <ImportFormatSelection onClose={onClose} spaceId={spaceId} />
-          </Modal.Body>
-        </Modal.Content>
-      </Modal.Root>
-    </>
+    <Modal.Root
+      keepMounted={true}
+      mah={400}
+      onClose={onClose}
+      opened={open}
+      padding="xl"
+      size={600}
+      xOffset={0}
+      yOffset="10vh"
+    >
+      <Modal.Overlay />
+      <Modal.Content style={{ overflow: "hidden" }}>
+        <Modal.Header py={0}>
+          <Modal.Title fw={500}>{t("Import pages")}</Modal.Title>
+          <Modal.CloseButton aria-label={t("Close")} />
+        </Modal.Header>
+        <Modal.Body>
+          <ImportFormatSelection onClose={onClose} spaceId={spaceId} />
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   );
 }
 
@@ -95,11 +86,6 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
   const notionFileRef = useRef<() => void>(null);
   const confluenceFileRef = useRef<() => void>(null);
   const zipFileRef = useRef<() => void>(null);
-
-  const canUseConfluence = useHasFeature(Feature.CONFLUENCE_IMPORT);
-  const canUseDocx = useHasFeature(Feature.DOCX_IMPORT);
-  const canUsePdf = useHasFeature(Feature.PDF_IMPORT);
-  const upgradeLabel = useUpgradeLabel();
 
   const handleZipUpload = async (selectedFile: File, source: string) => {
     if (!selectedFile) {
@@ -338,7 +324,6 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
     }
   };
 
-  // @ts-expect-error
   return (
     <>
       <SimpleGrid cols={2}>
@@ -385,56 +370,6 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
         </FileButton>
 
         <FileButton
-          accept=".docx"
-          inputProps={{
-            "aria-label": t("Choose {{format}} file", {
-              format: "Word (DOCX)",
-            }),
-          }}
-          multiple
-          onChange={handleFileUpload}
-          resetRef={docxFileRef}
-        >
-          {(props) => (
-            <Tooltip disabled={canUseDocx} label={upgradeLabel}>
-              <Button
-                disabled={!canUseDocx}
-                justify="start"
-                leftSection={<IconFileTypeDocx size={18} />}
-                variant="default"
-                {...props}
-              >
-                Word (DOCX)
-              </Button>
-            </Tooltip>
-          )}
-        </FileButton>
-
-        <FileButton
-          accept=".pdf"
-          inputProps={{
-            "aria-label": t("Choose {{format}} file", { format: "PDF" }),
-          }}
-          multiple
-          onChange={handleFileUpload}
-          resetRef={pdfFileRef}
-        >
-          {(props) => (
-            <Tooltip disabled={canUsePdf} label={upgradeLabel}>
-              <Button
-                disabled={!canUsePdf}
-                justify="start"
-                leftSection={<IconFileTypePdf size={18} />}
-                variant="default"
-                {...props}
-              >
-                PDF
-              </Button>
-            </Tooltip>
-          )}
-        </FileButton>
-
-        <FileButton
           accept="application/zip"
           inputProps={{
             "aria-label": t("Choose {{format}} file", { format: "Notion" }),
@@ -451,28 +386,6 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
             >
               Notion
             </Button>
-          )}
-        </FileButton>
-        <FileButton
-          accept="application/zip"
-          inputProps={{
-            "aria-label": t("Choose {{format}} file", { format: "Confluence" }),
-          }}
-          onChange={(file) => handleZipUpload(file, "confluence")}
-          resetRef={confluenceFileRef}
-        >
-          {(props) => (
-            <Tooltip disabled={canUseConfluence} label={upgradeLabel}>
-              <Button
-                disabled={!canUseConfluence}
-                justify="start"
-                leftSection={<ConfluenceIcon size={18} />}
-                variant="default"
-                {...props}
-              >
-                Confluence
-              </Button>
-            </Tooltip>
           )}
         </FileButton>
       </SimpleGrid>

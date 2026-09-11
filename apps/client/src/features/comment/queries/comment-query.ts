@@ -43,8 +43,8 @@ export function useCommentsQuery(params: ICommentParams) {
       return;
     }
     return {
-      items: query.data.pages.flatMap((p) => p.items),
-      meta: query.data.pages[query.data.pages.length - 1].meta,
+      items: query.data.pages.flatMap((p: any) => p.items),
+      meta: query.data.pages.at(-1).meta,
     };
   }, [query.data]);
 

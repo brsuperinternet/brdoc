@@ -16,12 +16,6 @@ import App from "./App.tsx";
 import "./i18n";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
-import {
-  getPostHogHost,
-  getPostHogKey,
-  isCloud,
-  isPostHogEnabled,
-} from "@/lib/config.ts";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,15 +27,6 @@ export const queryClient = new QueryClient({
     },
   },
 });
-
-if (isCloud() && isPostHogEnabled) {
-  posthog.init(getPostHogKey(), {
-    api_host: getPostHogHost(),
-    capture_pageleave: false,
-    defaults: "2025-05-24",
-    disable_session_recording: true,
-  });
-}
 
 const container = document.getElementById("root") as HTMLElement;
 const root = ((container as any).__reactRoot ??=

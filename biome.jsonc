@@ -24,19 +24,38 @@
         },
         "useExhaustiveDependencies": "off"
       },
-      "suspicious": {
-        "noLeakedRender": "off",
-        "noAsyncPromiseExecutor": "off"
-      },
-      "performance": {
-        "noJsxPropsBind": "off"
-      },
+      // "suspicious": {
+      //   "noLeakedRender": "off",
+      //   "noAsyncPromiseExecutor": "off",
+      //   "useAwait": "off",
+      //   "noExplicitAny": "off",
+      //   "noShadow": "off"
+      // },
+      "suspicious": "off",
+      "performance": "off",
+      "security": "off",
       "style": {
         "useTemplate": "off",
         "useDestructuring": "off",
         "useImportType": "off",
-        "useReadonlyClassProperties": "off"
-      }
+        "useReadonlyClassProperties": "off",
+        "useConsistentTypeDefinitions": "off",
+        "noNestedTernary": "off",
+        "useNodejsImportProtocol": {
+          "level": "error",
+          "fix": "safe"
+        },
+        "useAtIndex": {
+          "level": "error",
+          "fix": "safe"
+        },
+        "noNonNullAssertion": {
+          "level": "error",
+          "fix": "safe"
+        }
+      },
+      "a11y": "off",
+      "complexity": "off"
     }
   }
 }

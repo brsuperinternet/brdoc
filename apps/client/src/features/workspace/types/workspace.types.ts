@@ -1,5 +1,3 @@
-import { IAuthProvider } from "@/ee/security/types/security.types.ts";
-
 export interface IWorkspace {
   aiChatReadOnly?: boolean;
   aiChatWorkspaceKnowledgeOnly?: boolean;
@@ -107,7 +105,6 @@ export interface IAcceptInvite {
 }
 
 export interface IPublicWorkspace {
-  authProviders: IAuthProvider[];
   enforceSso: boolean;
   hostname: string;
   id: string;

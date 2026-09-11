@@ -523,7 +523,7 @@ export function updateCacheOnMovePage(
     >(["sidebar-pages", { pageId: oldParentId, spaceId }]);
 
     const remainingChildren =
-      oldParentCache?.pages.flatMap((p) => p.items).length ?? 0;
+      oldParentCache?.pages.flatMap((p: any) => p.items).length ?? 0;
 
     if (remainingChildren === 0) {
       // Update hasChildren in all caches where old parent appears

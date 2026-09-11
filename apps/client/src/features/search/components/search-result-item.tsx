@@ -1,16 +1,6 @@
-import {
-  ActionIcon,
-  Badge,
-  Center,
-  Group,
-  getDefaultZIndex,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Badge, Center, Group, Text } from "@mantine/core";
 import { Spotlight } from "@mantine/spotlight";
-import { IconDownload, IconFile } from "@tabler/icons-react";
 import DOMPurify from "dompurify";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { buildPageUrl } from "@/features/page/page.utils";
@@ -22,7 +12,6 @@ import { getPageIcon } from "@/lib";
 import { timeAgo } from "@/lib/time.ts";
 
 interface SearchResultItemProps {
-  isAttachmentResult: boolean;
   result: IPageSearch | IAttachmentSearch;
   showSpace?: boolean;
 }
@@ -35,78 +24,9 @@ const makeActionTabbable = (el: HTMLElement | null) => {
   }
 };
 
-export function SearchResultItem({
-  result,
-  isAttachmentResult,
-  showSpace,
-}: SearchResultItemProps) {
+export function SearchResultItem({ result, showSpace }: SearchResultItemProps) {
   const { t } = useTranslation();
 
-  if (isAttachmentResult) {
-    const attachmentResult = result as IAttachmentSearch;
-
-    const handleDownload = (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const downloadUrl = `/api/files/${attachmentResult.id}/${attachmentResult.fileName}`;
-      window.open(downloadUrl, "_blank");
-    };
-
-    return (
-      <Spotlight.Action
-        component={Link}
-        ref={makeActionTabbable}
-        style={{ userSelect: "none" }}
-        //@ts-expect-error
-        to={buildPageUrl(
-          attachmentResult.space.slug,
-          attachmentResult.page.slugId,
-          attachmentResult.page.title
-        )}
-      >
-        <Group w="100%" wrap="nowrap">
-          <Center>
-            <IconFile size={16} />
-          </Center>
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Group gap="xs" justify="space-between" wrap="nowrap">
-              <Text truncate>{attachmentResult.fileName}</Text>
-              <Text c="dimmed" size="xs" style={{ flexShrink: 0 }}>
-                {timeAgo(attachmentResult.updatedAt)}
-              </Text>
-            </Group>
-            <Text opacity={0.6} size="xs">
-              {attachmentResult.space.name} • {attachmentResult.page.title}
-            </Text>
-
-            {attachmentResult?.highlight && (
-              <Text
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(attachmentResult.highlight, {
-                    ALLOWED_ATTR: [],
-                    ALLOWED_TAGS: ["mark", "em", "strong", "b"],
-                  }),
-                }}
-                opacity={0.6}
-                size="xs"
-              />
-            )}
-          </div>
-
-          <Tooltip
-            label={t("Download attachment")}
-            withArrow
-            zIndex={getDefaultZIndex("max")}
-          >
-            <ActionIcon color="gray" onClick={handleDownload} variant="subtle">
-              <IconDownload size={18} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </Spotlight.Action>
-    );
-  }
   const pageResult = result as IPageSearch;
   return (
     <Spotlight.Action

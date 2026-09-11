@@ -15,7 +15,7 @@ import { useAtom } from "jotai";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import { PageVerificationBadge } from "@/ee/page-verification";
+
 import { currentPageEditModeAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import { EmptyPageGetStarted } from "@/features/editor/components/empty-page/empty-page-get-started";
 import { FixedToolbar } from "@/features/editor/components/fixed-toolbar/fixed-toolbar";
@@ -104,18 +104,14 @@ export function FullEditor({
         spaceSlug={spaceSlug}
         title={title}
       />
-      <PageByline
-        contributors={contributors}
-        creator={creator}
-        readOnly={!editable}
-      />
+      <PageByline contributors={contributors} creator={creator} />
       <MemoizedPageEditor
         canComment={canComment}
         content={content}
         editable={editable}
         pageId={pageId}
       />
-      <EmptyPageGetStarted editable={editable} pageId={pageId} />
+      <EmptyPageGetStarted editable={editable} />
     </Container>
   );
 }
@@ -123,10 +119,9 @@ export function FullEditor({
 type PageBylineProps = {
   creator?: PageUser;
   contributors?: IContributor[];
-  readOnly?: boolean;
 };
 
-function PageByline({ creator, contributors, readOnly }: PageBylineProps) {
+function PageByline({ creator, contributors }: PageBylineProps) {
   const { t } = useTranslation();
   const detailsTriggerProps = useAsideTriggerProps("details");
 
@@ -213,8 +208,6 @@ function PageByline({ creator, contributors, readOnly }: PageBylineProps) {
           <IconInfoCircle size={20} stroke={1.5} />
         </ActionIcon>
       </Tooltip>
-
-      <PageVerificationBadge readOnly={readOnly} />
     </Group>
   );
 }

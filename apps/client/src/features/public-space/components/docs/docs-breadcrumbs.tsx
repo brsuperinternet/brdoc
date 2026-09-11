@@ -96,7 +96,7 @@ export default function DocsBreadcrumbs() {
       </Menu>
     );
   }
-  const trailing = collapsed ? [crumbs[crumbs.length - 1]] : crumbs;
+  const trailing = collapsed ? [crumbs.at(-1)] : crumbs;
   for (const crumb of trailing) {
     items.push(
       <Link className={styles.crumbLink} key={crumb.key} to={crumb.url}>

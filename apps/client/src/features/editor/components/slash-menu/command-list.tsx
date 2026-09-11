@@ -1,36 +1,18 @@
-import {
-  ActionIcon,
-  Badge,
-  Group,
-  Paper,
-  ScrollArea,
-  Text,
-  Tooltip,
-  UnstyledButton,
-  VisuallyHidden,
-} from "@mantine/core";
-import clsx from "clsx";
+import { Paper, ScrollArea, Text, VisuallyHidden } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+
 import {
   SlashMenuGroupedItemsType,
   SlashMenuItemType,
 } from "@/features/editor/components/slash-menu/types";
-import classes from "./slash-menu.module.css";
 
 const CommandList = ({
   items,
   command,
-  editor,
-  range,
 }: {
   items: SlashMenuGroupedItemsType;
   command: any;
-  editor: any;
-  range: any;
 }) => {
   const { t } = useTranslation();
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -38,13 +20,11 @@ const CommandList = ({
   const [countAnnouncement, setCountAnnouncement] = useState("");
   const [selectionAnnouncement, setSelectionAnnouncement] = useState("");
 
-  const hasBases = useHasFeature(Feature.BASES);
-  const upgradeLabel = useUpgradeLabel();
   // Without the bases entitlement the item stays visible but inert; an
   // expired license the client can't detect falls through to a handled
   // create failure.
   const isItemDisabled = (item: SlashMenuItemType) =>
-    !hasBases && item.requiresBases === true;
+    item.requiresBases === true;
 
   const flatItems = useMemo(() => Object.values(items).flat(), [items]);
 
@@ -55,7 +35,7 @@ const CommandList = ({
         command(item);
       }
     },
-    [command, flatItems, hasBases]
+    [command, flatItems]
   );
 
   useEffect(() => {
@@ -141,68 +121,14 @@ const CommandList = ({
         viewportRef={viewportRef}
         w={270}
       >
-        {(() => {
-          let flatIndex = -1;
-          return Object.entries(items).map(([category, categoryItems]) => (
+        {(() =>
+          Object.entries(items).map(([category]) => (
             <div aria-label={category} key={category} role="group">
               <Text c="dimmed" fw={500} mb={4} tt="capitalize">
                 {category}
               </Text>
-              {categoryItems.map((item: SlashMenuItemType) => {
-                flatIndex += 1;
-                const itemIndex = flatIndex;
-                const disabled = isItemDisabled(item);
-                return (
-                  <Tooltip
-                    disabled={!disabled}
-                    key={itemIndex}
-                    label={upgradeLabel}
-                    position="right"
-                  >
-                    <UnstyledButton
-                      aria-disabled={disabled}
-                      aria-selected={itemIndex === selectedIndex}
-                      className={clsx(classes.menuBtn, {
-                        [classes.selectedItem]: itemIndex === selectedIndex,
-                        [classes.gatedItem]: disabled,
-                      })}
-                      data-item-index={itemIndex}
-                      id={`slash-command-option-${itemIndex}`}
-                      onClick={() => selectItem(itemIndex)}
-                      role="option"
-                    >
-                      <Group wrap="nowrap">
-                        <ActionIcon
-                          aria-hidden="true"
-                          component="div"
-                          variant="default"
-                        >
-                          <item.icon size={18} />
-                        </ActionIcon>
-
-                        <div style={{ flex: 1 }}>
-                          <Text fw={500} size="sm">
-                            {t(item.title)}
-                          </Text>
-
-                          <Text c="dimmed" size="xs">
-                            {t(item.description)}
-                          </Text>
-                        </div>
-
-                        {disabled && (
-                          <Badge color="gray" size="xs" variant="light">
-                            {t("Upgrade")}
-                          </Badge>
-                        )}
-                      </Group>
-                    </UnstyledButton>
-                  </Tooltip>
-                );
-              })}
             </div>
-          ));
-        })()}
+          )))()}
       </ScrollArea>
     </Paper>
   ) : null;

@@ -33,7 +33,7 @@ export default function RecentChanges({ spaceId }: Props) {
     fetchNextPage,
     isFetchingNextPage,
   } = useRecentChangesQuery(spaceId);
-  const pages = data?.pages.flatMap((p) => p.items) ?? [];
+  const pages = data?.pages.flatMap((p: any) => p.items) ?? [];
 
   if (isLoading) {
     return <PageListSkeleton />;

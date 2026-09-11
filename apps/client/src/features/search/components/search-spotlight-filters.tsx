@@ -1,12 +1,4 @@
-import {
-  Badge,
-  Button,
-  Group,
-  getDefaultZIndex,
-  Menu,
-  Switch,
-  Text,
-} from "@mantine/core";
+import { Button, Group, getDefaultZIndex, Menu, Text } from "@mantine/core";
 import {
   IconBuilding,
   IconCheck,
@@ -18,34 +10,27 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import cx from "clsx";
-import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RadioMenuItem } from "@/components/ui/radio-menu-item";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
+
 import { CreatorFilterMenu } from "@/features/search/components/creator-filter-menu";
 import { SpaceFilterMenu } from "@/features/space/components/space-filter-menu";
 import { useGetSpacesQuery } from "@/features/space/queries/space-query";
-import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { LabelFilterMenu } from "./label-filter-menu";
 import classes from "./search-spotlight-filters.module.css";
 
 interface SearchSpotlightFiltersProps {
-  isAiMode?: boolean;
-  onAskClick?: () => void;
   onFiltersChange?: (filters: any) => void;
   spaceId?: string;
 }
 
 export function SearchSpotlightFilters({
   onFiltersChange,
-  onAskClick,
   spaceId,
-  isAiMode = false,
 }: SearchSpotlightFiltersProps) {
   const { t } = useTranslation();
-  const hasAttachmentIndexing = useHasFeature(Feature.ATTACHMENT_INDEXING);
+
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(
     spaceId || null
   );
@@ -60,21 +45,13 @@ export function SearchSpotlightFilters({
   const [titleOnly, setTitleOnly] = useState(false);
   const [openedFilter, setOpenedFilter] = useState<string | null>(null);
   const [visibleFilters, setVisibleFilters] = useState<string[]>([]);
-  const [workspace] = useAtom(workspaceAtom);
 
   const { data: spacesData } = useGetSpacesQuery({ limit: 100 });
   const selectedSpaceData = selectedSpaceId
     ? spacesData?.items.find((space) => space.id === selectedSpaceId)
     : null;
 
-  const contentTypeOptions = [
-    { label: t("Pages"), value: "page" },
-    {
-      disabled: !hasAttachmentIndexing,
-      label: t("Attachments"),
-      value: "attachment",
-    },
-  ];
+  const contentTypeOptions = [{ label: t("Pages"), value: "page" }];
 
   useEffect(() => {
     onFiltersChange?.({
@@ -149,40 +126,6 @@ export function SearchSpotlightFilters({
 
   return (
     <div className={classes.filtersContainer}>
-      {workspace?.settings?.ai?.search === true && (
-        <div
-          style={{
-            alignItems: "center",
-            display: "flex",
-            height: "32px",
-            paddingLeft: "8px",
-            paddingRight: "8px",
-          }}
-        >
-          <Switch
-            checked={isAiMode}
-            color="blue"
-            label={t("AI Answers")}
-            labelPosition="left"
-            onChange={(event) => onAskClick()}
-            size="sm"
-            styles={{
-              label: {
-                fontSize: "13px",
-                fontWeight: 500,
-                paddingRight: "8px",
-                whiteSpace: "nowrap",
-              },
-              root: {
-                alignItems: "center",
-                display: "flex",
-                flexShrink: 0,
-              },
-            }}
-          />
-        </div>
-      )}
-
       <SpaceFilterMenu
         onChange={handleSpaceSelect}
         position="bottom-start"
@@ -231,12 +174,8 @@ export function SearchSpotlightFilters({
             <Menu.Item
               aria-checked={contentType === option.value}
               component={RadioMenuItem}
-              disabled={
-                option.disabled || (isAiMode && option.value === "attachment")
-              }
               key={option.value}
               onClick={() =>
-                !option.disabled &&
                 contentType !== option.value &&
                 handleChangeContentType(option.value)
               }
@@ -244,18 +183,6 @@ export function SearchSpotlightFilters({
               <Group flex="1" gap="xs">
                 <div>
                   <Text size="sm">{option.label}</Text>
-                  {option.disabled && (
-                    <Badge mt={4} size="xs">
-                      {t("Enterprise")}
-                    </Badge>
-                  )}
-                  {!option.disabled &&
-                    isAiMode &&
-                    option.value === "attachment" && (
-                      <Text mt={4} size="xs">
-                        {t("AI Answers not available for attachments")}
-                      </Text>
-                    )}
                 </div>
                 {contentType === option.value && (
                   <IconCheck aria-hidden size={20} />
@@ -266,93 +193,90 @@ export function SearchSpotlightFilters({
         </Menu.Dropdown>
       </Menu>
 
-      {!isAiMode && (
-        <Button
-          aria-pressed={titleOnly}
-          className={cx(
-            classes.filterButton,
-            titleOnly && classes.filterButtonActive
-          )}
-          color={titleOnly ? "blue" : "gray"}
-          fw={500}
-          leftSection={<IconLetterCase size={16} />}
-          onClick={() => setTitleOnly(!titleOnly)}
-          radius="xl"
-          size="sm"
-          variant={titleOnly ? "light" : "subtle"}
-        >
-          {t("Title only")}
-        </Button>
-      )}
+      <Button
+        aria-pressed={titleOnly}
+        className={cx(
+          classes.filterButton,
+          titleOnly && classes.filterButtonActive
+        )}
+        color={titleOnly ? "blue" : "gray"}
+        fw={500}
+        leftSection={<IconLetterCase size={16} />}
+        onClick={() => setTitleOnly(!titleOnly)}
+        radius="xl"
+        size="sm"
+        variant={titleOnly ? "light" : "subtle"}
+      >
+        {t("Title only")}
+      </Button>
 
-      {!isAiMode &&
-        orderedVisibleFilters.map((filterKey) => {
-          if (filterKey === "creator") {
-            return (
-              <CreatorFilterMenu
-                key="creator"
-                onChange={handleCreatorSelect}
-                onOpenChange={(opened) =>
-                  setOpenedFilter(opened ? "creator" : null)
-                }
-                opened={openedFilter === "creator"}
-                position="bottom-start"
-                value={selectedCreatorId}
-                width={250}
-                zIndex={getDefaultZIndex("max")}
+      {orderedVisibleFilters.map((filterKey) => {
+        if (filterKey === "creator") {
+          return (
+            <CreatorFilterMenu
+              key="creator"
+              onChange={handleCreatorSelect}
+              onOpenChange={(opened) =>
+                setOpenedFilter(opened ? "creator" : null)
+              }
+              opened={openedFilter === "creator"}
+              position="bottom-start"
+              value={selectedCreatorId}
+              width={250}
+              zIndex={getDefaultZIndex("max")}
+            >
+              <Button
+                className={classes.filterButton}
+                color="gray"
+                fw={500}
+                leftSection={<IconUser size={16} />}
+                rightSection={<IconChevronDown size={14} />}
+                size="sm"
+                variant="subtle"
               >
-                <Button
-                  className={classes.filterButton}
-                  color="gray"
-                  fw={500}
-                  leftSection={<IconUser size={16} />}
-                  rightSection={<IconChevronDown size={14} />}
-                  size="sm"
-                  variant="subtle"
-                >
-                  {selectedCreatorId
-                    ? `${t("Created by")}: ${selectedCreatorName || t("Unknown")}`
-                    : `${t("Created by")}: ${t("Anyone")}`}
-                </Button>
-              </CreatorFilterMenu>
-            );
-          }
+                {selectedCreatorId
+                  ? `${t("Created by")}: ${selectedCreatorName || t("Unknown")}`
+                  : `${t("Created by")}: ${t("Anyone")}`}
+              </Button>
+            </CreatorFilterMenu>
+          );
+        }
 
-          if (filterKey === "labels") {
-            return (
-              <LabelFilterMenu
-                key="labels"
-                onChange={handleLabelsSelect}
-                onOpenChange={(opened) =>
-                  setOpenedFilter(opened ? "labels" : null)
-                }
-                opened={openedFilter === "labels"}
-                position="bottom-start"
-                value={selectedLabelIds}
-                width={250}
-                zIndex={getDefaultZIndex("max")}
+        if (filterKey === "labels") {
+          return (
+            <LabelFilterMenu
+              key="labels"
+              onChange={handleLabelsSelect}
+              onOpenChange={(opened) =>
+                setOpenedFilter(opened ? "labels" : null)
+              }
+              opened={openedFilter === "labels"}
+              position="bottom-start"
+              value={selectedLabelIds}
+              width={250}
+              zIndex={getDefaultZIndex("max")}
+            >
+              <Button
+                className={classes.filterButton}
+                color="gray"
+                fw={500}
+                leftSection={<IconTag size={16} />}
+                rightSection={<IconChevronDown size={14} />}
+                size="sm"
+                variant="subtle"
               >
-                <Button
-                  className={classes.filterButton}
-                  color="gray"
-                  fw={500}
-                  leftSection={<IconTag size={16} />}
-                  rightSection={<IconChevronDown size={14} />}
-                  size="sm"
-                  variant="subtle"
-                >
-                  {selectedLabelIds.length > 0
-                    ? `${t("Labels")} (${selectedLabelIds.length})`
-                    : t("Labels")}
-                </Button>
-              </LabelFilterMenu>
-            );
-          }
+                {selectedLabelIds.length > 0
+                  ? `${t("Labels")} (${selectedLabelIds.length})`
+                  : t("Labels")}
+              </Button>
+            </LabelFilterMenu>
+          );
+        }
 
-          return null;
-        })}
+        return null;
+      })}
 
-      {!isAiMode && addableFilters.length > 0 && (
+      {addableFilters.length > 0 && (
         <Menu
           position="bottom-end"
           shadow="md"

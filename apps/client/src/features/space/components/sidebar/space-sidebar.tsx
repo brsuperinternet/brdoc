@@ -19,12 +19,10 @@ import {
   IconSettings,
   IconStar,
   IconStarFilled,
-  IconTemplate,
   IconTrash,
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import { useAtom } from "jotai";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useParams } from "react-router-dom";
 import ExportModal from "@/components/common/export-modal";
@@ -54,15 +52,6 @@ import {
 import { getSpaceUrl, isBetaPublicSpaces } from "@/lib/config.ts";
 import classes from "./space-sidebar.module.css";
 import { SwitchSpace } from "./switch-space";
-
-const TemplatePickerModal = React.lazy(
-  () => import("@/ee/template/components/template-picker-modal")
-);
-
-import { ErrorBoundary } from "react-error-boundary";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
 
 export function SpaceSidebar() {
   const { t } = useTranslation();
@@ -257,12 +246,6 @@ function SpaceMenu({
     useDisclosure(false);
   const [exportOpened, { open: openExportModal, close: closeExportModal }] =
     useDisclosure(false);
-  const [
-    templatePickerOpened,
-    { open: openTemplatePicker, close: closeTemplatePicker },
-  ] = useDisclosure(false);
-  const hasTemplates = useHasFeature(Feature.TEMPLATES);
-  const upgradeLabel = useUpgradeLabel();
 
   const { data: watchStatus } = useSpaceWatchStatusQuery(spaceId);
   const watchMutation = useWatchSpaceMutation();
@@ -335,27 +318,6 @@ function SpaceMenu({
           {canManagePages && (
             <>
               <Menu.Divider />
-              <Tooltip
-                disabled={hasTemplates}
-                label={upgradeLabel}
-                position="right"
-                withArrow
-              >
-                <Menu.Item
-                  aria-disabled={!hasTemplates || undefined}
-                  data-disabled={!hasTemplates || undefined}
-                  leftSection={<IconTemplate size={16} />}
-                  onClick={hasTemplates ? openTemplatePicker : undefined}
-                >
-                  {t("Templates")}
-                </Menu.Item>
-              </Tooltip>
-            </>
-          )}
-
-          {canManagePages && (
-            <>
-              <Menu.Divider />
 
               <Menu.Item
                 leftSection={<IconArrowDown size={16} />}
@@ -401,24 +363,11 @@ function SpaceMenu({
           />
 
           <ExportModal
-            id={spaceId}
             onClose={closeExportModal}
             open={exportOpened}
             type="space"
           />
         </>
-      )}
-
-      {hasTemplates && templatePickerOpened && (
-        <ErrorBoundary fallbackRender={() => null}>
-          <React.Suspense fallback={null}>
-            <TemplatePickerModal
-              initialSpaceId={spaceId}
-              onClose={closeTemplatePicker}
-              opened={templatePickerOpened}
-            />
-          </React.Suspense>
-        </ErrorBoundary>
       )}
     </>
   );

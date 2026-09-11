@@ -1,23 +1,17 @@
 import {
-  Anchor,
   Box,
   Button,
   Container,
   PasswordInput,
-  Text,
   TextInput,
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { z } from "zod/v4";
-import SsoCloudSignup from "@/ee/components/sso-cloud-signup.tsx";
 import classes from "@/features/auth/components/auth.module.css";
 import useAuth from "@/features/auth/hooks/use-auth";
-import APP_ROUTE from "@/lib/app-route.ts";
-import { isCloud } from "@/lib/config.ts";
 import { AuthLayout } from "./auth-layout.tsx";
 
 const formSchema = z.object({
@@ -35,7 +29,6 @@ type FormValues = z.infer<typeof formSchema>;
 export function SetupWorkspaceForm() {
   const { t } = useTranslation();
   const { setupWorkspace, isLoading } = useAuth();
-  // useRedirectIfAuthenticated();
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -59,20 +52,16 @@ export function SetupWorkspaceForm() {
             {t("Create workspace")}
           </Title>
 
-          {isCloud() && <SsoCloudSignup />}
-
           <form onSubmit={form.onSubmit(onSubmit)}>
-            {!isCloud() && (
-              <TextInput
-                id="workspaceName"
-                label={t("Workspace Name")}
-                mt="md"
-                placeholder={t("e.g ACME Inc")}
-                type="text"
-                variant="filled"
-                {...form.getInputProps("workspaceName")}
-              />
-            )}
+            <TextInput
+              id="workspaceName"
+              label={t("Workspace Name")}
+              mt="md"
+              placeholder={t("e.g ACME Inc")}
+              type="text"
+              variant="filled"
+              {...form.getInputProps("workspaceName")}
+            />
 
             <TextInput
               id="name"
@@ -112,18 +101,6 @@ export function SetupWorkspaceForm() {
           </form>
         </Box>
       </Container>
-      {isCloud() && (
-        <Text ta="center">
-          {t("Already part of an existing workspace?")}{" "}
-          <Anchor
-            component={Link}
-            fw={500}
-            to={APP_ROUTE.AUTH.SELECT_WORKSPACE}
-          >
-            {t("Sign-in")}
-          </Anchor>
-        </Text>
-      )}
     </AuthLayout>
   );
 }

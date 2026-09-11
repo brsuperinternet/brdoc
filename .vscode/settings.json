@@ -1,16 +1,21 @@
 {
-	"editor.codeActionsOnSave": {
-		"source.organizeImports.biome": "always",
-		"source.fixAll.biome": "always"
-	},
-	"cSpell.words": [
-		"collab",
-		"docmost",
-		"encapsulte",
-		"kysely",
-		"lowlight",
-		"pgvector",
-		"prosemirror",
-		"ultracite"
-	]
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "always",
+    "source.fixAll.biome": "always"
+  },
+  "cSpell.words": [
+    "Backlink",
+    "Backlinks",
+    "collab",
+    "docmost",
+    "encapsulte",
+    "kysely",
+    "licence",
+    "lowlight",
+    "pgvector",
+    "prosemirror",
+    "Scim",
+    "tabler",
+    "ultracite"
+  ]
 }

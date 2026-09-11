@@ -278,7 +278,7 @@ export function DragHandlePlugin(
       view.state.selection instanceof NodeSelection &&
       view.state.selection.node.type.name === "listItem"
     ) {
-      listType = node.parentElement!.tagName;
+      listType = node.parentElement?.tagName;
     }
 
     const slice = view.state.selection.content();

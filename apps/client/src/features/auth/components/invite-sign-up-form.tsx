@@ -12,7 +12,7 @@ import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router-dom";
 import { z } from "zod/v4";
-import SsoLogin from "@/ee/components/sso-login.tsx";
+
 import classes from "@/features/auth/components/auth.module.css";
 import useAuth from "@/features/auth/hooks/use-auth";
 import { useRedirectIfAuthenticated } from "@/features/auth/hooks/use-redirect-if-authenticated.ts";
@@ -71,8 +71,6 @@ export function InviteSignUpForm() {
           <Title fw={500} mb="md" order={2} ta="center">
             {t("Join the workspace")}
           </Title>
-
-          <SsoLogin />
 
           {!invitation.enforceSso && (
             <Stack align="stretch" gap="xl" justify="center">

@@ -28,7 +28,6 @@ import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router-dom";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { asideStateAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom";
-import { EditorAiMenu } from "@/ee/ai/components/editor/ai-menu/ai-menu";
 import { useCollabToken } from "@/features/auth/queries/auth-query.tsx";
 import {
   activeCommentIdAtom,
@@ -486,7 +485,6 @@ function CollabPageEditor({
 
         {editor && editorIsEditable && (
           <div>
-            <EditorAiMenu editor={editor} />
             <EditorLinkMenu editor={editor} />
             <EditorBubbleMenu editor={editor} />
             <TableMenu editor={editor} />

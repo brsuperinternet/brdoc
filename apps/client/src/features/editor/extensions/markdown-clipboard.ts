@@ -251,7 +251,7 @@ export function normalizeTableColumnWidths(root: Element): void {
         }
         const colspan =
           Number.parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
-        const slice = colWidths!.slice(col, col + colspan);
+        const slice = colWidths?.slice(col, col + colspan);
         col += colspan;
         if (slice.length === 0 || slice.every((w) => w === null)) {
           return;

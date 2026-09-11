@@ -50,7 +50,7 @@ export default function LabelPage() {
   } = useLabelPagesQuery(labelName, debouncedSearch, activeSpaceId);
 
   const pages = useMemo(
-    () => pagesData?.pages.flatMap((p) => p.items) ?? [],
+    () => pagesData?.pages.flatMap((p: any) => p.items) ?? [],
     [pagesData]
   );
 

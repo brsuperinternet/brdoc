@@ -1,10 +1,6 @@
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
-import { Feature } from "@/ee/features";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import {
-  searchAttachments,
-  searchPage,
-} from "@/features/search/services/search-service";
+
+import { searchPage } from "@/features/search/services/search-service";
 import {
   IAttachmentSearch,
   IPageSearch,
@@ -21,12 +17,6 @@ export function useUnifiedSearch(
   params: UseUnifiedSearchParams,
   enabled = true
 ): UseQueryResult<UnifiedSearchResult[], Error> {
-  const hasAttachmentIndexing = useHasFeature(Feature.ATTACHMENT_INDEXING);
-
-  const isAttachmentSearch =
-    params.contentType === "attachment" && hasAttachmentIndexing;
-  const searchType = isAttachmentSearch ? "attachment" : "page";
-
   return useQuery({
     enabled:
       (!!params.query ||
@@ -39,7 +29,7 @@ export function useUnifiedSearch(
       if (!(params.query || params.labelIds?.length || params.creatorId)) {
         return;
       }
-      if (previousQuery && previousQuery.queryKey[1] !== searchType) {
+      if (previousQuery && previousQuery.queryKey[1] !== "page") {
         return;
       }
       return previousData;
@@ -48,11 +38,8 @@ export function useUnifiedSearch(
       // Remove contentType from backend params since it's only used for frontend routing
       const { contentType, ...backendParams } = params;
 
-      if (isAttachmentSearch) {
-        return await searchAttachments(backendParams);
-      }
       return await searchPage(backendParams);
     },
-    queryKey: ["unified-search", searchType, params],
+    queryKey: ["unified-search", params],
   });
 }

@@ -27,9 +27,9 @@ export default function FavoriteSpacesGrid() {
   const { data } = useFavoritesQuery("space");
   const [expanded, setExpanded] = useState(false);
 
-  const allSpaces = (data?.pages.flatMap((p) => p.items) ?? [])
+  const allSpaces = (data?.pages.flatMap((p: any) => p.items) ?? [])
     .filter((fav) => fav.space)
-    .sort((a, b) => a.space!.name.localeCompare(b.space!.name));
+    .sort((a, b) => a.space?.name.localeCompare(b.space?.name));
 
   if (allSpaces.length === 0) {
     return null;
@@ -51,33 +51,33 @@ export default function FavoriteSpacesGrid() {
             className={spaceClasses.card}
             component={Link}
             key={fav.id}
-            onMouseEnter={() => prefetchSpace(fav.space!.slug, fav.space!.id)}
+            onMouseEnter={() => prefetchSpace(fav.space?.slug, fav.space?.id)}
             p="xs"
             radius="md"
-            to={getSpaceUrl(fav.space!.slug)}
+            to={getSpaceUrl(fav.space?.slug)}
             withBorder
           >
             <Card.Section className={spaceClasses.cardSection} h={40}>
               <div className={spaceClasses.starButton} data-favorited="true">
                 <StarButton
-                  name={fav.space!.name}
+                  name={fav.space?.name}
                   size={16}
-                  spaceId={fav.space!.id}
+                  spaceId={fav.space?.id}
                   type="space"
                 />
               </div>
             </Card.Section>
             <CustomAvatar
-              avatarUrl={fav.space!.logo}
+              avatarUrl={fav.space?.logo}
               color="initials"
               mt={rem(-20)}
-              name={fav.space!.name}
+              name={fav.space?.name}
               size="md"
               type={AvatarIconType.SPACE_ICON}
               variant="filled"
             />
             <Text className={spaceClasses.title} fw={500} fz="md" mt="xs">
-              {fav.space!.name}
+              {fav.space?.name}
             </Text>
           </Card>
         ))}

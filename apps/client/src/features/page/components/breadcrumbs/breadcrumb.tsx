@@ -110,7 +110,7 @@ export default function Breadcrumb() {
     if (breadcrumbNodes.length > 3) {
       const firstNode = breadcrumbNodes[0];
       //const secondLastNode = breadcrumbNodes[breadcrumbNodes.length - 2];
-      const lastNode = breadcrumbNodes[breadcrumbNodes.length - 1];
+      const lastNode = breadcrumbNodes.at(-1);
 
       return [
         renderAnchor(firstNode),

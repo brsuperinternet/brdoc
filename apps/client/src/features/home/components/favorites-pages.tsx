@@ -34,7 +34,7 @@ export default function FavoritesPages({ spaceId }: Props) {
     isFetchingNextPage,
   } = useFavoritesQuery("page", spaceId);
 
-  const favorites = data?.pages.flatMap((p) => p.items) ?? [];
+  const favorites = data?.pages.flatMap((p: any) => p.items) ?? [];
 
   if (isLoading) {
     return <PageListSkeleton />;
