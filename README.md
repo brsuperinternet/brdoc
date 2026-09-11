@@ -1,5 +1,5 @@
 <div align="center">
-    <h1><b>Docmost</b></h1>
+    <h1><b>BrDoc</b></h1>
     <p>
         Open-source collaborative wiki and documentation software.
         <br />
@@ -11,7 +11,7 @@
 
 ## Getting started
 
-To get started with Docmost, please refer to our [documentation](https://docmost.com/docs) or try our [cloud version](https://docmost.com/pricing) .
+To get started with BrDoc, please refer to our [documentation](https://docmost.com/docs) or try our [cloud version](https://docmost.com/pricing) .
 
 ## Features
 
@@ -30,12 +30,13 @@ To get started with Docmost, please refer to our [documentation](https://docmost
 ### Screenshots
 
 <p align="center">
-<img alt="home" src="https://docmost.com/screenshots/home.png" width="50%"><img alt="editor" src="https://docmost.com/screenshots/editor.png" width="50%">
+<img alt="home" src="https://docmost.com/screenshots/home.png" width="80%">
+<img alt="editor" src="https://docmost.com/screenshots/editor.png" width="80%">
 </p>
 
 ### License
 
-Docmost core is licensed under the open-source AGPL 3.0 license.
+BrDoc core is licensed under the open-source AGPL 3.0 license.
 
 ### Contributing
 
